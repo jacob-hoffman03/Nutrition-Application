@@ -1060,7 +1060,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bl";
+const APP_VERSION = "2026.09.18-bm";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -2426,36 +2426,63 @@ function weightTrend(){
 }
 /* ============ 1-MONTH MILESTONE (research 2026-09-18) ============
    Suggests a weight goal one month out, anchored to the profile update date
-   (S.goals.profile.updatedAt, stamped by commitGoalsInputs). Rates:
-   gain 0.4%/wk of bodyweight (range 0.25–0.5 — coach consensus, MASS / Helms /
-   Henselmans circles; textbook 1 lb/wk rules rest on limited evidence per
-   Larson-Meyer review); cut 0.7%/wk (range 0.5–1.0 — Ruiz-Castellano et al.,
-   Nutrients 2021). Cross-checks: McDonald beginner max ~2 lb muscle/month;
-   Aragon beginner 1–1.5% BW/month muscle; Helms et al. 2023 (SMO): a 15%
-   surplus built no more muscle than 5% — just more fat. */
+   (S.goals.profile.updatedAt, stamped by commitGoalsInputs). The rate comes
+   from HIS profile — not a fixed lean-bulk number: expected scale change from
+   his actual daily surplus/deficit via 3,500 kcal/lb energy math (same as
+   paintGainProj; Hall 2011 notes it overstates long-term change). Guardrails
+   from research: gains above ~0.5%/wk are mostly fat, not muscle (Helms et al.
+   2023, SMO); losses capped at 1.0%/wk to preserve muscle (Ruiz-Castellano et
+   al., Nutrients 2021; Garthe et al., IJSNEM 2011). Cross-checks: McDonald
+   beginner max ~2 lb muscle/month; Aragon beginner 1–1.5% BW/month. */
 function suggestedMilestone(){
   const cur = curBodyWeight(); if(!(cur>0)) return null;
   const g = S.goals.weight;
   let dir = 0;
   if(g>0) dir = Math.sign(g-cur);
-  else if(S.goals.surplus>0) dir = 1;
-  else if(S.goals.surplus<0) dir = -1;
+  else dir = Math.sign(goalTotal()-((S.goals.maintenance>0)?S.goals.maintenance:goalTotal()));
   if(dir===0) return null;
-  const pctWk = dir>0 ? 0.4 : 0.7;
-  const delta = dir*cur*(pctWk/100)*(30/7);
+  const maint = S.goals.maintenance>0 ? S.goals.maintenance : 0;
+  const gap = goalTotal()-maint; /* kcal/day: surplus (+) or deficit (−) */
+  const MODE_LABEL = {lean:"Lean Bulk", bulk:"Bulk", maintain:"Maintain", custom:"Custom"};
+  let lbWk, basis;
+  if(dir>0){
+    if(gap>0){ lbWk = gap*7/3500; basis = "surplus"; }
+    else { lbWk = cur*0.004; basis = "guideline"; } /* no surplus configured: lean-bulk default */
+    lbWk = Math.min(lbWk, cur*0.015); /* sanity cap: 1.5%/wk */
+  } else {
+    if(gap<0){ lbWk = Math.abs(gap)*7/3500; basis = "deficit"; }
+    else { lbWk = cur*0.007; basis = "guideline"; }
+    lbWk = Math.min(lbWk, cur*0.01); /* evidence cap: 1.0%/wk */
+  }
+  const pctWk = lbWk/cur*100;
+  const delta = dir*lbWk*(30/7);
   let target = Math.round((cur+delta)*2)/2;
   if(g>0){ target = dir>0 ? Math.min(target,g) : Math.max(target,g); }
   if(target===cur || (g>0 && Math.abs(target-g)<0.01)) return null;
   const base = (S.goals.profile||{}).updatedAt || todayStr();
   const dt = new Date(base+"T12:00:00"); dt.setDate(dt.getDate()+30);
   return {target, dateStr: dt.toLocaleDateString(undefined,{month:"short",day:"numeric"}),
-          perWk: Math.abs(cur*(pctWk/100)), dir};
+          lbWk, pctWk, dir, gap, basis, modeName: MODE_LABEL[S.goals.mode]||"Custom"};
 }
 function milestoneHtml(ms){
   const wu = wUnit(), d1 = v => wDisp(v).toFixed(1);
-  const ev = ms.dir>0
-    ? `Paced at +${d1(ms.perWk)} ${wu}/week (~0.4% of bodyweight) — the lean-bulk guideline from the evidence-based coaching consensus (MASS / Helms / Henselmans). Beginners max out around 2 lb of muscle a month (McDonald; Aragon: 1–1.5% BW/month), and a 15% surplus built no more muscle than 5% — just more fat (Helms et al., Sports Med Open 2023).`
-    : `Paced at −${d1(ms.perWk)} ${wu}/week (~0.7% of bodyweight) — the range that best preserves muscle while cutting (Ruiz-Castellano et al., Nutrients 2021; Garthe et al., IJSNEM 2011).`;
+  const sgn = ms.dir>0 ? "+" : "−";
+  let ev;
+  if(ms.basis==="surplus"){
+    const pct = S.goals.maintenance>0 ? Math.round(ms.gap/S.goals.maintenance*100) : 0;
+    ev = `Based on your ${ms.modeName} (+${pct}% ≈ +${Math.round(ms.gap).toLocaleString()} kcal/day) — ≈${sgn}${d1(ms.lbWk)} ${wu}/week (${ms.pctWk.toFixed(2)}% of body weight) by energy math (3,500 kcal/lb — a first-week heuristic that overstates over time, Hall 2011). `+
+      (ms.pctWk>0.5
+        ? `That's faster than the 0.25–0.5%/week lean-gain guideline — the extra is mostly fat, not muscle (Helms et al., Sports Med Open 2023).`
+        : `Inside the 0.25–0.5%/week lean-gain guideline (MASS / Helms consensus); beginners max out around 2 lb of muscle a month (McDonald; Aragon: 1–1.5% BW/month).`);
+  } else if(ms.basis==="deficit"){
+    ev = `Based on your ${Math.round(Math.abs(ms.gap)).toLocaleString()} kcal/day deficit — ≈${sgn}${d1(ms.lbWk)} ${wu}/week (${ms.pctWk.toFixed(2)}% of body weight). `+
+      (ms.pctWk>=0.99 ? `Capped at 1.0%/week — faster losses cost muscle (Ruiz-Castellano et al., Nutrients 2021; Garthe et al., IJSNEM 2011).`
+                      : `Inside the 0.5–1.0%/week range that best preserves muscle while cutting (Ruiz-Castellano et al., Nutrients 2021).`);
+  } else if(ms.dir>0){
+    ev = `No surplus configured — paced at +${d1(ms.lbWk)} ${wu}/week (~0.4% of bodyweight), the lean-bulk guideline from the evidence-based coaching consensus (MASS / Helms / Henselmans). Set your surplus in Goals › Calorie goal and this follows it.`;
+  } else {
+    ev = `No deficit configured — paced at −${d1(ms.lbWk)} ${wu}/week (~0.7% of bodyweight), the range that best preserves muscle while cutting (Ruiz-Castellano et al., Nutrients 2021).`;
+  }
   return `<div class="msugg"><div class="msrow"><div><b>Suggested 1-month milestone</b><span>${d1(ms.target)} ${wu} by ${ms.dateStr} — one month from your profile update</span></div><button class="chip" id="msUse">Use as goal</button></div>`+
     `<div class="rangenote" style="margin-top:6px">${ev} Early weeks read high — that's glycogen and water, not tissue. Judge the 4-week trend, not week 1.</div></div>`;
 }
