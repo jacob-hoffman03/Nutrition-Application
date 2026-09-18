@@ -361,8 +361,16 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wlegend .wtline{display:inline-block; width:16px; height:3px; border-radius:2px; background:#5b5bf0; vertical-align:middle; margin-right:4px;}
 .wlegend .wtnote{font-style:italic;}
 .wlogrow input{flex:1; border:1.5px solid var(--line); border-radius:12px; padding:11px; font-size:16px; background:#fff; outline:none;}
-.wlogrow input[type="date"]{flex:0 1 128px; font-size:14px; padding:11px 6px; color:var(--ink);}
 .wlogbtn{background:var(--acc); color:#fff; border:none; border-radius:12px; padding:11px 18px; font-weight:800;}
+.wrange{display:flex; background:#f1f1f6; border-radius:16px; padding:4px; margin-top:10px;}
+.wrange button{flex:1; border:none; background:none; padding:9px 0; font-size:15px; font-weight:700; color:#8a8a94; border-radius:12px;}
+.wrange button.on{background:#5b5bf0; color:#fff; box-shadow:0 2px 6px rgba(91,91,240,.35);}
+.wstatgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
+.wstat{background:#f6f6f9; border-radius:18px; padding:13px 16px;}
+.wstat span{display:block; font-size:13px; color:#6d6d78; font-weight:600;}
+.wstat b{display:block; font-size:21px; margin-top:3px; font-variant-numeric:tabular-nums;}
+.wlogrow input{min-width:0;}
+.wlogrow input[type="date"]{flex:0 1 112px; font-size:13px; padding:11px 4px; color:var(--ink);}
 /* tab bar */
 .tabbar{position:fixed; left:0; right:0; bottom:0; z-index:30; background:rgba(255,255,255,.96);
   -webkit-transform:translateZ(0); transform:translateZ(0);
@@ -701,8 +709,11 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div style="display:flex; justify-content:space-between; align-items:baseline;"><b style="font-size:16px">Body weight</b><b id="curWeight" style="font-size:20px">—</b></div>
       <button class="srow" id="wtGoalBtn" style="padding-top:10px"><span>Weight goal</span><span class="sval"><b id="wtGoalVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
       <div id="wtGoalProg" style="margin-top:2px"></div>
-      <svg id="weightChart" width="100%" height="150" viewBox="0 0 340 150" preserveAspectRatio="none" style="margin-top:8px"></svg>
-      <div class="wlegend" id="wlegend" style="display:none"><span><i class="wdot"></i>weigh-ins</span><span><i class="wtline"></i>7-day trend</span><span id="wtrendNote" class="wtnote"></span></div>
+      <div class="wrange" id="wRange" role="group" aria-label="Chart range">
+        <button data-r="7">W</button><button data-r="30">M</button><button data-r="90" class="on">3M</button><button data-r="365">Y</button><button data-r="0">All</button>
+      </div>
+      <svg id="weightChart" width="100%" height="200" viewBox="0 0 340 200" preserveAspectRatio="none" style="margin-top:8px"></svg>
+      <div class="wstatgrid" id="wStatTiles" style="display:none"></div>
       <div class="wlogrow">
         <input id="weightDate" type="date" aria-label="Weigh-in date">
         <input id="weightInput" type="number" inputmode="decimal" step="0.1" placeholder="Weight (lb)">
@@ -1062,7 +1073,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bo";
+const APP_VERSION = "2026.09.18-bp";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -2662,71 +2673,118 @@ function smoothPath(p){
   }
   return d;
 }
+let wRange = 90; /* chart range in days; 0 = all */
+function wRangeStats(pts){
+  /* halves-by-date rate on a filtered point list (same method as weightTrend) */
+  if(pts.length<2) return {rateWk:null, change:0, hi:pts.length?pts[0].w:0, lo:pts.length?pts[0].w:0};
+  const T = p => new Date(p.d+"T12:00:00").getTime();
+  const t0 = T(pts[0]), t1 = T(pts[pts.length-1]), mid = (t0+t1)/2;
+  const early = pts.filter(p=>T(p)<=mid), recent = pts.filter(p=>T(p)>mid);
+  let rateWk = null;
+  if(early.length && recent.length){
+    const avgW = a=>a.reduce((x,p)=>x+p.w,0)/a.length, avgT = a=>a.reduce((x,p)=>x+T(p),0)/a.length;
+    const dDays = Math.max(1,(avgT(recent)-avgT(early))/86400000);
+    rateWk = (avgW(recent)-avgW(early))/dDays*7;
+  }
+  const vals = pts.map(p=>p.w);
+  return {rateWk, change: pts[pts.length-1].w-pts[0].w, hi: Math.max(...vals), lo: Math.min(...vals)};
+}
+function smoothLine(pts){
+  /* Catmull-Rom -> cubic Bezier through the points */
+  if(pts.length<2) return "";
+  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for(let i=0;i<pts.length-1;i++){
+    const p0 = pts[Math.max(0,i-1)], p1 = pts[i], p2 = pts[i+1], p3 = pts[Math.min(pts.length-1,i+2)];
+    const c1x = p1[0]+(p2[0]-p0[0])/6, c1y = p1[1]+(p2[1]-p0[1])/6;
+    const c2x = p2[0]-(p3[0]-p1[0])/6, c2y = p2[1]-(p3[1]-p1[1])/6;
+    d += `C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
 function paintWeightChart(w){
   const svg = document.getElementById("weightChart"), wu = wUnit();
-  const legend = document.getElementById("wlegend"), note = document.getElementById("wtrendNote");
+  const tiles = document.getElementById("wStatTiles");
   const ws = w.slice().sort((a,b)=>a.d<b.d?-1:1);
   const T = p => new Date(p.d+"T12:00:00").getTime();
-  const dFmt = t => new Date(t).toLocaleDateString(undefined,{month:"short",day:"numeric"});
-  if(legend) legend.style.display = "none";
-  if(note) note.textContent = "";
+  const f1 = v => wDisp(v).toFixed(1);
   if(ws.length===0){
-    svg.innerHTML = `<text x="170" y="75" text-anchor="middle" fill="#9a9aa5" font-size="13">Log weight to see your trend</text>`;
-    svg.setAttribute("role","img"); svg.setAttribute("aria-label","Weight chart: no weigh-ins yet");
-    return;
-  }
-  if(ws.length===1){
-    svg.innerHTML = `<circle cx="170" cy="60" r="4.5" fill="#5b5bf0"/><text x="170" y="112" text-anchor="middle" fill="#9a9aa5" font-size="12">Log another weigh-in to draw your trend</text>`;
-    svg.setAttribute("role","img"); svg.setAttribute("aria-label","Weight chart: one weigh-in, "+wDisp(ws[0].w)+" "+wu);
+    svg.innerHTML = `<text x="170" y="100" text-anchor="middle" fill="#9a9aa5" font-size="13">Log weight to see your trend</text>`;
+    svg.setAttribute("aria-label","Weight chart: no weigh-ins yet");
+    if(tiles) tiles.style.display = "none";
     return;
   }
   const tEnd = T(ws[ws.length-1]);
-  const tStart = Math.max(tEnd-90*86400000, T(ws[0])-2*86400000); /* last 90 days max; gaps stay gaps */
+  const tStart = wRange>0 ? tEnd-wRange*86400000 : T(ws[0])-2*86400000;
   const pts = ws.filter(p=>T(p)>=tStart);
-  const goal = S.goals.weight>0 ? S.goals.weight : 0;
+  /* flag: his set goal, else the auto milestone predicted from his data */
+  let flag = null;
+  if(S.goals.weight>0) flag = {v:S.goals.weight, auto:false};
+  else { const ms = suggestedMilestone(); if(ms) flag = {v:ms.target, auto:true}; }
   const vals = pts.map(p=>p.w);
   let mn = Math.min(...vals), mx = Math.max(...vals);
-  if(goal){ mn = Math.min(mn,goal); mx = Math.max(mx,goal); }
-  const pad = Math.max((mx-mn)*0.15, 1);
-  mn -= pad; mx += pad;
-  const W=340, H=150, PL=32, PR=10, PT=14, PB=28;
+  if(flag){ mn = Math.min(mn,flag.v); mx = Math.max(mx,flag.v); }
+  if(mx-mn<0.5){ mn-=0.5; mx+=0.5; }
+  const pad = (mx-mn)*0.18; mn-=pad; mx+=pad;
+  const W=340, H=200, PL=10, PR=44, PT=20, PB=24;
   const X = t => PL + (t-tStart)/Math.max(1,(tEnd-tStart))*(W-PL-PR);
   const Y = v => PT + (1-(v-mn)/Math.max(0.001,(mx-mn)))*(H-PT-PB);
-  /* raw series: thin line, broken across gaps > 7 days */
-  let segs=[[]];
-  pts.forEach((p,i)=>{ if(i>0 && T(p)-T(pts[i-1])>7*86400000) segs.push([]); segs[segs.length-1].push(p); });
-  const rawLines = segs.filter(s=>s.length>1).map(s=>
-    `<polyline points="${s.map(p=>X(T(p)).toFixed(1)+","+Y(p.w).toFixed(1)).join(" ")}" fill="none" stroke="#dcdcf5" stroke-width="1.5"/>`).join("");
-  const dots = pts.map(p=>`<circle cx="${X(T(p)).toFixed(1)}" cy="${Y(p.w).toFixed(1)}" r="2.5" fill="#c3c3ee"/>`).join("");
-  /* trend: 7-day moving average, needs 3+ weigh-ins */
-  let trendSvg = "";
-  if(pts.length>=3){
-    const ma = trendMA(pts);
-    const tp = [];
-    ma.forEach((m,i)=>{ if(m.n>=2) tp.push({m, brk:i>0 && T(pts[i])-T(pts[i-1])>7*86400000}); });
-    let runs=[], cur=[];
-    tp.forEach(o=>{ if(o.brk && cur.length){ runs.push(cur); cur=[]; } cur.push([X(new Date(o.m.d+"T12:00:00").getTime()), Y(o.m.w)]); });
-    if(cur.length) runs.push(cur);
-    trendSvg = runs.filter(r=>r.length>1).map(r=>`<path d="${smoothPath(r)}" fill="none" stroke="#5b5bf0" stroke-width="3" stroke-linecap="round"/>`).join("");
-  } else if(note) note.textContent = "trend appears after 3 weigh-ins";
-  /* goal: dashed + labeled, never styled like a data series */
-  let goalSvg = "";
-  if(goal){
-    const gy = Y(goal), ly = Math.max(PT+10, gy-6);
-    goalSvg = `<line x1="${PL}" y1="${gy.toFixed(1)}" x2="${W-PR}" y2="${gy.toFixed(1)}" stroke="#2fbf71" stroke-width="1.5" stroke-dasharray="5,4"/>`+
-      `<text x="${W-PR}" y="${ly.toFixed(1)}" text-anchor="end" fill="#2fbf71" font-size="10">goal ${wDisp(goal)} ${wu}</text>`;
+  const dFmtS = t => new Date(t).toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  let s = "";
+  /* y gridlines + right-side labels */
+  for(let i=0;i<=3;i++){
+    const v = mn+(mx-mn)*i/3, y = Y(v);
+    s += `<line x1="${PL}" y1="${y.toFixed(1)}" x2="${W-PR+6}" y2="${y.toFixed(1)}" stroke="#eeeef3" stroke-width="1"/>`+
+         `<text x="${W-2}" y="${(y+3.5).toFixed(1)}" text-anchor="end" fill="#9a9aa5" font-size="10">${f1(v)}</text>`;
   }
-  const dir = pts.length>=3 ? (pts[pts.length-1].w>=pts[0].w ? "up" : "down") : "flat";
-  svg.innerHTML =
-    `<text x="2" y="${PT+9}" fill="#9a9aa5" font-size="10">${wDisp(mx)}</text>`+
-    `<text x="2" y="${H-PB+3}" fill="#9a9aa5" font-size="10">${wDisp(mn)}</text>`+
-    `<text x="${PL}" y="${H-8}" fill="#9a9aa5" font-size="10">${dFmt(tStart)}</text>`+
-    `<text x="${W-PR}" y="${H-8}" text-anchor="end" fill="#9a9aa5" font-size="10">${dFmt(tEnd)}</text>`+
-    goalSvg + rawLines + trendSvg + dots;
+  /* x labels: month starts for long ranges, 4 even ticks for short ones */
+  let xticks = [];
+  if(wRange>=60){ const d = new Date(tStart); d.setDate(1); d.setHours(12,0,0,0);
+    if(d.getTime()<tStart) d.setMonth(d.getMonth()+1);
+    while(d.getTime()<=tEnd){ xticks.push({t:d.getTime(), l:d.toLocaleDateString(undefined,{month:"short"})}); d.setMonth(d.getMonth()+1); }
+  } else { for(let i=0;i<4;i++){ const t = tStart+(tEnd-tStart)*i/3; xticks.push({t, l:dFmtS(t)}); } }
+  xticks.forEach(x=>{ s += `<text x="${X(x.t).toFixed(1)}" y="${H-6}" text-anchor="middle" fill="#9a9aa5" font-size="10">${x.l}</text>`; });
+  /* goal flag: dashed line + pennant, never styled like the data series */
+  if(flag){
+    const gy = Y(flag.v);
+    s += `<line x1="${PL}" y1="${gy.toFixed(1)}" x2="${W-PR+6}" y2="${gy.toFixed(1)}" stroke="#5b5bf0" stroke-width="1.5" stroke-dasharray="6,5" opacity="0.85"/>`+
+      `<g transform="translate(${PL+2},${(gy-13).toFixed(1)})"><line x1="0" y1="0" x2="0" y2="13" stroke="#5b5bf0" stroke-width="2"/><path d="M1,1 L13,4.5 L1,8 Z" fill="#5b5bf0"/></g>`+
+      `<text x="${PL+18}" y="${(gy-3).toFixed(1)}" fill="#5b5bf0" font-size="11" font-weight="700">${flag.auto?"auto ":""}${f1(flag.v)}${wu}</text>`;
+  }
+  const xy = pts.map(p=>[X(T(p)), Y(p.w)]);
+  if(xy.length>=2){
+    const line = smoothLine(xy);
+    s += `<path d="${line}L${xy[xy.length-1][0].toFixed(1)},${H-PB}L${xy[0][0].toFixed(1)},${H-PB}Z" fill="rgba(91,91,240,0.08)"/>`+
+         `<path d="${line}" fill="none" stroke="#5b5bf0" stroke-width="3" stroke-linecap="round"/>`;
+  }
+  s += xy.map(q=>`<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="4" fill="#fff" stroke="#5b5bf0" stroke-width="2.5"/>`).join("");
+  /* min / max annotations */
+  if(pts.length>=2){
+    let iMn=0, iMx=0;
+    pts.forEach((p,i)=>{ if(p.w<pts[iMn].w) iMn=i; if(p.w>pts[iMx].w) iMx=i; });
+    if(iMn!==iMx){
+      s += `<text x="${xy[iMn][0].toFixed(1)}" y="${(xy[iMn][1]+16).toFixed(1)}" text-anchor="middle" fill="#5b5bf0" font-size="11" font-weight="700">${f1(pts[iMn].w)}${wu}</text>`+
+           `<text x="${xy[iMx][0].toFixed(1)}" y="${(xy[iMx][1]-9).toFixed(1)}" text-anchor="middle" fill="#5b5bf0" font-size="11" font-weight="700">${f1(pts[iMx].w)}${wu}</text>`;
+    }
+  }
+  if(xy.length===1){
+    s += `<text x="${xy[0][0].toFixed(1)}" y="${(xy[0][1]-12).toFixed(1)}" text-anchor="middle" fill="#5b5bf0" font-size="11" font-weight="700">${f1(pts[0].w)}${wu}</text>`;
+  }
+  svg.innerHTML = s;
   svg.setAttribute("role","img");
-  svg.setAttribute("aria-label",`Weight chart: ${pts.length} weigh-ins, ${dFmt(tStart)} to ${dFmt(tEnd)}, trending ${dir}`+
-    (goal ? `, goal ${wDisp(goal)} ${wu}` : ""));
-  if(legend) legend.style.display = "";
+  svg.setAttribute("aria-label",`Weight chart: ${pts.length} weigh-ins, ${dFmtS(tStart)} to ${dFmtS(tEnd)}`+(flag?`, ${flag.auto?"auto milestone":"goal"} ${f1(flag.v)} ${wu}`:""));
+  /* stat tiles */
+  if(tiles){
+    if(pts.length>=2){
+      const st = wRangeStats(pts);
+      const sgn = v => (v>0?"+":v<0?"\u2212":"")+f1(Math.abs(v));
+      tiles.innerHTML =
+        `<div class="wstat"><span>Weekly rate</span><b>${st.rateWk==null?"\u2014":sgn(st.rateWk)+" "+wu+"/wk"}</b></div>`+
+        `<div class="wstat"><span>Change</span><b>${sgn(st.change)} ${wu}</b></div>`+
+        `<div class="wstat"><span>Highest</span><b>${f1(st.hi)} ${wu}</b></div>`+
+        `<div class="wstat"><span>Lowest</span><b>${f1(st.lo)} ${wu}</b></div>`;
+      tiles.style.display = "";
+    } else tiles.style.display = "none";
+  }
 }
 function renderProgress(){
   const days = last7();
@@ -2774,6 +2832,11 @@ document.getElementById("weightAdd").onclick = ()=>{
   syncWeightFromLog(v, k);
   save(); renderProgress();
 };
+document.querySelectorAll("#wRange button").forEach(b=>{
+  b.onclick = ()=>{ wRange = parseInt(b.dataset.r,10);
+    document.querySelectorAll("#wRange button").forEach(x=>x.classList.toggle("on", x===b));
+    renderProgress(); };
+});
 document.getElementById("wtGoalBtn").onclick = ()=>{
   const wu = wUnit(), lo = wIsMet()?23:50, hi = wIsMet()?275:600;
   const cur = S.goals.weight>0 ? wDisp(S.goals.weight) : "";
