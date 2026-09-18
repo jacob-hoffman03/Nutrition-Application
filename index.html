@@ -23,6 +23,7 @@
 .targetline b{color:var(--ink);font-size:17px;}
 .targetline span{font-size:12px;}
 .field small{display:block;font-size:12px;color:var(--muted);margin-top:4px;}
+.ver{text-align:center;font-size:11px;color:var(--muted);margin:14px 0 4px;}
 .statuspill{border-radius:16px;padding:12px 14px 10px;margin-bottom:12px;transition:background-color .3s;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .sprow{display:flex;align-items:center;gap:12px;}
 .sptext{flex:1;min-width:0;}
@@ -351,6 +352,7 @@ header.appbar{
       <button class="ghostbtn" id="exportBtn">Export my data (JSON)</button>
       <div style="text-align:center; margin-top:6px;"><button class="danger" id="wipeBtn">Erase all data</button></div>
       <div class="hint">Everything is stored privately in this browser on your phone. Nothing is sent anywhere.</div>
+      <div class="ver" id="appVer"></div>
     </div>
   </section>
 
@@ -449,6 +451,7 @@ const ICONS = {
 };
 const MEAL_LABEL = {breakfast:"Breakfast", lunch:"Lunch", dinner:"Dinner", snacks:"Snacks"};
 const KEY = "fuel.v1";
+const APP_VERSION = "2026.09.18-f";
 
 /* ============ STATE ============ */
 const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:375, fat:83, water:10, weight:150});
@@ -792,6 +795,7 @@ function renderSettings(){
   document.getElementById("gC").value=g.carbs; document.getElementById("gF").value=g.fat;
   document.getElementById("gW").value=g.water; document.getElementById("gWt").value=g.weight;
   document.getElementById("dDays").textContent = Object.keys(S.days).length;
+  document.getElementById("appVer").textContent = "Fuel " + APP_VERSION;
   document.getElementById("dFoods").textContent = Object.values(S.days).reduce((a,d)=>a+MEALS.reduce((x,m)=>x+(d.meals[m]||[]).length,0),0);
 }
 function updateTargetLine(){
