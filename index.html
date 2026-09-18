@@ -531,15 +531,15 @@ function renderDiary(){
   if(eCal > mCal){ fsur.innerHTML = FLAGI + "+"+Math.round(eCal-mCal).toLocaleString()+" SUR"; fsur.classList.add("on"); }
   else { fsur.innerHTML = FLAGI + Math.round(mCal-eCal).toLocaleString()+" to SUR"; fsur.classList.remove("on"); }
   const pill = document.getElementById("statusPill");
-  const d = Math.round(mCal - eCal);
-  const dpct = mCal>0 ? Math.round(d/mCal*100) : 0;
+  const defc = Math.round(mCal - eCal);
+  const dpct = mCal>0 ? Math.round(defc/mCal*100) : 0;
   const pAte = Math.round(t.p||0), pGoal = g.protein||0;
   const lowP = pGoal>0 && pAte < pGoal*0.8;
   let pcls, picon, ptitle, pdet, fillc;
   if(eCal < mCal){
     pcls="deficit"; picon=ICONS.warn; fillc="#ff5c5c"; ptitle="Calorie deficit";
-    const tier = d>=500 ? "deep enough to stall muscle gain" : d>=250 ? "big enough to slow gains if it keeps up" : "small gap — closable with a snack";
-    pdet = d.toLocaleString()+" cal under maintenance ("+dpct+"%) — "+tier;
+    const tier = defc>=500 ? "deep enough to stall muscle gain" : defc>=250 ? "big enough to slow gains if it keeps up" : "small gap — closable with a snack";
+    pdet = defc.toLocaleString()+" cal under maintenance ("+dpct+"%) — "+tier;
     if(lowP) pdet += ". Protein only "+pAte+"g of "+pGoal+"g — low protein makes a deficit cost more muscle";
   }else if(eCal < tCal){
     pcls="surplus"; picon=ICONS.up; fillc="#ff9f43"; ptitle="Past maintenance";
