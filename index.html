@@ -587,6 +587,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div class="cfrow" id="htMetRow" style="display:none"><span>Height</span><span><input id="pfHtCm" type="number" inputmode="decimal" style="width:90px"> <span class="ph">cm</span></span></div>
       <div class="cfrow"><span>Weight</span><span><input id="pfWeight" type="number" inputmode="decimal" style="width:90px"> <span class="ph" id="pfWeightUnit">lb</span></span></div>
       <div class="cfrow"><span>Body fat <span class="ph">(optional)</span></span><span><input id="pfFat" type="number" inputmode="decimal" style="width:90px"> <span class="ph">%</span></span></div>
+      <div class="cfrow"><span>Waist <span class="ph">(optional)</span></span><span><input id="pfWaist" type="number" inputmode="decimal" style="width:90px"> <span class="ph" id="pfWaistUnit">in</span></span></div>
     </div>
     <div class="secttl">Activity &amp; maintenance</div>
     <div class="chips" id="pfAct">
@@ -608,9 +609,10 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <div class="rangenote" style="margin:10px 2px 2px">Goal</div>
     <div class="chips" id="goalMode">
       <button class="chip" data-m="lean" data-pct="10">Lean Bulk</button>
-      <button class="chip" data-m="bulk" data-pct="20">Bulk</button>
+      <button class="chip" data-m="bulk" data-pct="15">Bulk</button>
       <button class="chip" data-m="maintain" data-pct="0">Maintain</button>
     </div>
+    <div class="rangenote" style="margin-top:6px">Bigger surpluses add fat, not extra muscle (Helms 2023) — +5–10% is the lean-gain sweet spot.</div>
     <div class="card">
       <input type="range" id="goalSlider" min="1500" max="6000" step="25" value="3000">
       <div class="rangelabels"><span id="goalMin">1500 kcal</span><span id="goalMax">6000 kcal</span></div>
@@ -618,7 +620,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
         <button class="chip" data-p="5">+5%</button>
         <button class="chip" data-p="10">+10%</button>
         <button class="chip" data-p="15">+15%</button>
-        <button class="chip" data-p="20">+20%</button>
       </div>
     </div>
     <div class="secttl">Macros</div>
@@ -681,6 +682,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div class="bmibar"><i id="bmiMark" style="display:none"></i></div>
       <div class="bmilbls"><span>14</span><span>18.5</span><span>25</span><span>30</span><span>34</span></div>
       <div class="rangenote" id="bmiNote" style="margin-top:8px"></div>
+      <div class="rangenote" id="whtrNote" style="margin-top:6px; display:none"></div>
       <div class="statgrid" id="wtStats" style="margin-top:10px"></div>
       <div class="rangenote" id="wtContext" style="margin-top:10px"></div>
     </div>
@@ -913,7 +915,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
         <div class="cfsec">Serving unit</div>
         <div class="cfcard"><div class="chips" id="cUnitChips" style="padding:12px 0"></div></div>
         <div class="cfsec">Hydration</div>
-        <div class="cfcard"><label class="crow"><input type="checkbox" id="cXW"><span>Needs extra water<span class="chint">e.g. creatine — adds +2 glasses to your water target on days you log it</span></span></label></div>
+        <div class="cfcard"><label class="crow"><input type="checkbox" id="cXW"><span>Needs extra water<span class="chint">adds +2 glasses to your water target on days you log it — not needed for creatine (ISSN 2017)</span></span></label></div>
       </div>
       <div class="cfsec">Photo <span style="font-weight:400">(optional)</span></div>
       <div class="cfcard">
@@ -1026,7 +1028,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-be";
+const APP_VERSION = "2026.09.18-bf";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -1062,7 +1064,7 @@ document.getElementById("testFoodsRow").onclick = ()=>{
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
    new app — Jay fills them in himself. (2026.09.18-ak) */
-const defProfile = () => ({units:"imp", sex:"", age:0, heightIn:0, weightLb:0, bodyFat:0, activityKey:"", auto:false});
+const defProfile = () => ({units:"imp", sex:"", age:0, heightIn:0, weightLb:0, bodyFat:0, waistIn:0, activityKey:"", auto:false});
 const defGoals = () => ({maintenance:0, surplus:0, protein:0, carbs:0, fat:0, water:0, waterV:1, weight:0, mode:"custom", nutrTargets:{}, profile:defProfile(), muscleGoal:0, macroAuto:true});
 function load(){
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) {
@@ -1185,19 +1187,21 @@ function dayHasXW(){
   const d = S.days[viewDate()]; if(!d) return false;
   return MEALS.some(m => (d.meals[m]||[]).some(e=>e.xw));
 }
-/* Single source of truth for the auto water target: IOM 1.0–1.5 mL/kcal of
-   maintenance by activity tier, ~80% of total water from fluids (NASEM 3.7/2.7 L AI;
-   EFSA 2.5/2.0 L). Practical bump: creatine-type supplements pull ~0.5–1.0 L into
-   muscle during loading (ISSN position stand, Kreider 2017) — +2 glasses that day. */
+/* ================= ANALYTICS ENGINE — HYDRATION =================
+   Research sources (2026 refresh): IOM 2004 — adequate intake ~1.0 mL/kcal total
+   water (3.7 L men / 2.7 L women), ~80% from fluids; EFSA 2010 — 2.5 L / 2.0 L.
+   No newer AI supersedes these. The "8 glasses" rule has no scientific origin.
+   Creatine: ISSN Kreider 2017 — does NOT cause dehydration; no extra water needed
+   (the old "+2 glasses on creatine" bump is retired). */
 function waterCalc(){
   const g = S.goals;
   if(g.water>0) return {target:g.water, manual:true};
   if(!(g.maintenance>0)) return {target:0, manual:false, tdee:0, perKcal:0, xw:dayHasXW(), tier:"—", unset:true}; /* blank slate: no phantom fallback */
   const tdee = g.maintenance;
   const pal = actPAL(g.profile);
-  const perKcal = pal>=2.05 ? 1.5 : pal>=1.85 ? 1.35 : pal>=1.7 ? 1.2 : 1.0;
+  const perKcal = pal>=1.7 ? 1.2 : 1.0; /* IOM 1.0-1.5 mL/kcal; 1.2 cap for active tiers */
   const xw = dayHasXW();
-  const ml = tdee*perKcal*0.8 + (xw ? 500 : 0);
+  const ml = tdee*perKcal*0.8 + (xw ? 500 : 0); /* ~80% of water from fluids; +500 mL only for a non-creatine supplement manually flagged "needs extra water" */
   const tier = (ACT_TIERS.find(t=>t.key===(g.profile&&g.profile.activityKey))||ACT_TIERS[2]).key;
   return {target:Math.max(4, Math.min(24, Math.round(ml/240))), manual:false, tdee, perKcal, xw, tier};
 }
@@ -1670,6 +1674,12 @@ const FIBER_DV = 28; /* FDA Daily Value, g — shown for reference in the nutrie
    14 g per 1,000 kcal of the daily calorie goal (FDA Daily Value 28 g @ 2,000 kcal;
    Institute of Medicine adequate intake 14 g/1,000 kcal). Blank slate: 0 until the goal exists. */
 function fiberTarget(){ const ct = (S.goals.nutrTargets||{})["Fiber"]; if(ct && ct.val>0) return ct.val; const tot = goalTotal(); return tot>0 ? Math.round(14*tot/1000) : 0; }
+/* ================= ANALYTICS ENGINE — MICRONUTRIENTS =================
+   Research sources (2026 refresh): fiber 14 g/1,000 kcal (IOM, still current);
+   FDA Daily Values are label values (2016 table), not personalized goals.
+   Potassium: NASEM 2019 adequate intake 3,400 mg/d men / 2,600 mg/d women —
+   the label DV is still 4,700 mg (set from the older AI), shown for reference. */
+function potassiumTarget(){ const ct = (S.goals.nutrTargets||{})["Potassium"]; if(ct && ct.val>0) return ct.val; return S.goals.profile.sex==="f" ? 2600 : 3400; }
 function fiberTotal(k){
   const d = S.days[k]; let f = 0;
   if(d) MEALS.forEach(m=>(d.meals[m]||[]).forEach(e=>(e.nutrs||[]).forEach(x=>{
@@ -1698,6 +1708,7 @@ function dayNutrients(k){
     } else if(v.cls==="wt" && dv){
       unit = dv.unit; val = v.base/(WT2MG[unit]||1);
       if(v.disp==="Fiber"){ target = fiberTarget(); pct = target>0 ? val/target*100 : 0; } /* research auto-target, not zero */
+      else if(v.disp==="Potassium"){ target = potassiumTarget(); pct = target>0 ? val/target*100 : 0; } /* NASEM 2019 AI goal; label DV 4,700 mg shown for reference */
       else { target = 0; pct = 0; } /* blank slate: goal is zero until he sets his own */
     } else if(v.cls==="iu" && dv && dv.iu){
       unit = "IU"; val = v.base; target = 0; pct = 0;
@@ -1726,7 +1737,7 @@ function paintNutrients(k){
     box.querySelectorAll(".nrow").forEach(el=>el.onclick=()=>openNSheet(el.dataset.n));
   }
   document.getElementById("nutrNote").textContent = rows.length
-    ? "Combined from everything logged today. Tap a nutrient to set your own daily target — all targets start at zero, except fiber which auto-follows 14 g per 1,000 kcal of your calorie goal."
+    ? "Combined from everything logged today. Tap a nutrient to set your own daily target — all targets start at zero, except fiber (auto: 14 g per 1,000 kcal of your goal) and potassium (auto: NASEM 2019 adequate intake, 3,400 mg)."
     : "";
 }
 
@@ -1740,8 +1751,9 @@ function openNSheet(disp){
   document.getElementById("nToday").textContent = r1(r.val)+" "+r.unit;
   document.getElementById("nDV").textContent = r.custom ? r1(r.target)+" "+r.unit+" (yours)"
     : (nKey==="Fiber" ? "Auto: "+r1(fiberTarget())+" "+r.unit+" · 14 g per 1,000 kcal of your "+goalTotal().toLocaleString()+" kcal goal"
-      : "0 "+r.unit+(r.dvRef ? " · FDA Daily Value "+r1(r.dvRef.dv)+" "+r.dvRef.unit+" for reference" : ""));
-  document.getElementById("nClear").textContent = nKey==="Fiber" ? "Back to auto target" : "Use FDA default instead";
+      : (nKey==="Potassium" ? "Goal: "+r1(potassiumTarget())+" "+r.unit+" · NASEM 2019 adequate intake (label DV 4,700 mg for reference)"
+      : "0 "+r.unit+(r.dvRef ? " · FDA Daily Value "+r1(r.dvRef.dv)+" "+r.dvRef.unit+" for reference" : "")));
+  document.getElementById("nClear").textContent = nKey==="Fiber" ? "Back to auto target" : (nKey==="Potassium" ? "Back to AI goal" : "Use FDA default instead");
   const ct = (S.goals.nutrTargets||{})[disp];
   const nt = document.getElementById("nTarget");
   nt.value = ct ? ct.val : "";
@@ -2164,9 +2176,6 @@ function servingGrams(sTxt){
   return per ? parseFloat(m[1])*per : null;
 }
 document.getElementById("cNutrAdd").onclick = addNutrRow;
-document.getElementById("cName").addEventListener("input", e=>{
-  if(cKind==="supp" && /creatine/i.test(e.target.value)) document.getElementById("cXW").checked = true;
-});
 
 /* ============ PROGRESS TAB ============ */
 function last7(){
@@ -2192,7 +2201,7 @@ function streak(){
 function targetRateBand(){
   const m = S.goals.mode, w = S.goals.profile.weightLb>0 ? S.goals.profile.weightLb : 150;
   if(m==="lean") return [0.25, 0.5];
-  if(m==="bulk") return [0.35, 0.7];
+  if(m==="bulk") return [0.3, 0.6];
   if(m==="maintain") return [-0.15, 0.15];
   const s = S.goals.surplus>0 ? S.goals.surplus : 0;
   const r = s*7/3500/w*100;
@@ -2251,6 +2260,10 @@ function paintWtGoal(){
     (toGo===0 ? `<div class="rangenote" style="margin-top:6px">Goal reached — set a new one to keep going.</div>`
               : `<div class="rangenote" style="margin-top:6px">${justStarted ? "Starting point set — log weigh-ins and this bar tracks your run at the "+d1(g)+" "+wu+" goal." : "Pace from your weigh-ins"+eta+". Daily weight swings ±1–2%, so 2+ weeks smooths the noise."}</div>`);
 }
+/* ================= ANALYTICS ENGINE — BODY METRICS =================
+   Research sources (2026 refresh): BMI WHO 2006 cutoffs (screening, not diagnosis —
+   cannot separate muscle from fat); waist-to-height ratio NICE NG246 2022
+   (<0.5 lower, 0.5-0.59 increased, 0.6+ high central-adiposity risk). */
 function paintWtAnalysis(){
   const p = S.goals.profile||{}, hIn = p.heightIn>0 ? p.heightIn : 0, w = curBodyWeight();
   const bv = document.getElementById("bmiVal"), pill = document.getElementById("bmiPill"),
@@ -2295,6 +2308,12 @@ function paintWtAnalysis(){
   else if(bmi<30) c = "BMI 25–29.9 is classified as overweight (WHO/CDC). For lifters this often overstates fat — waist and body-fat % tell the truer story.";
   else c = "BMI 30+ is classified as obese (WHO/CDC). BMI is a screening tool, not a diagnosis — body-fat % and waist give the fuller picture.";
   ctx.textContent = c;
+  /* Waist-to-height ratio (NICE 2022): <0.5 lower central-adiposity risk, 0.5-0.59 increased, 0.6+ high. Needs waist + height in Goals › Profile. */
+  const wn = document.getElementById("whtrNote"), waist = (S.goals.profile||{}).waistIn>0 ? S.goals.profile.waistIn : 0;
+  if(waist>0 && hIn>0){
+    const r = waist/hIn, zone = r<0.5 ? "lower central-adiposity risk" : r<0.6 ? "increased central-adiposity risk" : "high central-adiposity risk";
+    wn.style.display = ""; wn.textContent = "Waist-to-height ratio "+r.toFixed(2)+" ("+zone+", NICE 2022 — keep waist under half your height).";
+  } else { wn.style.display = "none"; wn.textContent = ""; }
 }
 function paintCalCheck(){
   const out = document.getElementById("calCheckOut"), wrap = document.getElementById("calCheckApply"), btn = document.getElementById("calApplyBtn");
@@ -2412,22 +2431,33 @@ document.getElementById("wtGoalBtn").onclick = ()=>{
 
 /* ============ GOALS VIEW ============ */
 function goalTotal(){ return (S.goals.maintenance>0?S.goals.maintenance:0) + (S.goals.surplus>0?S.goals.surplus:0); }
-/* Auto macros: derived from the calorie goal whenever it changes, so Jay never has
-   to type them. Protein 2.2 g/kg (top of the Morton 2018 research range = 1 g/lb),
-   fat 25% of goal calories, carbs fill the rest. Typing any macro switches to manual. */
+/* ================= ANALYTICS ENGINE — MACROS =================
+   Research sources (2026 refresh): protein 1.6-2.2 g/kg/d for muscle gain
+   (Morton 2018 meta-analysis: breakpoint 1.62; ISSN 2017: 1.4-2.0) — auto default
+   2.0 g/kg. No per-meal "30 g max" (Trommelen 2023: no upper limit in 12 h);
+   practical guidance is 0.3-0.4 g/kg across 3-5 meals. Fat 20-35% of energy (AMDR,
+   still current); carbs fill the rest (~3-6 g/kg for lifters). Typing any macro
+   switches to manual. */
 function deriveMacros(){
   const tot = goalTotal();
   if(!(tot>0)){ S.goals.protein=0; S.goals.carbs=0; S.goals.fat=0; return; }
   const wKg = (S.goals.profile.weightLb>0 ? S.goals.profile.weightLb : 150)/2.20462;
-  S.goals.protein = Math.round(wKg*2.2);
+  S.goals.protein = Math.round(wKg*2.0);
   S.goals.fat = Math.max(0, Math.round(tot*0.25/9));
   S.goals.carbs = Math.max(0, Math.round((tot - S.goals.protein*4 - S.goals.fat*9)/4));
 }
 function autoDeriveMacros(){ if(S.goals.macroAuto!==false) deriveMacros(); }
-/* Katch-McArdle (body fat known) or Mifflin-St Jeor x FAO activity factor = maintenance.
-   The old 1.2-1.9 ladder is a pre-doubly-labelled-water legacy that underestimates active
-   people; FAO/WHO/UNU 2004 bands (1.40-1.69 light, 1.70-1.99 moderate, 2.00-2.40 vigorous)
-   are the DLW-calibrated standard. */
+/* ================= ANALYTICS ENGINE — ENERGY =================
+   Research sources (2026 refresh: old vs new evidence review):
+   - BMR default: Mifflin-St Jeor 1990 — best-validated classic in healthy adults
+     (men: 9.99xW + 6.25xH - 4.92xA + 5; women: -161). Typical individual error ±10-15%.
+   - BMR with body fat: Cunningham 1991 (500 + 22xFFM) — preferred for lean lifters
+     over Katch-McArdle (370 + 21.6xFFM).
+   - Activity: FAO/WHO/UNU 2004 PAL bands (doubly-labelled-water calibrated).
+     The legacy 1.2-1.9 ladder understates active people.
+   - Pontzer 2021 (Science): TEE is flat from age 20-60 — no age penalty applied here.
+   - Pontzer 2016 (Curr Biol): constrained expenditure — multipliers can overstate
+     TEE at very high activity; the Calorie Check feedback loop corrects this. */
 const ACT_TIERS = [
   {key:"sedentary", pal:1.45},
   {key:"light", pal:1.60},
@@ -2436,16 +2466,16 @@ const ACT_TIERS = [
   {key:"very", pal:2.10}
 ];
 const actPAL = p => (ACT_TIERS.find(t=>t.key===(p&&p.activityKey))||ACT_TIERS[2]).pal;
-const MODE_PCT = {lean:10, bulk:20, maintain:0};
+const MODE_PCT = {lean:10, bulk:15, maintain:0}; /* Helms 2023: bigger surpluses add fat, not muscle — bulk capped at +15% */
 function calcMaintenance(){
   const p = S.goals.profile;
   const kg = p.weightLb/2.20462;
   let bmr, formula;
   if(p.bodyFat>0){
-    bmr = 370 + 21.6*(kg*(1-p.bodyFat/100));
-    formula = "Katch-McArdle";
+    bmr = 500 + 22*(kg*(1-p.bodyFat/100));
+    formula = "Cunningham";
   } else {
-    bmr = 10*kg + 6.25*(p.heightIn*2.54) - 5*p.age + (p.sex==="f" ? -161 : 5);
+    bmr = 9.99*kg + 6.25*(p.heightIn*2.54) - 4.92*p.age + (p.sex==="f" ? -161 : 5);
     formula = "Mifflin-St Jeor";
   }
   return {bmr: Math.round(bmr), maint: Math.round(bmr*actPAL(p)), formula};
@@ -2455,6 +2485,12 @@ function applyModePct(){
   const pct = MODE_PCT[S.goals.mode];
   if(pct!==undefined && S.goals.maintenance>0) S.goals.surplus = Math.round(S.goals.maintenance*pct/100);
 }
+/* ================= ANALYTICS ENGINE — WEIGHT DYNAMICS =================
+   Research sources (2026 refresh): Hall 2011 (dynamic energy balance — the
+   3,500 kcal/lb rule is a first-week heuristic that overstates long-term change);
+   target gain 0.25-0.5% body weight/week for lean bulks (Helms 2023). The
+   Calorie Check below (Hall 2014 model-based feedback) keeps projections honest
+   by comparing expected vs observed weigh-in trends. */
 function paintGainProj(){
   const s = S.goals.surplus>0 ? S.goals.surplus : 0;
   const el = document.getElementById("gainProj");
@@ -2462,7 +2498,7 @@ function paintGainProj(){
   const w = S.goals.profile.weightLb>0 ? S.goals.profile.weightLb : 150;
   const lbWk = s*7/3500; /* 3500 kcal/lb: rough first-week heuristic, overestimates over time */
   const wu = wUnit();
-  el.textContent = "≈ +"+wDisp(lbWk).toFixed(2)+" "+wu+"/week ("+(lbWk/w*100).toFixed(2)+"% of body weight) at this surplus — rough estimate; your weigh-ins are the real answer";
+  el.textContent = "≈ +"+wDisp(lbWk).toFixed(2)+" "+wu+"/week ("+(lbWk/w*100).toFixed(2)+"% of body weight) at this surplus — first-week estimate only; gains slow as you grow (Hall 2011). Your weigh-ins are the real answer";
 }
 function paintMaintNote(){
   const p = S.goals.profile;
@@ -2489,6 +2525,9 @@ function readProfile(){
   }
   const f = parseFloat(document.getElementById("pfFat").value);
   p.bodyFat = (f>=0 && f<=70) ? f : 0;
+  const wst = parseFloat(document.getElementById("pfWaist").value);
+  if(met) p.waistIn = (wst>40 && wst<200) ? wst/2.54 : 0; /* cm → in */
+  else p.waistIn = (wst>15 && wst<80) ? wst : 0;
 }
 /* Commit every typed value on the Goals page into S.goals (memory; callers save).
    Called before ANY re-render and on every field change, so a tap can never
@@ -2518,6 +2557,8 @@ function renderProfile(){
   document.getElementById("pfWeight").value = met ? (p.weightLb/2.20462).toFixed(1) : Math.round(p.weightLb*10)/10;
   document.getElementById("pfWeightUnit").textContent = met?"kg":"lb";
   document.getElementById("pfFat").value = p.bodyFat>0 ? p.bodyFat : "";
+  document.getElementById("pfWaist").value = p.waistIn>0 ? (met ? Math.round(p.waistIn*2.54*10)/10 : Math.round(p.waistIn*10)/10) : "";
+  document.getElementById("pfWaistUnit").textContent = met?"cm":"in";
   document.querySelectorAll("#pfAct .chip").forEach(c=>c.classList.toggle("sel", c.dataset.k===p.activityKey));
   const at = document.getElementById("pfAuto");
   at.textContent = p.auto?"On":"Off"; at.classList.toggle("sel", !!p.auto);
@@ -2572,8 +2613,8 @@ function infoContent(k){
      <div class="irow"><b>Maintain (+0%):</b> eat at maintenance to hold your weight steady.</div>
      <div class="irow">Adjusting the slider changes your surplus on top of maintenance. Surplus presets are % of maintenance — research supports <b>5–20%</b> for lean gains.</div>`};
   if(k==="macros") return {t:"Macros", b:
-    `<div class="irow"><b>Protein:</b> muscle gains top out near <b>1.6 g/kg/day</b> (Morton 2018 meta-analysis); up to <b>2.2 g/kg</b> (1 g/lb) is the supported ceiling.</div>
-     <div class="irow"><b>Auto:</b> protein 2.2 g/kg of body weight, fat 25% of your calorie goal, carbs fill the rest — re-derived every time your goal changes. Typing a number switches to manual; tap Auto to re-sync.</div>`};
+    `<div class="irow"><b>Protein:</b> muscle gains top out near <b>1.6 g/kg/day</b> (Morton 2018 meta-analysis); up to <b>2.2 g/kg</b> (1 g/lb) is the supported ceiling. No per-meal maximum — large protein meals are still used (Trommelen 2023); spread 0.3–0.4 g/kg across 3–5 meals.</div>
+     <div class="irow"><b>Auto:</b> protein 2.0 g/kg of body weight, fat 25% of your calorie goal, carbs fill the rest — re-derived every time your goal changes. Typing a number switches to manual; tap Auto to re-sync.</div>`};
   if(k==="water"){
     const w = waterCalc();
     if(w.unset) return {t:"Water target", b:
@@ -2582,11 +2623,11 @@ function infoContent(k){
     const pk = w.perKcal.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
     return {t:"Water target", b:
     `<div class="irow"><b>Auto</b> builds your target from maintenance: <b>${w.target*8} oz (${w.target} glasses)</b> = ${Math.round(w.tdee).toLocaleString()} kcal × ${w.tier} activity at ${pk} mL/kcal.</div>
-     <div class="irow">The formula follows the <b>IOM</b> guideline of ~1.0–1.5 mL per kcal of energy expenditure, with ~80% of total water assumed to come from fluids (NASEM AI: 3.7 L men / 2.7 L women; EFSA: 2.5 L / 2.0 L).</div>
-     <div class="irow"><b>+16 oz</b> on days you log a creatine-type supplement — creatine pulls ~0.5–1.0 L into muscle (Kreider 2017, ISSN) and extra water keeps that covered.</div>`};
+     <div class="irow">The formula follows the <b>IOM</b> guideline of ~1.0–1.2 mL per kcal of energy expenditure, with ~80% of total water assumed to come from fluids (IOM AI: 3.7 L men / 2.7 L women; EFSA: 2.5 L / 2.0 L).</div>
+     <div class="irow"><b>Creatine:</b> no extra water needed — controlled trials show creatine does <b>not</b> cause dehydration (ISSN, Kreider 2017). The "needs extra water" toggle is for other supplements (e.g. fiber).</div>`};
   }
   if(k==="advanced") return {t:"Advanced", b:
-    `<div class="irow"><b>Auto-adjust as I gain weight:</b> when you log a new weight in Progress, Fuel recalculates maintenance and re-derives your macros (protein 2.2 g/kg, fat 25%, carbs fill the rest) — unless you've switched macros to manual. Turn it off to control everything manually.</div>
+    `<div class="irow"><b>Auto-adjust as I gain weight:</b> when you log a new weight in Progress, Fuel recalculates maintenance and re-derives your macros (protein 2.0 g/kg, fat 25%, carbs fill the rest) — unless you've switched macros to manual. Turn it off to control everything manually.</div>
      <div class="irow"><b>Auto-tune maintenance:</b> when 2+ weeks of weigh-ins show your real gain rate missing the target band, Fuel nudges maintenance ±150 kcal — max once per 2 weeks.</div>
      <div class="irow">The formulas are only ±10% accurate — your weigh-in trend is the calibration instrument.</div>`};
   if(k==="scores") return {t:"Energy & bloat", b: scoreInfoHTML()};
@@ -2826,7 +2867,7 @@ function waterBreakdown(){
   const w = waterCalc();
   if(w.manual) return "Manual target of "+(w.target*8)+" oz ("+w.target+" glasses). Switch to Auto for the research-based formula.";
   if(w.unset) return "Auto needs your maintenance first — set your profile in Goals › Profile, then tap Calculate maintenance.";
-  return "Auto: "+(w.target*8)+" oz ("+w.target+" glasses) from "+Math.round(w.tdee).toLocaleString()+" kcal maintenance × "+w.tier+" activity"+(w.xw?" — +16 oz for a creatine-type supplement logged today":" — +16 oz on days you log a creatine-type supplement")+".";
+  return "Auto: "+(w.target*8)+" oz ("+w.target+" glasses) from "+Math.round(w.tdee).toLocaleString()+" kcal maintenance × "+w.tier+" activity (1.0–1.2 mL/kcal, IOM 2004)"+(w.xw?" — +16 oz for a supplement you flagged 'needs extra water'.":" — creatine needs no extra water (ISSN 2017).")+".";
 }
 function paintWater(){
   const g = S.goals;
