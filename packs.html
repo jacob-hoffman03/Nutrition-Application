@@ -83,7 +83,7 @@ main{padding:14px;}
 </div>
 <main>
   <section id="viewShop">
-    <div class="secttl">Fuel pack · 100 pts</div>
+    <div class="secttl">Fuel pack · 5 pts</div>
     <div class="packstage"><div class="pack"><div class="foil"></div><div class="pq">?</div><div class="pl">FUEL PACK</div></div></div>
     <div class="odds">
       <span style="color:#8a8a94">Common 60%</span>
@@ -92,7 +92,7 @@ main{padding:14px;}
       <span style="color:#d99a00">Legendary 4%</span>
     </div>
     <button class="bigbtn" id="openBtn">Open Pack · 100 PTS</button>
-    <div class="hintline">Earn points from daily medals in Fuel:<br>Silver +10 · Gold +25 · Diamond +50</div>
+    <div class="hintline">Earn points from daily medals in Fuel:<br>Silver +2 · Gold +3 · Diamond +5</div>
     <div class="secttl">How it works</div>
     <div class="hintline" style="text-align:left">Every card's pixel art is generated from blocks the moment you pull it — no two pulls look alike. Epic and Legendary cards get animated holo glint; Legendaries get sparkle bling. Pulls are numbered in the order you open them.</div>
   </section>
@@ -127,7 +127,7 @@ main{padding:14px;}
 <script>
 "use strict";
 const KEY = "fuel.v1";
-const PACK_PRICE = 100;
+const PACK_PRICE = 5;
 /* ---- storage: shares Fuel's localStorage key; never invents a fresh state ---- */
 function readState(){ try{ const s = JSON.parse(localStorage.getItem(KEY)); return (s && s.goals) ? s : null; }catch(e){ return null; } }
 function writeState(s){ try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
