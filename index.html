@@ -202,6 +202,14 @@ button{font-family:inherit;}
 #totemWrap .totemflash{position:absolute; inset:0; background:radial-gradient(circle at 50% 46%, rgba(255,255,255,.9), rgba(255,255,255,0) 62%);}
 .totemmedal svg{width:min(46vw,230px); height:auto; display:block; filter:drop-shadow(0 0 26px rgba(255,255,255,.95)) drop-shadow(0 10px 34px rgba(0,0,0,.28));}
 .totemname{font-size:24px; font-weight:900; letter-spacing:3px; text-shadow:0 0 16px #fff, 0 2px 10px rgba(0,0,0,.4);}
+.totempts{font-size:15px; font-weight:800; letter-spacing:2px; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.45);}
+.packshop{display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit;}
+.packshop .pkico{width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#5b5bf0,#9a6bff); display:flex; align-items:center; justify-content:center; flex:none;}
+.packshop .pkico svg{width:26px; height:26px;}
+.packshop .pkmeta{flex:1; display:flex; flex-direction:column;}
+.packshop .pkmeta b{font-size:15px;}
+.packshop .pkmeta i{font-style:normal; font-size:12px; color:var(--muted); font-weight:700;}
+.packshop .pkchev{font-size:22px; color:var(--muted); font-weight:700;}
 @keyframes totemPop{0%{transform:scale(.12) rotate(-10deg); opacity:0;}16%{transform:scale(1.14) rotate(2.5deg); opacity:1;}30%{transform:scale(1) rotate(0);}70%{transform:scale(1); opacity:1;}100%{transform:scale(1.5); opacity:0;}}
 @keyframes totemLife{0%{opacity:0;}10%{opacity:1;}70%{opacity:1;}100%{opacity:0;}}
 .prow{display:flex; align-items:center; gap:14px;}
@@ -772,6 +780,11 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div class="medals" id="sMedals"></div>
       <div class="rangenote" id="medalHint" style="margin-top:10px"></div>
     </div>
+    <a class="card packshop" href="packs.html">
+      <span class="pkico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M6 8h12M12 3v5"/><circle cx="12" cy="14.5" r="2.2"/></svg></span>
+      <span class="pkmeta"><b>Pack Shop</b><i id="packPtsLine">0 pts</i></span>
+      <span class="pkchev">›</span>
+    </a>
     <input type="file" id="pPhotoFile" accept="image/*" style="display:none">
     <input type="file" id="progPhotoFile" accept="image/*" style="display:none">
     <div class="card" style="padding-top:4px; padding-bottom:4px; margin-top:12px;">
@@ -1010,6 +1023,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
   <div class="toteminner">
     <div class="totemmedal" id="totemMedal"></div>
     <div class="totemname" id="totemName"></div>
+    <div class="totempts" id="totemPts"></div>
   </div>
 </div>
 <script>
@@ -1037,7 +1051,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-at";
+const APP_VERSION = "2026.09.18-au";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2423,13 +2437,15 @@ function openInfo(k){
   document.getElementById("infoSheet").classList.add("open");
 }
 /* Minecraft-totem style medal celebration: the medal pops big in the center of the
-   screen for a moment, then fades. Only fires for medals earned after this shipped. */
-function totemPop(md){
+   screen for a moment, then fades. Medals also pay pack points for the Pack Shop. */
+const PTS = {silver:10, gold:25, diamond:50};
+function totemPop(md, pts){
   const wrap = document.getElementById("totemWrap");
   document.getElementById("totemMedal").innerHTML = medalSVG(md.color, true);
   const nm = document.getElementById("totemName");
   nm.textContent = md.name.toUpperCase()+"!";
   nm.style.color = md.color;
+  document.getElementById("totemPts").textContent = "+"+pts+" PTS";
   wrap.classList.remove("show");
   void wrap.offsetWidth;
   wrap.classList.add("show");
@@ -2448,8 +2464,10 @@ function celebrateMedals(){
   const fresh = MEDAL_DEFS.filter(md=>m[md.id] && seen.indexOf(md.id)<0);
   if(!fresh.length) return;
   fresh.forEach(md=>seen.push(md.id));
+  const pts = fresh.reduce((a,md)=>a+(PTS[md.id]||0),0);
+  S.packPoints = (S.packPoints||0)+pts;
   save();
-  fresh.forEach((md,i)=>setTimeout(()=>totemPop(md), i*1800));
+  fresh.forEach((md,i)=>setTimeout(()=>totemPop(md, PTS[md.id]||0), i*1800));
 }
 document.getElementById("infoScrim").onclick = ()=>document.getElementById("infoSheet").classList.remove("open");
 document.getElementById("infoX").onclick = ()=>document.getElementById("infoSheet").classList.remove("open");
@@ -2891,6 +2909,7 @@ function renderProfileCard(){
   document.getElementById("medalHint").textContent = n===3 ? "All three earned today. Huge day." :
     n===0 ? "Log your first meal to earn Silver." :
     "Tap a medal to see what each one takes.";
+  document.getElementById("packPtsLine").textContent = (S.packPoints||0)+" pts";
   paintScoreWheel();
   renderPhotoStrip();
 }
