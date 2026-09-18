@@ -147,6 +147,29 @@ button{font-family:inherit;}
 .infbody{padding:2px 18px 24px; font-size:14.5px; line-height:1.65; color:#3a3a42;}
 .infbody b{color:var(--ink);}
 .infbody .irow{margin-bottom:10px;}
+/* training calendar */
+.calhead{display:flex; align-items:center; justify-content:space-between; padding:4px 2px 8px;}
+.calhead b{font-size:17px; font-weight:800;}
+.calgrid{display:grid; grid-template-columns:repeat(7,1fr); gap:2px;}
+.caldow{font-size:11px; color:var(--muted); font-weight:700; text-align:center; padding:6px 0;}
+.calday{aspect-ratio:.92; border:none; background:none; border-radius:12px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:4px; font-size:14px; font-weight:600; color:var(--ink); cursor:pointer; padding:0;}
+.calday:active{background:var(--card);}
+.calday.dim{color:#c9c9d4;}
+.calday .cdn{width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%;}
+.calday .cdn.today{background:var(--acc-soft); color:var(--acc); font-weight:800;}
+.cdot{width:7px; height:7px; border-radius:50%; display:inline-block; flex:none;}
+.cdot.rec{background:#34c759; width:6px; height:6px;}
+.cdot.rec.pri{background:#1f9d44; width:9px; height:9px; box-shadow:0 0 0 2.5px #d2f0da;}
+.callegend{display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:12px; font-size:12px; color:var(--muted); font-weight:600;}
+.callegend .leg{display:flex; align-items:center; gap:6px;}
+.schedrow{margin:12px 0 4px;}
+.schedrow .flabel{margin-bottom:8px;}
+.schedcustom{width:100%; margin-top:8px; border:1.5px solid var(--line); border-radius:12px; padding:10px 12px; font-size:14px; font-weight:600; color:var(--ink); outline:none;}
+.schedcustom::placeholder{color:#b9b9c4;}
+.dayline{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+.spd{width:12px; height:12px; border-radius:50%; flex:none;}
+.daybtn{width:100%; margin-top:4px;}
 /* add-food: reference-style rows */
 .arow2{display:flex; align-items:center; gap:14px; padding:13px 2px; border-bottom:1px solid var(--line); cursor:pointer;}
 .athumb{width:56px; height:56px; border-radius:16px; background:var(--card2); flex:none; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:26px; color:var(--muted);}
@@ -358,7 +381,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <button class="tbtn" id="dayPrev" aria-label="Previous day">‹</button>
       <h1 id="dayTitle">Today</h1>
       <div class="ticons">
-        <button id="calBtn" aria-label="Go to today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button>
+        <button id="calBtn" aria-label="Training calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button>
         <button id="gearBtn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       </div>
     </div>
@@ -597,6 +620,26 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     </div>
   </section>
 
+  <!-- CALENDAR -->
+  <section class="view" id="view-calendar">
+    <div class="topbar">
+      <button class="tbtn" id="calBack" aria-label="Back">‹</button>
+      <h1>Training</h1>
+      <div style="width:44px"></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="calhead">
+        <button class="tbtn" id="calPrev" aria-label="Previous month">‹</button>
+        <b id="calTitle"></b>
+        <button class="tbtn" id="calNext" aria-label="Next month">›</button>
+      </div>
+      <div class="calgrid" id="calGrid"></div>
+      <div class="callegend" id="calLegend"></div>
+    </div>
+    <button class="bigbtn" id="schedBtn" style="margin-top:12px">Set training schedule</button>
+    <div class="rangenote" id="calHint" style="margin:10px 2px 0"></div>
+  </section>
+
   <!-- SETTINGS -->
   <section class="view" id="view-settings">
     <div class="topbar">
@@ -645,6 +688,31 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <button class="xbtn" id="infoX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
     <div class="infttl" id="infoTitle"></div>
     <div class="infbody" id="infoBody"></div>
+  </div>
+</div>
+
+<!-- TRAINING SCHEDULE SHEET -->
+<div class="sheet" id="schedSheet">
+  <div class="scrim" id="schedScrim"></div>
+  <div class="panel" style="padding-bottom:8px">
+    <button class="xbtn" id="schedX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    <div class="infttl">Training schedule</div>
+    <div class="infbody">
+      <div class="flabel">Training days</div>
+      <div class="chips" id="schedDays"></div>
+      <div id="schedRows"></div>
+      <button class="bigbtn" id="schedSave" style="margin-top:14px">Save schedule</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALENDAR DAY SHEET -->
+<div class="sheet" id="daySheet">
+  <div class="scrim" id="dayScrim"></div>
+  <div class="panel" style="padding-bottom:8px">
+    <button class="xbtn" id="dayX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    <div class="infttl" id="dayTitle"></div>
+    <div class="infbody" id="dayBody"></div>
   </div>
 </div>
 
@@ -812,7 +880,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-aa";
+const APP_VERSION = "2026.09.18-ab";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
@@ -820,8 +888,8 @@ const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:413, 
 function load(){
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; if(!(s.goals.surplus>0)){ const d=(s.goals.cal>0?s.goals.cal:3000)-s.goals.maintenance; s.goals.surplus = d>0?Math.round(d):300; } delete s.goals.cal; if(!s.goals.profile) s.goals.profile = defProfile(); else { const dp = defProfile(); for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; }
 /* migrate legacy numeric activity factor to FAO tier key */
-if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); return s; } } catch(e){}
-  return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals()};
+if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); if(!s.training) s.training = {sched:{}, done:{}}; return s; } } catch(e){}
+  return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}}};
 }
 let S = load();
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
@@ -1840,6 +1908,151 @@ function openGsec(name){
     if(t===name) s.classList.remove("closed");
   });
 }
+/* ============ TRAINING CALENDAR ============ */
+const SPLITS = ["Push","Pull","Legs","Upper","Lower","Full Body","Cardio"];
+const SPLIT_COLORS = {Push:"#5b5bf0", Pull:"#12cfae", Legs:"#f27a1a", Upper:"#7e7ef2", Lower:"#fb6f84", "Full Body":"#a78bfa", Cardio:"#3b82f6"};
+const splitColor = s => SPLIT_COLORS[s] || "#8a8a98";
+const WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+function trainDay(ds){
+  const t = S.training || (S.training = {sched:{}, done:{}});
+  const wd = new Date(ds+"T12:00:00").getDay();
+  const dn = t.done[ds];
+  if(dn) return {train:true, split:dn.split, done:true};
+  const plan = t.sched[wd];
+  if(plan) return {train:true, split:plan.split, done:false};
+  return {train:false};
+}
+/* consecutive training days ending the day before ds — drives priority-recovery detection */
+function trainStreakBefore(ds){
+  let n = 0; const d = new Date(ds+"T12:00:00");
+  for(let i=0;i<60;i++){ d.setDate(d.getDate()-1); if(trainDay(dstr(d)).train) n++; else break; }
+  return n;
+}
+let calY = null, calM = null;
+function renderCalendar(){
+  const now = new Date();
+  if(calY===null){ calY = now.getFullYear(); calM = now.getMonth(); }
+  document.getElementById("calTitle").textContent =
+    new Date(calY, calM, 1).toLocaleString("en-US",{month:"long", year:"numeric"});
+  const g = document.getElementById("calGrid");
+  const todayS = todayStr();
+  let h = WD.map(w=>`<div class="caldow">${w}</div>`).join("");
+  const first = new Date(calY, calM, 1).getDay();
+  const dim = new Date(calY, calM+1, 0).getDate();
+  const prevDim = new Date(calY, calM, 0).getDate();
+  const cells = [];
+  for(let i=first-1;i>=0;i--) cells.push(new Date(calY, calM-1, prevDim-i));
+  for(let d=1;d<=dim;d++) cells.push(new Date(calY, calM, d));
+  while(cells.length%7){ const l = cells[cells.length-1]; cells.push(new Date(l.getFullYear(), l.getMonth(), l.getDate()+1)); }
+  cells.forEach(cd=>{
+    const ds = dstr(cd), td = trainDay(ds);
+    const inMonth = cd.getMonth()===calM;
+    let dot;
+    if(td.train) dot = `<span class="cdot" style="background:${splitColor(td.split)}${td.done?"":";opacity:.35"}"></span>`;
+    else { const st = trainStreakBefore(ds); dot = `<span class="cdot rec${st>=3?" pri":""}"></span>`; }
+    h += `<button class="calday${inMonth?"":" dim"}" data-ds="${ds}"><span class="cdn${ds===todayS?" today":""}">${cd.getDate()}</span>${dot}</button>`;
+  });
+  g.innerHTML = h;
+  g.querySelectorAll(".calday").forEach(b=>b.onclick=()=>openDaySheet(b.dataset.ds));
+  const used = {};
+  Object.values(S.training.sched).forEach(p=>{ if(p) used[p.split] = 1; });
+  Object.values(S.training.done).forEach(dn=>{ used[dn.split] = 1; });
+  document.getElementById("calLegend").innerHTML =
+    Object.keys(used).map(s=>`<span class="leg"><span class="cdot" style="background:${splitColor(s)}"></span>${s}</span>`).join("")+
+    `<span class="leg"><span class="cdot rec"></span>Recovery</span><span class="leg"><span class="cdot rec pri"></span>Priority recovery</span>`;
+  const sched = S.training.sched, nDays = Object.keys(sched).length;
+  const hint = document.getElementById("calHint");
+  if(!nDays){ hint.textContent = "Set your training schedule to see workout and recovery days on the calendar."; return; }
+  let best = {n:0, s:null, e:null}, cur = 0, cs = null;
+  for(let d=1;d<=dim;d++){
+    const ds = dstr(new Date(calY, calM, d));
+    if(trainDay(ds).train){ if(!cur) cs = ds; cur++; }
+    else { if(cur>best.n) best = {n:cur, s:cs, e:dstr(new Date(calY, calM, d-1))}; cur = 0; }
+  }
+  if(cur>best.n) best = {n:cur, s:cs, e:dstr(new Date(calY, calM, dim))};
+  hint.textContent = best.n>=2
+    ? "Longest training stretch this month: "+best.n+" days"+(best.n>=3?" — the rest day after a 3+ day stretch is marked as a priority recovery day":"")+"."
+    : "Recovery days are green. Train 3+ days in a row and the rest day after gets flagged as priority recovery.";
+}
+document.getElementById("calPrev").onclick = ()=>{ calM--; if(calM<0){calM=11;calY--;} renderCalendar(); };
+document.getElementById("calNext").onclick = ()=>{ calM++; if(calM>11){calM=0;calY++;} renderCalendar(); };
+document.getElementById("calBack").onclick = ()=>showView("diary");
+/* ---- day detail sheet ---- */
+function openDaySheet(ds){
+  const d = new Date(ds+"T12:00:00");
+  document.getElementById("dayTitle").textContent = d.toLocaleString("en-US",{weekday:"long", month:"short", day:"numeric"});
+  paintDayBody(ds);
+  document.getElementById("daySheet").classList.add("open");
+}
+function paintDayBody(ds){
+  const td = trainDay(ds), t = totals(ds), goal = goalTotal();
+  let h = "";
+  if(td.train){
+    h += `<div class="dayline"><span class="spd" style="background:${splitColor(td.split)}"></span><b style="font-size:16px">${td.split}</b><span style="color:var(--muted); font-size:13px">${td.done?"· trained":"· planned"}</span></div>`;
+    h += `<button class="bigbtn daybtn" id="dayTrainBtn">${td.done?"Undo trained":"Mark trained"}</button>`;
+  } else {
+    const st = trainStreakBefore(ds);
+    h += `<div class="dayline"><span class="spd" style="background:${st>=3?"#1f9d44":"#34c759"}"></span><b style="font-size:16px">${st>=3?"Priority recovery day":"Recovery day"}</b></div>`;
+    if(st>0) h += `<div class="rangenote" style="margin:0 0 10px">${st} training day${st>1?"s":""} in a row before this — ${st>=3?"your body needs this one most.":"a good spot to recover."}</div>`;
+    h += `<div class="flabel" style="margin:6px 0 8px">Trained anyway? Log it:</div><div class="chips" id="daySplits">`+
+      SPLITS.map(s=>`<button class="chip" data-s="${s}">${s}</button>`).join("")+`</div>`;
+  }
+  h += `<div class="rangenote" style="margin-top:12px">${Math.round(t.cal).toLocaleString()} / ${goal.toLocaleString()} kcal logged</div>`;
+  document.getElementById("dayBody").innerHTML = h;
+  const tb = document.getElementById("dayTrainBtn");
+  if(tb) tb.onclick = ()=>{
+    if(S.training.done[ds]) delete S.training.done[ds];
+    else S.training.done[ds] = {split: td.split};
+    save(); renderCalendar(); paintDayBody(ds);
+  };
+  document.querySelectorAll("#daySplits .chip").forEach(c=>c.onclick=()=>{
+    S.training.done[ds] = {split: c.dataset.s};
+    save(); renderCalendar(); paintDayBody(ds);
+  });
+}
+document.getElementById("dayScrim").onclick = ()=>document.getElementById("daySheet").classList.remove("open");
+document.getElementById("dayX").onclick = ()=>document.getElementById("daySheet").classList.remove("open");
+/* ---- schedule sheet ---- */
+let schedDraft = {};
+function openSched(){
+  schedDraft = {};
+  Object.keys(S.training.sched).forEach(wd=>{ schedDraft[wd] = S.training.sched[wd].split; });
+  paintSched();
+  document.getElementById("schedSheet").classList.add("open");
+}
+function paintSched(){
+  const dg = document.getElementById("schedDays");
+  dg.innerHTML = WD.map((w,i)=>`<button class="chip${schedDraft[i]!==undefined?" sel":""}" data-wd="${i}">${w}</button>`).join("");
+  dg.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
+    const wd = c.dataset.wd;
+    if(schedDraft[wd]!==undefined) delete schedDraft[wd];
+    else schedDraft[wd] = "Push";
+    paintSched();
+  });
+  const rows = document.getElementById("schedRows");
+  rows.innerHTML = Object.keys(schedDraft).sort((a,b)=>a-b).map(wd=>{
+    const cur = schedDraft[wd], isCustom = SPLITS.indexOf(cur)<0;
+    return `<div class="schedrow"><div class="flabel">${WD[wd]} — split</div>
+      <div class="chips">`+SPLITS.map(s=>`<button class="chip${cur===s?" sel":""}" data-wd="${wd}" data-s="${s}">${s}</button>`).join("")+`</div>
+      <input class="schedcustom" data-wd="${wd}" placeholder="Custom split (optional)" value="${isCustom?cur.replace(/"/g,"&quot;"):""}"></div>`;
+  }).join("");
+  rows.querySelectorAll(".chips .chip").forEach(c=>c.onclick=()=>{ schedDraft[c.dataset.wd] = c.dataset.s; paintSched(); });
+}
+document.getElementById("schedBtn").onclick = openSched;
+document.getElementById("schedScrim").onclick = ()=>document.getElementById("schedSheet").classList.remove("open");
+document.getElementById("schedX").onclick = ()=>document.getElementById("schedSheet").classList.remove("open");
+document.getElementById("schedSave").onclick = ()=>{
+  const ns = {};
+  Object.keys(schedDraft).forEach(wd=>{
+    const inp = document.querySelector(`.schedcustom[data-wd="${wd}"]`);
+    const custom = inp ? inp.value.trim() : "";
+    ns[wd] = {split: custom || schedDraft[wd] || "Push"};
+  });
+  S.training.sched = ns;
+  save();
+  document.getElementById("schedSheet").classList.remove("open");
+  renderCalendar();
+};
 /* ============ WATER TARGET (settings UI) ============ */
 function waterBreakdown(){
   const w = waterCalc();
@@ -2001,19 +2214,20 @@ document.getElementById("wipeBtn").onclick = ()=>{
 function showView(v){
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active", x.id==="view-"+v));
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",
-    t.dataset.v===v || (v==="analysis"&&t.dataset.v==="diary") || (v==="goals"&&t.dataset.v==="settings")));
+    t.dataset.v===v || (v==="analysis"&&t.dataset.v==="diary") || (v==="goals"&&t.dataset.v==="settings") || (v==="calendar"&&t.dataset.v==="diary")));
   if(v==="progress") renderProgress();
   if(v==="settings") renderSettings();
   if(v==="foods") renderFoods();
   if(v==="analysis") renderAnalysis();
   if(v==="goals") renderGoals();
+  if(v==="calendar") renderCalendar();
   window.scrollTo(0,0);
 }
 function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.v));
 document.getElementById("dayPrev").onclick = ()=>{ dayOffset--; renderDiary(); };
 document.getElementById("todayPill").onclick = ()=>{ dayOffset = 0; renderDiary(); };
-document.getElementById("calBtn").onclick = ()=>{ dayOffset = 0; renderDiary(); };
+document.getElementById("calBtn").onclick = ()=>{ calY = null; showView("calendar"); };
 document.getElementById("gearBtn").onclick = ()=>showView("settings");
 document.getElementById("analysisLink").onclick = ()=>showView("analysis");
 document.getElementById("analysisBack").onclick = ()=>showView("diary");
