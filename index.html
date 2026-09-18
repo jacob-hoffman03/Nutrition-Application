@@ -427,7 +427,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
           <div class="macrow"><div class="mhead"><span>Carbs</span><b><i id="valCv">0</i> / <span id="valCg">375</span>g</b></div><div class="mbar"><i id="barC" style="background:linear-gradient(90deg,#7e7ef2,#a8a8ff)"></i></div></div>
           <div class="macrow"><div class="mhead"><span>Protein</span><b><i id="valPv">0</i> / <span id="valPg">150</span>g</b></div><div class="mbar"><i id="barP" style="background:linear-gradient(90deg,#12cfae,#54e6c4)"></i></div></div>
           <div class="macrow"><div class="mhead"><span>Fat</span><b><i id="valFv">0</i> / <span id="valFg">83</span>g</b></div><div class="mbar"><i id="barF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></div></div>
-          <div class="macrow"><div class="mhead"><span>Fiber</span><b><i id="valFiv">0</i> / <span id="valFig">28</span>g</b></div><div class="mbar"><i id="barFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div></div>
+          <div class="macrow"><div class="mhead"><span>Fiber</span><b><i id="valFiv">0</i> / <span id="valFig">0</span>g</b></div><div class="mbar"><i id="barFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div></div>
         </div>
       </div>
       <button class="analysislink" id="analysisLink">Nutrition Analysis <span>›</span></button>
@@ -494,7 +494,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div class="macrow" style="padding:10px 0"><div class="mhead"><span>Carbs</span><b><i id="avalCv">0</i> / <span id="avalCg">375</span>g</b></div><div class="mbar"><i id="abarC" style="background:linear-gradient(90deg,#7e7ef2,#a8a8ff)"></i></div></div>
       <div class="macrow" style="padding:10px 0"><div class="mhead"><span>Protein</span><b><i id="avalPv">0</i> / <span id="avalPg">150</span>g</b></div><div class="mbar"><i id="abarP" style="background:linear-gradient(90deg,#12cfae,#54e6c4)"></i></div></div>
       <div class="macrow" style="padding:10px 0"><div class="mhead"><span>Fat</span><b><i id="avalFv">0</i> / <span id="avalFg">83</span>g</b></div><div class="mbar"><i id="abarF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></div></div>
-      <div class="macrow" style="padding:10px 0"><div class="mhead"><span>Fiber</span><b><i id="avalFiv">0</i> / <span id="avalFig">28</span>g</b></div><div class="mbar"><i id="abarFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div></div>
+      <div class="macrow" style="padding:10px 0"><div class="mhead"><span>Fiber</span><b><i id="avalFiv">0</i> / <span id="avalFig">0</span>g</b></div><div class="mbar"><i id="abarFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div></div>
     </div>
     <div class="secttl">All Nutrients</div>
     <div class="card" style="padding-top:2px; padding-bottom:10px">
@@ -636,7 +636,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
         </svg>
         <div id="muscleOut" style="flex:1; font-size:13.5px; line-height:1.6"></div>
       </div>
-      <button class="srow" id="muscleGoalBtn" style="margin-top:8px"><span>Muscle goal: <b id="muscleGoalLbl">4 lb</b></span><span class="chev2">›</span></button>
+      <button class="srow" id="muscleGoalBtn" style="margin-top:8px"><span>Muscle goal: <b id="muscleGoalLbl">0 lb</b></span><span class="chev2">›</span></button>
     </div>
     <div class="secttl">7-Day Calories</div>
     <div class="card">
@@ -918,15 +918,22 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-aj";
+const APP_VERSION = "2026.09.18-ak";
 
 /* ============ STATE ============ */
-const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
-const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:413, fat:83, water:0, waterV:1, weight:150, mode:"custom", nutrTargets:{}, profile:defProfile(), muscleGoal:4});
+/* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
+   new app — Jay fills them in himself. (2026.09.18-ak) */
+const defProfile = () => ({units:"imp", sex:"", age:0, heightIn:0, weightLb:0, bodyFat:0, activityKey:"", auto:false});
+const defGoals = () => ({maintenance:0, surplus:0, protein:0, carbs:0, fat:0, water:0, waterV:1, weight:0, mode:"custom", nutrTargets:{}, profile:defProfile(), muscleGoal:0});
 function load(){
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; if(!(s.goals.surplus>0)){ const d=(s.goals.cal>0?s.goals.cal:3000)-s.goals.maintenance; s.goals.surplus = d>0?Math.round(d):300; } delete s.goals.cal; if(!s.goals.profile) s.goals.profile = defProfile(); else { const dp = defProfile(); for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; }
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) {
+/* 2026.09.18-ak blank-slate reset: Jay asked for every goal, nutrient target, and profile/setting
+   at zero like a new app. Runs once — his logged days, custom foods, weights, and training stay. */
+if(!s.zeroReset){ s.goals = defGoals(); s.zeroReset = 1; try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
+else { const dg = defGoals(); for(const k in dg) if(s.goals[k]===undefined) s.goals[k]=dg[k]; const dp = defProfile(); if(!s.goals.profile) s.goals.profile = dp; else for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; }
+delete s.goals.cal;
 /* migrate legacy numeric activity factor to FAO tier key */
-if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!(s.goals.muscleGoal>0)) s.goals.muscleGoal = 4; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); if(!s.training) s.training = {sched:{}, done:{}, deloads:{}}; if(!s.training.deloads) s.training.deloads = {}; if(!s.profile) s.profile = {name:"Jay", img:""}; return s; } } catch(e){}
+if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); if(!s.training) s.training = {sched:{}, done:{}, deloads:{}}; if(!s.training.deloads) s.training.deloads = {}; if(!s.profile) s.profile = {name:"Jay", img:""}; return s; } } catch(e){}
   return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:"Jay", img:""}};
 }
 let S = load();
@@ -934,7 +941,7 @@ function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} 
 /* fingerprint of the profile inputs that feed calcMaintenance — if these changed since
    maintenance was last calculated, Save recalculates so the goal can never go stale */
 function profHash(){ const p=S.goals.profile; return [p.weightLb,p.heightIn,p.age,p.sex,p.bodyFat,p.activityKey].join("|"); }
-function recalcMaint(){ S.goals.maintenance = calcMaintenance().maint; applyModePct(); S.goals.profHash = profHash(); }
+function recalcMaint(){ if(!(S.goals.profile.weightLb>0)){ S.goals.profHash = profHash(); return; } /* blank slate: nothing to calculate from yet */ S.goals.maintenance = calcMaintenance().maint; applyModePct(); S.goals.profHash = profHash(); }
 if(!S.goals.profHash) S.goals.profHash = profHash();
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const dstr = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -1032,7 +1039,8 @@ function dayHasXW(){
 function waterCalc(){
   const g = S.goals;
   if(g.water>0) return {target:g.water, manual:true};
-  const tdee = g.maintenance>0 ? g.maintenance : 2500;
+  if(!(g.maintenance>0)) return {target:0, manual:false, tdee:0, perKcal:0, xw:dayHasXW(), tier:"—", unset:true}; /* blank slate: no phantom fallback */
+  const tdee = g.maintenance;
   const pal = actPAL(g.profile);
   const perKcal = pal>=2.05 ? 1.5 : pal>=1.85 ? 1.35 : pal>=1.7 ? 1.2 : 1.0;
   const xw = dayHasXW();
@@ -1082,7 +1090,7 @@ function renderDiary(){
   $("barP").style.width = barW(t.p,g.protein);
   $("barF").style.width = barW(t.f,g.fat);
   const fib = fiberTotal(k);
-  $("barFi").style.width = barW(fib,FIBER_DV);
+  $("barFi").style.width = barW(fib,fiberTarget()); $("valFig").textContent = r1(fiberTarget());
   $("valCv").textContent = r1(t.c); $("valCg").textContent = g.carbs;
   $("valPv").textContent = r1(t.p); $("valPg").textContent = g.protein;
   $("valFv").textContent = r1(t.f); $("valFg").textContent = g.fat;
@@ -1111,13 +1119,14 @@ function renderDiary(){
   });
 
   const wt = waterTarget();
-  $("waterLabel").textContent = d.water+" / "+wt+" glasses";
+  const nGlass = wt>0 ? wt : 8; /* blank slate: no target yet, but logging still works */
+  $("waterLabel").textContent = wt>0 ? d.water+" / "+wt+" glasses" : d.water+" glasses";
   $("waterNum").textContent = d.water;
   const C = 2*Math.PI*36, wr = document.getElementById("waterRing");
   wr.style.strokeDasharray = C;
-  wr.style.strokeDashoffset = C*(1-Math.min(d.water/wt,1));
+  wr.style.strokeDashoffset = wt>0 ? C*(1-Math.min(d.water/wt,1)) : C;
   const gw = $("glasses"); gw.innerHTML = "";
-  for(let i=0;i<wt;i++){
+  for(let i=0;i<nGlass;i++){
     const gl = document.createElement("div");
     gl.className = "glass"+(i<d.water?" full":"");
     gl.onclick = ()=>{ const dd=day(); dd.water = (i<dd.water)? i : i+1; save(); renderDiary(); };
@@ -1125,12 +1134,14 @@ function renderDiary(){
   }
   $("waterNote").textContent = S.goals.water>0
     ? "Manual target — change it in Goals › Water."
-    : "Auto target from your maintenance + activity (IOM 1.0–1.5 mL/kcal)" + (dayHasXW() ? " + 2 glasses for a creatine-type supplement." : ". Tap a glass to add, tap a full one to remove.");
+    : (wt>0
+        ? "Auto target from your maintenance + activity (IOM 1.0–1.5 mL/kcal)" + (dayHasXW() ? " + 2 glasses for a creatine-type supplement." : ". Tap a glass to add, tap a full one to remove.")
+        : "No auto target yet — set your maintenance in Goals › Profile, or pick a manual target in Goals › Water.");
   renderWeek();
 }
 
 /* ============ MICRONUTRIENT TRACKING ============ */
-/* FDA Daily Values (adults) — shown as the target in All Nutrients */
+/* FDA Daily Values (adults) — reference only; All Nutrients targets start at 0 until he sets his own */
 const NUTR_DV = {
   "Vitamin A":{dv:900,unit:"mcg"}, "Vitamin C":{dv:90,unit:"mg"}, "Vitamin D":{dv:20,unit:"mcg",iu:40},
   "Vitamin E":{dv:15,unit:"mg"}, "Vitamin K":{dv:120,unit:"mcg"},
@@ -1165,7 +1176,9 @@ function canonNutr(name){
   return t.replace(/\w\S*/g, w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase());
 }
 const WT2MG = {g:1000, mg:1, mcg:0.001};
-const FIBER_DV = 28; /* FDA Daily Value, g — shown as the diary fiber target */
+const FIBER_DV = 28; /* FDA Daily Value, g — reference only; the live fiber target starts at 0 until he sets his own via the nutrient sheet */
+/* Fiber target: his own custom target if set, else 0 (blank slate — like every other nutrient goal) */
+function fiberTarget(){ const ct = (S.goals.nutrTargets||{})["Fiber"]; return (ct && ct.val>0) ? ct.val : 0; }
 function fiberTotal(k){
   const d = S.days[k]; let f = 0;
   if(d) MEALS.forEach(m=>(d.meals[m]||[]).forEach(e=>(e.nutrs||[]).forEach(x=>{
@@ -1192,13 +1205,13 @@ function dayNutrients(k){
     } else if(ct && v.cls==="iu" && ct.unit==="IU"){
       unit = "IU"; val = v.base; target = ct.val; pct = val/ct.val*100; custom = true;
     } else if(v.cls==="wt" && dv){
-      unit = dv.unit; val = v.base/(WT2MG[unit]||1); target = dv.dv; pct = val/dv.dv*100;
+      unit = dv.unit; val = v.base/(WT2MG[unit]||1); target = 0; pct = 0; /* blank slate: goal is zero until he sets his own */
     } else if(v.cls==="iu" && dv && dv.iu){
-      unit = "IU"; val = v.base; target = dv.dv*dv.iu; pct = val/target*100;
+      unit = "IU"; val = v.base; target = 0; pct = 0;
     } else if(v.cls==="wt"){
       val = v.base; unit = val>=1000 ? "g" : "mg"; if(unit==="g") val = val/1000;
     } else { val = v.base; unit = v.cls==="iu" ? "IU" : "mL"; }
-    out.push({disp:v.disp, val, unit, target, pct, custom, limit:!custom&&!!(dv&&dv.limit)});
+    out.push({disp:v.disp, val, unit, target, pct, custom, limit:!custom&&!!(dv&&dv.limit), dvRef:dv||null});
   });
   out.sort((a,b)=>((b.pct===null?-1:b.pct)-(a.pct===null?-1:a.pct)) || a.disp.localeCompare(b.disp));
   return out;
@@ -1220,7 +1233,7 @@ function paintNutrients(k){
     box.querySelectorAll(".nrow").forEach(el=>el.onclick=()=>openNSheet(el.dataset.n));
   }
   document.getElementById("nutrNote").textContent = rows.length
-    ? "Combined from everything logged today. Tap a nutrient to set your own daily target — defaults are FDA Daily Values."
+    ? "Combined from everything logged today. Tap a nutrient to set your own daily target — all targets start at zero."
     : "";
 }
 
@@ -1232,7 +1245,8 @@ function openNSheet(disp){
   nKey = disp; nUnit = r.unit;
   document.getElementById("nName").textContent = disp;
   document.getElementById("nToday").textContent = r1(r.val)+" "+r.unit;
-  document.getElementById("nDV").textContent = r.target!=null ? r1(r.target)+" "+r.unit+(r.custom?" (yours)":" (FDA)") : "No reference value";
+  document.getElementById("nDV").textContent = r.custom ? r1(r.target)+" "+r.unit+" (yours)"
+    : "0 "+r.unit+(r.dvRef ? " · FDA Daily Value "+r1(r.dvRef.dv)+" "+r.dvRef.unit+" for reference" : "");
   const ct = (S.goals.nutrTargets||{})[disp];
   const nt = document.getElementById("nTarget");
   nt.value = ct ? ct.val : "";
@@ -1283,11 +1297,11 @@ function renderAnalysis(){
   $("abarC").style.width = barW(t.c,g.carbs);
   $("abarP").style.width = barW(t.p,g.protein);
   $("abarF").style.width = barW(t.f,g.fat);
-  $("abarFi").style.width = barW(fiberTotal(k),FIBER_DV);
+  $("abarFi").style.width = barW(fiberTotal(k),fiberTarget());
   $("avalCv").textContent = r1(t.c); $("avalCg").textContent = g.carbs;
   $("avalPv").textContent = r1(t.p); $("avalPg").textContent = g.protein;
   $("avalFv").textContent = r1(t.f); $("avalFg").textContent = g.fat;
-  $("avalFiv").textContent = r1(fiberTotal(k));
+  $("avalFiv").textContent = r1(fiberTotal(k)); $("avalFig").textContent = r1(fiberTarget());
   paintNutrients(k);
 }
 </script>
@@ -1815,13 +1829,15 @@ function applyModePct(){
 function paintGainProj(){
   const s = S.goals.surplus>0 ? S.goals.surplus : 0;
   const el = document.getElementById("gainProj");
-  if(s <= 0){ el.textContent = "At maintenance — no projected gain"; return; }
+  if(s <= 0){ el.textContent = S.goals.maintenance>0 ? "At maintenance — no projected gain" : "Calculate your maintenance above to see your projected gain"; return; }
   const w = S.goals.profile.weightLb>0 ? S.goals.profile.weightLb : 150;
   const lbWk = s*7/3500; /* 3500 kcal/lb: rough first-week heuristic, overestimates over time */
   el.textContent = "≈ +"+lbWk.toFixed(2)+" lb/week ("+(lbWk/w*100).toFixed(2)+"% of body weight) at this surplus — rough estimate; your weigh-ins are the real answer";
 }
 function paintMaintNote(){
-  const p = S.goals.profile, cm = calcMaintenance();
+  const p = S.goals.profile;
+  if(!(p.weightLb>0)){ document.getElementById("pfNote").textContent = "Enter your stats above, then tap Calculate maintenance — your calorie goal builds from it."; return; }
+  const cm = calcMaintenance();
   document.getElementById("pfNote").textContent = cm.formula+": BMR "+cm.bmr.toLocaleString()+" (just living) × "+actPAL(p)+" activity = "+cm.maint.toLocaleString()+" kcal maintenance. Formulas run ±10%; the activity factor is the roughest part — weigh-ins calibrate it.";
 }
 function readProfile(){
@@ -1918,6 +1934,9 @@ function infoContent(k){
      <div class="irow"><b>Auto-split:</b> keeps protein as entered, sets fat to 25% of your calorie goal, and fills the rest with carbs.</div>`};
   if(k==="water"){
     const w = waterCalc();
+    if(w.unset) return {t:"Water target", b:
+    `<div class="irow"><b>Auto</b> needs your maintenance first — set your profile in Goals › Profile, then tap Calculate maintenance.</div>
+     <div class="irow">Or type a manual target below and it takes over immediately.</div>`};
     const pk = w.perKcal.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
     return {t:"Water target", b:
     `<div class="irow"><b>Auto</b> builds your target from maintenance: <b>${w.target} glasses</b> = ${Math.round(w.tdee).toLocaleString()} kcal × ${w.tier} activity at ${pk} mL/kcal.</div>
@@ -2286,20 +2305,23 @@ function muscleStats(){
 }
 function paintMuscle(){
   const ring = document.getElementById("muscleArc"), num = document.getElementById("muscleNum"), out = document.getElementById("muscleOut");
-  const goal = S.goals.muscleGoal>0 ? S.goals.muscleGoal : 4;
+  const goal = S.goals.muscleGoal||0; /* blank slate: honest zero, no hidden 4 lb default */
   document.getElementById("muscleGoalLbl").textContent = goal+" lb";
   const C = 2*Math.PI*52, st = muscleStats();
   if(!st.ok){ ring.setAttribute("stroke-dasharray","0 "+C); num.textContent = "–"; out.textContent = st.why; return; }
-  ring.setAttribute("stroke-dasharray", (Math.min(1,st.muscle/goal)*C)+" "+C);
+  ring.setAttribute("stroke-dasharray", (goal>0?Math.min(1,st.muscle/goal)*C:0)+" "+C);
   num.textContent = st.muscle.toFixed(1);
   const f1 = v => (v>=0?"+":"")+v.toFixed(1);
   let h = "Scale: <b>"+f1(st.dW)+" lb</b> over "+Math.max(2,Math.round(st.weeks))+" wks<br>";
   h += "Est. muscle: <b>"+f1(st.muscle)+" lb</b> · est. fat: "+f1(st.fat)+" lb<br>";
   h += "<span style=\"color:var(--muted)\">Lean share "+Math.round(st.lean*100)+"% — surplus "+st.avgSurPct.toFixed(0)+"%, protein "+st.protPerKg.toFixed(1)+" g/kg, "+st.sessWk.toFixed(1)+" sessions/wk.</span><br>";
   if(st.rateMo>0){
-    const eta = st.muscle<goal ? Math.ceil((goal-st.muscle)/(st.rateMo/4.33)) : 0;
-    h += st.muscle>=goal ? "<b style=\"color:var(--green)\">Goal hit.</b> Set a bigger one."
-      : "Pace: <b>"+st.rateMo.toFixed(1)+" lb/mo</b> — realistic for a beginner is 0.5–1.5 lb/mo."+(eta>0?" At this pace the goal lands in ~"+eta+" wk"+(eta>1?"s":"")+".":"");
+    if(goal<=0){ h += "Set a muscle goal above to track against it."; }
+    else {
+      const eta = st.muscle<goal ? Math.ceil((goal-st.muscle)/(st.rateMo/4.33)) : 0;
+      h += st.muscle>=goal ? "<b style=\"color:var(--green)\">Goal hit.</b> Set a bigger one."
+        : "Pace: <b>"+st.rateMo.toFixed(1)+" lb/mo</b> — realistic for a beginner is 0.5–1.5 lb/mo."+(eta>0?" At this pace the goal lands in ~"+eta+" wk"+(eta>1?"s":"")+".":"");
+    }
   } else h += "Not gaining yet — the scale has to move up first.";
   out.innerHTML = h;
 }
@@ -2398,6 +2420,7 @@ document.getElementById("pPhotoFile").onchange = e=>{
 function waterBreakdown(){
   const w = waterCalc();
   if(w.manual) return "Manual target of "+w.target+" glasses. Switch to Auto for the research-based formula.";
+  if(w.unset) return "Auto needs your maintenance first — set your profile in Goals › Profile, then tap Calculate maintenance.";
   return "Auto: "+w.target+" glasses from "+Math.round(w.tdee).toLocaleString()+" kcal maintenance × "+w.tier+" activity"+(w.xw?" — +2 glasses for a creatine-type supplement logged today":" — +2 glasses on days you log a creatine-type supplement")+".";
 }
 function paintWater(){
@@ -2424,6 +2447,7 @@ function renderGoals(){
   sl.min = Math.max(1200, g.maintenance);
   sl.max = g.maintenance + 2000;
   sl.value = tot;
+  sl.disabled = !(g.maintenance>0); /* blank slate: calculate maintenance first (matches the mode/surplus chip guards) */
   document.getElementById("goalMin").textContent = Number(sl.min).toLocaleString()+" kcal";
   document.getElementById("goalMax").textContent = Number(sl.max).toLocaleString()+" kcal";
   document.getElementById("goalTotal").textContent = Math.round(tot).toLocaleString();
@@ -2513,7 +2537,7 @@ document.getElementById("pfCalc").onclick = ()=>{
 };
 document.getElementById("macroAuto").onclick = ()=>{
   const tot = goalTotal();
-  const entered = Math.max(0, Math.round(parseFloat(document.getElementById("gmP").value)||S.goals.protein||150));
+  const entered = Math.max(0, Math.round(parseFloat(document.getElementById("gmP").value)||S.goals.protein||0));
   const p = Math.max(entered, Math.round(S.goals.profile.weightLb/2.20462*1.6)); /* Morton 2018 breakpoint */
   const f = Math.max(0, Math.round(tot*0.25/9));
   const c = Math.max(0, Math.round((tot - p*4 - f*9)/4));
@@ -2539,7 +2563,7 @@ function renderSettings(){
   const g = S.goals;
   renderProfileCard();
   document.getElementById("goalRowVal").textContent = Math.round(goalTotal()).toLocaleString()+" kcal";
-  document.getElementById("waterRowVal").textContent = g.water>0 ? g.water+" glasses" : "Auto ("+waterTarget()+" glasses)";
+  document.getElementById("waterRowVal").textContent = g.water>0 ? g.water+" glasses" : (waterTarget()>0 ? "Auto ("+waterTarget()+" glasses)" : "Auto (set maintenance first)");
   document.getElementById("weightRowVal").textContent = g.weight+" lb";
   document.getElementById("dDays").textContent = Object.keys(S.days).length;
   document.getElementById("appVer").textContent = "Fuel " + APP_VERSION;
@@ -2562,7 +2586,7 @@ document.getElementById("exportBtn").onclick = ()=>{
 document.getElementById("importBtn").onclick = ()=>document.getElementById("importFile").click();
 document.getElementById("muscleInfo").onclick = openMuscleInfo;
 document.getElementById("muscleGoalBtn").onclick = ()=>{
-  const cur = S.goals.muscleGoal>0 ? S.goals.muscleGoal : 4;
+  const cur = S.goals.muscleGoal||0;
   const v = prompt("Muscle goal (lb)", cur);
   if(v===null) return;
   const n = Math.round(parseFloat(v)*10)/10;
