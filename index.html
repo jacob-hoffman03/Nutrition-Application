@@ -123,6 +123,61 @@ button{font-family:inherit;}
 .glass.full{border-color:var(--acc);}
 .glass.full::after{content:""; position:absolute; left:0; right:0; bottom:0; top:18%; background:linear-gradient(#8f8ff7,var(--acc));}
 .whint{font-size:12px; color:var(--muted); margin-top:10px;}
+/* water ring */
+.wrow{display:flex; gap:16px; align-items:center;}
+.wring{position:relative; width:88px; height:88px; flex:none;}
+.wring svg{display:block;}
+.wcenter{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1;}
+.wcenter b{font-size:20px;}
+.wcenter span{font-size:10px; color:var(--muted); font-weight:600;}
+.winfo{flex:1; min-width:0;}
+.winfo b{font-size:16px;}
+.winfo .wlbl{font-size:14px; color:var(--muted); font-weight:600; margin-left:8px;}
+/* collapsible goal sections */
+.ghead{display:flex; align-items:center; gap:8px; font-size:21px; font-weight:800; margin:20px 2px 12px; letter-spacing:-.3px; cursor:pointer; user-select:none;}
+.ghead::before{content:""; width:5px; height:20px; border-radius:3px; background:var(--acc); flex:none;}
+.ghead .gchev{margin-left:auto; color:var(--muted); font-size:22px; font-weight:400; transition:transform .18s;}
+.gsec.closed .gbody{display:none;}
+.gsec.closed .gchev{transform:rotate(90deg);}
+/* add-food: reference-style rows */
+.arow2{display:flex; align-items:center; gap:14px; padding:13px 2px; border-bottom:1px solid var(--line); cursor:pointer;}
+.athumb{width:56px; height:56px; border-radius:16px; background:var(--card2); flex:none; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:26px; color:var(--muted);}
+.athumb img{width:100%; height:100%; object-fit:cover;}
+.anm{flex:1; min-width:0;}
+.anm b{display:block; font-size:16px; letter-spacing:-.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.anm span{font-size:13px; color:var(--muted);}
+.aplus{width:44px; height:44px; border-radius:14px; border:none; background:var(--card2); color:var(--acc); font-size:26px; line-height:1; font-weight:600; flex:none; display:flex; align-items:center; justify-content:center;}
+.aplus:active{transform:scale(.93);}
+/* tray bar */
+#trayBar{position:sticky; bottom:0; display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; padding:12px 4px calc(10px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); margin:12px -2px -4px;}
+.trayinfo{display:flex; align-items:center; gap:10px; font-size:17px;}
+.trayico{position:relative; font-size:26px;}
+.trayico b{position:absolute; top:-8px; right:-10px; background:#e5484d; color:#fff; font-size:11px; min-width:20px; height:20px; border-radius:10px; display:flex; align-items:center; justify-content:center; padding:0 5px;}
+.trayadd{flex:1; max-width:280px; background:#4a6cf7; color:#fff; border:none; border-radius:16px; padding:15px; font-size:17px; font-weight:800;}
+.trayadd:disabled{background:#dcdce4;}
+/* detail view */
+.dtop{display:flex; align-items:center; gap:14px; margin:6px 0 14px;}
+.dthumb{width:72px; height:72px; border-radius:20px; background:var(--card2); flex:none; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:32px; color:var(--muted);}
+.dthumb img{width:100%; height:100%; object-fit:cover;}
+.dtop b{display:block; font-size:19px; letter-spacing:-.3px;}
+.dtop span{font-size:14px; color:var(--muted);}
+.dlabel{font-size:16px; font-weight:800; margin-bottom:10px;}
+.dbig{display:flex; align-items:baseline; justify-content:center; gap:10px; margin:6px 0 2px;}
+.dbig input{width:150px; text-align:center; font-size:44px; font-weight:800; border:none; border-bottom:2px solid var(--acc); background:none; color:var(--ink); padding:2px 0;}
+.dbig input:focus{outline:none;}
+.dbig .du{font-size:17px; color:var(--acc); font-weight:700;}
+.dkcal{text-align:center; font-size:14px; color:var(--muted); margin-bottom:10px;}
+#dUnits{display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+.micons{display:flex; gap:8px; justify-content:space-between;}
+.micon{flex:1; border:none; background:var(--card2); border-radius:16px; padding:10px 4px; font-size:20px; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--ink);}
+.micon span{font-size:11px; font-weight:700; color:var(--muted);}
+.micon.sel{background:var(--acc-soft);}
+.micon.sel span{color:var(--acc);}
+/* analysis nutrient rows tappable */
+.nrow{cursor:pointer;}
+/* nutrient target sheet */
+.nkv{display:flex; justify-content:space-between; align-items:center; padding:10px 2px; font-size:15px;}
+.nkv b{font-size:16px;}
 /* analysis */
 .arow{display:flex; align-items:center; gap:14px;}
 .atable{width:100%; border-collapse:collapse; margin-top:14px;}
@@ -341,9 +396,21 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <div class="card mealcard" id="meals"></div>
 
     <div class="card watercard">
-      <div class="whead"><b>Water</b><span id="waterLabel"></span></div>
+      <div class="wrow">
+        <div class="wring">
+          <svg width="88" height="88" viewBox="0 0 88 88">
+            <defs><linearGradient id="wgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6ea8ff"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs>
+            <circle cx="44" cy="44" r="36" fill="none" stroke="#ececf1" stroke-width="10"/>
+            <circle id="waterRing" cx="44" cy="44" r="36" fill="none" stroke="url(#wgrad)" stroke-width="10" stroke-linecap="round" transform="rotate(-90 44 44)"/>
+          </svg>
+          <div class="wcenter"><b id="waterNum">0</b><span>glasses</span></div>
+        </div>
+        <div class="winfo">
+          <b>Water</b><span class="wlbl" id="waterLabel"></span>
+          <div class="whint" id="waterNote" style="margin-top:6px"></div>
+        </div>
+      </div>
       <div class="glasses" id="glasses"></div>
-      <div class="whint" id="waterNote"></div>
     </div>
   </section>
 
@@ -430,7 +497,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div class="cfrow"><span>Weight</span><span><input id="pfWeight" type="number" inputmode="decimal" style="width:90px"> <span class="ph" id="pfWeightUnit">lb</span></span></div>
       <div class="cfrow"><span>Body fat <span class="ph">(optional)</span></span><span><input id="pfFat" type="number" inputmode="decimal" style="width:90px"> <span class="ph">%</span></span></div>
     </div>
-    <div class="rangenote" style="margin:10px 2px 2px">Activity level</div>
+    <div class="secttl">Activity &amp; maintenance</div>
     <div class="chips" id="pfAct">
       <button class="chip" data-k="sedentary">Sedentary</button>
       <button class="chip" data-k="light">Light</button>
@@ -441,10 +508,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <div class="rangenote">Factors from FAO/WHO/UNU activity bands (1.45–2.10). On your feet all day ≈ 1.9. This factor is the roughest part of the math (±10–15%) — your weigh-ins calibrate it.</div>
     <button class="bigbtn" id="pfCalc" style="margin-top:4px">Calculate maintenance</button>
     <div class="rangenote" id="pfNote"></div>
-    <div class="cfrow" style="margin-top:8px"><span><b style="font-size:14px">Auto-adjust as I gain weight</b><br><span class="ph">Recalculates maintenance + macros when you log a new weight</span></span><button class="chip" id="pfAuto">Off</button></div>
-    <div class="rangenote" id="pfAutoNote"></div>
-    <div class="cfrow" style="margin-top:8px"><span><b style="font-size:14px">Auto-tune maintenance</b><br><span class="ph">Nudges maintenance ±150 kcal when your 2-week weigh-in trend misses your target — max once per 2 weeks</span></span><button class="chip" id="pfTune">Off</button></div>
-    <div class="rangenote" id="pfTuneNote"></div>
+    <div class="secttl">Calorie goal</div>
     <div class="card goalbig" style="margin-top:14px">
       <div class="glabel">Your Daily Calorie Goal</div>
       <div class="gnum"><span id="goalTotal">3000</span> <small>kcal</small></div>
@@ -469,6 +533,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
         <button class="chip" data-p="20">+20%</button>
       </div>
     </div>
+    <div class="secttl">Macros</div>
     <div class="fhead"><span class="flabel">Macro split</span><button class="createbtn" id="macroAuto">Auto-split</button></div>
     <div class="macro3">
       <div class="m3 c"><div class="mn">Carbs</div><div class="mp" id="gmCp">50%</div><div class="mg"><input id="gmC" type="number" inputmode="numeric"> g</div></div>
@@ -477,6 +542,19 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     </div>
     <div class="segbar" id="macroSeg"><i id="segC" style="background:#7e7ef2"></i><i id="segP" style="background:#12cfae"></i><i id="segF" style="background:#fb6f84"></i></div>
     <div class="rangenote">Evidence: muscle gains top out near 1.6 g protein/kg/day (Morton 2018); up to 2.2 g/kg (1 g/lb) is the supported ceiling.</div>
+    <div class="secttl">Water</div>
+    <div class="card">
+      <div class="fhead"><span class="flabel">Daily target</span><span class="chips" id="waterMode" style="margin:0"><button class="chip" data-w="auto">Auto</button><button class="chip" data-w="8">8</button><button class="chip" data-w="10">10</button><button class="chip" data-w="12">12</button><button class="chip" data-w="14">14</button></span></div>
+      <div class="cfrow"><span>Custom <span class="ph">(glasses, 0 = Auto)</span></span><input id="waterCustom" type="number" inputmode="numeric" style="width:84px"></div>
+    </div>
+    <div class="rangenote" id="waterBreak"></div>
+    <div class="secttl">Advanced</div>
+    <div class="card">
+      <div class="cfrow"><span><b style="font-size:14px">Auto-adjust as I gain weight</b><br><span class="ph">Recalculates maintenance + macros when you log a new weight</span></span><button class="chip" id="pfAuto">Off</button></div>
+      <div class="cfrow" style="margin-top:8px"><span><b style="font-size:14px">Auto-tune maintenance</b><br><span class="ph">Nudges maintenance ±150 kcal when your 2-week weigh-in trend misses your target — max once per 2 weeks</span></span><button class="chip" id="pfTune">Off</button></div>
+    </div>
+    <div class="rangenote" id="pfAutoNote"></div>
+    <div class="rangenote" id="pfTuneNote"></div>
     <button class="bigbtn" id="goalsDone">Done</button>
   </section>
 
@@ -565,44 +643,61 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <div class="body">
       <div id="sheetSearchWrap">
         <input class="searchinput" id="sheetSearch" placeholder="Search for Food" autocomplete="off" style="margin-bottom:8px">
+        <div class="segtabs" id="sheetTabs">
+          <button class="segtab sel" data-t="recent">Recent</button>
+          <button class="segtab" data-t="favorites">Favorites</button>
+          <button class="segtab" data-t="custom">Custom</button>
+        </div>
+        <div class="fhead">
+          <span class="flabel"><select id="sheetSort" style="border:none;background:none;font:inherit;color:inherit;font-weight:600"><option value="time">Sort by Time ⌄</option><option value="name">Sort by Name ⌄</option></select></span>
+          <button class="createbtn" id="sheetCreate">Create</button>
+        </div>
         <div id="sheetResults"></div>
+        <div id="trayBar" style="display:none">
+          <span class="trayinfo"><span class="trayico">🍽️<b id="trayCount">0</b></span><b id="trayKcal">0 kcal</b></span>
+          <button class="trayadd" id="trayAdd" disabled>+ Add</button>
+        </div>
       </div>
       <div id="sheetDetail" style="display:none">
-        <div class="card" style="margin-bottom:4px">
-          <div class="dhead">
-            <img id="dPhoto" alt="Food photo" style="display:none">
-            <div>
-              <b id="dName" style="font-size:16px"></b>
-              <div class="hint" id="dMacros" style="margin-top:4px"></div>
-            </div>
-          </div>
+        <div class="dtop">
+          <span class="dthumb" id="dThumb"></span>
+          <div><b id="dName"></b><span id="dSub"></span></div>
         </div>
+        <div class="card">
+          <div class="dlabel">Serving Size</div>
+          <div class="dbig"><input id="dQty" type="number" inputmode="decimal" value="1"><span class="du" id="dUnit"></span></div>
+          <div class="dkcal" id="dKcal"></div>
+          <div class="chips" id="dUnits"></div>
         </div>
-        <div class="label">Servings</div>
-        <div class="qtyrow">
-          <button id="qMinus">−</button>
-          <div class="qv" id="qVal">1</div>
-          <button id="qPlus">+</button>
+        <div class="card">
+          <div class="dlabel">Meal</div>
+          <div class="micons" id="dMeals"></div>
         </div>
-        <div class="chips" id="qChips">
-          <button class="chip" data-q="0.5">½</button>
-          <button class="chip sel" data-q="1">1</button>
-          <button class="chip" data-q="1.5">1½</button>
-          <button class="chip" data-q="2">2</button>
-          <button class="chip" data-q="3">3</button>
-        </div>
-        <div class="label">Add to meal</div>
-        <div class="chips" id="mealChips">
-          <button class="chip" data-m="breakfast">Breakfast</button>
-          <button class="chip" data-m="lunch">Lunch</button>
-          <button class="chip" data-m="dinner">Dinner</button>
-          <button class="chip" data-m="snacks">Snacks</button>
-          <button class="chip" data-m="supplements">Supplements</button>
-        </div>
-        <div class="kv" style="margin-top:8px;"><span>Total for this entry</span><b id="dTotal"></b></div>
-        <button class="bigbtn" id="confirmAdd">Add to diary</button>
+        <button class="bigbtn" id="confirmAdd">Confirm</button>
         <button class="ghostbtn" id="backToSearch">← Back to search</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- NUTRIENT TARGET SHEET -->
+<div class="sheet" id="nsheet">
+  <div class="scrim" id="nScrim"></div>
+  <div class="panel">
+    <div class="grab"></div>
+    <button class="xbtn" id="nX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    <h2 id="nName">Nutrient</h2>
+    <div class="body">
+      <div class="nkv"><span>Logged today</span><b id="nToday"></b></div>
+      <div class="nkv"><span>Current target</span><b id="nDV"></b></div>
+      <div class="label" style="margin-top:8px">My daily target</div>
+      <div class="qtyrow" style="margin-top:4px">
+        <input id="nTarget" type="number" inputmode="decimal" placeholder="—" style="width:130px; text-align:center; font-size:28px; font-weight:800; border:none; border-bottom:2px solid var(--acc); background:none; color:var(--ink); padding:2px 0;">
+        <span class="du" id="nUnit" style="font-size:15px; color:var(--acc); font-weight:700;"></span>
+      </div>
+      <div class="rangenote" style="margin-top:8px">Set your own number — e.g. 4,000 IU of Vitamin D. Leave blank and save nothing changes.</div>
+      <button class="bigbtn" id="nSave">Save target</button>
+      <button class="ghostbtn" id="nClear">Use FDA default instead</button>
     </div>
   </div>
 </div>
@@ -691,11 +786,11 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-s";
+const APP_VERSION = "2026.09.18-t";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
-const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:413, fat:83, water:0, waterV:1, weight:150, mode:"custom", profile:defProfile()});
+const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:413, fat:83, water:0, waterV:1, weight:150, mode:"custom", nutrTargets:{}, profile:defProfile()});
 function load(){
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; if(!(s.goals.surplus>0)){ const d=(s.goals.cal>0?s.goals.cal:3000)-s.goals.maintenance; s.goals.surplus = d>0?Math.round(d):300; } delete s.goals.cal; if(!s.goals.profile) s.goals.profile = defProfile(); else { const dp = defProfile(); for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; }
 /* migrate legacy numeric activity factor to FAO tier key */
@@ -871,6 +966,10 @@ function renderDiary(){
 
   const wt = waterTarget();
   $("waterLabel").textContent = d.water+" / "+wt+" glasses";
+  $("waterNum").textContent = d.water;
+  const C = 2*Math.PI*36, wr = document.getElementById("waterRing");
+  wr.style.strokeDasharray = C;
+  wr.style.strokeDashoffset = C*(1-Math.min(d.water/wt,1));
   const gw = $("glasses"); gw.innerHTML = "";
   for(let i=0;i<wt;i++){
     const gl = document.createElement("div");
@@ -879,7 +978,7 @@ function renderDiary(){
     gw.appendChild(gl);
   }
   $("waterNote").textContent = S.goals.water>0
-    ? "Manual target — set to 0 in Settings for an auto target."
+    ? "Manual target — change it in Goals › Water."
     : "Auto target from your maintenance + activity (IOM 1.0–1.5 mL/kcal)" + (dayHasXW() ? " + 2 glasses for a creatine-type supplement." : ". Tap a glass to add, tap a full one to remove.");
   renderWeek();
 }
@@ -930,16 +1029,20 @@ function dayNutrients(k){
   })));
   const out = [];
   map.forEach(v=>{
-    const dv = NUTR_DV[v.disp];
-    let val, unit, pct = null, target = null;
-    if(v.cls==="wt" && dv){
+    const dv = NUTR_DV[v.disp], ct = (S.goals.nutrTargets||{})[v.disp];
+    let val, unit, pct = null, target = null, custom = false;
+    if(ct && v.cls==="wt" && WT2MG[ct.unit]){
+      unit = ct.unit; val = v.base/WT2MG[ct.unit]; target = ct.val; pct = val/ct.val*100; custom = true;
+    } else if(ct && v.cls==="iu" && ct.unit==="IU"){
+      unit = "IU"; val = v.base; target = ct.val; pct = val/ct.val*100; custom = true;
+    } else if(v.cls==="wt" && dv){
       unit = dv.unit; val = v.base/(WT2MG[unit]||1); target = dv.dv; pct = val/dv.dv*100;
     } else if(v.cls==="iu" && dv && dv.iu){
       unit = "IU"; val = v.base; target = dv.dv*dv.iu; pct = val/target*100;
     } else if(v.cls==="wt"){
       val = v.base; unit = val>=1000 ? "g" : "mg"; if(unit==="g") val = val/1000;
     } else { val = v.base; unit = v.cls==="iu" ? "IU" : "mL"; }
-    out.push({disp:v.disp, val, unit, target, pct});
+    out.push({disp:v.disp, val, unit, target, pct, custom});
   });
   out.sort((a,b)=>((b.pct===null?-1:b.pct)-(a.pct===null?-1:a.pct)) || a.disp.localeCompare(b.disp));
   return out;
@@ -955,13 +1058,44 @@ function paintNutrients(k){
         ? `<b><i class="${r.pct>=100?"met":""}">${vs}</i> / ${r1(r.target)}</b>`
         : `<b>${vs}</b>`;
       const bar = r.pct!=null ? `<div class="nbar"><i style="width:${Math.min(r.pct,100)}%"></i></div>` : "";
-      return `<div class="nrow"><div class="nhead"><span>${esc(r.disp)} (${r.unit})</span>${right}</div>${bar}</div>`;
+      return `<div class="nrow" data-n="${esc(r.disp)}"><div class="nhead"><span>${esc(r.disp)} (${r.unit})${r.custom?' <span class="diy">MY TARGET</span>':""}</span>${right}</div>${bar}</div>`;
     }).join("");
+    box.querySelectorAll(".nrow").forEach(el=>el.onclick=()=>openNSheet(el.dataset.n));
   }
   document.getElementById("nutrNote").textContent = rows.length
-    ? "Combined from everything logged today. Targets are FDA Daily Values — add nutrients when creating custom foods for better data."
+    ? "Combined from everything logged today. Tap a nutrient to set your own daily target — defaults are FDA Daily Values."
     : "";
 }
+
+/* ============ NUTRIENT TARGET SHEET ============ */
+const nsheet = document.getElementById("nsheet");
+let nKey = null, nUnit = "";
+function openNSheet(disp){
+  const r = dayNutrients(viewDate()).find(x=>x.disp===disp); if(!r) return;
+  nKey = disp; nUnit = r.unit;
+  document.getElementById("nName").textContent = disp;
+  document.getElementById("nToday").textContent = r1(r.val)+" "+r.unit;
+  document.getElementById("nDV").textContent = r.target!=null ? r1(r.target)+" "+r.unit+(r.custom?" (yours)":" (FDA)") : "No reference value";
+  const ct = (S.goals.nutrTargets||{})[disp];
+  const nt = document.getElementById("nTarget");
+  nt.value = ct ? ct.val : "";
+  nt.placeholder = r.target!=null ? String(r1(r.target)) : "—";
+  document.getElementById("nUnit").textContent = r.unit;
+  nsheet.classList.add("open");
+}
+document.getElementById("nScrim").onclick = ()=>nsheet.classList.remove("open");
+document.getElementById("nX").onclick = ()=>nsheet.classList.remove("open");
+document.getElementById("nSave").onclick = ()=>{
+  const v = parseFloat(document.getElementById("nTarget").value);
+  if(!(v>0)) return;
+  S.goals.nutrTargets = S.goals.nutrTargets||{};
+  S.goals.nutrTargets[nKey] = {val:v, unit:nUnit};
+  save(); nsheet.classList.remove("open"); renderAnalysis();
+};
+document.getElementById("nClear").onclick = ()=>{
+  if(S.goals.nutrTargets) delete S.goals.nutrTargets[nKey];
+  save(); nsheet.classList.remove("open"); renderAnalysis();
+};
 
 /* ============ ANALYSIS ============ */
 function renderAnalysis(){
@@ -1001,11 +1135,15 @@ function renderAnalysis(){
 <script>
 "use strict";
 /* ============ ADD-FOOD SHEET ============ */
-let sheetMeal = "breakfast", sheetFood = null, sheetQty = 1;
+let sheetMeal = "breakfast", sheetFood = null, sheetTab = "recent", sheetSort = "time", tray = [];
 const sheet = document.getElementById("sheet");
+const MEAL_EMOJI = {breakfast:"🌅", lunch:"☀️", dinner:"🌙", snacks:"🍿", supplements:"💊"};
 function openSheet(meal){
-  sheetMeal = meal || "breakfast"; sheetFood = null; sheetQty = 1;
+  sheetMeal = meal || "breakfast"; sheetFood = null; tray = [];
   document.getElementById("sheetSearch").value = "";
+  sheetTab = "recent"; sheetSort = "time";
+  document.querySelectorAll("#sheetTabs .segtab").forEach(t=>t.classList.toggle("sel", t.dataset.t==="recent"));
+  document.getElementById("sheetSort").value = "time";
   showSearch(); renderSheetResults("");
   sheet.classList.add("open");
 }
@@ -1016,60 +1154,127 @@ document.getElementById("statusPill").onclick = ()=>{ renderZoneSheet(); documen
 document.getElementById("statusPill").onkeydown = e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); document.getElementById("statusPill").click(); } };
 document.getElementById("zoneScrim").onclick = ()=>document.getElementById("zoneSheet").classList.remove("open");
 document.getElementById("zoneX").onclick = ()=>document.getElementById("zoneSheet").classList.remove("open");
-function foodRowHtml(f){
-  return `<div class="sresult"><div class="nm"><b>${isCustom(f.n)?'<span class="diy">DIY</span>':""}${esc(f.n)}</b><span>${Math.round(f.cal)}kcal / ${esc(f.s)}</span></div>
-    <button class="fadd" data-n="${esc(f.n)}">+</button></div>`;
+function sheetRowHtml(f){
+  const thumb = f.img ? '<img src="'+f.img+'" alt="">' : (f.kind==="supp"?"💊":"🍽️");
+  const diy = isCustom(f.n) ? '<span class="diy">DIY</span>' : "";
+  return '<div class="arow2" data-n="'+esc(f.n)+'"><span class="athumb">'+thumb+'</span>'+
+    '<div class="anm"><b>'+diy+esc(f.n)+'</b><span>'+Math.round(f.cal)+'kcal / '+esc(f.s)+'</span></div>'+
+    '<button class="aplus" data-n="'+esc(f.n)+'">+</button></div>';
 }
 function renderSheetResults(q){
   q = q.trim().toLowerCase();
   const box = document.getElementById("sheetResults"); box.innerHTML = "";
-  let list = allFoods();
+  let list = sheetTab==="recent" ? recentFoods()
+    : sheetTab==="favorites" ? allFoods().filter(f=>isFav(f.n))
+    : S.customFoods.slice().reverse();
   if(q) list = list.filter(f => f.n.toLowerCase().includes(q));
-  const favs = list.filter(f=>isFav(f.n)), rest = list.filter(f=>!isFav(f.n));
-  const html = (arr, label) => arr.length ?
-    `<div class="sect">${label}</div>` + arr.slice(0, 30).map(foodRowHtml).join("") : "";
-  box.innerHTML = html(favs,"Favorites") + html(rest, q ? "Results" : "All foods") ||
-    `<div class="empty">No matches. Try the Foods tab to create a custom food.</div>`;
-  box.querySelectorAll(".fadd").forEach(b=>b.onclick=()=>{ sheetFood = findFood(b.dataset.n); sheetQty = 1; if(sheetFood.kind==="supp") sheetMeal="supplements"; showDetail(); });
+  if(!q && sheetTab==="recent" && !list.length) list = allFoods();
+  if(sheetSort==="name") list = list.slice().sort((a,b)=>a.n.localeCompare(b.n));
+  box.innerHTML = list.slice(0, 40).map(sheetRowHtml).join("") ||
+    '<div class="empty">No matches. Tap Create to add a custom food.</div>';
+  box.querySelectorAll(".aplus").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const f=findFood(b.dataset.n); if(f) addToTray(f, 1); });
+  box.querySelectorAll(".arow2").forEach(r=>r.onclick=()=>openDetail(findFood(r.dataset.n)));
 }
+function addToTray(f, qty, meal){
+  const m = meal || (f.kind==="supp" ? "supplements" : sheetMeal);
+  const ex = tray.find(t=>t.n===f.n && t.meal===m);
+  if(ex) ex.qty = Math.round((ex.qty+qty)*100)/100;
+  else tray.push({n:f.n, qty, meal:m});
+  paintTray();
+}
+function paintTray(){
+  const bar = document.getElementById("trayBar"), count = tray.length;
+  const kcal = Math.round(tray.reduce((a,t)=>{ const f=findFood(t.n); return a+(f?f.cal*t.qty:0); },0));
+  document.getElementById("trayCount").textContent = count;
+  document.getElementById("trayKcal").textContent = kcal.toLocaleString()+" kcal";
+  document.getElementById("trayAdd").disabled = !count;
+  bar.style.display = count ? "" : "none";
+}
+document.getElementById("trayAdd").onclick = ()=>{
+  const d = day();
+  tray.forEach(t=>{
+    const f = findFood(t.n); if(!f) return;
+    d.meals[t.meal].push({id:uid(), n:f.n, s:f.s, qty:t.qty, img:f.img||null,
+      cal:f.cal*t.qty, p:f.p*t.qty, c:f.c*t.qty, f:f.f*t.qty,
+      kind:f.kind||"food", nutrs:(f.nutrs||[]).map(x=>({n:x.n, amt:x.amt*t.qty, u:x.u})), xw:!!f.xw});
+  });
+  save(); closeSheet(); renderDiary();
+};
+document.querySelectorAll("#sheetTabs .segtab").forEach(t=>t.onclick=()=>{ sheetTab=t.dataset.t;
+  document.querySelectorAll("#sheetTabs .segtab").forEach(x=>x.classList.toggle("sel", x===t));
+  renderSheetResults(document.getElementById("sheetSearch").value); });
+document.getElementById("sheetSort").addEventListener("change", e=>{ sheetSort=e.target.value; renderSheetResults(document.getElementById("sheetSearch").value); });
+document.getElementById("sheetCreate").onclick = ()=>{ closeSheet(); resetCustomForm(); csheet.classList.add("open"); };
 function showSearch(){
   document.getElementById("sheetSearchWrap").style.display = "";
   document.getElementById("sheetDetail").style.display = "none";
   document.getElementById("sheetTitle").textContent = "Add food";
+  renderSheetResults(document.getElementById("sheetSearch").value);
+  paintTray();
 }
-function showDetail(){
+/* ---- detail: serving-size editor ---- */
+let dQty = 1, dUnit = "serv", dMeal = "breakfast", dGramPer = 0;
+const round2 = x => Math.round(x*100)/100;
+function parseGrams(s){ const m = String(s||"").match(/(\d+(?:\.\d+)?)\s*g\b/i); return m ? parseFloat(m[1]) : 0; }
+function servUnitLabel(f){ return (f.kind==="supp" && f.cUnit) ? f.cUnit : "serving"; }
+function dServings(){
+  if(dUnit==="g") return dQty/dGramPer;
+  if(dUnit==="oz") return dQty*28.3495/dGramPer;
+  return dQty;
+}
+function openDetail(f){
+  if(!f) return;
+  sheetFood = f; dMeal = f.kind==="supp" ? "supplements" : sheetMeal;
+  dGramPer = parseGrams(f.s); dUnit = "serv"; dQty = 1;
   document.getElementById("sheetSearch").blur();
   document.getElementById("sheetSearchWrap").style.display = "none";
   document.getElementById("sheetDetail").style.display = "";
   document.getElementById("sheetTitle").textContent = "Log food";
-  document.getElementById("dName").textContent = sheetFood.n;
-  const dp = document.getElementById("dPhoto");
-  if(sheetFood.img){ dp.src = sheetFood.img; dp.style.display = ""; } else { dp.removeAttribute("src"); dp.style.display = "none"; }
-  document.getElementById("dMacros").textContent = (sheetFood.nutrs && sheetFood.nutrs.length)
-    ? `${sheetFood.s} · ${sheetFood.nutrs.map(x=>`${r1(x.amt)} ${x.u}`).join(" + ")}`
-    : `${sheetFood.s} · ${Math.round(sheetFood.cal)} cal · P ${r1(sheetFood.p)}g C ${r1(sheetFood.c)}g F ${r1(sheetFood.f)}g`;
-  document.querySelectorAll("#mealChips .chip").forEach(c=>c.classList.toggle("sel", c.dataset.m===sheetMeal));
-  updateQty();
+  document.getElementById("dName").textContent = f.n;
+  document.getElementById("dSub").textContent = Math.round(f.cal)+"kcal / "+f.s;
+  document.getElementById("dThumb").innerHTML = f.img ? '<img src="'+f.img+'" alt="">' : (f.kind==="supp"?"💊":"🍽️");
+  const dm = document.getElementById("dMeals"); dm.innerHTML = "";
+  MEALS.forEach(m=>{
+    const b = document.createElement("button");
+    b.className = "micon"+(m===dMeal?" sel":"");
+    b.innerHTML = MEAL_EMOJI[m]+"<span>"+m[0].toUpperCase()+m.slice(1)+"</span>";
+    b.onclick = ()=>{ dMeal = m; dm.querySelectorAll(".micon").forEach(x=>x.classList.toggle("sel", x===b)); };
+    dm.appendChild(b);
+  });
+  paintDUnits(); updateDetail();
 }
-function updateQty(){
-  document.getElementById("qVal").textContent = sheetQty;
-  document.querySelectorAll("#qChips .chip").forEach(c=>c.classList.toggle("sel", +c.dataset.q===sheetQty));
-  const cal = Math.round(sheetFood.cal*sheetQty);
-  document.getElementById("dTotal").textContent = cal+" cal · "+r1(sheetFood.p*sheetQty)+"g protein";
+function paintDUnits(){
+  const f = sheetFood, box = document.getElementById("dUnits"); box.innerHTML = "";
+  const units = [{id:"serv", label:servUnitLabel(f)}];
+  if(dGramPer>0) units.push({id:"g", label:"g"}, {id:"oz", label:"oz"});
+  units.forEach(u=>{
+    const b = document.createElement("button");
+    b.className = "chip"+(u.id===dUnit?" sel":"");
+    b.textContent = u.label;
+    b.onclick = ()=>{
+      const serv = dServings();
+      dUnit = u.id;
+      dQty = dUnit==="serv" ? round2(serv) : dUnit==="g" ? round2(serv*dGramPer) : round2(serv*dGramPer/28.3495);
+      paintDUnits(); updateDetail();
+    };
+    box.appendChild(b);
+  });
 }
+function updateDetail(){
+  const f = sheetFood, serv = dServings(), qi = document.getElementById("dQty");
+  if(document.activeElement!==qi) qi.value = dQty;
+  document.getElementById("dUnit").textContent = dUnit==="serv" ? servUnitLabel(f) : dUnit;
+  document.getElementById("dKcal").textContent = Math.round(f.cal*serv).toLocaleString()+" kcal";
+}
+document.getElementById("dQty").addEventListener("input", e=>{
+  const v = parseFloat(e.target.value);
+  if(v>0 && v<100000){ dQty = v; updateDetail(); }
+});
 document.getElementById("sheetSearch").addEventListener("input", e=>renderSheetResults(e.target.value));
-document.getElementById("qMinus").onclick = ()=>{ sheetQty = Math.max(0.25, Math.round((sheetQty-0.25)*100)/100); updateQty(); };
-document.getElementById("qPlus").onclick = ()=>{ sheetQty = Math.round((sheetQty+0.25)*100)/100; updateQty(); };
-document.querySelectorAll("#qChips .chip").forEach(c=>c.onclick=()=>{ sheetQty=+c.dataset.q; updateQty(); });
-document.querySelectorAll("#mealChips .chip").forEach(c=>c.onclick=()=>{ sheetMeal=c.dataset.m;
-  document.querySelectorAll("#mealChips .chip").forEach(x=>x.classList.toggle("sel", x===c)); });
 document.getElementById("backToSearch").onclick = showSearch;
 document.getElementById("confirmAdd").onclick = ()=>{
-  const d = day(), f = sheetFood;
-  d.meals[sheetMeal].push({id:uid(), n:f.n, s:f.s, qty:sheetQty, img:f.img||null,
-    cal:f.cal*sheetQty, p:f.p*sheetQty, c:f.c*sheetQty, f:f.f*sheetQty,
-    kind:f.kind||"food", nutrs:(f.nutrs||[]).map(x=>({n:x.n, amt:x.amt*sheetQty, u:x.u})), xw:!!f.xw});
-  save(); closeSheet(); renderDiary();
+  addToTray(sheetFood, round2(dServings()), dMeal);
+  showSearch();
 };
 
 /* ============ FOODS TAB ============ */
@@ -1092,14 +1297,14 @@ function renderFoods(){
   document.getElementById("foodCount").textContent = list.length ? list.length+" item"+(list.length>1?"s":"") : "";
   const box = document.getElementById("foodResults");
   box.innerHTML = list.slice(0,60).map(f =>
-    `<div class="frow"><span class="fim">${f.img?`<img src="${f.img}" alt="">`:MEAL_ICON.snacks}</span>
-     <div class="fnm"><b>${isCustom(f.n)?'<span class="diy">DIY</span>':""}${esc(f.n)}</b><span>${Math.round(f.cal)}kcal / ${esc(f.s)}</span></div>
+    `<div class="arow2" data-n="${esc(f.n)}"><span class="athumb">${f.img?`<img src="${f.img}" alt="">`:(f.kind==="supp"?"💊":"🍽️")}</span>
+     <div class="anm"><b>${isCustom(f.n)?'<span class="diy">DIY</span>':""}${esc(f.n)}</b><span>${Math.round(f.cal)}kcal / ${esc(f.s)}</span></div>
      <button class="favstar" data-n="${esc(f.n)}">${isFav(f.n)?STAR_ON:STAR_OFF}</button>
-     <button class="fadd" data-n="${esc(f.n)}">+</button></div>`
+     <button class="aplus" data-n="${esc(f.n)}">+</button></div>`
   ).join("") || `<div class="empty">${foodTab==="recent" ? "Nothing logged yet — foods you log will show up here." : foodTab==="favorites" ? "Tap the star on any food to pin it here." : "No custom foods yet. Tap + Create."}</div>`;
-  box.querySelectorAll(".favstar").forEach(b=>b.onclick=()=>{ toggleFav(b.dataset.n); renderFoods(); });
-  box.querySelectorAll(".fadd").forEach(b=>b.onclick=()=>{ sheetFood = findFood(b.dataset.n); sheetMeal="lunch"; sheetQty=1;
-    document.getElementById("sheet").classList.add("open"); showDetail(); });
+  box.querySelectorAll(".favstar").forEach(b=>b.onclick=e=>{ e.stopPropagation(); toggleFav(b.dataset.n); renderFoods(); });
+  box.querySelectorAll(".aplus").forEach(b=>b.onclick=e=>{ e.stopPropagation(); openSheet("lunch"); openDetail(findFood(b.dataset.n)); });
+  box.querySelectorAll(".arow2").forEach(r=>r.onclick=()=>{ openSheet("lunch"); openDetail(findFood(r.dataset.n)); });
 }
 document.getElementById("foodSearch").addEventListener("input", renderFoods);
 document.querySelectorAll("#foodTabs .segtab").forEach(t=>t.onclick=()=>{ foodTab=t.dataset.t; renderFoods(); });
@@ -1434,6 +1639,57 @@ function maybeAutoAdjust(newLb, dateStr){
   S.goals.autoNote = "Auto-adjusted from "+(Math.round(newLb*10)/10)+" lb on "+dateStr+" — maintenance and macros recalculated.";
   return true;
 }
+/* ============ GOALS: collapsible sections ============ */
+(function(){
+  const v = document.getElementById("view-goals");
+  [...v.querySelectorAll(":scope > .secttl")].forEach(h=>{
+    const sec = document.createElement("div"); sec.className = "gsec";
+    h.replaceWith(sec);
+    const gh = document.createElement("div"); gh.className = "ghead";
+    gh.innerHTML = `<span>${h.innerHTML}</span><span class="gchev">›</span>`;
+    sec.appendChild(gh);
+    const body = document.createElement("div"); body.className = "gbody";
+    sec.appendChild(body);
+    let n = sec.nextSibling;
+    while(n && !(n.classList && n.classList.contains("secttl"))){ const nx = n.nextSibling; body.appendChild(n); n = nx; }
+    gh.onclick = ()=>sec.classList.toggle("closed");
+  });
+})();
+function openGsec(name){
+  document.querySelectorAll("#view-goals .gsec").forEach(s=>{
+    const t = s.querySelector(".ghead span").textContent;
+    if(t===name) s.classList.remove("closed");
+  });
+}
+/* ============ WATER TARGET (settings UI) ============ */
+function waterBreakdown(){
+  const g = S.goals;
+  if(g.water>0) return "Manual target of "+g.water+" glasses. Switch to Auto for the research-based formula.";
+  const tdee = g.maintenance>0 ? g.maintenance : 2500;
+  const pal = actPAL(g.profile);
+  const perKcal = pal>=1.9 ? 1.5 : pal>=1.6 ? 1.25 : 1.0;
+  const base = Math.round(tdee*perKcal*0.8/240);
+  const tier = (ACT_TIERS.find(t=>t.key===(g.profile&&g.profile.activityKey))||ACT_TIERS[2]).key;
+  return "Auto: "+base+" glasses from "+Math.round(tdee).toLocaleString()+" kcal maintenance × "+tier+" activity (IOM "+perKcal.toFixed(2).replace(/0+$/,"").replace(/\.$/,"")+" mL/kcal, ~80% of water from fluids)"+(dayHasXW()?" + 2 glasses for a creatine-type supplement logged today":" — +2 glasses on days you log a creatine-type supplement")+".";
+}
+function paintWater(){
+  const g = S.goals;
+  document.querySelectorAll("#waterMode .chip").forEach(c=>{
+    const w = c.dataset.w;
+    c.classList.toggle("sel", (w==="auto" && !(g.water>0)) || (+w===g.water));
+  });
+  const wc = document.getElementById("waterCustom");
+  if(document.activeElement!==wc) wc.value = g.water>0 ? g.water : "";
+  document.getElementById("waterBreak").textContent = waterBreakdown();
+}
+document.querySelectorAll("#waterMode .chip").forEach(c=>c.onclick=()=>{
+  S.goals.water = c.dataset.w==="auto" ? 0 : +c.dataset.w;
+  save(); paintWater(); renderDiary(); renderSettings();
+});
+document.getElementById("waterCustom").addEventListener("change", e=>{
+  const n = Math.round(parseFloat(e.target.value)||0);
+  if(n>=0 && n<=30){ S.goals.water = n; save(); paintWater(); renderDiary(); renderSettings(); }
+});
 function renderGoals(){
   const g = S.goals, tot = goalTotal();
   const sl = document.getElementById("goalSlider");
@@ -1449,7 +1705,7 @@ function renderGoals(){
   document.querySelectorAll("#goalMode .chip").forEach(c=>c.classList.toggle("sel", c.dataset.m===g.mode));
   document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", g.maintenance>0 && +c.dataset.p === Math.round(g.surplus/g.maintenance*100)));
   paintModeNote(); paintGainProj();
-  updateMacroSplit();
+  updateMacroSplit(); paintWater();
 }
 function updateMacroSplit(){
   const g = S.goals, tot = goalTotal();
@@ -1549,12 +1805,7 @@ function renderSettings(){
   document.getElementById("dFoods").textContent = Object.values(S.days).reduce((a,d)=>a+MEALS.reduce((x,m)=>x+(d.meals[m]||[]).length,0),0);
 }
 document.getElementById("goalRow").onclick = ()=>{ renderGoals(); showView("goals"); };
-document.getElementById("waterRow").onclick = ()=>{
-  const cur = S.goals.water>0 ? S.goals.water : 0;
-  const v = prompt("Water glasses per day (enter 0 for Auto target):", cur);
-  if(v===null) return; const n = Math.round(parseFloat(v)||0);
-  if(n>=0 && n<=30){ S.goals.water = n; save(); renderSettings(); renderDiary(); }
-};
+document.getElementById("waterRow").onclick = ()=>{ renderGoals(); showView("goals"); openGsec("Water"); };
 document.getElementById("weightRow").onclick = ()=>{
   const v = prompt("Weight goal (lb):", S.goals.weight);
   if(v===null) return; const n = parseFloat(v);
