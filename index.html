@@ -744,16 +744,22 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
         <div class="cfrow"><span><span class="req">*</span>Serving Size</span><input id="cServ" placeholder="e.g. 100 g"></div>
         <div class="cfrow"><span><span class="req">*</span>Calories (kcal)</span><input id="cCal" type="number" inputmode="decimal" placeholder="Required"></div>
       </div>
-      <div class="cfsec">Nutrients</div>
-      <div class="cfcard">
-        <div class="cfrow"><span>Carbs (g)</span><input id="cC" type="number" inputmode="decimal" placeholder="Optional"></div>
-        <div class="cfrow"><span>Protein (g)</span><input id="cP" type="number" inputmode="decimal" placeholder="Optional"></div>
-        <div class="cfrow"><span>Fat (g)</span><input id="cF" type="number" inputmode="decimal" placeholder="Optional"></div>
+      <div id="cFoodNutrSec">
+        <div class="cfsec">Nutrition Facts</div>
+        <div class="cfcard" id="cFoodNutrBox"></div>
       </div>
-      <div class="cfsec">Vitamins &amp; minerals <span style="font-weight:400">(optional)</span></div>
-      <div class="cfcard">
-        <div id="cNutrRows"></div>
-        <div style="padding:4px 0 14px"><button type="button" class="cphotobtn" id="cNutrAdd">+ Add nutrient</button></div>
+      <div id="cSuppNutrSec" style="display:none">
+        <div class="cfsec">Nutrients</div>
+        <div class="cfcard">
+          <div class="cfrow"><span>Carbs (g)</span><input id="cC" type="number" inputmode="decimal" placeholder="Optional"></div>
+          <div class="cfrow"><span>Protein (g)</span><input id="cP" type="number" inputmode="decimal" placeholder="Optional"></div>
+          <div class="cfrow"><span>Fat (g)</span><input id="cF" type="number" inputmode="decimal" placeholder="Optional"></div>
+        </div>
+        <div class="cfsec">Vitamins &amp; minerals <span style="font-weight:400">(optional)</span></div>
+        <div class="cfcard">
+          <div id="cNutrRows"></div>
+          <div style="padding:4px 0 14px"><button type="button" class="cphotobtn" id="cNutrAdd">+ Add nutrient</button></div>
+        </div>
       </div>
       <button class="bigbtn" id="cSave">Save</button>
     </div>
@@ -795,7 +801,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-w";
+const APP_VERSION = "2026.09.18-x";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
@@ -1329,15 +1335,18 @@ function setCPhoto(data){
 }
 function resetCustomForm(){
   ["cName","cServ","cCal","cP","cC","cF"].forEach(id=>document.getElementById(id).value="");
+  FOOD_LABEL_ROWS.forEach(([id])=>{document.getElementById(id).value="";});
   document.getElementById("cPhotoFile").value = "";
   setCPhoto("");
   cKind = "food"; cUnit = "capsule"; cFoodUnit = "g";
   document.querySelectorAll("#cKindChips .chip").forEach(x=>x.classList.toggle("sel", x.dataset.kind==="food"));
   document.getElementById("cSuppSec").style.display = "none";
   document.getElementById("cFoodServSec").style.display = "";
+  document.getElementById("cFoodNutrSec").style.display = "";
+  document.getElementById("cSuppNutrSec").style.display = "none";
   document.querySelectorAll("#cFoodUnitChips .chip").forEach(x=>x.classList.toggle("sel", x.dataset.u==="g"));
   document.querySelectorAll("#cUnitChips .chip").forEach(x=>x.classList.toggle("sel", x.dataset.u==="capsule"));
-  seedNutrRows();
+  document.getElementById("cNutrRows").innerHTML = ""; cNutrSeed = "";
   document.getElementById("cXW").checked = false;
   const sv = document.getElementById("cServ"); sv.dataset.dirty = "";
   document.getElementById("cCal").placeholder = "Required";
@@ -1371,19 +1380,31 @@ document.getElementById("cSave").onclick = ()=>{
   if(!isSupp && !(cal>0)){ alert("Enter calories for the food."); return; }
   const num = id => parseFloat(document.getElementById(id).value) || 0;
   const sTxt = document.getElementById("cServ").value.trim() || (isSupp ? "1 "+cUnit : "1 serving");
-  const nutrs = [...document.querySelectorAll("#cNutrRows .nutrrow")].map(r=>({
-    n:r.children[0].value.trim(), amt:parseFloat(r.children[1].value)||0, u:r.children[2].value
-  })).filter(x=>x.n && x.amt>0);
-  for(const x of nutrs){
-    const dv = NUTR_DV[canonNutr(x.n)], u = String(x.u).toLowerCase();
-    if(dv && u==="g" && x.amt>=1 && dv.unit!=="g"){
-      if(!confirm(`Heads up: ${x.amt} g of ${x.n} is way over the daily value (${dv.dv} ${dv.unit}) — the unit is probably meant to be mg, not g.\n\nOK = save as ${x.amt} g anyway · Cancel = go back and fix it`)) return;
+  let p, c, f, nutrs;
+  if(isSupp){
+    p = num("cP"); c = num("cC"); f = num("cF");
+    nutrs = [...document.querySelectorAll("#cNutrRows .nutrrow")].map(r=>({
+      n:r.children[0].value.trim(), amt:parseFloat(r.children[1].value)||0, u:r.children[2].value
+    })).filter(x=>x.n && x.amt>0);
+    for(const x of nutrs){
+      const dv = NUTR_DV[canonNutr(x.n)], u = String(x.u).toLowerCase();
+      if(dv && u==="g" && x.amt>=1 && dv.unit!=="g"){
+        if(!confirm(`Heads up: ${x.amt} g of ${x.n} is way over the daily value (${dv.dv} ${dv.unit}) — the unit is probably meant to be mg, not g.\n\nOK = save as ${x.amt} g anyway · Cancel = go back and fix it`)) return;
+      }
     }
+  } else {
+    /* Food: fixed Nutrition Facts rows, fixed FDA units — no unit pickers. */
+    p = num("fProt"); c = num("fCarb"); f = num("fFat");
+    nutrs = [["Saturated Fat","fSatFat","g"],["Trans Fat","fTransFat","g"],
+             ["Cholesterol","fChol","mg"],["Sodium","fSod","mg"],
+             ["Dietary Fiber","fFiber","g"],["Total Sugars","fSugar","g"],["Added Sugars","fAddSugar","g"],
+             ["Vitamin D","fVitD","mcg"],["Calcium","fCalc","mg"],["Iron","fIron","mg"],["Potassium","fPot","mg"]]
+      .map(([n,id,u])=>({n, amt:num(id), u})).filter(x=>x.amt>0);
   }
   /* Serving-size plausibility: if the calories/macros can't physically fit the
      serving, the serving size is probably too small (Atwater: 4/4/9 kcal/g, fat max ~9). */
   const servG = servingGrams(sTxt), issues = [];
-  const mp = num("cP"), mc = num("cC"), mf = num("cF");
+  const mp = p, mc = c, mf = f;
   if(servG){
     const macroG = mp+mc+mf;
     if(macroG > servG*1.05) issues.push(`Protein + carbs + fat add up to ${r1(macroG)} g, but the serving is only ${r1(servG)} g — the serving size has to be bigger (or the macros smaller).`);
@@ -1394,7 +1415,7 @@ document.getElementById("cSave").onclick = ()=>{
     issues.push(`Your macros work out to about ${Math.round(expKcal)} kcal (4/4/9 math), but you entered ${r1(cal)} kcal — double-check for a typo.`);
   if(issues.length && !confirm(issues.join("\n\n")+"\n\nSave anyway?")) return;
   S.customFoods.push({n, s:sTxt,
-    cal, p:num("cP"), c:num("cC"), f:num("cF"), img:cPhotoData,
+    cal, p, c, f, img:cPhotoData,
     kind:isSupp?"supp":"food", unit:isSupp?cUnit:null, nutrs, xw:isSupp && document.getElementById("cXW").checked});
   resetCustomForm();
   save(); csheet.classList.remove("open"); renderFoods();
@@ -1412,6 +1433,17 @@ cFoodUnitBox.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
   const sv = document.getElementById("cServ");
   if(!sv.dataset.dirty) sv.value = (cFoodUnit==="g" ? "100 " : "1 ")+cFoodUnit;
 });
+/* Food uses a real Nutrition Facts layout: fixed rows with FDA-fixed units,
+   just fill in amounts. The free-form name/unit builder is supplement-only now. */
+const FOOD_LABEL_ROWS = [
+  ["fFat","Total Fat","g"],["fSatFat","Saturated Fat","g"],["fTransFat","Trans Fat","g"],
+  ["fChol","Cholesterol","mg"],["fSod","Sodium","mg"],
+  ["fCarb","Total Carbohydrate","g"],["fFiber","Dietary Fiber","g"],["fSugar","Total Sugars","g"],["fAddSugar","Added Sugars","g"],
+  ["fProt","Protein","g"],
+  ["fVitD","Vitamin D","mcg"],["fCalc","Calcium","mg"],["fIron","Iron","mg"],["fPot","Potassium","mg"]
+];
+document.getElementById("cFoodNutrBox").innerHTML = FOOD_LABEL_ROWS.map(([id,n,u])=>
+  `<div class="cfrow"><span>${n} (${u})</span><input id="${id}" type="number" inputmode="decimal" placeholder="Optional"></div>`).join("");
 /* ============ SUPPLEMENT CREATION ============ */
 const SUPP_UNITS = ["capsule","tablet","softgel","gummy","scoop","packet","dropper (mL)","serving","g","mg","mcg","mL","IU"];
 const NUTR_UNITS = ["mg","mcg","g","IU","mL"];
@@ -1430,19 +1462,19 @@ document.querySelectorAll("#cKindChips .chip").forEach(c=>c.onclick=()=>{
   document.querySelectorAll("#cKindChips .chip").forEach(x=>x.classList.toggle("sel", x===c));
   document.getElementById("cSuppSec").style.display = cKind==="supp" ? "" : "none";
   document.getElementById("cFoodServSec").style.display = cKind==="food" ? "" : "none";
+  document.getElementById("cFoodNutrSec").style.display = cKind==="food" ? "" : "none";
+  document.getElementById("cSuppNutrSec").style.display = cKind==="supp" ? "" : "none";
   document.getElementById("cCal").placeholder = cKind==="supp" ? "0" : "Required";
   const sv = document.getElementById("cServ");
   if(cKind==="supp" && !sv.dataset.dirty) sv.value = "1 "+cUnit;
   else if(cKind==="food" && !sv.dataset.dirty) sv.value = "100 "+cFoodUnit;
-  if(nutrRowsPristine()) seedNutrRows();
+  if(cKind==="supp" && nutrRowsPristine()) seedNutrRows();
 });
-/* Default nutrient rows, from FDA label research (2026-09-18):
-   - Food: the 4 vitamins/minerals FDA requires on every Nutrition Facts label
-     (Vitamin D, Calcium, Iron, Potassium), with their label units.
-   - Supplement: the most common dietary ingredients on Supplement Facts labels.
+/* Default nutrient rows for the SUPPLEMENT builder, from FDA label research (2026-09-18):
+   the most common dietary ingredients on Supplement Facts labels.
+   Food uses the fixed Nutrition Facts rows above instead — no free-form builder.
    Empty rows are dropped on save, so these are just fill-in-the-blank. */
 const NUTR_DEFAULTS = {
-  food:[["Vitamin D","mcg"],["Calcium","mg"],["Iron","mg"],["Potassium","mg"]],
   supp:[["Vitamin D","mcg"],["Magnesium","mg"],["Zinc","mg"],["Vitamin B12","mcg"]]
 };
 function addNutrRow(name, unit){
@@ -1459,7 +1491,7 @@ function nutrRowsPristine(){
 }
 function seedNutrRows(){
   document.getElementById("cNutrRows").innerHTML = "";
-  (NUTR_DEFAULTS[cKind]||[]).forEach(([n,u])=>addNutrRow(n,u));
+  (NUTR_DEFAULTS.supp||[]).forEach(([n,u])=>addNutrRow(n,u));
   cNutrSeed = [...document.querySelectorAll("#cNutrRows .nutrrow")].map(r=>r.children[0].value+"|"+r.children[2].value).join(";");
 }
 /* Serving → grams, so plausibility checks run on a metric base.
