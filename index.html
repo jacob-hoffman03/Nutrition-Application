@@ -170,6 +170,21 @@ button{font-family:inherit;}
 .dayline{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
 .spd{width:12px; height:12px; border-radius:50%; flex:none;}
 .daybtn{width:100%; margin-top:4px;}
+/* profile strip + medals */
+.pstrip{display:flex; align-items:center; gap:12px; padding:2px 2px 12px;}
+.pavatar{width:46px; height:46px; border-radius:50%; object-fit:cover; flex:none; background:var(--acc-soft); color:var(--acc);
+  display:flex; align-items:center; justify-content:center; font-weight:800; font-size:19px; border:none; cursor:pointer; overflow:hidden; padding:0;}
+.pavatar img{width:100%; height:100%; object-fit:cover; display:block;}
+.pmeta{flex:1; min-width:0;}
+.pname{font-size:17px; font-weight:800; letter-spacing:-.2px;}
+.psub{font-size:12px; color:var(--muted); font-weight:600;}
+.medals{display:flex; gap:10px; align-items:center;}
+.medal{width:34px; height:41px; border:none; background:none; padding:0; cursor:pointer; transition:transform .15s;}
+.medal:active{transform:scale(1.12);}
+.medal svg{width:100%; height:100%; display:block;}
+.prow{display:flex; align-items:center; gap:14px;}
+.prow .pmeta{flex:1;}
+.sname{width:100%; border:none; background:var(--card); border-radius:12px; padding:12px 14px; font-size:16px; font-weight:700; color:var(--ink); outline:none; font-family:inherit;}
 /* add-food: reference-style rows */
 .arow2{display:flex; align-items:center; gap:14px; padding:13px 2px; border-bottom:1px solid var(--line); cursor:pointer;}
 .athumb{width:56px; height:56px; border-radius:16px; background:var(--card2); flex:none; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:26px; color:var(--muted);}
@@ -385,6 +400,11 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
         <button id="gearBtn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       </div>
     </div>
+    <div class="pstrip">
+      <button class="pavatar" id="pAvatar" aria-label="Profile"></button>
+      <div class="pmeta"><div class="pname" id="pName">Jay</div><div class="psub">Today's medals</div></div>
+      <div class="medals" id="pMedals"></div>
+    </div>
     <div class="card herocard">
       <div class="wkrow">
         <span style="font-size:13px;color:var(--muted);font-weight:600" id="daySub"></span>
@@ -583,7 +603,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     </div>
     <div class="rangenote" id="pfAutoNote"></div>
     <div class="rangenote" id="pfTuneNote"></div>
-    <button class="bigbtn" id="goalsDone">Done</button>
+    <button class="bigbtn" id="goalsDone">Save changes</button>
   </section>
 
   <!-- PROGRESS -->
@@ -647,6 +667,16 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <h1>Settings</h1>
       <div style="width:44px"></div>
     </div>
+    <div class="card" style="margin-top:12px">
+      <div class="prow">
+        <button class="pavatar" id="sAvatar" style="width:58px;height:58px;font-size:22px" aria-label="Change profile photo"></button>
+        <div class="pmeta"><input class="sname" id="sName" placeholder="Your name" autocomplete="off"></div>
+      </div>
+      <div class="flabel" style="margin:14px 0 8px">Today's medals</div>
+      <div class="medals" id="sMedals"></div>
+      <div class="rangenote" id="medalHint" style="margin-top:10px"></div>
+    </div>
+    <input type="file" id="pPhotoFile" accept="image/*" style="display:none">
     <div class="card" style="padding-top:4px; padding-bottom:4px; margin-top:12px;">
       <button class="srow" id="goalRow"><span>Goal Settings</span><span class="sval"><b id="goalRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
       <button class="srow" id="waterRow"><span>Water target</span><span class="sval"><b id="waterRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
@@ -880,7 +910,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-ab";
+const APP_VERSION = "2026.09.18-ac";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
@@ -888,11 +918,16 @@ const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:413, 
 function load(){
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; if(!(s.goals.surplus>0)){ const d=(s.goals.cal>0?s.goals.cal:3000)-s.goals.maintenance; s.goals.surplus = d>0?Math.round(d):300; } delete s.goals.cal; if(!s.goals.profile) s.goals.profile = defProfile(); else { const dp = defProfile(); for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; }
 /* migrate legacy numeric activity factor to FAO tier key */
-if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); if(!s.training) s.training = {sched:{}, done:{}}; return s; } } catch(e){}
-  return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}}};
+if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); if(!s.training) s.training = {sched:{}, done:{}}; if(!s.profile) s.profile = {name:"Jay", img:""}; return s; } } catch(e){}
+  return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}}, profile:{name:"Jay", img:""}};
 }
 let S = load();
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+/* fingerprint of the profile inputs that feed calcMaintenance — if these changed since
+   maintenance was last calculated, Save recalculates so the goal can never go stale */
+function profHash(){ const p=S.goals.profile; return [p.weightLb,p.heightIn,p.age,p.sex,p.bodyFat,p.activityKey].join("|"); }
+function recalcMaint(){ S.goals.maintenance = calcMaintenance().maint; applyModePct(); S.goals.profHash = profHash(); }
+if(!S.goals.profHash) S.goals.profHash = profHash();
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const dstr = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const todayStr = () => dstr(new Date());
@@ -1016,6 +1051,7 @@ function ringPaint(calId, surpId, eCal, mCal, tCal){
 }
 function renderDiary(){
   const k = viewDate(), d = day(), g = S.goals, t = totals(k);
+  renderProfileStrip();
   const dt = new Date(k+"T12:00:00");
   const isToday = k === todayStr();
   $("dayTitle").textContent = isToday ? "Today" : (dt.getMonth()+1)+"/"+dt.getDate()+"/"+String(dt.getFullYear()).slice(2);
@@ -1840,6 +1876,7 @@ function maybeAutoAdjust(newLb, dateStr){
   p.weightLb = newLb;
   S.goals.maintenance = calcMaintenance().maint;
   applyModePct();
+  S.goals.profHash = profHash();
   const pTarget = Math.round(newLb/2.20462*1.6); /* Morton 2018: gains top out ~1.6 g/kg */
   if(pTarget > S.goals.protein) S.goals.protein = pTarget;
   const tot = goalTotal();
@@ -2053,6 +2090,89 @@ document.getElementById("schedSave").onclick = ()=>{
   document.getElementById("schedSheet").classList.remove("open");
   renderCalendar();
 };
+/* ============ PROFILE + DAILY MEDALS ============ */
+const MEDAL_DEFS = [
+  {id:"silver", name:"Silver", color:"#a9b0c2", desc:"Log any food today — showing up counts."},
+  {id:"gold", name:"Gold", color:"#f2b705", desc:"Finish within ±10% of your calorie goal and hit your protein goal."},
+  {id:"diamond", name:"Diamond", color:"#5ec8f2", desc:"Gold, plus your water target, plus a trained workout."}
+];
+function medalsFor(ds){
+  const t = totals(ds), g = S.goals, goal = goalTotal();
+  const silver = t.cal > 0;
+  const gold = silver && goal>0 && g.protein>0 && t.cal>=goal*0.9 && t.cal<=goal*1.1 && t.p>=g.protein;
+  const d = S.days[ds];
+  const diamond = gold && d && (d.water||0)>=waterTarget() && trainDay(ds).done;
+  return {silver:!!silver, gold:!!gold, diamond:!!diamond};
+}
+function medalSVG(color, earned){
+  return `<svg viewBox="0 0 40 48"><path d="M13 2h14l5 15-12 9-12-9z" fill="${earned?color:"#dcdce4"}"/>`+
+    `<circle cx="20" cy="33" r="12" fill="${earned?color:"#ececf1"}" stroke="${earned?color:"#c9c9d4"}" stroke-width="2"/>`+
+    `<path d="M20 26.5l2.2 4.5 4.9.7-3.5 3.5.8 5-4.4-2.3-4.4 2.3.8-5-3.5-3.5 4.9-.7z" fill="${earned?"#ffffff":"#c4c4d0"}"/></svg>`;
+}
+function medalRowHTML(ds){
+  const m = medalsFor(ds);
+  return MEDAL_DEFS.map(md=>`<button class="medal" data-m="${md.id}" aria-label="${md.name} medal${m[md.id]?" earned":""}">${medalSVG(md.color, m[md.id])}</button>`).join("");
+}
+function wireMedals(el){ el.querySelectorAll(".medal").forEach(b=>b.onclick=()=>openMedalInfo()); }
+function openMedalInfo(){
+  const m = medalsFor(todayStr());
+  document.getElementById("infoTitle").textContent = "Daily medals";
+  document.getElementById("infoBody").innerHTML = MEDAL_DEFS.map(md=>
+    `<div class="irow"><b style="color:${md.color}">${md.name}</b> ${m[md.id]?"— earned today":"— not yet"}<br><span style="color:var(--muted)">${md.desc}</span></div>`).join("")+
+    `<div class="irow" style="color:var(--muted)">Medals reset every day. Diamond needs a training day, so planned recovery days top out at Gold.</div>`;
+  document.getElementById("infoSheet").classList.add("open");
+}
+function avatarHTML(pr, px){
+  const initial = ((pr.name||"Jay").trim().charAt(0)||"J").toUpperCase();
+  return pr.img ? `<img src="${pr.img}" alt="Profile photo">` : `<span>${initial}</span>`;
+}
+function renderProfileStrip(){
+  const pr = S.profile || {name:"Jay", img:""};
+  document.getElementById("pAvatar").innerHTML = avatarHTML(pr);
+  document.getElementById("pName").textContent = pr.name || "Jay";
+  const pm = document.getElementById("pMedals");
+  pm.innerHTML = medalRowHTML(todayStr());
+  wireMedals(pm);
+}
+document.getElementById("pAvatar").onclick = ()=>showView("settings");
+function renderProfileCard(){
+  const pr = S.profile || {name:"Jay", img:""};
+  document.getElementById("sAvatar").innerHTML = avatarHTML(pr);
+  const nm = document.getElementById("sName");
+  if(document.activeElement!==nm) nm.value = pr.name || "";
+  const sm = document.getElementById("sMedals");
+  sm.innerHTML = medalRowHTML(todayStr());
+  wireMedals(sm);
+  const m = medalsFor(todayStr());
+  const n = (m.silver?1:0)+(m.gold?1:0)+(m.diamond?1:0);
+  document.getElementById("medalHint").textContent = n===3 ? "All three earned today. Huge day." :
+    n===0 ? "Log your first meal to earn Silver." :
+    "Tap a medal to see what each one takes.";
+}
+document.getElementById("sAvatar").onclick = ()=>document.getElementById("pPhotoFile").click();
+document.getElementById("sName").addEventListener("change", e=>{
+  S.profile.name = e.target.value.trim() || "Jay";
+  save(); renderProfileStrip(); renderProfileCard();
+});
+document.getElementById("pPhotoFile").onchange = e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = ()=>{
+    try{
+      const max = 256, scale = Math.min(1, max/Math.max(img.width, img.height));
+      const cv = document.createElement("canvas");
+      cv.width = Math.max(1, Math.round(img.width*scale)); cv.height = Math.max(1, Math.round(img.height*scale));
+      cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+      S.profile.img = cv.toDataURL("image/jpeg", 0.85);
+      save(); renderProfileCard(); renderProfileStrip();
+    }catch(err){ alert("Couldn't use that photo."); }
+    URL.revokeObjectURL(url);
+  };
+  img.onerror = ()=>{ URL.revokeObjectURL(url); alert("Couldn't read that photo."); };
+  img.src = url;
+};
 /* ============ WATER TARGET (settings UI) ============ */
 function waterBreakdown(){
   const w = waterCalc();
@@ -2125,7 +2245,8 @@ document.getElementById("goalSlider").addEventListener("input", e=>{
 document.querySelectorAll("#pfAct .chip").forEach(c=>c.onclick=()=>{
   S.goals.profile.activityKey = c.dataset.k;
   document.querySelectorAll("#pfAct .chip").forEach(x=>x.classList.toggle("sel", x===c));
-  save(); paintMaintNote(); renderDiary();
+  recalcMaint();
+  save(); renderGoals(); renderDiary();
 });
 document.querySelectorAll("#pfUnits .chip").forEach(c=>c.onclick=()=>{
   readProfile();
@@ -2135,7 +2256,8 @@ document.querySelectorAll("#pfUnits .chip").forEach(c=>c.onclick=()=>{
 document.querySelectorAll("#pfSex .chip").forEach(c=>c.onclick=()=>{
   S.goals.profile.sex = c.dataset.x;
   document.querySelectorAll("#pfSex .chip").forEach(x=>x.classList.toggle("sel", x===c));
-  save(); paintMaintNote();
+  recalcMaint();
+  save(); renderGoals(); renderDiary();
 });
 document.getElementById("pfAuto").onclick = ()=>{
   S.goals.profile.auto = !S.goals.profile.auto;
@@ -2159,8 +2281,7 @@ document.querySelectorAll("#surpChips .chip").forEach(c=>c.onclick=()=>{
 });
 document.getElementById("pfCalc").onclick = ()=>{
   readProfile();
-  S.goals.maintenance = calcMaintenance().maint;
-  applyModePct();
+  recalcMaint();
   save(); renderGoals(); renderDiary();
 };
 document.getElementById("macroAuto").onclick = ()=>{
@@ -2178,6 +2299,7 @@ document.getElementById("goalsDone").onclick = ()=>{
   const num=(id,fb)=>{ const v=parseFloat(document.getElementById(id).value); return v>=0?v:fb; };
   S.goals.carbs = num("gmC",S.goals.carbs); S.goals.protein = num("gmP",S.goals.protein); S.goals.fat = num("gmF",S.goals.fat);
   readProfile();
+  if(profHash()!==S.goals.profHash) recalcMaint(); /* profile changed → goal can never go stale */
   save(); showView("settings"); renderDiary();
 };
 document.getElementById("goalsBack").onclick = ()=>showView("settings");
@@ -2185,6 +2307,7 @@ document.getElementById("goalsBack").onclick = ()=>showView("settings");
 /* ============ SETTINGS ============ */
 function renderSettings(){
   const g = S.goals;
+  renderProfileCard();
   document.getElementById("goalRowVal").textContent = Math.round(goalTotal()).toLocaleString()+" kcal";
   document.getElementById("waterRowVal").textContent = g.water>0 ? g.water+" glasses" : "Auto ("+waterTarget()+" glasses)";
   document.getElementById("weightRowVal").textContent = g.weight+" lb";
