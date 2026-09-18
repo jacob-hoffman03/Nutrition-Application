@@ -410,12 +410,13 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     </div>
     <div class="rangenote" style="margin:10px 2px 2px">Activity level</div>
     <div class="chips" id="pfAct">
-      <button class="chip" data-a="1.2">Sedentary</button>
-      <button class="chip" data-a="1.375">Light</button>
-      <button class="chip" data-a="1.55">Moderate</button>
-      <button class="chip" data-a="1.725">Active</button>
-      <button class="chip" data-a="1.9">Very active</button>
+      <button class="chip" data-k="sedentary">Sedentary</button>
+      <button class="chip" data-k="light">Light</button>
+      <button class="chip" data-k="moderate">Moderate</button>
+      <button class="chip" data-k="active">Active</button>
+      <button class="chip" data-k="very">Very active</button>
     </div>
+    <div class="rangenote">Factors from FAO/WHO/UNU activity bands (1.45–2.10). On your feet all day ≈ 1.9. This factor is the roughest part of the math (±10–15%) — your weigh-ins calibrate it.</div>
     <button class="bigbtn" id="pfCalc" style="margin-top:4px">Calculate maintenance</button>
     <div class="rangenote" id="pfNote"></div>
     <div class="cfrow" style="margin-top:8px"><span><b style="font-size:14px">Auto-adjust as I gain weight</b><br><span class="ph">Recalculates maintenance + macros when you log a new weight</span></span><button class="chip" id="pfAuto">Off</button></div>
@@ -428,20 +429,20 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     </div>
     <div class="rangenote" style="margin:10px 2px 2px">Goal</div>
     <div class="chips" id="goalMode">
-      <button class="chip" data-m="lean" data-s="250">Lean Bulk</button>
-      <button class="chip" data-m="bulk" data-s="500">Bulk</button>
-      <button class="chip" data-m="maintain" data-s="0">Maintain</button>
+      <button class="chip" data-m="lean" data-pct="10">Lean Bulk</button>
+      <button class="chip" data-m="bulk" data-pct="20">Bulk</button>
+      <button class="chip" data-m="maintain" data-pct="0">Maintain</button>
     </div>
     <div class="rangenote" id="modeNote"></div>
     <div class="card">
       <input type="range" id="goalSlider" min="1500" max="6000" step="25" value="3000">
       <div class="rangelabels"><span id="goalMin">1500 kcal</span><span id="goalMax">6000 kcal</span></div>
-      <div class="rangenote">*Adjusting the slider changes your surplus on top of maintenance.</div>
+      <div class="rangenote">*Adjusting the slider changes your surplus on top of maintenance. Surplus presets are % of maintenance — research supports 5–20% for lean gains.</div>
       <div class="chips" id="surpChips" style="margin-top:10px">
-        <button class="chip" data-s="250">+0.5 lb/wk</button>
-        <button class="chip" data-s="375">+0.75 lb/wk</button>
-        <button class="chip" data-s="500">+1 lb/wk</button>
-        <button class="chip" data-s="625">+1.25 lb/wk</button>
+        <button class="chip" data-p="5">+5%</button>
+        <button class="chip" data-p="10">+10%</button>
+        <button class="chip" data-p="15">+15%</button>
+        <button class="chip" data-p="20">+20%</button>
       </div>
     </div>
     <div class="fhead"><span class="flabel">Macro split</span><button class="createbtn" id="macroAuto">Auto-split</button></div>
@@ -451,6 +452,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div class="m3 f"><div class="mn">Fat</div><div class="mp" id="gmFp">30%</div><div class="mg"><input id="gmF" type="number" inputmode="numeric"> g</div></div>
     </div>
     <div class="segbar" id="macroSeg"><i id="segC" style="background:#7e7ef2"></i><i id="segP" style="background:#12cfae"></i><i id="segF" style="background:#fb6f84"></i></div>
+    <div class="rangenote">Evidence: muscle gains top out near 1.6 g protein/kg/day (Morton 2018); up to 2.2 g/kg (1 g/lb) is the supported ceiling.</div>
     <button class="bigbtn" id="goalsDone">Done</button>
   </section>
 
@@ -475,6 +477,12 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
         <button class="wlogbtn" id="weightAdd">Log</button>
       </div>
       <div id="weightHist" style="margin-top:6px"></div>
+    </div>
+    <div class="secttl">Calorie Check</div>
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:baseline;"><b style="font-size:16px">Is your target working?</b></div>
+      <div class="rangenote" id="calCheckOut" style="margin-top:6px">Log your weight for 2+ weeks and this compares your real rate of gain against your target.</div>
+      <div id="calCheckApply" style="margin-top:10px; display:none"><button class="bigbtn" id="calApplyBtn"></button></div>
     </div>
     <div class="secttl">7-Day Calories</div>
     <div class="card">
@@ -641,13 +649,15 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-p";
+const APP_VERSION = "2026.09.18-q";
 
 /* ============ STATE ============ */
-const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activity:1.55, auto:true});
+const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
 const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:413, fat:83, water:10, weight:150, mode:"custom", profile:defProfile()});
 function load(){
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; if(!(s.goals.surplus>0)){ const d=(s.goals.cal>0?s.goals.cal:3000)-s.goals.maintenance; s.goals.surplus = d>0?Math.round(d):300; } delete s.goals.cal; if(!s.goals.profile) s.goals.profile = defProfile(); else { const dp = defProfile(); for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; } if(!s.goals.mode) s.goals.mode = "custom"; s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); return s; } } catch(e){}
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; if(!(s.goals.surplus>0)){ const d=(s.goals.cal>0?s.goals.cal:3000)-s.goals.maintenance; s.goals.surplus = d>0?Math.round(d):300; } delete s.goals.cal; if(!s.goals.profile) s.goals.profile = defProfile(); else { const dp = defProfile(); for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; }
+/* migrate legacy numeric activity factor to FAO tier key */
+if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); return s; } } catch(e){}
   return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals()};
 }
 let S = load();
@@ -1008,6 +1018,51 @@ function streak(){
   }
   return s;
 }
+/* ============ CALORIE CHECK (Hall 2014 model-based feedback control) ============
+   Formulas guess; weigh-ins decide. Compare the 7-day-averaged weight trend over 2+ weeks
+   against the target rate, then adjust intake ±100-150 kcal. Research finds no large
+   "metabolic damage" term beyond what the formulas predict — the trend is the truth. */
+function targetRateBand(){
+  const m = S.goals.mode, w = S.goals.profile.weightLb>0 ? S.goals.profile.weightLb : 150;
+  if(m==="lean") return [0.25, 0.5];
+  if(m==="bulk") return [0.35, 0.7];
+  if(m==="maintain") return [-0.15, 0.15];
+  const s = S.goals.surplus>0 ? S.goals.surplus : 0;
+  const r = s*7/3500/w*100;
+  return [r*0.6, r*1.4];
+}
+function paintCalCheck(){
+  const out = document.getElementById("calCheckOut"), wrap = document.getElementById("calCheckApply"), btn = document.getElementById("calApplyBtn");
+  wrap.style.display = "none";
+  const ws = (S.weights||[]).slice().sort((a,b)=>a.d<b.d?-1:1);
+  if(ws.length < 3){ out.textContent = "Log your weight for 2+ weeks and this compares your real rate of gain against your target."; return; }
+  const days = Math.round((new Date(ws[ws.length-1].d+"T12:00:00") - new Date(ws[0].d+"T12:00:00"))/86400000);
+  if(days < 14){ out.textContent = "Need weigh-ins spanning 2+ weeks ("+days+"d so far). Daily weight swings ±1–2%, so 2–3 weeks reveals the real trend."; return; }
+  const avg = a => a.reduce((x,p)=>x+p.w,0)/a.length;
+  const early = avg(ws.slice(0, Math.min(7, ws.length)));
+  const recent = avg(ws.slice(-Math.min(7, ws.length)));
+  const wAvg = (early+recent)/2;
+  const rate = (recent-early)/days*7, pct = rate/wAvg*100;
+  const bd = targetRateBand();
+  const f2 = v => (v>=0?"+":"")+v.toFixed(2);
+  let msg = "Actual: "+f2(rate)+" lb/wk ("+f2(pct)+"%/wk). Target: "+bd[0].toFixed(2)+" to "+bd[1].toFixed(2)+"%/wk. ";
+  let suggest = 0;
+  if(pct < bd[0]-0.05){ msg += "Below target — consider +100–150 kcal/day."; suggest = 150; }
+  else if(pct > bd[1]+0.05){ msg += "Above target — consider −100–150 kcal/day."; suggest = -150; }
+  else msg += "On target — hold steady and re-check in 2–3 weeks.";
+  msg += " Give any change 2–3 weeks before judging it.";
+  out.textContent = msg;
+  if(suggest){
+    wrap.style.display = "";
+    btn.textContent = "Apply "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal/day";
+    btn.onclick = ()=>{
+      S.goals.surplus = Math.max(0, Math.round((S.goals.surplus>0?S.goals.surplus:0) + suggest));
+      S.goals.mode = "custom";
+      S.goals.autoNote = "Calibration "+todayStr()+": surplus "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal based on your weight trend.";
+      save(); renderGoals(); renderProgress(); renderDiary();
+    };
+  }
+}
 function renderProgress(){
   const days = last7();
   const logged = days.filter(x=>x.logged);
@@ -1038,6 +1093,7 @@ function renderProgress(){
   const wh = document.getElementById("weightHist");
   wh.innerHTML = w.slice(-5).reverse().map(p=>
     `<div class="wrow"><span>${new Date(p.d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span><b>${p.w} lb</b></div>`).join("");
+  paintCalCheck();
 }
 document.getElementById("weightAdd").onclick = ()=>{
   const v = parseFloat(document.getElementById("weightInput").value);
@@ -1051,7 +1107,19 @@ document.getElementById("weightAdd").onclick = ()=>{
 
 /* ============ GOALS VIEW ============ */
 function goalTotal(){ return (S.goals.maintenance>0?S.goals.maintenance:0) + (S.goals.surplus>0?S.goals.surplus:0); }
-/* Katch-McArdle (body fat known) or Mifflin-St Jeor x activity = maintenance */
+/* Katch-McArdle (body fat known) or Mifflin-St Jeor x FAO activity factor = maintenance.
+   The old 1.2-1.9 ladder is a pre-doubly-labelled-water legacy that underestimates active
+   people; FAO/WHO/UNU 2004 bands (1.40-1.69 light, 1.70-1.99 moderate, 2.00-2.40 vigorous)
+   are the DLW-calibrated standard. */
+const ACT_TIERS = [
+  {key:"sedentary", pal:1.45},
+  {key:"light", pal:1.60},
+  {key:"moderate", pal:1.75},
+  {key:"active", pal:1.90},
+  {key:"very", pal:2.10}
+];
+const actPAL = p => (ACT_TIERS.find(t=>t.key===(p&&p.activityKey))||ACT_TIERS[2]).pal;
+const MODE_PCT = {lean:10, bulk:20, maintain:0};
 function calcMaintenance(){
   const p = S.goals.profile;
   const kg = p.weightLb/2.20462;
@@ -1063,23 +1131,29 @@ function calcMaintenance(){
     bmr = 10*kg + 6.25*(p.heightIn*2.54) - 5*p.age + (p.sex==="f" ? -161 : 5);
     formula = "Mifflin-St Jeor";
   }
-  return {bmr: Math.round(bmr), maint: Math.round(bmr*p.activity), formula};
+  return {bmr: Math.round(bmr), maint: Math.round(bmr*actPAL(p)), formula};
+}
+/* keep a preset mode's surplus glued to its % of maintenance */
+function applyModePct(){
+  const pct = MODE_PCT[S.goals.mode];
+  if(pct!==undefined && S.goals.maintenance>0) S.goals.surplus = Math.round(S.goals.maintenance*pct/100);
 }
 function paintGainProj(){
   const s = S.goals.surplus>0 ? S.goals.surplus : 0;
   const el = document.getElementById("gainProj");
   if(s <= 0){ el.textContent = "At maintenance — no projected gain"; return; }
-  el.textContent = "≈ +"+(s*7/3500).toFixed(2)+" lb/week · +"+(s*30/3500).toFixed(1)+" lb/month at this surplus";
+  const w = S.goals.profile.weightLb>0 ? S.goals.profile.weightLb : 150;
+  const lbWk = s*7/3500; /* 3500 kcal/lb: rough first-week heuristic, overestimates over time */
+  el.textContent = "≈ +"+lbWk.toFixed(2)+" lb/week ("+(lbWk/w*100).toFixed(2)+"% of body weight) at this surplus — rough estimate; your weigh-ins are the real answer";
 }
 function paintMaintNote(){
   const p = S.goals.profile, cm = calcMaintenance();
-  document.getElementById("pfNote").textContent = cm.formula+": BMR "+cm.bmr.toLocaleString()+" × "+p.activity+" = "+cm.maint.toLocaleString()+" kcal maintenance";
+  document.getElementById("pfNote").textContent = cm.formula+": BMR "+cm.bmr.toLocaleString()+" (just living) × "+actPAL(p)+" activity = "+cm.maint.toLocaleString()+" kcal maintenance. Formulas run ±10%; the activity factor is the roughest part — weigh-ins calibrate it.";
 }
 function paintModeNote(){
-  const m = S.goals.mode, el = document.getElementById("modeNote"), maint = S.goals.maintenance;
-  const pct = s => maint>0 ? Math.round(s/maint*100) : 0;
-  if(m==="lean") el.textContent = "Lean bulk: +250 kcal (~"+pct(250)+"% over maintenance) · ≈+0.5 lb/week · maximal muscle, minimal fat.";
-  else if(m==="bulk") el.textContent = "Bulk: +500 kcal (~"+pct(500)+"% over maintenance) · ≈+1 lb/week · faster gains, more fat.";
+  const m = S.goals.mode, el = document.getElementById("modeNote");
+  if(m==="lean") el.textContent = "Lean bulk: +10% over maintenance. A 2023 trial (Helms) found bigger surpluses add fat, not extra muscle — target 0.25–0.5% body weight/week.";
+  else if(m==="bulk") el.textContent = "Bulk: +20% over maintenance. Faster scale gains, but research shows much of the extra is fat — target 0.35–0.7% body weight/week.";
   else if(m==="maintain") el.textContent = "Maintain: eat at maintenance to hold your weight steady.";
   else el.textContent = "";
 }
@@ -1114,7 +1188,7 @@ function renderProfile(){
   document.getElementById("pfWeight").value = met ? (p.weightLb/2.20462).toFixed(1) : Math.round(p.weightLb*10)/10;
   document.getElementById("pfWeightUnit").textContent = met?"kg":"lb";
   document.getElementById("pfFat").value = p.bodyFat>0 ? p.bodyFat : "";
-  document.querySelectorAll("#pfAct .chip").forEach(c=>c.classList.toggle("sel", +c.dataset.a===p.activity));
+  document.querySelectorAll("#pfAct .chip").forEach(c=>c.classList.toggle("sel", c.dataset.k===p.activityKey));
   const at = document.getElementById("pfAuto");
   at.textContent = p.auto?"On":"Off"; at.classList.toggle("sel", !!p.auto);
   document.getElementById("pfAutoNote").textContent = S.goals.autoNote || "";
@@ -1127,7 +1201,8 @@ function maybeAutoAdjust(newLb, dateStr){
   if(Math.abs(newLb - p.weightLb) < 0.05) return false;
   p.weightLb = newLb;
   S.goals.maintenance = calcMaintenance().maint;
-  const pTarget = Math.round(newLb);
+  applyModePct();
+  const pTarget = Math.round(newLb/2.20462*1.6); /* Morton 2018: gains top out ~1.6 g/kg */
   if(pTarget > S.goals.protein) S.goals.protein = pTarget;
   const tot = goalTotal();
   S.goals.fat = Math.max(0, Math.round(tot*0.25/9));
@@ -1148,7 +1223,7 @@ function renderGoals(){
   document.getElementById("gmC").value = g.carbs; document.getElementById("gmP").value = g.protein; document.getElementById("gmF").value = g.fat;
   renderProfile();
   document.querySelectorAll("#goalMode .chip").forEach(c=>c.classList.toggle("sel", c.dataset.m===g.mode));
-  document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", +c.dataset.s === Math.round(g.surplus)));
+  document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", g.maintenance>0 && +c.dataset.p === Math.round(g.surplus/g.maintenance*100)));
   paintModeNote(); paintGainProj();
   updateMacroSplit();
 }
@@ -1174,13 +1249,13 @@ document.getElementById("goalSlider").addEventListener("input", e=>{
   document.getElementById("goalTotal").textContent = Math.round(goalTotal()).toLocaleString();
   document.getElementById("goalSub").textContent = Math.round(S.goals.maintenance).toLocaleString()+" maintenance + "+Math.round(S.goals.surplus).toLocaleString()+" surplus";
   document.querySelectorAll("#goalMode .chip").forEach(c=>c.classList.remove("sel"));
-  document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", +c.dataset.s === S.goals.surplus));
+  document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", S.goals.maintenance>0 && +c.dataset.p === Math.round(S.goals.surplus/S.goals.maintenance*100)));
   paintModeNote(); paintGainProj();
   updateMacroSplit();
 });
 ["gmC","gmP","gmF"].forEach(id=>document.getElementById(id).addEventListener("input", updateMacroSplit));
 document.querySelectorAll("#pfAct .chip").forEach(c=>c.onclick=()=>{
-  S.goals.profile.activity = +c.dataset.a;
+  S.goals.profile.activityKey = c.dataset.k;
   document.querySelectorAll("#pfAct .chip").forEach(x=>x.classList.toggle("sel", x===c));
   paintMaintNote();
 });
@@ -1199,24 +1274,27 @@ document.getElementById("pfAuto").onclick = ()=>{
   save(); renderProfile();
 };
 document.querySelectorAll("#goalMode .chip").forEach(c=>c.onclick=()=>{
+  if(!(S.goals.maintenance>0)){ alert("Calculate your maintenance first."); return; }
   S.goals.mode = c.dataset.m;
-  S.goals.surplus = +c.dataset.s;
+  S.goals.surplus = Math.round(S.goals.maintenance*(+c.dataset.pct)/100);
   save(); renderGoals(); renderDiary();
 });
 document.querySelectorAll("#surpChips .chip").forEach(c=>c.onclick=()=>{
-  S.goals.surplus = +c.dataset.s;
+  if(!(S.goals.maintenance>0)){ alert("Calculate your maintenance first."); return; }
+  S.goals.surplus = Math.round(S.goals.maintenance*(+c.dataset.p)/100);
   S.goals.mode = "custom";
   save(); renderGoals(); renderDiary();
 });
 document.getElementById("pfCalc").onclick = ()=>{
   readProfile();
   S.goals.maintenance = calcMaintenance().maint;
+  applyModePct();
   save(); renderGoals(); renderDiary();
 };
 document.getElementById("macroAuto").onclick = ()=>{
   const tot = goalTotal();
   const entered = Math.max(0, Math.round(parseFloat(document.getElementById("gmP").value)||S.goals.protein||150));
-  const p = Math.max(entered, Math.round(S.goals.profile.weightLb));
+  const p = Math.max(entered, Math.round(S.goals.profile.weightLb/2.20462*1.6)); /* Morton 2018 breakpoint */
   const f = Math.max(0, Math.round(tot*0.25/9));
   const c = Math.max(0, Math.round((tot - p*4 - f*9)/4));
   document.getElementById("gmP").value = p;
