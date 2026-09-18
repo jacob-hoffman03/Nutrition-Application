@@ -139,6 +139,14 @@ button{font-family:inherit;}
 .ghead .gchev{margin-left:auto; color:var(--muted); font-size:22px; font-weight:400; transition:transform .18s;}
 .gsec.closed .gbody{display:none;}
 .gsec.closed .gchev{transform:rotate(90deg);}
+.ginfo{flex:none; width:21px; height:21px; border-radius:50%; border:1.6px solid #b9b9c6; color:#8a8a98;
+  font-size:12.5px; font-weight:800; font-style:italic; background:none; display:flex; align-items:center;
+  justify-content:center; cursor:pointer; line-height:1; padding:0; font-family:Georgia, serif;}
+.ginfo:active{background:#f0f0f5;}
+.infttl{font-size:17px; font-weight:800; padding:18px 18px 6px;}
+.infbody{padding:2px 18px 24px; font-size:14.5px; line-height:1.65; color:#3a3a42;}
+.infbody b{color:var(--ink);}
+.infbody .irow{margin-bottom:10px;}
 /* add-food: reference-style rows */
 .arow2{display:flex; align-items:center; gap:14px; padding:13px 2px; border-bottom:1px solid var(--line); cursor:pointer;}
 .athumb{width:56px; height:56px; border-radius:16px; background:var(--card2); flex:none; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:26px; color:var(--muted);}
@@ -488,7 +496,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <h1>Nutrition Goals</h1>
       <div style="width:44px"></div>
     </div>
-    <p class="goalsub">Your daily intake goal, based on your maintenance + surplus plan.</p>
     <div class="secttl" style="margin-top:2px">Profile</div>
     <div class="card">
       <div class="cfrow"><span>Units</span><span class="chips" id="pfUnits" style="margin:0"><button class="chip" data-u="imp">Imperial</button><button class="chip" data-u="met">Metric</button></span></div>
@@ -507,7 +514,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <button class="chip" data-k="active">Active</button>
       <button class="chip" data-k="very">Very active</button>
     </div>
-    <div class="rangenote">Factors from FAO/WHO/UNU activity bands (1.45–2.10). On your feet all day ≈ 1.9. This factor is the roughest part of the math (±10–15%) — your weigh-ins calibrate it.</div>
     <button class="bigbtn" id="pfCalc" style="margin-top:4px">Calculate maintenance</button>
     <div class="rangenote" id="pfNote"></div>
     <div class="secttl">Calorie goal</div>
@@ -523,11 +529,9 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <button class="chip" data-m="bulk" data-pct="20">Bulk</button>
       <button class="chip" data-m="maintain" data-pct="0">Maintain</button>
     </div>
-    <div class="rangenote" id="modeNote"></div>
     <div class="card">
       <input type="range" id="goalSlider" min="1500" max="6000" step="25" value="3000">
       <div class="rangelabels"><span id="goalMin">1500 kcal</span><span id="goalMax">6000 kcal</span></div>
-      <div class="rangenote">*Adjusting the slider changes your surplus on top of maintenance. Surplus presets are % of maintenance — research supports 5–20% for lean gains.</div>
       <div class="chips" id="surpChips" style="margin-top:10px">
         <button class="chip" data-p="5">+5%</button>
         <button class="chip" data-p="10">+10%</button>
@@ -543,7 +547,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div class="m3 f"><div class="mn">Fat</div><div class="mp" id="gmFp">30%</div><div class="mg"><input id="gmF" type="number" inputmode="numeric"> g</div></div>
     </div>
     <div class="segbar" id="macroSeg"><i id="segC" style="background:#7e7ef2"></i><i id="segP" style="background:#12cfae"></i><i id="segF" style="background:#fb6f84"></i></div>
-    <div class="rangenote">Evidence: muscle gains top out near 1.6 g protein/kg/day (Morton 2018); up to 2.2 g/kg (1 g/lb) is the supported ceiling.</div>
     <div class="secttl">Water</div>
     <div class="card">
       <div class="fhead"><span class="flabel">Daily target</span><span class="chips" id="waterMode" style="margin:0"><button class="chip" data-w="auto">Auto</button><button class="chip" data-w="8">8</button><button class="chip" data-w="10">10</button><button class="chip" data-w="12">12</button><button class="chip" data-w="14">14</button></span></div>
@@ -552,8 +555,8 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <div class="rangenote" id="waterBreak"></div>
     <div class="secttl">Advanced</div>
     <div class="card">
-      <div class="cfrow"><span><b style="font-size:14px">Auto-adjust as I gain weight</b><br><span class="ph">Recalculates maintenance + macros when you log a new weight</span></span><button class="chip" id="pfAuto">Off</button></div>
-      <div class="cfrow" style="margin-top:8px"><span><b style="font-size:14px">Auto-tune maintenance</b><br><span class="ph">Nudges maintenance ±150 kcal when your 2-week weigh-in trend misses your target — max once per 2 weeks</span></span><button class="chip" id="pfTune">Off</button></div>
+      <div class="cfrow"><span><b style="font-size:14px">Auto-adjust as I gain weight</b></span><button class="chip" id="pfAuto">Off</button></div>
+      <div class="cfrow" style="margin-top:8px"><span><b style="font-size:14px">Auto-tune maintenance</b></span><button class="chip" id="pfTune">Off</button></div>
     </div>
     <div class="rangenote" id="pfAutoNote"></div>
     <div class="rangenote" id="pfTuneNote"></div>
@@ -633,6 +636,16 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Settings</button>
   </div></nav>
+</div>
+
+<!-- INFO POPUP (Goals section explainers) -->
+<div class="sheet" id="infoSheet">
+  <div class="scrim" id="infoScrim"></div>
+  <div class="panel" style="padding-bottom:8px">
+    <button class="xbtn" id="infoX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    <div class="infttl" id="infoTitle"></div>
+    <div class="infbody" id="infoBody"></div>
+  </div>
 </div>
 
 <!-- ADD FOOD SHEET -->
@@ -799,7 +812,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-z";
+const APP_VERSION = "2026.09.18-aa";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
@@ -1698,13 +1711,6 @@ function paintMaintNote(){
   const p = S.goals.profile, cm = calcMaintenance();
   document.getElementById("pfNote").textContent = cm.formula+": BMR "+cm.bmr.toLocaleString()+" (just living) × "+actPAL(p)+" activity = "+cm.maint.toLocaleString()+" kcal maintenance. Formulas run ±10%; the activity factor is the roughest part — weigh-ins calibrate it.";
 }
-function paintModeNote(){
-  const m = S.goals.mode, el = document.getElementById("modeNote");
-  if(m==="lean") el.textContent = "Lean bulk: +10% over maintenance. A 2023 trial (Helms) found bigger surpluses add fat, not extra muscle — target 0.25–0.5% body weight/week.";
-  else if(m==="bulk") el.textContent = "Bulk: +20% over maintenance. Faster scale gains, but research shows much of the extra is fat — target 0.35–0.7% body weight/week.";
-  else if(m==="maintain") el.textContent = "Maintain: eat at maintenance to hold your weight steady.";
-  else el.textContent = "";
-}
 function readProfile(){
   const p = S.goals.profile, met = p.units==="met";
   const age = parseInt(document.getElementById("pfAge").value);
@@ -1742,7 +1748,7 @@ function renderProfile(){
   document.getElementById("pfAutoNote").textContent = S.goals.autoNote || "";
   const tn = document.getElementById("pfTune");
   tn.textContent = S.goals.autoTune?"On":"Off"; tn.classList.toggle("sel", !!S.goals.autoTune);
-  document.getElementById("pfTuneNote").textContent = S.goals.tuneNote || "The formulas are only ±10% accurate — your weigh-in trend is the calibration instrument.";
+  document.getElementById("pfTuneNote").textContent = S.goals.tuneNote || "";
   paintMaintNote();
 }
 /* Auto-tune: nudge maintenance itself toward the weigh-in trend (max once per 2 weeks).
@@ -1774,20 +1780,58 @@ function maybeAutoAdjust(newLb, dateStr){
   S.goals.autoNote = "Auto-adjusted from "+(Math.round(newLb*10)/10)+" lb on "+dateStr+" — maintenance and macros recalculated.";
   return true;
 }
-/* ============ GOALS: collapsible sections ============ */
+/* ============ GOALS: collapsible sections + info buttons ============ */
+/* Goals section explainers shown behind the ⓘ buttons */
+function infoContent(k){
+  if(k==="activity") return {t:"Activity & maintenance", b:
+    `<div class="irow">Activity factors use the <b>FAO/WHO/UNU (2004)</b> bands, calibrated with doubly-labelled water: <b>Sedentary 1.45 · Light 1.60 · Moderate 1.75 · Active 1.90 · Very active 2.10</b>.</div>
+     <div class="irow">On your feet all day ≈ 1.9. This factor is the roughest part of the math (±10–15%) — your weigh-ins calibrate it.</div>`};
+  if(k==="calorie") return {t:"Calorie goal", b:
+    `<div class="irow"><b>Lean Bulk (+10% over maintenance):</b> a 2023 trial (Helms) found bigger surpluses add fat, not extra muscle — target 0.25–0.5% body weight/week.</div>
+     <div class="irow"><b>Bulk (+20% over maintenance):</b> faster scale gains, but much of the extra is fat — target 0.35–0.7% body weight/week.</div>
+     <div class="irow"><b>Maintain (+0%):</b> eat at maintenance to hold your weight steady.</div>
+     <div class="irow">Adjusting the slider changes your surplus on top of maintenance. Surplus presets are % of maintenance — research supports <b>5–20%</b> for lean gains.</div>`};
+  if(k==="macros") return {t:"Macros", b:
+    `<div class="irow"><b>Protein:</b> muscle gains top out near <b>1.6 g/kg/day</b> (Morton 2018 meta-analysis); up to <b>2.2 g/kg</b> (1 g/lb) is the supported ceiling.</div>
+     <div class="irow"><b>Auto-split:</b> keeps protein as entered, sets fat to 25% of your calorie goal, and fills the rest with carbs.</div>`};
+  if(k==="water"){
+    const w = waterCalc();
+    const pk = w.perKcal.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
+    return {t:"Water target", b:
+    `<div class="irow"><b>Auto</b> builds your target from maintenance: <b>${w.target} glasses</b> = ${Math.round(w.tdee).toLocaleString()} kcal × ${w.tier} activity at ${pk} mL/kcal.</div>
+     <div class="irow">The formula follows the <b>IOM</b> guideline of ~1.0–1.5 mL per kcal of energy expenditure, with ~80% of total water assumed to come from fluids (NASEM AI: 3.7 L men / 2.7 L women; EFSA: 2.5 L / 2.0 L).</div>
+     <div class="irow"><b>+2 glasses</b> on days you log a creatine-type supplement — creatine pulls ~0.5–1.0 L into muscle (Kreider 2017, ISSN) and extra water keeps that covered.</div>`};
+  }
+  if(k==="advanced") return {t:"Advanced", b:
+    `<div class="irow"><b>Auto-adjust as I gain weight:</b> when you log a new weight in Progress, Fuel recalculates maintenance and macros automatically — protein floor raised, fat set to 25%, carbs fill the rest. Turn it off to control everything manually.</div>
+     <div class="irow"><b>Auto-tune maintenance:</b> when 2+ weeks of weigh-ins show your real gain rate missing the target band, Fuel nudges maintenance ±150 kcal — max once per 2 weeks.</div>
+     <div class="irow">The formulas are only ±10% accurate — your weigh-in trend is the calibration instrument.</div>`};
+}
+function openInfo(k){
+  const c = infoContent(k); if(!c) return;
+  document.getElementById("infoTitle").textContent = c.t;
+  document.getElementById("infoBody").innerHTML = c.b;
+  document.getElementById("infoSheet").classList.add("open");
+}
+document.getElementById("infoScrim").onclick = ()=>document.getElementById("infoSheet").classList.remove("open");
+document.getElementById("infoX").onclick = ()=>document.getElementById("infoSheet").classList.remove("open");
 (function(){
   const v = document.getElementById("view-goals");
+  const infoFor = t => t.indexOf("Activity")===0 ? "activity" : t==="Calorie goal" ? "calorie" : t==="Macros" ? "macros" : t==="Water" ? "water" : t==="Advanced" ? "advanced" : null;
   [...v.querySelectorAll(":scope > .secttl")].forEach(h=>{
     const sec = document.createElement("div"); sec.className = "gsec";
     h.replaceWith(sec);
     const gh = document.createElement("div"); gh.className = "ghead";
-    gh.innerHTML = `<span>${h.innerHTML}</span><span class="gchev">›</span>`;
+    const ik = infoFor(h.textContent.trim());
+    gh.innerHTML = `<span>${h.innerHTML}</span>`+(ik?`<button class="ginfo" aria-label="More info">i</button>`:"")+`<span class="gchev">›</span>`;
     sec.appendChild(gh);
     const body = document.createElement("div"); body.className = "gbody";
     sec.appendChild(body);
     let n = sec.nextSibling;
     while(n && !(n.classList && n.classList.contains("secttl"))){ const nx = n.nextSibling; body.appendChild(n); n = nx; }
-    gh.onclick = ()=>sec.classList.toggle("closed");
+    gh.onclick = (e)=>{ if(e.target.closest(".ginfo")) return; sec.classList.toggle("closed"); };
+    const ib = gh.querySelector(".ginfo");
+    if(ib) ib.onclick = (e)=>{ e.stopPropagation(); openInfo(ik); };
   });
 })();
 function openGsec(name){
@@ -1800,7 +1844,7 @@ function openGsec(name){
 function waterBreakdown(){
   const w = waterCalc();
   if(w.manual) return "Manual target of "+w.target+" glasses. Switch to Auto for the research-based formula.";
-  return "Auto: "+w.target+" glasses from "+Math.round(w.tdee).toLocaleString()+" kcal maintenance × "+w.tier+" activity (IOM "+w.perKcal.toFixed(2).replace(/0+$/,"").replace(/\.$/,"")+" mL/kcal, ~80% of water from fluids)"+(w.xw?" + 2 glasses for a creatine-type supplement logged today":" — +2 glasses on days you log a creatine-type supplement")+".";
+  return "Auto: "+w.target+" glasses from "+Math.round(w.tdee).toLocaleString()+" kcal maintenance × "+w.tier+" activity"+(w.xw?" — +2 glasses for a creatine-type supplement logged today":" — +2 glasses on days you log a creatine-type supplement")+".";
 }
 function paintWater(){
   const g = S.goals;
@@ -1834,7 +1878,7 @@ function renderGoals(){
   renderProfile();
   document.querySelectorAll("#goalMode .chip").forEach(c=>c.classList.toggle("sel", c.dataset.m===g.mode));
   document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", g.maintenance>0 && +c.dataset.p === Math.round(g.surplus/g.maintenance*100)));
-  paintModeNote(); paintGainProj();
+  paintGainProj();
   updateMacroSplit(); paintWater();
 }
 function updateMacroSplit(){
@@ -1861,7 +1905,7 @@ document.getElementById("goalSlider").addEventListener("input", e=>{
   document.getElementById("goalSub").textContent = Math.round(S.goals.maintenance).toLocaleString()+" maintenance + "+Math.round(S.goals.surplus).toLocaleString()+" surplus";
   document.querySelectorAll("#goalMode .chip").forEach(c=>c.classList.remove("sel"));
   document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", S.goals.maintenance>0 && +c.dataset.p === Math.round(S.goals.surplus/S.goals.maintenance*100)));
-  paintModeNote(); paintGainProj();
+  paintGainProj();
   updateMacroSplit();
 });
 ["gmC","gmP","gmF"].forEach(id=>document.getElementById(id).addEventListener("input", updateMacroSplit));
