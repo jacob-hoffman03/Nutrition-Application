@@ -51,6 +51,9 @@ header.appbar{
 .ring .center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
 .ring .center b{font-size:24px; font-weight:800;}
 .ring .center span{font-size:11px; color:var(--muted);}
+.legend{display:flex; gap:16px; margin:10px 2px 12px; font-size:12px; color:var(--muted); font-weight:600;}
+.legend i{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px;}
+.legend b{color:var(--ink);}
 /* macro bars */
 .macro{margin-top:10px;}
 .macro .mrow{display:flex; align-items:center; gap:10px; margin:8px 0;}
@@ -164,6 +167,8 @@ header.appbar{
             <circle cx="64" cy="64" r="54" fill="none" stroke="#e6ecf1" stroke-width="12"/>
             <circle id="ringCal" cx="64" cy="64" r="54" fill="none" stroke="#1f9ede" stroke-width="12"
               stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29"/>
+            <circle id="ringSurp" cx="64" cy="64" r="54" fill="none" stroke="#2fbf71" stroke-width="12"
+              stroke-linecap="round" stroke-dasharray="0 339.29" stroke-dashoffset="0" style="display:none"/>
           </svg>
           <div class="center"><b id="calEaten">0</b><span>of <span id="calGoal">3000</span> cal</span></div>
         </div>
@@ -172,6 +177,10 @@ header.appbar{
           <div class="bignum"><span id="calLeft">3000</span> <small>cal</small></div>
           <div class="hint" id="burnHint" style="margin-top:4px"></div>
         </div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--blue)"></i>Maintenance <b id="legMaint">–</b></span>
+        <span><i style="background:var(--green)"></i>Surplus goal <b id="legGoal">–</b></span>
       </div>
       <div class="macro">
         <div class="mrow"><div class="mname">Protein</div><div class="mbar"><i id="barP" style="background:#2fbf71"></i></div><div class="mval" id="valP">0 / 150g</div></div>
@@ -235,7 +244,8 @@ header.appbar{
     <div class="card">
       <h3>Daily targets</h3>
       <div class="nutgrid">
-        <div class="field"><label>Calories</label><input id="gCal" type="number" inputmode="numeric"></div>
+        <div class="field"><label>Surplus goal (cal)</label><input id="gCal" type="number" inputmode="numeric"></div>
+        <div class="field"><label>Maintenance (cal)</label><input id="gMaint" type="number" inputmode="numeric"></div>
         <div class="field"><label>Protein (g)</label><input id="gP" type="number" inputmode="numeric"></div>
         <div class="field"><label>Carbs (g)</label><input id="gC" type="number" inputmode="numeric"></div>
         <div class="field"><label>Fat (g)</label><input id="gF" type="number" inputmode="numeric"></div>
@@ -385,9 +395,9 @@ const MEAL_LABEL = {breakfast:"Breakfast", lunch:"Lunch", dinner:"Dinner", snack
 const KEY = "fuel.v1";
 
 /* ============ STATE ============ */
-const defGoals = () => ({cal:3000, protein:150, carbs:375, fat:83, water:10, weight:150});
+const defGoals = () => ({cal:3000, maintenance:2700, protein:150, carbs:375, fat:83, water:10, weight:150});
 function load(){
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) return s; } catch(e){}
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; return s; } } catch(e){}
   return {days:{}, customFoods:[], favorites:["CAVA bowl, dbl chicken"], weights:[], goals:defGoals()};
 }
 let S = load();
@@ -422,11 +432,27 @@ function renderDiary(){
   const left = g.cal - t.cal;
   document.getElementById("calLeft").textContent = Math.abs(Math.round(left)).toLocaleString();
   document.getElementById("remainLabel").textContent = left < 0 ? "Over target" : "Remaining";
-  const C = 339.29, frac = Math.min(t.cal/g.cal, 1);
+  const C = 339.29;
+  const mCal = Math.min(g.maintenance>0 ? g.maintenance : 0, g.cal);
+  const eCal = t.cal;
+  const baseFrac = Math.min(eCal, mCal)/g.cal;
   const ring = document.getElementById("ringCal");
-  ring.style.strokeDashoffset = C*(1-frac);
-  ring.style.stroke = left < 0 ? "#ff5c5c" : "#1f9ede";
-  document.getElementById("burnHint").textContent = left < 0 ? Math.abs(Math.round(left))+" cal over target" : "left to hit your target";
+  ring.style.strokeDashoffset = C*(1-baseFrac);
+  ring.style.stroke = "#1f9ede";
+  const surp = document.getElementById("ringSurp");
+  const sFrac = Math.min(Math.max(eCal-mCal,0), g.cal-mCal)/g.cal;
+  if(sFrac > 0.004){
+    surp.style.display = "";
+    surp.style.strokeDasharray = (C*sFrac)+" "+C;
+    surp.style.strokeDashoffset = -C*(mCal/g.cal);
+    surp.style.stroke = left < 0 ? "#ff5c5c" : "#2fbf71";
+  } else surp.style.display = "none";
+  document.getElementById("legMaint").textContent = mCal.toLocaleString();
+  document.getElementById("legGoal").textContent = g.cal.toLocaleString();
+  const hint = document.getElementById("burnHint");
+  if(left < 0) hint.textContent = Math.abs(Math.round(left))+" cal over target";
+  else if(eCal < mCal) hint.textContent = Math.round(mCal-eCal)+" cal to maintenance";
+  else hint.textContent = "+"+Math.round(eCal-mCal)+" over maintenance · "+Math.round(left)+" to goal";
   const set = (bar,val,id,gval) => {
     document.getElementById(bar).style.width = Math.min(val/gval*100,100)+"%";
     document.getElementById(id).textContent = Math.round(val)+" / "+gval+"g";
@@ -632,7 +658,8 @@ document.getElementById("weightAdd").onclick = ()=>{
 /* ============ SETTINGS ============ */
 function renderSettings(){
   const g = S.goals;
-  document.getElementById("gCal").value=g.cal; document.getElementById("gP").value=g.protein;
+  document.getElementById("gCal").value=g.cal; document.getElementById("gMaint").value=g.maintenance;
+  document.getElementById("gP").value=g.protein;
   document.getElementById("gC").value=g.carbs; document.getElementById("gF").value=g.fat;
   document.getElementById("gW").value=g.water; document.getElementById("gWt").value=g.weight;
   document.getElementById("dDays").textContent = Object.keys(S.days).length;
@@ -641,7 +668,9 @@ function renderSettings(){
 document.getElementById("saveGoals").onclick = ()=>{
   const num=(id,fb)=>{ const v=parseFloat(document.getElementById(id).value); return v>0?v:fb; };
   const g=S.goals;
-  g.cal=num("gCal",g.cal); g.protein=num("gP",g.protein); g.carbs=num("gC",g.carbs);
+  g.cal=num("gCal",g.cal); g.maintenance=num("gMaint",g.maintenance);
+  if(g.maintenance>g.cal) g.maintenance=g.cal;
+  g.protein=num("gP",g.protein); g.carbs=num("gC",g.carbs);
   g.fat=num("gF",g.fat); g.water=num("gW",g.water); g.weight=num("gWt",g.weight);
   save(); renderDiary(); alert("Targets saved.");
 };
