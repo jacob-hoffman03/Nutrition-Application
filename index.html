@@ -110,6 +110,8 @@ button{font-family:inherit;}
 .logrow .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#3a3a42;}
 .logrow .nm span{color:var(--muted); font-size:12px;}
 .logrow .kc{font-weight:700; font-variant-numeric:tabular-nums;}
+.logrow .lthumb{width:40px; height:40px; border-radius:12px; overflow:hidden; flex:none; background:var(--card);}
+.logrow .lthumb img{width:100%; height:100%; object-fit:cover; display:block;}
 .logdel{border:none; background:none; color:#c9c9d2; font-size:18px; width:28px; height:28px;}
 .mempty{padding:0 0 10px 46px; color:var(--muted); font-size:13px;}
 /* water */
@@ -639,7 +641,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-o";
+const APP_VERSION = "2026.09.18-p";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activity:1.55, auto:true});
@@ -776,13 +778,14 @@ function renderDiary(){
   $("valFv").textContent = r1(t.f); $("valFg").textContent = g.fat;
 
   const mh = $("meals"); mh.innerHTML = "";
+  const entryImg = e => e.img || ((S.customFoods||[]).find(f=>f.n===e.n)||{}).img;
   MEALS.forEach((m,mi) => {
     const items = d.meals[m]||[];
     const mc = items.reduce((a,e)=>a+e.cal,0);
     let html = `<div class="mrow${mi===MEALS.length-1 && !items.length ? "" : " noborder"}"><span class="mico" style="background:${MEAL_TINT[m]}">${MEAL_ICON[m]}</span><span class="mname">${MEAL_LABEL[m]}</span><span class="mkcal">${Math.round(mc)} kcal</span><button class="madd" data-add="${m}" aria-label="Add to ${MEAL_LABEL[m]}">+</button></div>`;
-    html += items.length ? items.map(e=>
-      `<div class="logrow"><span class="nm">${esc(e.n)} <span>${e.qty} × ${esc(e.s)}</span></span><span class="kc">${Math.round(e.cal)}</span><button class="logdel" data-m="${m}" data-id="${e.id}">×</button></div>`
-    ).join("") : "";
+    html += items.length ? items.map(e=>{ const im = entryImg(e);
+      return `<div class="logrow">${im?`<span class="lthumb"><img src="${im}" alt=""></span>`:""}<span class="nm">${esc(e.n)} <span>${e.qty} × ${esc(e.s)}</span></span><span class="kc">${Math.round(e.cal)}</span><button class="logdel" data-m="${m}" data-id="${e.id}">×</button></div>`;
+    }).join("") : "";
     const wrap = document.createElement("div");
     wrap.innerHTML = html;
     while(wrap.firstChild) mh.appendChild(wrap.firstChild);
@@ -904,7 +907,7 @@ document.querySelectorAll("#mealChips .chip").forEach(c=>c.onclick=()=>{ sheetMe
 document.getElementById("backToSearch").onclick = showSearch;
 document.getElementById("confirmAdd").onclick = ()=>{
   const d = day(), f = sheetFood;
-  d.meals[sheetMeal].push({id:uid(), n:f.n, s:f.s, qty:sheetQty,
+  d.meals[sheetMeal].push({id:uid(), n:f.n, s:f.s, qty:sheetQty, img:f.img||null,
     cal:f.cal*sheetQty, p:f.p*sheetQty, c:f.c*sheetQty, f:f.f*sheetQty});
   save(); closeSheet(); renderDiary();
 };
