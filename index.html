@@ -454,7 +454,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     </div>
     <div class="pstrip">
       <button class="pavatar" id="pAvatar" aria-label="Profile"></button>
-      <div class="pmeta"><div class="pname" id="pName">Jay</div><div class="psub">Today's medals</div></div>
+      <div class="pmeta"><div class="pname" id="pName">You</div><div class="psub">Today's medals</div></div>
       <div class="medals" id="pMedals"></div>
     </div>
     <div class="card herocard">
@@ -1060,7 +1060,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bm";
+const APP_VERSION = "2026.09.18-bn";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -1111,13 +1111,13 @@ if(!flagGet().zeroReset){ s.goals = defGoals(); flagSet("zeroReset",1); }
 else { const dg = defGoals(); for(const k in dg) if(s.goals[k]===undefined) s.goals[k]=dg[k]; const dp = defProfile(); if(!s.goals.profile) s.goals.profile = dp; else for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; }
 delete s.goals.cal;
 /* migrate legacy numeric activity factor to FAO tier key */
-if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); if(!s.training) s.training = {sched:{}, done:{}, deloads:{}}; if(!s.training.deloads) s.training.deloads = {}; if(!s.profile) s.profile = {name:"Jay", img:""};
+if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); if(!s.training) s.training = {sched:{}, done:{}, deloads:{}}; if(!s.training.deloads) s.training.deloads = {}; if(!s.profile) s.profile = {name:"", img:""};
   /* Water 2.0: intake moves from glasses to fluid oz; bottles are user-defined */
   if(!s.waterV2){ for(const k in (s.days||{})){ const dd=s.days[k]; if(dd.waterOz===undefined) dd.waterOz=Math.round(((dd.water||0)*8)*10)/10; delete dd.water; } s.waterV2=1; }
   if(!Array.isArray(s.bottles) || !s.bottles.length) s.bottles=[{id:"b0",name:"Glass",oz:8}];
   return s; } } catch(e){}
   flagSet("zeroReset",1); /* fresh boot / unreadable state: nothing to reset, mark it done */
-  return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:"Jay", img:""}, bottles:[{id:"b0",name:"Glass",oz:8}], waterV2:1};
+  return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:"", img:""}, bottles:[{id:"b0",name:"Glass",oz:8}], waterV2:1};
 }
 let S = load();
 /* save() is defined up near KEY — quota-aware, trims oldest progress photos when storage is full */
@@ -3149,13 +3149,13 @@ function openMedalInfo(){
   document.getElementById("infoSheet").classList.add("open");
 }
 function avatarHTML(pr, px){
-  const initial = ((pr.name||"Jay").trim().charAt(0)||"J").toUpperCase();
+  const initial = ((pr.name||"").trim().charAt(0)||"•").toUpperCase();
   return pr.img ? `<img src="${pr.img}" alt="Profile photo">` : `<span>${initial}</span>`;
 }
 function renderProfileStrip(){
-  const pr = S.profile || {name:"Jay", img:""};
+  const pr = S.profile || {name:"", img:""};
   document.getElementById("pAvatar").innerHTML = avatarHTML(pr);
-  document.getElementById("pName").textContent = pr.name || "Jay";
+  document.getElementById("pName").textContent = pr.name || "You";
   const pm = document.getElementById("pMedals");
   pm.innerHTML = medalRowHTML(todayStr());
   wireMedals(pm);
@@ -3163,7 +3163,7 @@ function renderProfileStrip(){
 }
 document.getElementById("pAvatar").onclick = ()=>showView("settings");
 function renderProfileCard(){
-  const pr = S.profile || {name:"Jay", img:""};
+  const pr = S.profile || {name:"", img:""};
   document.getElementById("sAvatar").innerHTML = avatarHTML(pr);
   const nm = document.getElementById("sName");
   if(document.activeElement!==nm) nm.value = pr.name || "";
@@ -3180,7 +3180,7 @@ function renderProfileCard(){
 }
 document.getElementById("sAvatar").onclick = ()=>document.getElementById("pPhotoFile").click();
 document.getElementById("sName").addEventListener("change", e=>{
-  S.profile.name = e.target.value.trim() || "Jay";
+  S.profile.name = e.target.value.trim() || "";
   save(); renderProfileStrip(); renderProfileCard();
 });
 document.getElementById("pPhotoFile").onchange = e=>{
@@ -3434,7 +3434,7 @@ document.getElementById("importFile").onchange = e=>{
       if(!obj || typeof obj!=="object" || !obj.goals || typeof obj.goals!=="object") throw new Error("bad");
       if(!confirm("Replace everything in the app with this backup? This can't be undone.")) return;
       S = obj;
-      if(!S.profile) S.profile = {name:"Jay", img:""};
+      if(!S.profile) S.profile = {name:"", img:""};
       if(!S.training) S.training = {sched:{}, done:{}};
       if(!S.goals.profHash){ const p0=S.goals.profile||{}; S.goals.profHash=[p0.weightLb,p0.heightIn,p0.age,p0.sex,p0.bodyFat,p0.activityKey].join("|"); }
       if(!S.days) S.days = {};
