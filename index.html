@@ -53,6 +53,10 @@ button{font-family:inherit;}
 .wkrow{display:flex; align-items:center; justify-content:space-between; margin-bottom:2px;}
 .todaypill{background:var(--acc-soft); color:var(--acc); border:none; border-radius:99px; padding:8px 14px; font-weight:800; font-size:13px; white-space:nowrap;}
 .weekstrip{display:flex;}
+.wknavrow{display:flex; align-items:center; gap:2px; margin-bottom:2px;}
+.wknavrow .weekstrip{flex:1;}
+.wknav{background:none; border:none; color:var(--muted); font-size:22px; font-weight:700; padding:8px 6px; line-height:1;}
+.wknav:disabled{opacity:.25;}
 .wday{flex:1; background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 2px; border-radius:12px;}
 .wday .wd{font-size:12px; color:var(--muted); font-weight:600;}
 .wday .wn{font-size:15px; font-weight:700; width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:50%; color:var(--ink);}
@@ -437,7 +441,11 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
         <span style="font-size:13px;color:var(--muted);font-weight:600" id="daySub"></span>
         <button id="todayPill" class="todaypill" style="visibility:hidden">↩ Today</button>
       </div>
-      <div class="weekstrip" id="weekStrip"></div>
+      <div class="wknavrow">
+        <button class="wknav" id="wkPrev" aria-label="Previous week">‹</button>
+        <div class="weekstrip" id="weekStrip"></div>
+        <button class="wknav" id="wkNext" aria-label="Next week">›</button>
+      </div>
 
       <div class="statusbar" id="statusPill" role="button" tabindex="0" aria-label="Intake details">
         <div class="sbtrack"><div class="sbfill" id="spFill"></div><div class="sbmark" id="spMark"></div></div>
@@ -1018,7 +1026,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bc";
+const APP_VERSION = "2026.09.18-bd";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -1108,11 +1116,12 @@ function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;"
 const $ = id => document.getElementById(id);
 
 /* ============ WEEK STRIP ============ */
+let weekOff = 0; /* which week the strip shows: 0 = current, -1 = last week, ... */
 function renderWeek(){
   const strip = $("weekStrip"); if(!strip) return;
   strip.innerHTML = "";
   const today = new Date(); today.setHours(12,0,0,0);
-  const sun = new Date(today); sun.setDate(today.getDate()-today.getDay());
+  const sun = new Date(today); sun.setDate(today.getDate()-today.getDay()+weekOff*7);
   const names = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
   for(let i=0;i<7;i++){
     const d = new Date(sun); d.setDate(sun.getDate()+i);
@@ -1128,7 +1137,10 @@ function renderWeek(){
     strip.appendChild(b);
   }
   $("todayPill").style.visibility = viewDate()===todayStr() ? "hidden" : "visible";
+  $("wkNext").disabled = weekOff >= 0;
 }
+$("wkPrev").onclick = ()=>{ weekOff--; renderDiary(); };
+$("wkNext").onclick = ()=>{ if(weekOff<0){ weekOff++; renderDiary(); } };
 
 /* ============ STATUS / ZONES ============ */
 function statusInfo(){
@@ -3076,7 +3088,7 @@ function showView(v){
 function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.v));
 document.getElementById("dayPrev").onclick = ()=>{ dayOffset--; renderDiary(); };
-document.getElementById("todayPill").onclick = ()=>{ dayOffset = 0; renderDiary(); };
+document.getElementById("todayPill").onclick = ()=>{ dayOffset = 0; weekOff = 0; renderDiary(); };
 document.getElementById("gearBtn").onclick = ()=>showView("settings");
 document.getElementById("analysisLink").onclick = ()=>showView("analysis");
 document.getElementById("analysisBack").onclick = ()=>showView("diary");
