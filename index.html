@@ -255,6 +255,15 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .cphotorow{display:flex; align-items:center; gap:12px; padding:14px 0;}
 #cPhotoPreview{width:72px; height:72px; border-radius:14px; object-fit:cover; flex:none;}
 .cphotobtn{border:1.5px dashed #c9c9d6; background:#fafafa; border-radius:14px; color:var(--acc); font-weight:700; font-size:15px; padding:14px 18px; font-family:inherit;}
+.nutrrow{display:flex; gap:8px; margin:10px 0; align-items:center;}
+.nutrrow input{border:1px solid var(--line); background:#fafafc; border-radius:10px; padding:10px; font-size:14px; font-weight:600; font-family:inherit; outline:none; min-width:0;}
+.nutrrow input[type=text]{flex:1;}
+.nutrrow input[type=number]{width:64px; flex:none;}
+.nutrrow select{border:1px solid var(--line); background:#fafafc; border-radius:10px; padding:10px 6px; font-size:14px; font-weight:600; font-family:inherit; flex:none;}
+.ndel{border:none; background:none; color:var(--red); font-size:22px; font-weight:700; cursor:pointer; padding:4px 6px; flex:none; line-height:1;}
+.crow{display:flex; gap:12px; align-items:flex-start; font-size:15px; font-weight:700; padding:14px 0; cursor:pointer;}
+.crow input{width:22px; height:22px; margin-top:1px; accent-color:var(--acc); flex:none;}
+.chint{display:block; font-weight:400; color:var(--muted); font-size:12px; margin-top:3px; line-height:1.45;}
 .cphotodel{border:none; background:none; color:var(--red); font-weight:700; font-size:14px; font-family:inherit; padding:8px 4px;}
 .frow .fim img{width:100%; height:100%; object-fit:cover; display:block;}
 .dhead{display:flex; align-items:center; gap:12px;}
@@ -326,7 +335,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <div class="card watercard">
       <div class="whead"><b>Water</b><span id="waterLabel"></span></div>
       <div class="glasses" id="glasses"></div>
-      <div class="whint">Tap a glass to add, tap a full one to remove.</div>
+      <div class="whint" id="waterNote"></div>
     </div>
   </section>
 
@@ -499,7 +508,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     </div>
     <div class="card" style="padding-top:4px; padding-bottom:4px; margin-top:12px;">
       <button class="srow" id="goalRow"><span>Goal Settings</span><span class="sval"><b id="goalRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
-      <button class="srow" id="waterRow"><span>Water glasses / day</span><span class="sval"><b id="waterRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
+      <button class="srow" id="waterRow"><span>Water target</span><span class="sval"><b id="waterRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
       <button class="srow" id="weightRow"><span>Weight goal (lb)</span><span class="sval"><b id="weightRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
     </div>
     <div class="card" style="padding-top:4px; padding-bottom:4px;">
@@ -573,6 +582,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
           <button class="chip" data-m="lunch">Lunch</button>
           <button class="chip" data-m="dinner">Dinner</button>
           <button class="chip" data-m="snacks">Snacks</button>
+          <button class="chip" data-m="supplements">Supplements</button>
         </div>
         <div class="kv" style="margin-top:8px;"><span>Total for this entry</span><b id="dTotal"></b></div>
         <button class="bigbtn" id="confirmAdd">Add to diary</button>
@@ -590,6 +600,22 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <button class="xbtn" id="cX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
     <h2>Create Custom Food</h2>
     <div class="body">
+      <div class="cfsec">Type</div>
+      <div class="cfcard"><div class="chips" id="cKindChips" style="padding:12px 0">
+        <button type="button" class="chip sel" data-kind="food">Food</button>
+        <button type="button" class="chip" data-kind="supp">Supplement</button>
+      </div></div>
+      <div id="cSuppSec" style="display:none">
+        <div class="cfsec">Serving unit</div>
+        <div class="cfcard"><div class="chips" id="cUnitChips" style="padding:12px 0"></div></div>
+        <div class="cfsec">Nutrients <span style="font-weight:400">(optional)</span></div>
+        <div class="cfcard">
+          <div id="cNutrRows"></div>
+          <div style="padding:4px 0 14px"><button type="button" class="cphotobtn" id="cNutrAdd">+ Add nutrient</button></div>
+        </div>
+        <div class="cfsec">Hydration</div>
+        <div class="cfcard"><label class="crow"><input type="checkbox" id="cXW"><span>Needs extra water<span class="chint">e.g. creatine — adds +2 glasses to your water target on days you log it</span></span></label></div>
+      </div>
       <div class="cfsec">Photo <span style="font-weight:400">(optional)</span></div>
       <div class="cfcard">
         <div class="cphotorow">
@@ -630,16 +656,17 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 "use strict";
 /* ============ DATA ============ */
 const FOODS = [];
-const MEALS = ["breakfast","lunch","dinner","snacks"];
-const MEAL_LABEL = {breakfast:"Breakfast", lunch:"Lunch", dinner:"Dinner", snacks:"Snacks"};
+const MEALS = ["breakfast","lunch","dinner","snacks","supplements"];
+const MEAL_LABEL = {breakfast:"Breakfast", lunch:"Lunch", dinner:"Dinner", snacks:"Snacks", supplements:"Supplements"};
 const MEAL_ICON = {
   breakfast:'<svg viewBox="0 0 24 24" fill="none" stroke="#ff9f43" stroke-width="2" stroke-linecap="round"><path d="M12 3v3M5.6 5.6l2.1 2.1M18.4 5.6l-2.1 2.1"/><path d="M7 15a5 5 0 0 1 10 0"/><path d="M3 15h18M6 18.5h12"/></svg>',
   lunch:'<svg viewBox="0 0 24 24" fill="none" stroke="#ff9f43" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5 5l1.8 1.8M17.2 17.2 19 19M19 5l-1.8 1.8M6.8 17.2 5 19"/></svg>',
   dinner:'<svg viewBox="0 0 24 24" fill="none" stroke="#7e7ef2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>',
-  snacks:'<svg viewBox="0 0 24 24" fill="none" stroke="#b07d4f" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="9.5" cy="10" r="1" fill="#b07d4f" stroke="none"/><circle cx="14.5" cy="9" r="1" fill="#b07d4f" stroke="none"/><circle cx="11" cy="14.5" r="1" fill="#b07d4f" stroke="none"/><circle cx="15" cy="14" r="1" fill="#b07d4f" stroke="none"/></svg>'
+  snacks:'<svg viewBox="0 0 24 24" fill="none" stroke="#b07d4f" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="9.5" cy="10" r="1" fill="#b07d4f" stroke="none"/><circle cx="14.5" cy="9" r="1" fill="#b07d4f" stroke="none"/><circle cx="11" cy="14.5" r="1" fill="#b07d4f" stroke="none"/><circle cx="15" cy="14" r="1" fill="#b07d4f" stroke="none"/></svg>',
+  supplements:'<svg viewBox="0 0 24 24" fill="none" stroke="#5b5bf0" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="9" width="17" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><line x1="10.2" y1="7.4" x2="13.8" y2="17.6"/></svg>'
 };
-const MEAL_TINT = {breakfast:"#fff3e2", lunch:"#fff3e2", dinner:"#eceeff", snacks:"#f3e9dc"};
-const MEAL_SEG = {breakfast:"#ffdca8", lunch:"#ffab3d", dinner:"#ff8f3d", snacks:"#ff7f2a"};
+const MEAL_TINT = {breakfast:"#fff3e2", lunch:"#fff3e2", dinner:"#eceeff", snacks:"#f3e9dc", supplements:"#eceeff"};
+const MEAL_SEG = {breakfast:"#ffdca8", lunch:"#ffab3d", dinner:"#ff8f3d", snacks:"#ff7f2a", supplements:"#8b8bf5"};
 const STAR_ON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="#e8a013"><path d="M12 2.6l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 17.5l-5.8 3.1 1.1-6.5L2.6 9.5l6.5-1z"/></svg>';
 const STAR_OFF = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#aeb9c4" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.6l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 17.5l-5.8 3.1 1.1-6.5L2.6 9.5l6.5-1z"/></svg>';
 const ICONS = {
@@ -649,15 +676,15 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-q";
+const APP_VERSION = "2026.09.18-r";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
-const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:413, fat:83, water:10, weight:150, mode:"custom", profile:defProfile()});
+const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:413, fat:83, water:0, waterV:1, weight:150, mode:"custom", profile:defProfile()});
 function load(){
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; if(!(s.goals.surplus>0)){ const d=(s.goals.cal>0?s.goals.cal:3000)-s.goals.maintenance; s.goals.surplus = d>0?Math.round(d):300; } delete s.goals.cal; if(!s.goals.profile) s.goals.profile = defProfile(); else { const dp = defProfile(); for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; }
 /* migrate legacy numeric activity factor to FAO tier key */
-if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); return s; } } catch(e){}
+if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); return s; } } catch(e){}
   return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals()};
 }
 let S = load();
@@ -667,19 +694,19 @@ const dstr = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"
 const todayStr = () => dstr(new Date());
 let dayOffset = 0;
 const viewDate = () => { const d = new Date(); d.setDate(d.getDate()+dayOffset); return dstr(d); };
-function day(){ const k = viewDate(); if(!S.days[k]) S.days[k] = {meals:{breakfast:[],lunch:[],dinner:[],snacks:[]}, water:0}; return S.days[k]; }
+function day(){ const k = viewDate(); if(!S.days[k]) S.days[k] = {meals:{breakfast:[],lunch:[],dinner:[],snacks:[],supplements:[]}, water:0}; return S.days[k]; }
 function allFoods(){ return FOODS.concat(S.customFoods); }
 function findFood(name){ return allFoods().find(f=>f.n===name); }
 function isFav(name){ return S.favorites.includes(name); }
 function isCustom(name){ return S.customFoods.some(f=>f.n===name); }
 function toggleFav(name){ const i=S.favorites.indexOf(name); if(i>=0) S.favorites.splice(i,1); else S.favorites.push(name); save(); }
 function totals(k){
-  const d = S.days[k] || {meals:{breakfast:[],lunch:[],dinner:[],snacks:[]}, water:0};
+  const d = S.days[k] || {meals:{breakfast:[],lunch:[],dinner:[],snacks:[],supplements:[]}, water:0};
   const t = {cal:0,p:0,c:0,f:0};
   MEALS.forEach(m => (d.meals[m]||[]).forEach(e=>{ t.cal+=e.cal; t.p+=e.p; t.c+=e.c; t.f+=e.f; }));
   return t;
 }
-const mealCals = k => { const d = S.days[k] || {meals:{breakfast:[],lunch:[],dinner:[],snacks:[]}}; const o={}; MEALS.forEach(m=>o[m]=(d.meals[m]||[]).reduce((a,e)=>a+e.cal,0)); return o; };
+const mealCals = k => { const d = S.days[k] || {meals:{breakfast:[],lunch:[],dinner:[],snacks:[],supplements:[]}}; const o={}; MEALS.forEach(m=>o[m]=(d.meals[m]||[]).reduce((a,e)=>a+e.cal,0)); return o; };
 const r1 = n => Math.round(n*10)/10;
 function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 const $ = id => document.getElementById(id);
@@ -745,6 +772,24 @@ function renderZoneSheet(){
     `<div class="zonefoot">Zones come from your goals: ${Math.round(m).toLocaleString()} maintenance + ${Math.round(g.surplus>0?g.surplus:0).toLocaleString()} surplus. The bar fills with the color of your current zone; the tick marks maintenance.<br><br>General nutrition research, not medical advice.</div>`;
 }
 
+/* ============ WATER TARGET (research-based, auto) ============ */
+function dayHasXW(){
+  const d = S.days[viewDate()]; if(!d) return false;
+  return MEALS.some(m => (d.meals[m]||[]).some(e=>e.xw));
+}
+function waterTarget(){
+  const g = S.goals;
+  if(g.water>0) return g.water; // manual override from Settings
+  // IOM: ~1.0 L water per 1,000 kcal expended, up to 1.5 with activity/heat; ~80% of total water comes from fluids
+  const tdee = g.maintenance>0 ? g.maintenance : 2500;
+  const pal = actPAL(g.profile);
+  const f = pal>=2.05 ? 1.5 : pal>=1.85 ? 1.35 : pal>=1.7 ? 1.2 : 1.0;
+  let ml = tdee*f*0.8;
+  // Practical bump: creatine-type supplements pull ~0.5-1.0 L into muscle during loading (ISSN position stand, Kreider 2017)
+  if(dayHasXW()) ml += 500;
+  return Math.max(4, Math.min(24, Math.round(ml/240)));
+}
+
 /* ============ DIARY ============ */
 function ringPaint(calId, surpId, eCal, mCal, tCal){
   const C = 339.29;
@@ -794,7 +839,10 @@ function renderDiary(){
     const mc = items.reduce((a,e)=>a+e.cal,0);
     let html = `<div class="mrow${mi===MEALS.length-1 && !items.length ? "" : " noborder"}"><span class="mico" style="background:${MEAL_TINT[m]}">${MEAL_ICON[m]}</span><span class="mname">${MEAL_LABEL[m]}</span><span class="mkcal">${Math.round(mc)} kcal</span><button class="madd" data-add="${m}" aria-label="Add to ${MEAL_LABEL[m]}">+</button></div>`;
     html += items.length ? items.map(e=>{ const im = entryImg(e);
-      return `<div class="logrow">${im?`<span class="lthumb"><img src="${im}" alt=""></span>`:""}<span class="nm">${esc(e.n)} <span>${e.qty} × ${esc(e.s)}</span></span><span class="kc">${Math.round(e.cal)}</span><button class="logdel" data-m="${m}" data-id="${e.id}">×</button></div>`;
+      const sub = e.kind==="supp" && e.nutrs && e.nutrs.length
+        ? `${esc(e.s)}${e.qty>1?` × ${e.qty}`:""} · ${e.nutrs.map(x=>`${r1(x.amt)} ${esc(x.u)}`).join(" + ")}`
+        : `${e.qty} × ${esc(e.s)}`;
+      return `<div class="logrow">${im?`<span class="lthumb"><img src="${im}" alt=""></span>`:""}<span class="nm">${esc(e.n)} <span>${sub}</span></span><span class="kc">${Math.round(e.cal)}</span><button class="logdel" data-m="${m}" data-id="${e.id}">×</button></div>`;
     }).join("") : "";
     const wrap = document.createElement("div");
     wrap.innerHTML = html;
@@ -806,14 +854,18 @@ function renderDiary(){
     save(); renderDiary();
   });
 
-  $("waterLabel").textContent = d.water+" / "+g.water+" glasses";
+  const wt = waterTarget();
+  $("waterLabel").textContent = d.water+" / "+wt+" glasses";
   const gw = $("glasses"); gw.innerHTML = "";
-  for(let i=0;i<g.water;i++){
+  for(let i=0;i<wt;i++){
     const gl = document.createElement("div");
     gl.className = "glass"+(i<d.water?" full":"");
     gl.onclick = ()=>{ const dd=day(); dd.water = (i<dd.water)? i : i+1; save(); renderDiary(); };
     gw.appendChild(gl);
   }
+  $("waterNote").textContent = S.goals.water>0
+    ? "Manual target — set to 0 in Settings for an auto target."
+    : "Auto target from your maintenance + activity (IOM 1.0–1.5 mL/kcal)" + (dayHasXW() ? " + 2 glasses for a creatine-type supplement." : ". Tap a glass to add, tap a full one to remove.");
   renderWeek();
 }
 
@@ -883,7 +935,7 @@ function renderSheetResults(q){
     `<div class="sect">${label}</div>` + arr.slice(0, 30).map(foodRowHtml).join("") : "";
   box.innerHTML = html(favs,"Favorites") + html(rest, q ? "Results" : "All foods") ||
     `<div class="empty">No matches. Try the Foods tab to create a custom food.</div>`;
-  box.querySelectorAll(".fadd").forEach(b=>b.onclick=()=>{ sheetFood = findFood(b.dataset.n); sheetQty = 1; showDetail(); });
+  box.querySelectorAll(".fadd").forEach(b=>b.onclick=()=>{ sheetFood = findFood(b.dataset.n); sheetQty = 1; if(sheetFood.kind==="supp") sheetMeal="supplements"; showDetail(); });
 }
 function showSearch(){
   document.getElementById("sheetSearchWrap").style.display = "";
@@ -898,7 +950,9 @@ function showDetail(){
   document.getElementById("dName").textContent = sheetFood.n;
   const dp = document.getElementById("dPhoto");
   if(sheetFood.img){ dp.src = sheetFood.img; dp.style.display = ""; } else { dp.removeAttribute("src"); dp.style.display = "none"; }
-  document.getElementById("dMacros").textContent = `${sheetFood.s} · ${Math.round(sheetFood.cal)} cal · P ${r1(sheetFood.p)}g C ${r1(sheetFood.c)}g F ${r1(sheetFood.f)}g`;
+  document.getElementById("dMacros").textContent = (sheetFood.kind==="supp" && sheetFood.nutrs && sheetFood.nutrs.length)
+    ? `${sheetFood.s} · ${sheetFood.nutrs.map(x=>`${r1(x.amt)} ${x.u}`).join(" + ")}`
+    : `${sheetFood.s} · ${Math.round(sheetFood.cal)} cal · P ${r1(sheetFood.p)}g C ${r1(sheetFood.c)}g F ${r1(sheetFood.f)}g`;
   document.querySelectorAll("#mealChips .chip").forEach(c=>c.classList.toggle("sel", c.dataset.m===sheetMeal));
   updateQty();
 }
@@ -918,7 +972,8 @@ document.getElementById("backToSearch").onclick = showSearch;
 document.getElementById("confirmAdd").onclick = ()=>{
   const d = day(), f = sheetFood;
   d.meals[sheetMeal].push({id:uid(), n:f.n, s:f.s, qty:sheetQty, img:f.img||null,
-    cal:f.cal*sheetQty, p:f.p*sheetQty, c:f.c*sheetQty, f:f.f*sheetQty});
+    cal:f.cal*sheetQty, p:f.p*sheetQty, c:f.c*sheetQty, f:f.f*sheetQty,
+    kind:f.kind||"food", nutrs:f.nutrs||[], xw:!!f.xw});
   save(); closeSheet(); renderDiary();
 };
 
@@ -967,6 +1022,14 @@ function resetCustomForm(){
   ["cName","cServ","cCal","cP","cC","cF"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("cPhotoFile").value = "";
   setCPhoto("");
+  cKind = "food"; cUnit = "capsule";
+  document.querySelectorAll("#cKindChips .chip").forEach(x=>x.classList.toggle("sel", x.dataset.kind==="food"));
+  document.getElementById("cSuppSec").style.display = "none";
+  document.querySelectorAll("#cUnitChips .chip").forEach(x=>x.classList.toggle("sel", x.dataset.u==="capsule"));
+  document.getElementById("cNutrRows").innerHTML = "";
+  document.getElementById("cXW").checked = false;
+  const sv = document.getElementById("cServ"); sv.dataset.dirty = "";
+  document.getElementById("cCal").placeholder = "Required";
 }
 document.getElementById("newCustomBtn").onclick = ()=>{ resetCustomForm(); csheet.classList.add("open"); };
 document.getElementById("cScrim").onclick = ()=>csheet.classList.remove("open");
@@ -991,15 +1054,54 @@ document.getElementById("cPhotoFile").onchange = e=>{
 };
 document.getElementById("cSave").onclick = ()=>{
   const n = document.getElementById("cName").value.trim();
-  if(!n){ alert("Give the food a name."); return; }
-  const cal = parseFloat(document.getElementById("cCal").value);
-  if(!(cal>0)){ alert("Enter calories for the food."); return; }
+  if(!n){ alert("Give it a name."); return; }
+  const isSupp = cKind==="supp";
+  const cal = parseFloat(document.getElementById("cCal").value)||0;
+  if(!isSupp && !(cal>0)){ alert("Enter calories for the food."); return; }
   const num = id => parseFloat(document.getElementById(id).value) || 0;
-  S.customFoods.push({n, s:document.getElementById("cServ").value.trim()||"1 serving",
-    cal, p:num("cP"), c:num("cC"), f:num("cF"), img:cPhotoData});
+  const sTxt = document.getElementById("cServ").value.trim() || (isSupp ? "1 "+cUnit : "1 serving");
+  const nutrs = isSupp ? [...document.querySelectorAll("#cNutrRows .nutrrow")].map(r=>({
+    n:r.children[0].value.trim(), amt:parseFloat(r.children[1].value)||0, u:r.children[2].value
+  })).filter(x=>x.n && x.amt>0) : [];
+  S.customFoods.push({n, s:sTxt,
+    cal, p:num("cP"), c:num("cC"), f:num("cF"), img:cPhotoData,
+    kind:isSupp?"supp":"food", unit:isSupp?cUnit:null, nutrs, xw:isSupp && document.getElementById("cXW").checked});
   resetCustomForm();
   save(); csheet.classList.remove("open"); renderFoods();
 };
+
+/* ============ SUPPLEMENT CREATION ============ */
+const SUPP_UNITS = ["capsule","tablet","softgel","gummy","scoop","packet","dropper (mL)","serving","g","mg","mcg","mL","IU"];
+const NUTR_UNITS = ["mg","mcg","g","IU","mL"];
+let cKind = "food", cUnit = "capsule";
+const cUnitBox = document.getElementById("cUnitChips");
+cUnitBox.innerHTML = SUPP_UNITS.map(u=>`<button type="button" class="chip${u===cUnit?" sel":""}" data-u="${u}">${u}</button>`).join("");
+cUnitBox.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
+  cUnit = c.dataset.u;
+  cUnitBox.querySelectorAll(".chip").forEach(x=>x.classList.toggle("sel", x===c));
+  const sv = document.getElementById("cServ");
+  if(!sv.dataset.dirty) sv.value = "1 "+cUnit;
+});
+document.getElementById("cServ").addEventListener("input", e=>{ e.target.dataset.dirty = e.target.value.trim() ? "1" : ""; });
+document.querySelectorAll("#cKindChips .chip").forEach(c=>c.onclick=()=>{
+  cKind = c.dataset.kind;
+  document.querySelectorAll("#cKindChips .chip").forEach(x=>x.classList.toggle("sel", x===c));
+  document.getElementById("cSuppSec").style.display = cKind==="supp" ? "" : "none";
+  document.getElementById("cCal").placeholder = cKind==="supp" ? "0" : "Required";
+  const sv = document.getElementById("cServ");
+  if(cKind==="supp" && !sv.dataset.dirty) sv.value = "1 "+cUnit;
+});
+function addNutrRow(){
+  const r = document.createElement("div");
+  r.className = "nutrrow";
+  r.innerHTML = `<input type="text" placeholder="e.g. Vitamin D3"><input type="number" inputmode="decimal" placeholder="Amt"><select>${NUTR_UNITS.map(u=>`<option>${u}</option>`).join("")}</select><button type="button" class="ndel" aria-label="Remove">×</button>`;
+  r.querySelector(".ndel").onclick = ()=>r.remove();
+  document.getElementById("cNutrRows").appendChild(r);
+}
+document.getElementById("cNutrAdd").onclick = addNutrRow;
+document.getElementById("cName").addEventListener("input", e=>{
+  if(cKind==="supp" && /creatine/i.test(e.target.value)) document.getElementById("cXW").checked = true;
+});
 
 /* ============ PROGRESS TAB ============ */
 function last7(){
@@ -1314,7 +1416,7 @@ document.getElementById("goalsBack").onclick = ()=>showView("settings");
 function renderSettings(){
   const g = S.goals;
   document.getElementById("goalRowVal").textContent = Math.round(goalTotal()).toLocaleString()+" kcal";
-  document.getElementById("waterRowVal").textContent = g.water+" glasses";
+  document.getElementById("waterRowVal").textContent = g.water>0 ? g.water+" glasses" : "Auto ("+waterTarget()+" glasses)";
   document.getElementById("weightRowVal").textContent = g.weight+" lb";
   document.getElementById("dDays").textContent = Object.keys(S.days).length;
   document.getElementById("appVer").textContent = "Fuel " + APP_VERSION;
@@ -1322,9 +1424,10 @@ function renderSettings(){
 }
 document.getElementById("goalRow").onclick = ()=>{ renderGoals(); showView("goals"); };
 document.getElementById("waterRow").onclick = ()=>{
-  const v = prompt("Glasses of water per day:", S.goals.water);
-  if(v===null) return; const n = parseInt(v,10);
-  if(n>0 && n<=30){ S.goals.water = n; save(); renderSettings(); renderDiary(); }
+  const cur = S.goals.water>0 ? S.goals.water : 0;
+  const v = prompt("Water glasses per day (enter 0 for Auto target):", cur);
+  if(v===null) return; const n = Math.round(parseFloat(v)||0);
+  if(n>=0 && n<=30){ S.goals.water = n; save(); renderSettings(); renderDiary(); }
 };
 document.getElementById("weightRow").onclick = ()=>{
   const v = prompt("Weight goal (lb):", S.goals.weight);
