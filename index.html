@@ -396,49 +396,7 @@ header.appbar{
 <script>
 "use strict";
 /* ============ DATA ============ */
-const FOODS = [
- {n:"Chicken breast, grilled", s:"1 breast (170g)", cal:284, p:53, c:0, f:6},
- {n:"Chicken thigh, grilled", s:"1 thigh (120g)", cal:230, p:26, c:0, f:14},
- {n:"Ground beef 90/10, cooked", s:"150g", cal:270, p:38, c:0, f:12},
- {n:"Salmon fillet, baked", s:"150g", cal:310, p:34, c:0, f:18},
- {n:"Tuna, canned in water", s:"1 can (142g)", cal:160, p:35, c:0, f:1},
- {n:"Eggs, whole", s:"2 large", cal:140, p:12, c:1, f:10},
- {n:"Egg whites", s:"4 whites", cal:68, p:14, c:1, f:0},
- {n:"Greek yogurt, plain 2%", s:"170g", cal:130, p:17, c:6, f:4},
- {n:"Cottage cheese 2%", s:"113g", cal:100, p:14, c:4, f:2},
- {n:"Whole milk", s:"1 cup (240ml)", cal:150, p:8, c:12, f:8},
- {n:"White rice, cooked", s:"1 cup (186g)", cal:240, p:5, c:53, f:0},
- {n:"Brown rice, cooked", s:"1 cup (195g)", cal:216, p:5, c:45, f:2},
- {n:"Oats, dry", s:"1/2 cup (40g)", cal:150, p:5, c:27, f:3},
- {n:"Pasta, cooked", s:"1 cup (140g)", cal:220, p:8, c:43, f:1},
- {n:"Bread, whole wheat", s:"1 slice", cal:80, p:4, c:14, f:1},
- {n:"Pita bread", s:"1 pita", cal:80, p:3, c:13, f:2},
- {n:"Tortilla, flour", s:"1 large", cal:150, p:4, c:26, f:4},
- {n:"Sweet potato, baked", s:"1 medium", cal:103, p:2, c:24, f:0},
- {n:"Banana", s:"1 medium", cal:105, p:1, c:27, f:0},
- {n:"Apple", s:"1 medium", cal:95, p:0, c:25, f:0},
- {n:"Peanut butter", s:"2 tbsp", cal:190, p:8, c:7, f:16},
- {n:"Almonds", s:"28g (handful)", cal:164, p:6, c:6, f:14},
- {n:"Olive oil", s:"1 tbsp", cal:119, p:0, c:0, f:14},
- {n:"Butter", s:"1 tbsp", cal:102, p:0, c:0, f:12},
- {n:"Avocado", s:"1/2 medium", cal:120, p:1, c:6, f:11},
- {n:"Broccoli, cooked", s:"1 cup", cal:55, p:4, c:11, f:1},
- {n:"Cheddar cheese", s:"28g", cal:114, p:7, c:0, f:9},
- {n:"Protein shake (whey)", s:"1 scoop + water", cal:130, p:25, c:3, f:1},
- {n:"Protein shake + milk", s:"1 scoop + 350ml milk", cal:340, p:37, c:20, f:9},
- {n:"Chipotle chicken burrito", s:"1 burrito", cal:1010, p:58, c:93, f:42},
- {n:"CAVA bowl, dbl chicken", s:"1 bowl (white rice, hummus, pita, corn)", cal:960, p:67, c:82, f:40, fav:true},
- {n:"In-N-Out Double-Double", s:"1 burger", cal:670, p:37, c:39, f:41},
- {n:"Pizza, pepperoni", s:"2 slices", cal:540, p:24, c:60, f:22},
- {n:"Pasta alfredo", s:"1 plate", cal:800, p:28, c:90, f:36},
- {n:"Orange juice", s:"1 cup", cal:112, p:2, c:26, f:0},
- {n:"Coca-Cola", s:"1 can", cal:140, p:0, c:39, f:0},
- {n:"Granola bar", s:"1 bar", cal:190, p:4, c:29, f:6},
- {n:"Bagel, plain", s:"1 bagel", cal:270, p:10, c:53, f:2},
- {n:"Pancakes", s:"3 medium", cal:350, p:8, c:68, f:8},
- {n:"French fries", s:"medium", cal:380, p:4, c:48, f:19},
- {n:"Caesar salad w/ chicken", s:"1 bowl", cal:470, p:38, c:12, f:30},
-];
+const FOODS = [];
 const MEALS = ["breakfast","lunch","dinner","snacks"];
 const MEAL_LABEL = {breakfast:"Breakfast", lunch:"Lunch", dinner:"Dinner", snacks:"Snacks"};
 const KEY = "fuel.v1";
@@ -446,8 +404,8 @@ const KEY = "fuel.v1";
 /* ============ STATE ============ */
 const defGoals = () => ({cal:3000, maintenance:2700, protein:150, carbs:375, fat:83, water:10, weight:150});
 function load(){
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; return s; } } catch(e){}
-  return {days:{}, customFoods:[], favorites:["CAVA bowl, dbl chicken"], weights:[], goals:defGoals()};
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); return s; } } catch(e){}
+  return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals()};
 }
 let S = load();
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
