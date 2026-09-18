@@ -158,6 +158,9 @@ button{font-family:inherit;}
 .astep{display:flex; align-items:center; gap:10px;}
 .astep button{width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:#fff; font-size:20px; line-height:1; color:var(--ink); cursor:pointer;}
 .astep b{font-size:20px; min-width:30px; text-align:center; font-variant-numeric:tabular-nums;}
+.alcrow{display:flex; align-items:center; justify-content:space-between; padding:7px 2px; border-top:1px solid #f0f0f4;}
+.alcrow .anm b{display:block; font-size:14.5px;}
+.alcrow .anm span{font-size:11.5px; color:var(--muted);}
 .alcwarn{margin-top:10px; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:13px; line-height:1.45; border-radius:12px; padding:10px 12px;}
 /* collapsible goal sections */
 .ghead{display:flex; align-items:center; gap:8px; font-size:21px; font-weight:800; margin:20px 2px 12px; letter-spacing:-.3px; cursor:pointer; user-select:none;}
@@ -512,11 +515,22 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
           <b>Alcohol</b><span class="wlbl" id="alcLabel"></span>
           <div class="whint" id="alcNote" style="margin-top:6px"></div>
         </div>
+      </div>
+      <div id="alcRows"></div>
+      <div class="alcwarn" id="alcWarn" style="display:none"></div>
+    </div>
+
+    <div class="card alccard">
+      <div class="arow">
+        <div class="winfo">
+          <b>Nicotine (vape)</b><span class="wlbl" id="vapeLabel"></span>
+          <div class="whint" id="vapeNote" style="margin-top:6px"></div>
+        </div>
         <div class="astep">
-          <button id="alcMinus" aria-label="Remove a drink">−</button><b id="alcNum">0</b><button id="alcPlus" aria-label="Add a drink">+</button>
+          <button id="vapeMinus" aria-label="Fewer disposables">−</button><b id="vapeNum">0</b><button id="vapePlus" aria-label="More disposables">+</button>
         </div>
       </div>
-      <div class="alcwarn" id="alcWarn" style="display:none"></div>
+      <div class="alcwarn" id="vapeWarn" style="display:none"></div>
     </div>
   </section>
 
@@ -1039,7 +1053,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bi";
+const APP_VERSION = "2026.09.18-bj";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -1319,31 +1333,95 @@ function renderDiary(){
 }
 
 /* ============ ALCOHOL (research #10) ============ */
-/* Log drinks; warn when drinking lands in the post-workout window or hits binge
-   levels. Parr et al. 2014: ~1.5 g/kg alcohol post-exercise cut muscle protein
-   synthesis 24% (with protein) to 37% (with carbs). Effects of 1-2 drinks are unstudied. */
+/* ============ ALCOHOL (research #10, refreshed 2026-09-18) ============
+   Log by drink type — shots, beer, cocktails — since a shot and a beer are very
+   different drinks. NIAAA: 1 standard drink = 14 g alcohol; 1.5 oz 80-proof shot
+   = 1 std drink ≈ 97 kcal; 12 oz 5% beer = 1 std drink ≈ 150 kcal; typical mixed
+   cocktail ≈ 1.5 std drinks ≈ 200 kcal. BAC via Widmark, scaled to his weight:
+   at 120 lb, 2 shots ≈ the 0.08% driving limit. Parr et al. 2014: ~1.5 g/kg
+   (≈6 shots at his weight) cut muscle protein synthesis 24–37%; 1–2 drinks unstudied.
+   Shots spike BAC faster than sipped beer. */
+const ALC_INFO = {
+  shot:     {kcal:97,  std:1,   label:"Shots",     sub:"1.5 oz 80-proof · 1 std drink · ~97 kcal"},
+  beer:     {kcal:150, std:1,   label:"Beers",     sub:"12 oz 5% · 1 std drink · ~150 kcal"},
+  cocktail: {kcal:200, std:1.5, label:"Cocktails", sub:"mixed drink · ~1.5 std drinks · ~200 kcal"}
+};
+function alcData(d){
+  let a = d.alc;
+  if(typeof a === "number") a = {shot:0, beer:a, cocktail:0}; /* migrate old count */
+  a = Object.assign({shot:0, beer:0, cocktail:0}, a||{});
+  const std = a.shot*1 + a.beer*1 + a.cocktail*1.5;
+  const kcal = a.shot*97 + a.beer*150 + a.cocktail*200;
+  return {a, std, kcal};
+}
+function bacPct(stdDrinks){
+  const w = curBodyWeight()>0 ? curBodyWeight() : 120;
+  return stdDrinks*0.6*5.14/(w*0.68); /* Widmark, male r=0.68; ignores metabolism (~0.015%/hr) */
+}
 function renderAlc(){
   const k = viewDate(), d = day();
-  const n = d.alc||0;
-  $("alcNum").textContent = n;
-  $("alcLabel").textContent = n===1 ? "1 drink" : n+" drinks";
-  $("alcNote").textContent = n>0
-    ? "≈ "+(n*100).toLocaleString()+" kcal from alcohol, roughly — not counted in your ring"
-    : "1 standard drink ≈ 100 kcal of alcohol, roughly.";
-  $("alcPlus").onclick = ()=>{ const dd=day(); dd.alc=(dd.alc||0)+1; save(); renderAlc(); };
-  $("alcMinus").onclick = ()=>{ const dd=day(); dd.alc=Math.max(0,(dd.alc||0)-1); save(); renderAlc(); };
+  const {a, std, kcal} = alcData(d);
+  d.alc = a;
+  const rows = $("alcRows"); rows.innerHTML = "";
+  Object.keys(ALC_INFO).forEach(t=>{
+    const info = ALC_INFO[t];
+    const row = document.createElement("div"); row.className = "alcrow";
+    row.innerHTML = `<div class="anm"><b>${info.label}</b><span>${info.sub}</span></div>
+      <div class="astep"><button aria-label="Fewer ${info.label.toLowerCase()}">−</button><b>${a[t]||0}</b><button aria-label="More ${info.label.toLowerCase()}">+</button></div>`;
+    const [minus, plus] = row.querySelectorAll("button");
+    minus.onclick = ()=>{ const dd=day(), x=alcData(dd); x.a[t]=Math.max(0,(x.a[t]||0)-1); dd.alc=x.a; save(); renderAlc(); };
+    plus.onclick = ()=>{ const dd=day(), x=alcData(dd); x.a[t]=(x.a[t]||0)+1; dd.alc=x.a; save(); renderAlc(); };
+    rows.appendChild(row);
+  });
+  const parts = Object.keys(ALC_INFO).filter(t=>a[t]>0).map(t=>a[t]+" "+ALC_INFO[t].label.toLowerCase());
+  $("alcLabel").textContent = parts.length ? parts.join(", ") : "";
+  const bac = bacPct(std);
+  $("alcNote").textContent = std>0
+    ? `≈ ${std.toFixed(1)} standard drinks · ${Math.round(kcal).toLocaleString()} kcal from alcohol, roughly — not counted in your ring`+
+      (bac>=0.02 ? ` · ≈${bac.toFixed(2)}% BAC at your weight` : "")
+    : "1.5 oz 80-proof shot = 1 standard drink ≈ 97 kcal. Shots spike BAC faster than beer.";
   const warn = $("alcWarn");
   let msg = "";
-  if(n>0){
+  if(std>0){
     const dn = ((S.training||{}).done||{})[k];
     const hrs = dn && dn.at ? (Date.now()-dn.at)/36e5 : null;
     const trained = trainDay(k).done;
-    if(n>=4) msg = "4+ drinks is binge territory — that's the dose range where research shows muscle building and recovery take a real hit (Parr et al. 2014; Murphy et al. 2020). The effect of 1–2 drinks hasn't been studied.";
+    if(bac>=0.08) msg = `≈${bac.toFixed(2)}% BAC at your weight — that's over the 0.08 driving limit. At 120 lb, just 2 shots gets you there. Don't drive.`+
+      (std>=5.8 ? " That's also the dose range where a study cut muscle building 24–37% after training (Parr et al. 2014)." : "");
+    else if(std>=5.8) msg = "That's the dose range (~1.5 g/kg at your weight) where a study cut muscle building 24–37% after training, even with protein (Parr et al. 2014).";
+    else if(std>=4) msg = "Binge territory — that's the dose range where research shows muscle building and recovery take a real hit (Parr et al. 2014; Murphy et al. 2020). The effect of 1–2 drinks hasn't been studied.";
     else if(trained && hrs!==null && hrs<8) msg = "You trained under 8 hours ago — alcohol's biggest cost is in the hours right after lifting. A heavy post-workout session cut muscle building ~24–37% even with protein (Parr et al. 2014).";
     else if(trained) msg = "You trained today. Alcohol's biggest cost is in the hours right after lifting — earlier is worse.";
+    else msg = "Even a little alcohol fragments the second half of sleep — the half that matters for recovery (Ebrahim et al. 2013).";
   }
   if(msg){ warn.style.display = ""; warn.textContent = msg; }
   else warn.style.display = "none";
+  renderVape();
+}
+/* ============ NICOTINE / VAPE (research 2026-09-18) ============
+   Log disposables finished. A typical 5% (50 mg/mL) 15 mL disposable ≈ 750 mg
+   nicotine content ≈ 3–4 packs' worth of nicotine content (11 mg/cig).
+   Mineur et al. 2011 (Science): nicotine activates hypothalamic POMC neurons →
+   appetite suppression — directly fights a bulk. Heavy use also shortens deep
+   sleep and raises 24-h burn ~100–200 kcal (mostly cigarette studies). Vaping is
+   far less harmful than smoking, not harmless; long-term effects unknown. */
+function renderVape(){
+  const d = day(), n = d.vape||0;
+  $("vapeNum").textContent = n;
+  $("vapeLabel").textContent = n===1 ? "1 disposable today" : n+" disposables today";
+  const mg = n*750, packs = mg/(11*20);
+  $("vapeNote").textContent = n>0
+    ? `≈ ${mg.toLocaleString()} mg nicotine content — like ~${packs.toFixed(1)} packs' worth`
+    : "Log disposables finished — 1 typical 5% disposable ≈ 750 mg nicotine (≈3–4 packs' worth).";
+  $("vapePlus").onclick = ()=>{ const dd=day(); dd.vape=(dd.vape||0)+1; save(); renderVape(); };
+  $("vapeMinus").onclick = ()=>{ const dd=day(); dd.vape=Math.max(0,(dd.vape||0)-1); save(); renderVape(); };
+  const warn = $("vapeWarn");
+  if(n>0){
+    const goal = Math.round(goalTotal()||3000).toLocaleString();
+    warn.style.display = "";
+    warn.textContent = `Nicotine flips your brain's "I'm full" switch — it directly fights your ${goal} kcal/day goal (Mineur et al. 2011). `+
+      `Heavy use also costs deep sleep and burns ~100–200 kcal/day extra — both work against the bulk. Far less harmful than smoking, but not harmless.`;
+  } else warn.style.display = "none";
 }
 
 /* ============ COPY MEAL ============ */
@@ -1545,7 +1623,7 @@ function foodFatigue(ds){
   const goal = goalTotal();
   if(goal>0 && t.cal<goal*0.85){ pts+=12; why.push("Only "+Math.round(t.cal).toLocaleString()+" of "+Math.round(goal).toLocaleString()+" kcal so far — running a deficit drains energy (low energy availability, RED-S research)."); }
   else if(goal>0 && t.cal<goal*0.95){ pts+=5; why.push("Slightly under your calorie goal — a small energy dip is likely."); }
-  const alc = d.alc||0;
+  const alc = alcData(d).std;
   if(alc>0){ pts+=Math.min(15, alc*5); why.push(alc+" drink"+(alc>1?"s":"")+" — alcohol fragments sleep, so the drag lands tomorrow."); }
   const score = Math.min(100, Math.round(pts));
   return {score, why, label: score<=25?"Energized":score<=45?"Steady":score<=65?"Heavy":"Drained"};
@@ -1580,7 +1658,7 @@ function bloatScore(ds){
   else if(big>=650){ pts+=7; why.push("Hearty meal ("+Math.round(big).toLocaleString()+" kcal) — some fullness expected."); }
   const w = waterCalc(), wr = w.target>0 ? (d.waterOz||0)/(w.target*8) : 1;
   if(w.target>0 && wr<0.75){ pts+=10; why.push("Behind on water ("+Math.round(wr*100)+"% of target) — when you're dry the body holds onto water, adding to the puff."); }
-  const alc = d.alc||0;
+  const alc = alcData(d).std;
   if(alc>0){ pts+=5; why.push("Alcohol irritates the gut lining — a small extra bloat nudge."); }
   const score = Math.max(0, Math.min(100, Math.round(pts)));
   return {score, why, label: score<=25?"Comfortable":score<=50?"Full":score<=75?"Bloated":"Very bloated"};
