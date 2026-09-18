@@ -54,6 +54,41 @@ header.appbar{
 .legend{display:flex; gap:16px; margin:10px 2px 12px; font-size:12px; color:var(--muted); font-weight:600;}
 .legend i{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px;}
 .legend b{color:var(--ink);}
+/* diary summary (RENPHO-style) */
+.sumcard{padding:18px 16px 14px;}
+.sumrow{display:flex; align-items:center; gap:18px;}
+.ring-lg{width:148px; height:148px; flex:none;}
+.ring .center .ctitle{font-size:11px; color:var(--muted); font-weight:600;}
+.ring .center b{font-size:30px; font-weight:800; letter-spacing:-.5px; line-height:1.15;}
+.flagkc{font-size:13px !important; font-weight:800; color:#ef7d12 !important;}
+.flagsur{font-size:12px !important; font-weight:700; color:var(--muted) !important;}
+.flagsur.on{color:var(--green) !important;}
+.macros{flex:1; min-width:0; display:flex; flex-direction:column; gap:13px;}
+.macrow .mhead{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;}
+.macrow .mhead span{font-size:14px; font-weight:700;}
+.macrow .mhead b{font-size:13px; color:var(--muted); font-weight:600;}
+.macrow .mbar{height:10px; border-radius:99px; background:#f3ede8; overflow:hidden;}
+.macrow .mbar i{display:block; height:100%; border-radius:99px; width:0;}
+.analysislink{display:block; margin:8px auto 0; background:none; border:none; color:var(--blue); font-size:16px; font-weight:800; padding:6px 12px;}
+.searchcard{padding:12px;}
+.searchbtn{width:100%; display:flex; align-items:center; gap:10px; background:#eef2f4; border:none; border-radius:14px; padding:14px 16px; font-size:16px; color:#98a4b0; font-weight:600;}
+.searchbtn svg{flex:none;}
+/* week strip */
+.weekcard{padding:12px 10px 10px;}
+.dhead{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
+.chev{background:none; border:none; font-size:28px; line-height:1; color:var(--ink); width:44px; padding:4px;}
+.dtitle{text-align:center;}
+.dtitle b{display:block; font-size:20px; font-weight:800;}
+.dtitle small{font-size:12px; color:var(--muted); font-weight:600;}
+.todaypill{background:#e7f0fe; color:var(--blue); border:none; border-radius:99px; padding:8px 14px; font-weight:800; font-size:13px; white-space:nowrap;}
+.weekstrip{display:flex;}
+.wday{flex:1; background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 2px; border-radius:12px;}
+.wday .wd{font-size:12px; color:var(--muted); font-weight:600;}
+.wday .wn{font-size:15px; font-weight:700; width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:50%; color:var(--ink);}
+.wday.sel .wn{background:var(--blue); color:#fff;}
+.wday.sel .wd{color:var(--blue);}
+.wday:disabled{opacity:.35;}
+.wday .wdot{width:5px; height:5px; border-radius:50%; background:#ef7d12;}
 /* macro bars */
 .macro{margin-top:10px;}
 .macro .mrow{display:flex; align-items:center; gap:10px; margin:8px 0;}
@@ -156,39 +191,49 @@ header.appbar{
 
   <!-- DIARY -->
   <section class="view active" id="view-diary">
-    <div class="datenav">
-      <button id="dayPrev" aria-label="Previous day">&#8592;</button>
-      <div class="dlabel"><span id="dayTitle">Today</span><small id="daySub"></small></div>
-      <button id="dayNext" aria-label="Next day">&#8594;</button>
+    <div class="card weekcard">
+      <div class="dhead">
+        <button id="dayPrev" class="chev" aria-label="Previous day">‹</button>
+        <div class="dtitle"><b id="dayTitle">Today</b><small id="daySub"></small></div>
+        <button id="todayPill" class="todaypill" style="visibility:hidden">↩ Today</button>
+      </div>
+      <div class="weekstrip" id="weekStrip"></div>
     </div>
 
-    <div class="card">
-      <div class="ringwrap">
-        <div class="ring">
-          <svg width="128" height="128" viewBox="0 0 128 128">
-            <circle cx="64" cy="64" r="54" fill="none" stroke="#e6ecf1" stroke-width="12"/>
+    <div class="card sumcard">
+      <div class="sumrow">
+        <div class="ring ring-lg">
+          <svg width="148" height="148" viewBox="0 0 128 128">
+            <circle cx="64" cy="64" r="54" fill="none" stroke="#eef3f7" stroke-width="12"/>
             <circle id="ringCal" cx="64" cy="64" r="54" fill="none" stroke="#1f9ede" stroke-width="12"
               stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29"/>
             <circle id="ringSurp" cx="64" cy="64" r="54" fill="none" stroke="#2fbf71" stroke-width="12"
               stroke-linecap="round" stroke-dasharray="0 339.29" stroke-dashoffset="0" style="display:none"/>
           </svg>
-          <div class="center"><b id="calEaten">0</b><span>of <span id="calGoal">3000</span> cal</span></div>
+          <div class="center">
+            <span class="ctitle">Calorie Intake</span>
+            <b id="calEaten">0</b>
+            <span class="flagkc" id="flagKcal">🚩0 kcal</span>
+            <span class="flagsur" id="flagSur"></span>
+          </div>
         </div>
-        <div style="flex:1">
-          <div class="label" id="remainLabel">Remaining</div>
-          <div class="bignum"><span id="calLeft">3000</span> <small>cal</small></div>
-          <div class="hint" id="burnHint" style="margin-top:4px"></div>
+        <div class="macros">
+          <div class="macrow"><div class="mhead"><span>Carbs</span><b id="valC">0 / 375g</b></div><div class="mbar"><i id="barC" style="background:#ff9f43"></i></div></div>
+          <div class="macrow"><div class="mhead"><span>Protein</span><b id="valP">0 / 150g</b></div><div class="mbar"><i id="barP" style="background:#2fbf71"></i></div></div>
+          <div class="macrow"><div class="mhead"><span>Fat</span><b id="valF">0 / 83g</b></div><div class="mbar"><i id="barF" style="background:#8b7cf6"></i></div></div>
         </div>
       </div>
       <div class="legend">
         <span><i style="background:var(--blue)"></i>Maintenance <b id="legMaint">–</b></span>
-        <span><i style="background:var(--green)"></i>Surplus goal <b id="legGoal">–</b></span>
+        <span><i style="background:var(--green)"></i>Surplus <b id="legGoal">–</b></span>
       </div>
-      <div class="macro">
-        <div class="mrow"><div class="mname">Protein</div><div class="mbar"><i id="barP" style="background:#2fbf71"></i></div><div class="mval" id="valP">0 / 150g</div></div>
-        <div class="mrow"><div class="mname">Carbs</div><div class="mbar"><i id="barC" style="background:#ff9f43"></i></div><div class="mval" id="valC">0 / 375g</div></div>
-        <div class="mrow"><div class="mname">Fat</div><div class="mbar"><i id="barF" style="background:#8b7cf6"></i></div><div class="mval" id="valF">0 / 83g</div></div>
-      </div>
+      <button class="analysislink" id="analysisLink">Nutrition Analysis <span>›</span></button>
+    </div>
+    <div class="card searchcard">
+      <button class="searchbtn" id="diarySearch">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98a4b0" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <span>Search for Food</span>
+      </button>
     </div>
 
     <div id="meals"></div>
@@ -424,18 +469,37 @@ function totals(k){
 }
 const r1 = n => Math.round(n*10)/10;
 
+/* ============ WEEK STRIP ============ */
+function renderWeek(){
+  const strip = document.getElementById("weekStrip"); if(!strip) return;
+  strip.innerHTML = "";
+  const today = new Date(); today.setHours(12,0,0,0);
+  const sun = new Date(today); sun.setDate(today.getDate()-today.getDay());
+  const names = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  for(let i=0;i<7;i++){
+    const d = new Date(sun); d.setDate(sun.getDate()+i);
+    const ks = dstr(d);
+    const b = document.createElement("button");
+    b.className = "wday"+(ks===viewDate()?" sel":"");
+    b.disabled = ks > todayStr();
+    const dd = S.days[ks];
+    const logged = dd && MEALS.some(m=>(dd.meals[m]||[]).length);
+    b.innerHTML = '<span class="wd">'+names[i]+'</span><span class="wn">'+d.getDate()+'</span><span class="wdot" style="'+(logged?"":"opacity:0")+'"></span>';
+    b.onclick = ()=>{ const t2 = new Date(); t2.setHours(12,0,0,0); const dd2 = new Date(d); dd2.setHours(12,0,0,0); dayOffset = Math.round((dd2-t2)/864e5); renderDiary(); };
+    strip.appendChild(b);
+  }
+  document.getElementById("todayPill").style.visibility = viewDate()===todayStr() ? "hidden" : "visible";
+}
+
 /* ============ DIARY ============ */
 function renderDiary(){
   const k = viewDate(), d = day(), g = S.goals, t = totals(k);
   const dt = new Date(k+"T12:00:00");
   const isToday = k === todayStr();
-  document.getElementById("dayTitle").textContent = isToday ? "Today" : dt.toLocaleDateString(undefined,{weekday:"long"});
-  document.getElementById("daySub").textContent = dt.toLocaleDateString(undefined,{month:"short",day:"numeric"});
-  document.getElementById("calGoal").textContent = g.cal;
-  document.getElementById("calEaten").textContent = Math.round(t.cal);
+  document.getElementById("dayTitle").textContent = isToday ? "Today" : (dt.getMonth()+1)+"/"+dt.getDate()+"/"+String(dt.getFullYear()).slice(2);
+  document.getElementById("daySub").textContent = dt.toLocaleDateString(undefined,{weekday:"long", month:"short", day:"numeric"});
+  document.getElementById("calEaten").textContent = Math.round(t.cal).toLocaleString();
   const left = g.cal - t.cal;
-  document.getElementById("calLeft").textContent = Math.abs(Math.round(left)).toLocaleString();
-  document.getElementById("remainLabel").textContent = left < 0 ? "Over target" : "Remaining";
   const C = 339.29;
   const mCal = Math.min(g.maintenance>0 ? g.maintenance : 0, g.cal);
   const eCal = t.cal;
@@ -453,10 +517,11 @@ function renderDiary(){
   } else surp.style.display = "none";
   document.getElementById("legMaint").textContent = mCal.toLocaleString();
   document.getElementById("legGoal").textContent = g.cal.toLocaleString();
-  const hint = document.getElementById("burnHint");
-  if(left < 0) hint.textContent = Math.abs(Math.round(left))+" cal over target";
-  else if(eCal < mCal) hint.textContent = Math.round(mCal-eCal)+" cal to maintenance";
-  else hint.textContent = "+"+Math.round(eCal-mCal)+" over maintenance · "+Math.round(left)+" to goal";
+  const fk = document.getElementById("flagKcal");
+  fk.textContent = left >= 0 ? "🚩"+Math.round(left).toLocaleString()+" kcal" : "🚩"+Math.round(-left).toLocaleString()+" over";
+  const fsur = document.getElementById("flagSur");
+  if(eCal > mCal){ fsur.textContent = "🚩+"+Math.round(eCal-mCal).toLocaleString()+" SUR"; fsur.classList.add("on"); }
+  else { fsur.textContent = "🚩"+Math.round(mCal-eCal).toLocaleString()+" to SUR"; fsur.classList.remove("on"); }
   const set = (bar,val,id,gval) => {
     document.getElementById(bar).style.width = Math.min(val/gval*100,100)+"%";
     document.getElementById(id).textContent = Math.round(val)+" / "+gval+"g";
@@ -491,6 +556,7 @@ function renderDiary(){
     gl.onclick = ()=>{ const dd=day(); dd.water = (i<dd.water)? i : i+1; save(); renderDiary(); };
     gw.appendChild(gl);
   }
+  renderWeek();
 }
 function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 </script>
@@ -703,7 +769,12 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   window.scrollTo(0,0);
 });
 document.getElementById("dayPrev").onclick = ()=>{ dayOffset--; renderDiary(); };
-document.getElementById("dayNext").onclick = ()=>{ if(viewDate() < todayStr()){ dayOffset++; renderDiary(); } };
+document.getElementById("todayPill").onclick = ()=>{ dayOffset = 0; renderDiary(); };
+document.getElementById("analysisLink").onclick = ()=>{ document.querySelector('.tab[data-v="progress"]').click(); };
+document.getElementById("diarySearch").onclick = ()=>{
+  const h = new Date().getHours();
+  openSheet(h<11 ? "breakfast" : h<15 ? "lunch" : h<21 ? "dinner" : "snacks");
+};
 renderAll();
 </script>
 </body>
