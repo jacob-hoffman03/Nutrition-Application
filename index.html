@@ -940,7 +940,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-af";
+const APP_VERSION = "2026.09.18-ag";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
@@ -1865,6 +1865,14 @@ function readProfile(){
   const f = parseFloat(document.getElementById("pfFat").value);
   p.bodyFat = (f>=0 && f<=70) ? f : 0;
 }
+/* Commit every typed value on the Goals page into S.goals (memory; callers save).
+   Called before ANY re-render and on every field change, so a tap can never
+   silently wipe an edit the user typed but hadn't saved yet. */
+function commitGoalsInputs(){
+  const num=(id,fb)=>{ const v=parseFloat(document.getElementById(id).value); return v>=0?v:fb; };
+  S.goals.carbs = num("gmC",S.goals.carbs); S.goals.protein = num("gmP",S.goals.protein); S.goals.fat = num("gmF",S.goals.fat);
+  readProfile();
+}
 function renderProfile(){
   const p = S.goals.profile, met = p.units==="met";
   document.querySelectorAll("#pfUnits .chip").forEach(c=>c.classList.toggle("sel", c.dataset.u===p.units));
@@ -2478,44 +2486,50 @@ document.getElementById("goalSlider").addEventListener("input", e=>{
 });
 ["gmC","gmP","gmF"].forEach(id=>document.getElementById(id).addEventListener("input", updateMacroSplit));
 document.querySelectorAll("#pfAct .chip").forEach(c=>c.onclick=()=>{
+  commitGoalsInputs();
   S.goals.profile.activityKey = c.dataset.k;
   document.querySelectorAll("#pfAct .chip").forEach(x=>x.classList.toggle("sel", x===c));
   recalcMaint();
   save(); renderGoals(); renderDiary();
 });
 document.querySelectorAll("#pfUnits .chip").forEach(c=>c.onclick=()=>{
-  readProfile();
+  commitGoalsInputs();
   S.goals.profile.units = c.dataset.u;
   save(); renderProfile();
 });
 document.querySelectorAll("#pfSex .chip").forEach(c=>c.onclick=()=>{
+  commitGoalsInputs();
   S.goals.profile.sex = c.dataset.x;
   document.querySelectorAll("#pfSex .chip").forEach(x=>x.classList.toggle("sel", x===c));
   recalcMaint();
   save(); renderGoals(); renderDiary();
 });
 document.getElementById("pfAuto").onclick = ()=>{
+  commitGoalsInputs();
   S.goals.profile.auto = !S.goals.profile.auto;
   save(); renderProfile();
 };
 document.getElementById("pfTune").onclick = ()=>{
+  commitGoalsInputs();
   S.goals.autoTune = !S.goals.autoTune;
   save(); renderProfile();
 };
 document.querySelectorAll("#goalMode .chip").forEach(c=>c.onclick=()=>{
+  commitGoalsInputs();
   if(!(S.goals.maintenance>0)){ alert("Calculate your maintenance first."); return; }
   S.goals.mode = c.dataset.m;
   S.goals.surplus = Math.round(S.goals.maintenance*(+c.dataset.pct)/100);
   save(); renderGoals(); renderDiary();
 });
 document.querySelectorAll("#surpChips .chip").forEach(c=>c.onclick=()=>{
+  commitGoalsInputs();
   if(!(S.goals.maintenance>0)){ alert("Calculate your maintenance first."); return; }
   S.goals.surplus = Math.round(S.goals.maintenance*(+c.dataset.p)/100);
   S.goals.mode = "custom";
   save(); renderGoals(); renderDiary();
 });
 document.getElementById("pfCalc").onclick = ()=>{
-  readProfile();
+  commitGoalsInputs();
   recalcMaint();
   save(); renderGoals(); renderDiary();
 };
@@ -2528,15 +2542,18 @@ document.getElementById("macroAuto").onclick = ()=>{
   document.getElementById("gmP").value = p;
   document.getElementById("gmF").value = f;
   document.getElementById("gmC").value = c;
+  commitGoalsInputs(); save();
   updateMacroSplit();
 };
 document.getElementById("goalsDone").onclick = ()=>{
-  const num=(id,fb)=>{ const v=parseFloat(document.getElementById(id).value); return v>=0?v:fb; };
-  S.goals.carbs = num("gmC",S.goals.carbs); S.goals.protein = num("gmP",S.goals.protein); S.goals.fat = num("gmF",S.goals.fat);
-  readProfile();
+  commitGoalsInputs();
   if(profHash()!==S.goals.profHash) recalcMaint(); /* profile changed → goal can never go stale */
   save(); showView("settings"); renderDiary();
 };
+/* Typed values commit on every field change (blur/return), so nothing the user
+   typed can ever be lost or silently reverted — Save changes just finalizes. */
+["gmC","gmP","gmF"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); updateMacroSplit(); }));
+["pfAge","pfHtFt","pfHtIn","pfHtCm","pfWeight","pfFat"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); paintMaintNote(); }));
 document.getElementById("goalsBack").onclick = ()=>showView("settings");
 
 /* ============ SETTINGS ============ */
