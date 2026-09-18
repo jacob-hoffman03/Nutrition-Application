@@ -339,6 +339,10 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wrow{display:flex; align-items:center; justify-content:space-between; padding:9px 2px; border-top:1px solid var(--line); font-size:14px;}
 .wrow b{font-variant-numeric:tabular-nums;}
 .wlogrow{display:flex; gap:8px; margin-top:10px;}
+.wlegend{display:flex; gap:14px; align-items:center; justify-content:center; font-size:11px; color:var(--muted); margin-top:4px;}
+.wlegend .wdot{display:inline-block; width:8px; height:8px; border-radius:50%; background:#c3c3ee; margin-right:4px;}
+.wlegend .wtline{display:inline-block; width:16px; height:3px; border-radius:2px; background:#5b5bf0; vertical-align:middle; margin-right:4px;}
+.wlegend .wtnote{font-style:italic;}
 .wlogrow input{flex:1; border:1.5px solid var(--line); border-radius:12px; padding:11px; font-size:16px; background:#fff; outline:none;}
 .wlogbtn{background:var(--acc); color:#fff; border:none; border-radius:12px; padding:11px 18px; font-weight:800;}
 /* tab bar */
@@ -669,7 +673,8 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div style="display:flex; justify-content:space-between; align-items:baseline;"><b style="font-size:16px">Body weight</b><b id="curWeight" style="font-size:20px">—</b></div>
       <button class="srow" id="wtGoalBtn" style="padding-top:10px"><span>Weight goal</span><span class="sval"><b id="wtGoalVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
       <div id="wtGoalProg" style="margin-top:2px"></div>
-      <svg id="weightChart" width="100%" height="120" viewBox="0 0 340 120" preserveAspectRatio="none" style="margin-top:8px"></svg>
+      <svg id="weightChart" width="100%" height="150" viewBox="0 0 340 150" preserveAspectRatio="none" style="margin-top:8px"></svg>
+      <div class="wlegend" id="wlegend" style="display:none"><span><i class="wdot"></i>weigh-ins</span><span><i class="wtline"></i>7-day trend</span><span id="wtrendNote" class="wtnote"></span></div>
       <div class="wlogrow">
         <input id="weightInput" type="number" inputmode="decimal" step="0.1" placeholder="Today's weight (lb)">
         <button class="wlogbtn" id="weightAdd">Log</button>
@@ -1028,7 +1033,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bf";
+const APP_VERSION = "2026.09.18-bg";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -2215,14 +2220,19 @@ function curBodyWeight(){
   const p = S.goals.profile||{};
   return p.weightLb>0 ? p.weightLb : 0;
 }
-/* Trend from weigh-ins: halves-by-date split so the two windows never overlap (same method as Calorie Check). */
+/* Trend from weigh-ins: halves-by-date split so the two windows never overlap (same method as Calorie Check).
+   2026 graph-UX refresh: rates are computed on the 7-day moving average ("trend weight",
+   Happy Scale/Libra/MacroFactor convention) — raw daily noise (±1-2%) misleads. Falls back
+   to raw when too sparse for a trend. Display stats (hi/lo/change) stay on raw. */
 function weightTrend(){
   const ws = sortedWeights();
   if(ws.length < 2) return null;
   const T = p => new Date(p.d+"T12:00:00").getTime();
-  const spanD = Math.max(1, Math.round((T(ws[ws.length-1])-T(ws[0]))/86400000));
-  const mid = (T(ws[0])+T(ws[ws.length-1]))/2;
-  const early = ws.filter(p=>T(p)<=mid), recent = ws.filter(p=>T(p)>mid);
+  const ma = trendMA(ws).filter(m=>m.n>=2);
+  const rs = ma.length>=3 ? ma : ws;
+  const spanD = Math.max(1, Math.round((T(rs[rs.length-1])-T(rs[0]))/86400000));
+  const mid = (T(rs[0])+T(rs[rs.length-1]))/2;
+  const early = rs.filter(p=>T(p)<=mid), recent = rs.filter(p=>T(p)>mid);
   let rateWk = null;
   if(early.length && recent.length){
     const avgW = a=>a.reduce((x,p)=>x+p.w,0)/a.length, avgT = a=>a.reduce((x,p)=>x+T(p),0)/a.length;
@@ -2365,6 +2375,102 @@ function paintCalCheck(){
     };
   }
 }
+/* ================= ANALYTICS ENGINE — WEIGHT CHART =================
+   Research sources (2026 graph-UX review: Happy Scale, Libra, MacroFactor, Withings):
+   - raw weigh-ins as dots + a heavier 7-day moving-average trend line over them;
+     the trend is what you read, the dots keep every entry honest
+   - x-axis linear in time (gaps stay gaps, never compressed); raw line breaks
+     across gaps > 7 days
+   - y-domain padded and always including the goal — never truncated to daily
+     noise (Correll et al. 2019); goal as a dashed, labeled line, never styled
+     like a data series; no moral red/green day coloring
+   - inline SVG (<1k points/year is deep in SVG's comfort zone; crisp on retina) */
+function trendMA(ws){
+  /* 7-day trailing moving average ("trend weight"): each point averages the
+     weigh-ins in its trailing 7 days. n = points in the window. */
+  const T = p => new Date(p.d+"T12:00:00").getTime();
+  return ws.map(p=>{
+    const t = T(p), win = ws.filter(q=>{ const qt=T(q); return qt<=t && qt>t-7*86400000; });
+    return {d:p.d, w:win.reduce((a,q)=>a+q.w,0)/win.length, n:win.length};
+  });
+}
+function smoothPath(p){
+  /* Catmull-Rom -> cubic bezier: a calm curve through the points */
+  if(p.length<2) return "";
+  if(p.length===2) return `M${p[0][0].toFixed(1)},${p[0][1].toFixed(1)} L${p[1][0].toFixed(1)},${p[1][1].toFixed(1)}`;
+  let d = `M${p[0][0].toFixed(1)},${p[0][1].toFixed(1)}`;
+  for(let i=0;i<p.length-1;i++){
+    const p0=p[Math.max(0,i-1)], p1=p[i], p2=p[i+1], p3=p[Math.min(p.length-1,i+2)];
+    d += ` C${(p1[0]+(p2[0]-p0[0])/6).toFixed(1)},${(p1[1]+(p2[1]-p0[1])/6).toFixed(1)} ${(p2[0]-(p3[0]-p1[0])/6).toFixed(1)},${(p2[1]-(p3[1]-p1[1])/6).toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+function paintWeightChart(w){
+  const svg = document.getElementById("weightChart"), wu = wUnit();
+  const legend = document.getElementById("wlegend"), note = document.getElementById("wtrendNote");
+  const ws = w.slice().sort((a,b)=>a.d<b.d?-1:1);
+  const T = p => new Date(p.d+"T12:00:00").getTime();
+  const dFmt = t => new Date(t).toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  if(legend) legend.style.display = "none";
+  if(note) note.textContent = "";
+  if(ws.length===0){
+    svg.innerHTML = `<text x="170" y="75" text-anchor="middle" fill="#9a9aa5" font-size="13">Log weight to see your trend</text>`;
+    svg.setAttribute("role","img"); svg.setAttribute("aria-label","Weight chart: no weigh-ins yet");
+    return;
+  }
+  if(ws.length===1){
+    svg.innerHTML = `<circle cx="170" cy="60" r="4.5" fill="#5b5bf0"/><text x="170" y="112" text-anchor="middle" fill="#9a9aa5" font-size="12">Log another weigh-in to draw your trend</text>`;
+    svg.setAttribute("role","img"); svg.setAttribute("aria-label","Weight chart: one weigh-in, "+wDisp(ws[0].w)+" "+wu);
+    return;
+  }
+  const tEnd = T(ws[ws.length-1]);
+  const tStart = Math.max(tEnd-90*86400000, T(ws[0])-2*86400000); /* last 90 days max; gaps stay gaps */
+  const pts = ws.filter(p=>T(p)>=tStart);
+  const goal = S.goals.weight>0 ? S.goals.weight : 0;
+  const vals = pts.map(p=>p.w);
+  let mn = Math.min(...vals), mx = Math.max(...vals);
+  if(goal){ mn = Math.min(mn,goal); mx = Math.max(mx,goal); }
+  const pad = Math.max((mx-mn)*0.15, 1);
+  mn -= pad; mx += pad;
+  const W=340, H=150, PL=32, PR=10, PT=14, PB=28;
+  const X = t => PL + (t-tStart)/Math.max(1,(tEnd-tStart))*(W-PL-PR);
+  const Y = v => PT + (1-(v-mn)/Math.max(0.001,(mx-mn)))*(H-PT-PB);
+  /* raw series: thin line, broken across gaps > 7 days */
+  let segs=[[]];
+  pts.forEach((p,i)=>{ if(i>0 && T(p)-T(pts[i-1])>7*86400000) segs.push([]); segs[segs.length-1].push(p); });
+  const rawLines = segs.filter(s=>s.length>1).map(s=>
+    `<polyline points="${s.map(p=>X(T(p)).toFixed(1)+","+Y(p.w).toFixed(1)).join(" ")}" fill="none" stroke="#dcdcf5" stroke-width="1.5"/>`).join("");
+  const dots = pts.map(p=>`<circle cx="${X(T(p)).toFixed(1)}" cy="${Y(p.w).toFixed(1)}" r="2.5" fill="#c3c3ee"/>`).join("");
+  /* trend: 7-day moving average, needs 3+ weigh-ins */
+  let trendSvg = "";
+  if(pts.length>=3){
+    const ma = trendMA(pts);
+    const tp = [];
+    ma.forEach((m,i)=>{ if(m.n>=2) tp.push({m, brk:i>0 && T(pts[i])-T(pts[i-1])>7*86400000}); });
+    let runs=[], cur=[];
+    tp.forEach(o=>{ if(o.brk && cur.length){ runs.push(cur); cur=[]; } cur.push([X(new Date(o.m.d+"T12:00:00").getTime()), Y(o.m.w)]); });
+    if(cur.length) runs.push(cur);
+    trendSvg = runs.filter(r=>r.length>1).map(r=>`<path d="${smoothPath(r)}" fill="none" stroke="#5b5bf0" stroke-width="3" stroke-linecap="round"/>`).join("");
+  } else if(note) note.textContent = "trend appears after 3 weigh-ins";
+  /* goal: dashed + labeled, never styled like a data series */
+  let goalSvg = "";
+  if(goal){
+    const gy = Y(goal), ly = Math.max(PT+10, gy-6);
+    goalSvg = `<line x1="${PL}" y1="${gy.toFixed(1)}" x2="${W-PR}" y2="${gy.toFixed(1)}" stroke="#2fbf71" stroke-width="1.5" stroke-dasharray="5,4"/>`+
+      `<text x="${W-PR}" y="${ly.toFixed(1)}" text-anchor="end" fill="#2fbf71" font-size="10">goal ${wDisp(goal)} ${wu}</text>`;
+  }
+  const dir = pts.length>=3 ? (pts[pts.length-1].w>=pts[0].w ? "up" : "down") : "flat";
+  svg.innerHTML =
+    `<text x="2" y="${PT+9}" fill="#9a9aa5" font-size="10">${wDisp(mx)}</text>`+
+    `<text x="2" y="${H-PB+3}" fill="#9a9aa5" font-size="10">${wDisp(mn)}</text>`+
+    `<text x="${PL}" y="${H-8}" fill="#9a9aa5" font-size="10">${dFmt(tStart)}</text>`+
+    `<text x="${W-PR}" y="${H-8}" text-anchor="end" fill="#9a9aa5" font-size="10">${dFmt(tEnd)}</text>`+
+    goalSvg + rawLines + trendSvg + dots;
+  svg.setAttribute("role","img");
+  svg.setAttribute("aria-label",`Weight chart: ${pts.length} weigh-ins, ${dFmt(tStart)} to ${dFmt(tEnd)}, trending ${dir}`+
+    (goal ? `, goal ${wDisp(goal)} ${wu}` : ""));
+  if(legend) legend.style.display = "";
+}
 function renderProgress(){
   const days = last7();
   const logged = days.filter(x=>x.logged);
@@ -2383,19 +2489,7 @@ function renderProgress(){
   const wu = wUnit();
   document.getElementById("weightInput").placeholder = "Today's weight ("+wu+")";
   document.getElementById("curWeight").textContent = w.length ? wDisp(w[w.length-1].w)+" "+wu : "—";
-  const svg = document.getElementById("weightChart");
-  const pts = w.slice(-14);
-  if(pts.length >= 2){
-    const vals = pts.map(p=>p.w), mn=Math.min(...vals), mx=Math.max(...vals), rg=Math.max(mx-mn,1);
-    const path = pts.map((p,i)=>`${(i/(pts.length-1)*320+10).toFixed(1)},${(110-((p.w-mn)/rg*90)).toFixed(1)}`).join(" ");
-    const goal = S.goals.weight;
-    const gy = goal ? (110-((Math.min(Math.max(goal,mn),mx)-mn)/rg*90)).toFixed(1) : null;
-    svg.innerHTML = `<polyline points="${path}" fill="none" stroke="#5b5bf0" stroke-width="3" stroke-linecap="round"/>` +
-      (gy?`<line x1="10" y1="${gy}" x2="330" y2="${gy}" stroke="#2fbf71" stroke-width="1.5" stroke-dasharray="5,4"/>`:"") +
-      pts.map((p,i)=>`<circle cx="${(i/(pts.length-1)*320+10).toFixed(1)}" cy="${(110-((p.w-mn)/rg*90)).toFixed(1)}" r="3.5" fill="#5b5bf0"/>`).join("");
-  } else if(pts.length === 1){
-    svg.innerHTML = `<circle cx="170" cy="55" r="4.5" fill="#5b5bf0"/><text x="170" y="95" text-anchor="middle" fill="#9a9aa5" font-size="12">Log another weigh-in to draw your trend</text>`;
-  } else svg.innerHTML = `<text x="170" y="62" text-anchor="middle" fill="#9a9aa5" font-size="13">Log weight to see your trend</text>`;
+  paintWeightChart(w);
   const wh = document.getElementById("weightHist");
   wh.innerHTML = w.slice(-5).reverse().map(p=>
     `<div class="wrow"><span>${new Date(p.d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span><b>${wDisp(p.w)} ${wu}</b></div>`).join("");
