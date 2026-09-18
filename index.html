@@ -269,6 +269,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .m3 .mn{font-size:13px; font-weight:700;}
 .m3 .mp{font-size:22px; font-weight:800; margin:6px 0 2px; font-variant-numeric:tabular-nums;}
 .m3 .mg{font-size:13px; color:var(--muted); font-weight:600; display:flex; align-items:center; justify-content:center; gap:2px;}
+.m3 .mkcal{font-size:11px; color:#9aa3ad; margin-top:4px; font-variant-numeric:tabular-nums; min-height:14px;}
 .m3 .mg input{width:52px; border:none; background:transparent; font-size:14px; font-weight:800; color:var(--ink); text-align:right; outline:none; font-family:inherit;}
 .segbar{display:flex; height:26px; border-radius:99px; overflow:hidden; position:relative; margin:2px 0 12px;}
 .segbar i{display:block; height:100%; position:relative;}
@@ -573,13 +574,18 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       </div>
     </div>
     <div class="secttl">Macros</div>
-    <div class="fhead"><span class="flabel">Macro split</span><button class="createbtn" id="macroAuto">Auto-split</button></div>
+    <div class="fhead"><span class="flabel">Macro split</span><span class="ph">type your targets — the analysis below is live</span></div>
     <div class="macro3">
-      <div class="m3 c"><div class="mn">Carbs</div><div class="mp" id="gmCp">50%</div><div class="mg"><input id="gmC" type="number" inputmode="numeric"> g</div></div>
-      <div class="m3 p"><div class="mn">Protein</div><div class="mp" id="gmPp">20%</div><div class="mg"><input id="gmP" type="number" inputmode="numeric"> g</div></div>
-      <div class="m3 f"><div class="mn">Fat</div><div class="mp" id="gmFp">30%</div><div class="mg"><input id="gmF" type="number" inputmode="numeric"> g</div></div>
+      <div class="m3 c"><div class="mn">Carbs</div><div class="mp" id="gmCp">–</div><div class="mg"><input id="gmC" type="number" inputmode="numeric"> g</div><div class="mkcal" id="gmCk"></div></div>
+      <div class="m3 p"><div class="mn">Protein</div><div class="mp" id="gmPp">–</div><div class="mg"><input id="gmP" type="number" inputmode="numeric"> g</div><div class="mkcal" id="gmPk"></div></div>
+      <div class="m3 f"><div class="mn">Fat</div><div class="mp" id="gmFp">–</div><div class="mg"><input id="gmF" type="number" inputmode="numeric"> g</div><div class="mkcal" id="gmFk"></div></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="cfrow"><span><b>Fiber</b> <span class="ph" id="fiberAutoTag"></span></span><span><b id="gmFip" style="margin-right:8px">–</b><input id="gmFi" type="number" inputmode="numeric" style="width:64px"> g</span></div>
+      <div class="cfrow" style="margin-top:6px"><span class="ph" id="fiberNote"></span><button class="chip" id="fiberAutoBtn" style="display:none">Use auto</button></div>
     </div>
     <div class="segbar" id="macroSeg"><i id="segC" style="background:#7e7ef2"></i><i id="segP" style="background:#12cfae"></i><i id="segF" style="background:#fb6f84"></i></div>
+    <div class="rangenote" id="macroAnalysis"></div>
     <div class="secttl">Water</div>
     <div class="card">
       <div class="fhead"><span class="flabel">Daily target</span><span class="chips" id="waterMode" style="margin:0"><button class="chip" data-w="auto">Auto</button><button class="chip" data-w="8">8</button><button class="chip" data-w="10">10</button><button class="chip" data-w="12">12</button><button class="chip" data-w="14">14</button></span></div>
@@ -918,7 +924,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-ak";
+const APP_VERSION = "2026.09.18-al";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1176,9 +1182,11 @@ function canonNutr(name){
   return t.replace(/\w\S*/g, w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase());
 }
 const WT2MG = {g:1000, mg:1, mcg:0.001};
-const FIBER_DV = 28; /* FDA Daily Value, g — reference only; the live fiber target starts at 0 until he sets his own via the nutrient sheet */
-/* Fiber target: his own custom target if set, else 0 (blank slate — like every other nutrient goal) */
-function fiberTarget(){ const ct = (S.goals.nutrTargets||{})["Fiber"]; return (ct && ct.val>0) ? ct.val : 0; }
+const FIBER_DV = 28; /* FDA Daily Value, g — shown for reference in the nutrient sheet */
+/* Fiber target: his own custom target if set, else the research auto-target —
+   14 g per 1,000 kcal of the daily calorie goal (FDA Daily Value 28 g @ 2,000 kcal;
+   Institute of Medicine adequate intake 14 g/1,000 kcal). Blank slate: 0 until the goal exists. */
+function fiberTarget(){ const ct = (S.goals.nutrTargets||{})["Fiber"]; if(ct && ct.val>0) return ct.val; const tot = goalTotal(); return tot>0 ? Math.round(14*tot/1000) : 0; }
 function fiberTotal(k){
   const d = S.days[k]; let f = 0;
   if(d) MEALS.forEach(m=>(d.meals[m]||[]).forEach(e=>(e.nutrs||[]).forEach(x=>{
@@ -1205,7 +1213,9 @@ function dayNutrients(k){
     } else if(ct && v.cls==="iu" && ct.unit==="IU"){
       unit = "IU"; val = v.base; target = ct.val; pct = val/ct.val*100; custom = true;
     } else if(v.cls==="wt" && dv){
-      unit = dv.unit; val = v.base/(WT2MG[unit]||1); target = 0; pct = 0; /* blank slate: goal is zero until he sets his own */
+      unit = dv.unit; val = v.base/(WT2MG[unit]||1);
+      if(v.disp==="Fiber"){ target = fiberTarget(); pct = target>0 ? val/target*100 : 0; } /* research auto-target, not zero */
+      else { target = 0; pct = 0; } /* blank slate: goal is zero until he sets his own */
     } else if(v.cls==="iu" && dv && dv.iu){
       unit = "IU"; val = v.base; target = 0; pct = 0;
     } else if(v.cls==="wt"){
@@ -1233,7 +1243,7 @@ function paintNutrients(k){
     box.querySelectorAll(".nrow").forEach(el=>el.onclick=()=>openNSheet(el.dataset.n));
   }
   document.getElementById("nutrNote").textContent = rows.length
-    ? "Combined from everything logged today. Tap a nutrient to set your own daily target — all targets start at zero."
+    ? "Combined from everything logged today. Tap a nutrient to set your own daily target — all targets start at zero, except fiber which auto-follows 14 g per 1,000 kcal of your calorie goal."
     : "";
 }
 
@@ -1246,7 +1256,9 @@ function openNSheet(disp){
   document.getElementById("nName").textContent = disp;
   document.getElementById("nToday").textContent = r1(r.val)+" "+r.unit;
   document.getElementById("nDV").textContent = r.custom ? r1(r.target)+" "+r.unit+" (yours)"
-    : "0 "+r.unit+(r.dvRef ? " · FDA Daily Value "+r1(r.dvRef.dv)+" "+r.dvRef.unit+" for reference" : "");
+    : (nKey==="Fiber" ? "Auto: "+r1(fiberTarget())+" "+r.unit+" · 14 g per 1,000 kcal of your "+goalTotal().toLocaleString()+" kcal goal"
+      : "0 "+r.unit+(r.dvRef ? " · FDA Daily Value "+r1(r.dvRef.dv)+" "+r.dvRef.unit+" for reference" : ""));
+  document.getElementById("nClear").textContent = nKey==="Fiber" ? "Back to auto target" : "Use FDA default instead";
   const ct = (S.goals.nutrTargets||{})[disp];
   const nt = document.getElementById("nTarget");
   nt.value = ct ? ct.val : "";
@@ -1838,7 +1850,8 @@ function paintMaintNote(){
   const p = S.goals.profile;
   if(!(p.weightLb>0)){ document.getElementById("pfNote").textContent = "Enter your stats above, then tap Calculate maintenance — your calorie goal builds from it."; return; }
   const cm = calcMaintenance();
-  document.getElementById("pfNote").textContent = cm.formula+": BMR "+cm.bmr.toLocaleString()+" (just living) × "+actPAL(p)+" activity = "+cm.maint.toLocaleString()+" kcal maintenance. Formulas run ±10%; the activity factor is the roughest part — weigh-ins calibrate it.";
+  const sexNote = p.sex==="" ? " (sex not set — assuming male; set it above for an exact number)" : "";
+  document.getElementById("pfNote").textContent = cm.formula+sexNote+": BMR "+cm.bmr.toLocaleString()+" (just living) × "+actPAL(p)+" activity = "+cm.maint.toLocaleString()+" kcal maintenance. Formulas run ±10%; the activity factor is the roughest part — weigh-ins calibrate it.";
 }
 function readProfile(){
   const p = S.goals.profile, met = p.units==="met";
@@ -1865,6 +1878,11 @@ function readProfile(){
 function commitGoalsInputs(){
   const num=(id,fb)=>{ const v=parseFloat(document.getElementById(id).value); return v>=0?v:fb; };
   S.goals.carbs = num("gmC",S.goals.carbs); S.goals.protein = num("gmP",S.goals.protein); S.goals.fat = num("gmF",S.goals.fat);
+  /* fiber goal lives in the nutrient-target store: a typed value overrides the 14 g/1,000 kcal auto-target, clearing it goes back to auto */
+  const fv = parseFloat(document.getElementById("gmFi").value);
+  S.goals.nutrTargets = S.goals.nutrTargets||{};
+  if(fv>0) S.goals.nutrTargets["Fiber"] = {val:fv, unit:"g"};
+  else delete S.goals.nutrTargets["Fiber"];
   readProfile();
 }
 function renderProfile(){
@@ -2453,26 +2471,56 @@ function renderGoals(){
   document.getElementById("goalTotal").textContent = Math.round(tot).toLocaleString();
   document.getElementById("goalSub").textContent = Math.round(g.maintenance).toLocaleString()+" maintenance + "+Math.round(g.surplus>0?g.surplus:0).toLocaleString()+" surplus";
   document.getElementById("gmC").value = g.carbs; document.getElementById("gmP").value = g.protein; document.getElementById("gmF").value = g.fat;
+  const fct = (g.nutrTargets||{}).Fiber;
+  document.getElementById("gmFi").value = fct ? fct.val : "";
+  document.getElementById("gmFi").placeholder = "auto";
   renderProfile();
   document.querySelectorAll("#goalMode .chip").forEach(c=>c.classList.toggle("sel", c.dataset.m===g.mode));
   document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", g.maintenance>0 && +c.dataset.p === Math.round(g.surplus/g.maintenance*100)));
   paintGainProj();
   updateMacroSplit(); paintWater();
 }
+/* Macro split: pure analysis, no auto-magic. Percentages are % of the daily calorie goal,
+   uncapped — if the numbers go past 100% that's the truth, not a bug. */
 function updateMacroSplit(){
   const g = S.goals, tot = goalTotal();
-  const cc = (parseFloat(document.getElementById("gmC").value)||0)*4;
-  const pc = (parseFloat(document.getElementById("gmP").value)||0)*4;
-  const fc = (parseFloat(document.getElementById("gmF").value)||0)*9;
-  const sum = cc+pc+fc;
-  const pct = v => tot>0 ? Math.round(v/tot*100) : 0;
-  document.getElementById("gmCp").textContent = pct(cc)+"%";
-  document.getElementById("gmPp").textContent = pct(pc)+"%";
-  document.getElementById("gmFp").textContent = pct(fc)+"%";
+  const c = Math.max(0, parseFloat(document.getElementById("gmC").value)||0);
+  const p = Math.max(0, parseFloat(document.getElementById("gmP").value)||0);
+  const f = Math.max(0, parseFloat(document.getElementById("gmF").value)||0);
+  const cc = c*4, pc = p*4, fc = f*9, sum = cc+pc+fc;
+  const pg = v => tot>0 ? Math.round(v/tot*100)+"%" : "–";
+  document.getElementById("gmCp").textContent = pg(cc);
+  document.getElementById("gmPp").textContent = pg(pc);
+  document.getElementById("gmFp").textContent = pg(fc);
+  const kc = v => v>0 ? Math.round(v).toLocaleString()+" kcal" : "";
+  document.getElementById("gmCk").textContent = kc(cc);
+  document.getElementById("gmPk").textContent = kc(pc);
+  document.getElementById("gmFk").textContent = kc(fc);
   const w = v => (sum>0 ? v/sum*100 : 0)+"%";
   document.getElementById("segC").style.width = w(cc);
   document.getElementById("segP").style.width = w(pc);
   document.getElementById("segF").style.width = w(fc);
+  /* fiber: research auto-target (14 g / 1,000 kcal) or his own override */
+  const fi = fiberTarget();
+  const fiv = Math.max(0, parseFloat(document.getElementById("gmFi").value)||0);
+  document.getElementById("gmFip").textContent = fi>0 ? Math.round(fiv/fi*100)+"%" : "–";
+  const custom = !!((S.goals.nutrTargets||{}).Fiber);
+  document.getElementById("fiberAutoTag").textContent = custom ? "your target" : "auto · "+fi+" g";
+  document.getElementById("fiberNote").textContent = custom
+    ? "Your target. Clear the field to go back to auto."
+    : (tot>0
+      ? "Auto: 14 g per 1,000 kcal of your "+tot.toLocaleString()+" kcal goal (FDA / Institute of Medicine guideline)."
+      : "Auto follows your calorie goal: 14 g per 1,000 kcal (FDA / IOM). Calculate maintenance above to see it.");
+  document.getElementById("fiberAutoBtn").style.display = custom ? "" : "none";
+  /* do the macros actually add up to the goal? */
+  const an = document.getElementById("macroAnalysis");
+  if(!(tot>0)){ an.textContent = "Percentages are % of your daily calorie goal — calculate your maintenance above to see them."; return; }
+  const diff = Math.round(sum-tot);
+  let s = "Your macros add up to "+Math.round(sum).toLocaleString()+" kcal vs your "+tot.toLocaleString()+" kcal goal";
+  s += diff===0 ? " — exactly on target." : " — "+Math.abs(diff).toLocaleString()+" kcal "+(diff>0?"over":"under")+" your goal.";
+  const kg = S.goals.profile.weightLb/2.20462;
+  if(kg>0 && p>0) s += " Protein is "+(p/kg).toFixed(1)+" g/kg — the research range for gaining muscle is 1.6–2.2 g/kg (Morton 2018).";
+  an.textContent = s;
 }
 document.getElementById("goalSlider").addEventListener("input", e=>{
   const tot = +e.target.value;
@@ -2486,7 +2534,7 @@ document.getElementById("goalSlider").addEventListener("input", e=>{
   paintGainProj();
   updateMacroSplit();
 });
-["gmC","gmP","gmF"].forEach(id=>document.getElementById(id).addEventListener("input", updateMacroSplit));
+["gmC","gmP","gmF","gmFi"].forEach(id=>document.getElementById(id).addEventListener("input", updateMacroSplit));
 document.querySelectorAll("#pfAct .chip").forEach(c=>c.onclick=()=>{
   commitGoalsInputs();
   S.goals.profile.activityKey = c.dataset.k;
@@ -2534,18 +2582,12 @@ document.getElementById("pfCalc").onclick = ()=>{
   commitGoalsInputs();
   recalcMaint();
   save(); renderGoals(); renderDiary();
+  /* never silently "not work": if there's still nothing to calculate from, put the cursor on the missing weight field */
+  if(!(S.goals.profile.weightLb>0)) document.getElementById("pfWeight").focus();
 };
-document.getElementById("macroAuto").onclick = ()=>{
-  const tot = goalTotal();
-  const entered = Math.max(0, Math.round(parseFloat(document.getElementById("gmP").value)||S.goals.protein||0));
-  const p = Math.max(entered, Math.round(S.goals.profile.weightLb/2.20462*1.6)); /* Morton 2018 breakpoint */
-  const f = Math.max(0, Math.round(tot*0.25/9));
-  const c = Math.max(0, Math.round((tot - p*4 - f*9)/4));
-  document.getElementById("gmP").value = p;
-  document.getElementById("gmF").value = f;
-  document.getElementById("gmC").value = c;
-  commitGoalsInputs(); save();
-  updateMacroSplit();
+document.getElementById("fiberAutoBtn").onclick = ()=>{
+  if(S.goals.nutrTargets) delete S.goals.nutrTargets["Fiber"];
+  save(); renderGoals();
 };
 document.getElementById("goalsDone").onclick = ()=>{
   commitGoalsInputs();
@@ -2554,7 +2596,7 @@ document.getElementById("goalsDone").onclick = ()=>{
 };
 /* Typed values commit on every field change (blur/return), so nothing the user
    typed can ever be lost or silently reverted — Save changes just finalizes. */
-["gmC","gmP","gmF"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); updateMacroSplit(); }));
+["gmC","gmP","gmF","gmFi"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); updateMacroSplit(); }));
 ["pfAge","pfHtFt","pfHtIn","pfHtCm","pfWeight","pfFat"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); paintMaintNote(); }));
 document.getElementById("goalsBack").onclick = ()=>showView("settings");
 
