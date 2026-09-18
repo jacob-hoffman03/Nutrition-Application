@@ -134,6 +134,12 @@ button{font-family:inherit;}
 .botrow .bnm b{display:block; font-size:15px;}
 .botrow .bnm span{font-size:12px; color:var(--muted);}
 .botdel{border:none; background:none; color:#ff5c5c; font-size:20px; width:32px; height:32px; flex:none;}
+.bottle img{width:44px; height:44px; border-radius:12px; object-fit:cover;}
+.botrow .bthumb{width:46px; height:46px; border-radius:12px; object-fit:cover; background:#f2f3f7; flex:none;}
+.bphoto{border:1.5px solid #e3e3ea; background:#fff; border-radius:10px; width:36px; height:36px; flex:none; display:flex; align-items:center; justify-content:center;}
+.bphoto svg{width:18px; height:18px;}
+.bphoto.hasimg{border-color:var(--acc);}
+.botform .bimgprev{width:44px; height:44px; border-radius:12px; object-fit:cover;}
 .botform{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
 .botform input{border:2px solid #e3e3ea; border-radius:12px; padding:9px 10px; font:inherit; font-size:14px;}
 .unitseg{display:flex; border:2px solid #e3e3ea; border-radius:12px; overflow:hidden;}
@@ -343,6 +349,13 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wlegend .wdot{display:inline-block; width:8px; height:8px; border-radius:50%; background:#c3c3ee; margin-right:4px;}
 .wlegend .wtline{display:inline-block; width:16px; height:3px; border-radius:2px; background:#5b5bf0; vertical-align:middle; margin-right:4px;}
 .wlegend .wtnote{font-style:italic;}
+.suppsug{display:flex; gap:10px; align-items:flex-start; padding:10px 2px; border-bottom:1px solid #f0f0f4;}
+.sgmain{flex:1; min-width:0;}
+.sgmain b{font-size:15px; display:block;}
+.sgmain span{display:block; font-size:12px; color:var(--muted); margin-top:1px;}
+.sgmain .sgwhy{color:var(--ink); font-size:12.5px;}
+.sgmain .sgev{font-size:11px;}
+.sgtag{display:inline-block; background:#eceeff; color:#5b5bf0; font-size:10.5px; font-weight:700; border-radius:20px; padding:1px 8px; margin-right:6px; vertical-align:1px;}
 .wlogrow input{flex:1; border:1.5px solid var(--line); border-radius:12px; padding:11px; font-size:16px; background:#fff; outline:none;}
 .wlogbtn{background:var(--acc); color:#fff; border:none; border-radius:12px; padding:11px 18px; font-weight:800;}
 /* tab bar */
@@ -996,6 +1009,72 @@ const MEAL_ICON = {
 const MEAL_TINT = {breakfast:"#fff3e2", lunch:"#fff3e2", dinner:"#eceeff", snacks:"#f3e9dc", supplements:"#eceeff"};
 const FOOD_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="#5b5bf0" stroke-width="2" stroke-linecap="round"><path d="M4 16.5h16"/><path d="M6.5 16.5a5.5 5.5 0 0 1 11 0"/><path d="M12 8.5v2"/><circle cx="12" cy="7" r="1.1" fill="#5b5bf0" stroke="none"/></svg>';
 const MEAL_SEG = {breakfast:"#ffdca8", lunch:"#ffab3d", dinner:"#ff8f3d", snacks:"#ff7f2a", supplements:"#8b8bf5"};
+/* ================= SUGGESTED SUPPLEMENTS =================
+   Evidence-based defaults (research 2026-09-18): only supplements with strong,
+   directly relevant evidence for a young active male bulking. Serving facts
+   verified against real product labels (NIH Dietary Supplement Label Database,
+   ON, Doctor's Best, Barlean's, Thorne). Shown in the add sheet for the
+   Supplements meal; one tap saves + logs. Personalized in suppSuggestions(). */
+const DEFAULT_SUPPS = [
+  {n:"Creatine monohydrate", s:"5 g (1 scoop, unflavored)", cal:0, p:0, c:0, f:0, unit:"scoop",
+   nutrs:[{n:"Creatine monohydrate", amt:5, u:"g"}],
+   why:"Most effective legal aid for strength + lean mass during resistance training.",
+   evidence:"ISSN position stand, Kreider et al., J Int Soc Sports Nutr 2017",
+   caution:"Only consistent side effect is weight gain (water in muscle — good on a bulk). Avoid with kidney disease."},
+  {n:"Whey protein", s:"1 scoop (~30 g)", cal:120, p:24, c:3, f:1, unit:"scoop",
+   nutrs:[{n:"Cholesterol", amt:35, u:"mg"},{n:"Calcium", amt:100, u:"mg"}],
+   why:"Easiest way to hit 1.6–2.2 g/kg/day protein for the bulk.",
+   evidence:"ISSN protein stand, Jäger et al., JISSN 2017; Morton et al., Br J Sports Med 2018",
+   caution:"Contains milk/soy; use isolate if lactose-sensitive."},
+  {n:"Vitamin D3", s:"1 softgel, 25 mcg (1,000 IU)", cal:0, p:0, c:0, f:0, unit:"softgel",
+   nutrs:[{n:"Vitamin D3", amt:25, u:"mcg"}],
+   why:"Indoor work makes insufficiency common; supports bone + muscle under heavy training.",
+   evidence:"IOM DRIs 2011 (RDA 15 mcg/day); Holick, JCEM 2011",
+   caution:"UL 4,000 IU/day — don't stack D sources; take with food."},
+  {n:"Magnesium glycinate", s:"2 tablets, 200 mg elemental", cal:0, p:0, c:0, f:0, unit:"tablet",
+   nutrs:[{n:"Magnesium", amt:200, u:"mg"}],
+   why:"Half the adult male RDA; training + sweat raise needs; supports sleep and muscle relaxation.",
+   evidence:"IOM DRIs 1997 (RDA 400 mg men 19–30); NHANES inadequacy data",
+   caution:"Supplement UL 350 mg/day — more causes GI upset; caution with kidney disease."},
+  {n:"Omega-3 fish oil", s:"2 softgels", cal:20, p:0, c:0, f:2, unit:"softgel",
+   nutrs:[{n:"EPA", amt:360, u:"mg"},{n:"DHA", amt:240, u:"mg"}],
+   why:"Cardiometabolic support; balances an omega-6-heavy restaurant diet. (Weak evidence for muscle gain itself.)",
+   evidence:"AHA advisory, Siscovick et al., Circulation 2017",
+   caution:"Talk to a doctor if on blood thinners or before surgery."},
+  {n:"Zinc", s:"1 capsule, 15 mg", cal:0, p:0, c:0, f:0, unit:"capsule",
+   nutrs:[{n:"Zinc", amt:15, u:"mg"}],
+   why:"Heavy sweaters risk inadequacy; supports immune function at RDA-level dosing.",
+   evidence:"IOM DRIs 2001 (RDA 11 mg, UL 40 mg men)",
+   caution:"UL 40 mg/day; chronic excess blocks copper; take with food."}
+];
+function ensureSupp(sd){
+  let f = (S.customFoods||[]).find(f=>f.n===sd.n);
+  if(!f){
+    f = {n:sd.n, s:sd.s, cal:sd.cal, p:sd.p, c:sd.c, f:sd.f, kind:"supp", unit:sd.unit,
+         nutrs:(sd.nutrs||[]).map(x=>({n:x.n, amt:x.amt, u:x.u})), xw:false};
+    S.customFoods.push(f); save();
+  }
+  return f;
+}
+/* Personalize suggestion order/notes from profile + where he stands */
+function suppSuggestions(){
+  const cur = curBodyWeight(), gw = S.goals.weight;
+  const bulking = (gw>0 && cur>0 && gw>=cur) || (S.goals.surplus>0);
+  const days = last7().filter(x=>x.logged);
+  const avgP = days.length ? days.reduce((a,x)=>a+x.p,0)/days.length : 0;
+  const protTarget = S.goals.protein>0 ? S.goals.protein : 0;
+  return DEFAULT_SUPPS
+    .filter(sd=>!(S.customFoods||[]).some(f=>f.n===sd.n))
+    .map(sd=>{
+      let why = sd.why, tag = "";
+      if((sd.n==="Creatine monohydrate" || sd.n==="Whey protein") && bulking){ tag = "Top pick for your bulk"; }
+      if(sd.n==="Whey protein" && protTarget>0 && avgP>=protTarget*0.9){
+        why += " You're already near your protein target — keep it as a convenient backup.";
+      }
+      return Object.assign({}, sd, {why, tag});
+    })
+    .sort((a,b)=>(b.tag?1:0)-(a.tag?1:0));
+}
 const STAR_ON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="#e8a013"><path d="M12 2.6l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 17.5l-5.8 3.1 1.1-6.5L2.6 9.5l6.5-1z"/></svg>';
 const STAR_OFF = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#aeb9c4" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.6l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 17.5l-5.8 3.1 1.1-6.5L2.6 9.5l6.5-1z"/></svg>';
 const ICONS = {
@@ -1033,7 +1112,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bg";
+const APP_VERSION = "2026.09.18-bh";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -1292,7 +1371,10 @@ function renderDiary(){
   (S.bottles||[]).forEach(b=>{
     const btn = document.createElement("button");
     btn.className = "bottle";
-    btn.innerHTML = "<b>+"+b.oz+" oz</b><span>"+esc(b.name)+"</span>";
+    btn.innerHTML = b.img
+      ? '<img src="'+b.img+'" alt=""><span>'+esc(b.name)+" · "+b.oz+' oz</span>'
+      : "<b>+"+b.oz+" oz</b><span>"+esc(b.name)+"</span>";
+    btn.title = b.name+" — "+b.oz+" oz";
     btn.onclick = ()=>{ const dd=day(); dd.waterOz=Math.round(((dd.waterOz||0)+b.oz)*10)/10; (dd.waterHist=dd.waterHist||[]).push(b.oz); save(); renderDiary(); };
     br.appendChild(btn);
   });
@@ -1371,18 +1453,35 @@ document.getElementById("copyScrim").onclick = closeCopySheet;
    in fluid oz (d.waterOz); the target stays in glasses internally and is shown
    as oz (×8) so bottles and target speak the same unit. */
 const OZ_PER_ML = 0.033814;
+/* Shared photo downscale: file -> small JPEG dataURL (keeps localStorage small) */
+function downscalePhoto(file, max, cb){
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = ()=>{
+    const scale = Math.min(1, max/Math.max(img.width, img.height));
+    const cv = document.createElement("canvas");
+    cv.width = Math.max(1, Math.round(img.width*scale)); cv.height = Math.max(1, Math.round(img.height*scale));
+    cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+    URL.revokeObjectURL(url);
+    cb(cv.toDataURL("image/jpeg", 0.8));
+  };
+  img.onerror = ()=>{ URL.revokeObjectURL(url); alert("Couldn't read that photo."); };
+  img.src = url;
+}
+const CAM_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="#5b5bf0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.2"/></svg>';
 function openBottleSheet(){
   const body = document.getElementById("bottleBody");
   const list = (S.bottles||[]).map(b=>
-    `<div class="botrow"><span class="bnm"><b>${esc(b.name)}</b><span>${b.oz} oz · ${Math.round(b.oz/OZ_PER_ML)} mL</span></span><button class="botdel" data-id="${b.id}" aria-label="Delete bottle">×</button></div>`
+    `<div class="botrow">${b.img?`<img class="bthumb" src="${b.img}" alt="">`:`<span class="bthumb"></span>`}<span class="bnm"><b>${esc(b.name)}</b><span>${b.oz} oz · ${Math.round(b.oz/OZ_PER_ML)} mL</span></span><button class="bphoto${b.img?" hasimg":""}" data-id="${b.id}" aria-label="Set bottle photo">${CAM_SVG}</button><button class="botdel" data-id="${b.id}" aria-label="Delete bottle">×</button></div>`
   ).join("");
+  let bPhoto = "";
   body.innerHTML =
     `<div class="fhead"><span class="flabel">Quick add</span></div>
      <div class="botform"><input id="qOz" type="number" inputmode="decimal" placeholder="oz" style="width:90px"><button class="chip" id="qAdd">Log</button></div>
      <div class="fhead" style="margin-top:14px"><span class="flabel">My bottles</span></div>
      ${list||'<div class="rangenote">No bottles yet.</div>'}
      <div class="fhead" style="margin-top:14px"><span class="flabel">Add a bottle</span></div>
-     <div class="botform"><input id="bName" placeholder="Name (e.g. Gym bottle)" style="flex:1;min-width:120px"><input id="bSize" type="number" inputmode="decimal" placeholder="Size" style="width:80px">
+     <div class="botform"><button class="bphoto" id="bPhotoBtn" aria-label="Add bottle photo" style="width:44px;height:44px">${CAM_SVG}</button><img class="bimgprev" id="bImgPrev" style="display:none" alt=""><input type="file" id="bPhotoFile" accept="image/*" style="display:none"><input id="bName" placeholder="Name (e.g. Gym bottle)" style="flex:1;min-width:120px"><input id="bSize" type="number" inputmode="decimal" placeholder="Size" style="width:80px">
      <span class="unitseg" id="bUnit"><button data-u="oz" class="sel">oz</button><button data-u="ml">mL</button></span>
      <button class="chip" id="bAdd">Add</button></div>`;
   let unit = "oz";
@@ -1393,14 +1492,34 @@ function openBottleSheet(){
     const dd = day(); dd.waterOz=Math.round(((dd.waterOz||0)+v)*10)/10; (dd.waterHist=dd.waterHist||[]).push(v);
     save(); renderDiary(); closeBottleSheet();
   };
+  body.querySelector("#bPhotoBtn").onclick = ()=>body.querySelector("#bPhotoFile").click();
+  body.querySelector("#bPhotoFile").onchange = e=>{
+    const file = e.target.files[0]; if(!file) return;
+    downscalePhoto(file, 160, url=>{ bPhoto = url;
+      const prev = body.querySelector("#bImgPrev"); prev.src = url; prev.style.display = "";
+      body.querySelector("#bPhotoBtn").classList.add("hasimg");
+    });
+  };
   body.querySelector("#bAdd").onclick = ()=>{
     const nm = body.querySelector("#bName").value.trim()||"Bottle";
     const sz = parseFloat(body.querySelector("#bSize").value);
     if(!(sz>0)) return;
     const oz = unit==="ml" ? Math.round(sz*OZ_PER_ML*10)/10 : Math.round(sz*10)/10;
-    S.bottles.push({id:"b"+Date.now(), name:nm, oz});
+    S.bottles.push({id:"b"+Date.now(), name:nm, oz, img:bPhoto||""});
     save(); openBottleSheet(); renderDiary();
   };
+  body.querySelectorAll(".bphoto[data-id]").forEach(x=>x.onclick=()=>{
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.accept = "image/*";
+    inp.onchange = ()=>{
+      const file = inp.files[0]; if(!file) return;
+      downscalePhoto(file, 160, url=>{
+        const b = (S.bottles||[]).find(b=>b.id===x.dataset.id);
+        if(b){ b.img = url; save(); openBottleSheet(); renderDiary(); }
+      });
+    };
+    inp.click();
+  });
   body.querySelectorAll(".botdel").forEach(x=>x.onclick=()=>{
     if(!confirm("Delete this bottle?")) return;
     S.bottles = S.bottles.filter(b=>b.id!==x.dataset.id);
@@ -1846,18 +1965,35 @@ function sheetRowHtml(f){
     '<div class="anm"><b>'+diy+esc(f.n)+'</b><span>'+Math.round(f.cal)+'kcal / '+esc(f.s)+'</span></div>'+
     '<button class="aplus" data-n="'+esc(f.n)+'">+</button></div>';
 }
+let sheetSugs = [];
 function renderSheetResults(q){
   q = q.trim().toLowerCase();
   const box = document.getElementById("sheetResults"); box.innerHTML = "";
+  let sugHtml = "";
+  sheetSugs = [];
+  if(sheetMeal==="supplements" && !q){
+    sheetSugs = suppSuggestions();
+    if(sheetSugs.length){
+      sugHtml = '<div class="fhead"><span class="flabel">Suggested for you</span></div>'+
+        '<div class="rangenote" style="margin:2px 0 4px">Based on your bulk, training and current intake — tap + to save &amp; log.</div>'+
+        sheetSugs.map((sd,i)=>'<div class="suppsug" data-sg="'+i+'"><div class="sgmain"><b>'+(sd.tag?'<span class="sgtag">'+esc(sd.tag)+'</span> ':"")+esc(sd.n)+'</b>'+
+          '<span>'+(sd.cal>0?Math.round(sd.cal)+" kcal / ":"")+esc(sd.s)+'</span>'+
+          '<span class="sgwhy">'+esc(sd.why)+'</span>'+
+          '<span class="sgev">'+esc(sd.evidence)+" · "+esc(sd.caution)+'</span></div>'+
+          '<button class="aplus" data-sg="'+i+'" aria-label="Add '+esc(sd.n)+'">+</button></div>').join("");
+    }
+  }
   let list = sheetTab==="recent" ? recentFoods()
     : sheetTab==="favorites" ? allFoods().filter(f=>isFav(f.n))
     : S.customFoods.slice().reverse();
   if(q) list = list.filter(f => f.n.toLowerCase().includes(q));
   if(!q && sheetTab==="recent" && !list.length) list = allFoods();
   if(sheetSort==="name") list = list.slice().sort((a,b)=>a.n.localeCompare(b.n));
-  box.innerHTML = list.slice(0, 40).map(sheetRowHtml).join("") ||
-    '<div class="empty">No matches. Tap + Create new food to add it.</div>';
-  box.querySelectorAll(".aplus").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const f=findFood(b.dataset.n); if(f) addToTray(f, 1); });
+  box.innerHTML = sugHtml + (list.slice(0, 40).map(sheetRowHtml).join("") ||
+    (sugHtml ? "" : '<div class="empty">No matches. Tap + Create new food to add it.</div>'));
+  box.querySelectorAll(".suppsug .aplus").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const sd=sheetSugs[+b.dataset.sg]; if(sd) addToTray(ensureSupp(sd), 1); });
+  box.querySelectorAll(".suppsug").forEach(r=>r.onclick=()=>{ const sd=sheetSugs[+r.dataset.sg]; if(sd) openDetail(ensureSupp(sd)); });
+  box.querySelectorAll(".aplus:not([data-sg])").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const f=findFood(b.dataset.n); if(f) addToTray(f, 1); });
   box.querySelectorAll(".arow2").forEach(r=>r.onclick=()=>openDetail(findFood(r.dataset.n)));
 }
 function addToTray(f, qty, meal){
