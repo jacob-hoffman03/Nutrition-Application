@@ -719,6 +719,10 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
         <button type="button" class="chip sel" data-kind="food">Food</button>
         <button type="button" class="chip" data-kind="supp">Supplement</button>
       </div></div>
+      <div id="cFoodServSec">
+        <div class="cfsec">Serving unit</div>
+        <div class="cfcard"><div class="chips" id="cFoodUnitChips" style="padding:12px 0"></div></div>
+      </div>
       <div id="cSuppSec" style="display:none">
         <div class="cfsec">Serving unit</div>
         <div class="cfcard"><div class="chips" id="cUnitChips" style="padding:12px 0"></div></div>
@@ -791,7 +795,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-v";
+const APP_VERSION = "2026.09.18-w";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
@@ -1327,9 +1331,11 @@ function resetCustomForm(){
   ["cName","cServ","cCal","cP","cC","cF"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("cPhotoFile").value = "";
   setCPhoto("");
-  cKind = "food"; cUnit = "capsule";
+  cKind = "food"; cUnit = "capsule"; cFoodUnit = "g";
   document.querySelectorAll("#cKindChips .chip").forEach(x=>x.classList.toggle("sel", x.dataset.kind==="food"));
   document.getElementById("cSuppSec").style.display = "none";
+  document.getElementById("cFoodServSec").style.display = "";
+  document.querySelectorAll("#cFoodUnitChips .chip").forEach(x=>x.classList.toggle("sel", x.dataset.u==="g"));
   document.querySelectorAll("#cUnitChips .chip").forEach(x=>x.classList.toggle("sel", x.dataset.u==="capsule"));
   seedNutrRows();
   document.getElementById("cXW").checked = false;
@@ -1374,6 +1380,19 @@ document.getElementById("cSave").onclick = ()=>{
       if(!confirm(`Heads up: ${x.amt} g of ${x.n} is way over the daily value (${dv.dv} ${dv.unit}) — the unit is probably meant to be mg, not g.\n\nOK = save as ${x.amt} g anyway · Cancel = go back and fix it`)) return;
     }
   }
+  /* Serving-size plausibility: if the calories/macros can't physically fit the
+     serving, the serving size is probably too small (Atwater: 4/4/9 kcal/g, fat max ~9). */
+  const servG = servingGrams(sTxt), issues = [];
+  const mp = num("cP"), mc = num("cC"), mf = num("cF");
+  if(servG){
+    const macroG = mp+mc+mf;
+    if(macroG > servG*1.05) issues.push(`Protein + carbs + fat add up to ${r1(macroG)} g, but the serving is only ${r1(servG)} g — the serving size has to be bigger (or the macros smaller).`);
+    if(cal>0 && cal/servG > 9.5) issues.push(`${r1(cal)} kcal in a ${r1(servG)} g serving is ${(cal/servG).toFixed(1)} kcal/g — even pure fat is only 9 kcal/g. The serving size has to be bigger.`);
+  }
+  const expKcal = 4*mp+4*mc+9*mf;
+  if(cal>0 && expKcal>0 && Math.abs(cal-expKcal) > Math.max(30, 0.25*Math.max(cal,expKcal)))
+    issues.push(`Your macros work out to about ${Math.round(expKcal)} kcal (4/4/9 math), but you entered ${r1(cal)} kcal — double-check for a typo.`);
+  if(issues.length && !confirm(issues.join("\n\n")+"\n\nSave anyway?")) return;
   S.customFoods.push({n, s:sTxt,
     cal, p:num("cP"), c:num("cC"), f:num("cF"), img:cPhotoData,
     kind:isSupp?"supp":"food", unit:isSupp?cUnit:null, nutrs, xw:isSupp && document.getElementById("cXW").checked});
@@ -1381,6 +1400,18 @@ document.getElementById("cSave").onclick = ()=>{
   save(); csheet.classList.remove("open"); renderFoods();
 };
 
+/* Food serving units: FDA household measures (21 CFR 101.9(b)(5)) + metric.
+   Serving sizes on labels are declared in household measure + metric equivalent. */
+const FOOD_SERV_UNITS = ["g","kg","oz","lb","mL","L","fl oz","cup","tbsp","tsp","serving"];
+let cFoodUnit = "g";
+const cFoodUnitBox = document.getElementById("cFoodUnitChips");
+cFoodUnitBox.innerHTML = FOOD_SERV_UNITS.map(u=>`<button type="button" class="chip${u===cFoodUnit?" sel":""}" data-u="${u}">${u}</button>`).join("");
+cFoodUnitBox.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
+  cFoodUnit = c.dataset.u;
+  cFoodUnitBox.querySelectorAll(".chip").forEach(x=>x.classList.toggle("sel", x===c));
+  const sv = document.getElementById("cServ");
+  if(!sv.dataset.dirty) sv.value = (cFoodUnit==="g" ? "100 " : "1 ")+cFoodUnit;
+});
 /* ============ SUPPLEMENT CREATION ============ */
 const SUPP_UNITS = ["capsule","tablet","softgel","gummy","scoop","packet","dropper (mL)","serving","g","mg","mcg","mL","IU"];
 const NUTR_UNITS = ["mg","mcg","g","IU","mL"];
@@ -1398,9 +1429,11 @@ document.querySelectorAll("#cKindChips .chip").forEach(c=>c.onclick=()=>{
   cKind = c.dataset.kind;
   document.querySelectorAll("#cKindChips .chip").forEach(x=>x.classList.toggle("sel", x===c));
   document.getElementById("cSuppSec").style.display = cKind==="supp" ? "" : "none";
+  document.getElementById("cFoodServSec").style.display = cKind==="food" ? "" : "none";
   document.getElementById("cCal").placeholder = cKind==="supp" ? "0" : "Required";
   const sv = document.getElementById("cServ");
   if(cKind==="supp" && !sv.dataset.dirty) sv.value = "1 "+cUnit;
+  else if(cKind==="food" && !sv.dataset.dirty) sv.value = "100 "+cFoodUnit;
   if(nutrRowsPristine()) seedNutrRows();
 });
 /* Default nutrient rows, from FDA label research (2026-09-18):
@@ -1428,6 +1461,19 @@ function seedNutrRows(){
   document.getElementById("cNutrRows").innerHTML = "";
   (NUTR_DEFAULTS[cKind]||[]).forEach(([n,u])=>addNutrRow(n,u));
   cNutrSeed = [...document.querySelectorAll("#cNutrRows .nutrrow")].map(r=>r.children[0].value+"|"+r.children[2].value).join(";");
+}
+/* Serving → grams, so plausibility checks run on a metric base.
+   Household → metric equivalents per FDA (1 oz = 28.3495 g, 1 cup = 236.588 mL);
+   mL≈g assumes water-like density, fine for a sanity check. */
+const FOOD_UNIT_G = {g:1, kg:1000, oz:28.3495, lb:453.592, ml:1, l:1000, "fl oz":29.5735, cup:236.588, tbsp:14.7868, tsp:4.92892};
+function servingGrams(sTxt){
+  const t = String(sTxt||"").trim();
+  let m = t.match(/\(([\d.]+)\s*g\)/i);
+  if(m && parseFloat(m[1])>0) return parseFloat(m[1]);
+  m = t.match(/^([\d.]+)\s*([a-zA-Z ]+)?/);
+  if(!m || !(parseFloat(m[1])>0)) return null;
+  const per = FOOD_UNIT_G[(m[2]||"g").trim().toLowerCase()];
+  return per ? parseFloat(m[1])*per : null;
 }
 document.getElementById("cNutrAdd").onclick = addNutrRow;
 document.getElementById("cName").addEventListener("input", e=>{
