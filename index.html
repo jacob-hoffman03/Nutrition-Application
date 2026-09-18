@@ -173,11 +173,14 @@ button{font-family:inherit;}
 .prow{display:flex; align-items:center; gap:14px;}
 .prow .pmeta{flex:1;}
 /* adherence wheel + progress photos (Settings profile) */
-.scorewheel{position:relative; width:78px; height:78px; background:none; border:none; padding:0; cursor:pointer; flex:none;}
-.scorewheel svg{width:78px; height:78px; display:block;}
+.scorewheel{position:relative; width:68px; height:68px; background:none; border:none; padding:0; cursor:pointer; flex:none;}
+.scorewheel svg{width:68px; height:68px; display:block;}
 .scorewheel .swnum{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;}
-.scorewheel .swnum b{font-size:19px; color:var(--ink); font-weight:800; line-height:1;}
-.scorewheel .swnum i{font-style:normal; font-size:8.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px;}
+.scorewheel .swnum b{font-size:17px; color:var(--ink); font-weight:800; line-height:1;}
+.scorewheel .swnum i{font-style:normal; font-size:8px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px;}
+.wheels{display:flex; gap:8px; flex:none;}
+.bloatbar{position:relative; height:10px; border-radius:99px; background:#ececf1; overflow:hidden; margin-top:6px;}
+#bloatFill{display:block; height:100%; width:0; border-radius:99px; transition:width .4s;}
 .photostrip{display:flex; gap:10px; overflow-x:auto; padding:2px 2px 8px; -webkit-overflow-scrolling:touch;}
 .photoadd{flex:none; width:76px; height:98px; border-radius:14px; border:1.5px dashed var(--line); background:none; color:var(--muted); font-size:26px; font-weight:600; cursor:pointer;}
 .phototile{position:relative; flex:none; width:76px; height:98px; border-radius:14px; overflow:hidden; background:var(--card); border:1px solid var(--line); padding:0; cursor:pointer;}
@@ -704,12 +707,22 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div class="prow">
         <button class="pavatar" id="sAvatar" style="width:58px;height:58px;font-size:22px" aria-label="Change profile photo"></button>
         <div class="pmeta"><input class="sname" id="sName" placeholder="Your name" autocomplete="off"></div>
-        <button class="scorewheel" id="scoreWheel" aria-label="Adherence and fatigue details">
+        <div class="wheels">
+        <button class="scorewheel" id="scoreWheel" aria-label="Adherence details">
           <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="#ececf1" stroke-width="9"/><circle id="adhArc" cx="42" cy="42" r="36" fill="none" stroke="#5b5bf0" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
           <span class="swnum"><b id="adhNum">–</b><i>adherence</i></span>
         </button>
+        <button class="scorewheel" id="fatWheel" aria-label="Food fatigue details">
+          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="#ececf1" stroke-width="9"/><circle id="fatArc" cx="42" cy="42" r="36" fill="none" stroke="#5b5bf0" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+          <span class="swnum"><b id="fatNum">–</b><i>fatigue</i></span>
+        </button>
+        </div>
       </div>
-      <div class="rangenote" id="fatigueLine" style="margin-top:10px"></div>
+      <div style="margin-top:10px">
+        <div class="flabel" style="display:flex;justify-content:space-between;align-items:baseline"><span>Bloat</span><span id="bloatVal" style="color:var(--muted);font-weight:700">–</span></div>
+        <div class="bloatbar"><div id="bloatFill"></div></div>
+        <div class="rangenote" id="scoreLine" style="margin-top:6px"></div>
+      </div>
       <div class="flabel" style="margin:14px 0 8px">Progress photos</div>
       <div class="photostrip" id="photoStrip"></div>
       <div class="flabel" style="margin:14px 0 8px">Today's medals</div>
@@ -985,7 +998,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-ay";
+const APP_VERSION = "2026.09.18-az";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1290,71 +1303,162 @@ function adherenceStats(){
   }
   return {n, hit, pct: n>0 ? Math.round(hit/n*100) : null};
 }
-/* Fatigue: composite 0–100 (higher = more beat up) from data already logged.
-   - ACWR (Gabbett 2016, Br J Sports Med): acute load (last 7d sessions) vs chronic
-     (prior 4-week average). 0.8–1.3 is the sweet spot; >1.5 = 2–4× injury risk.
-   - Consecutive training days without rest (ACSM: ~48h per muscle group).
-   - Hard-week streak: 5+ weeks of 4+ sessions = deload territory.
-   - Under-fueling: averaging <90% of calorie goal while training 3+/wk
-     (low energy availability impairs recovery — RED-S literature). */
-function fatigueStats(){
-  const done = S.training.done || {};
-  const sess = k => done[k] ? 1 : 0;
+/* ============ FOOD FATIGUE + BLOAT — "how will I feel" predictions ============
+   Both are predictions from what was LOGGED today (meals, water, alcohol) — the
+   old training-load fatigue model was retired in 2026.09.18-az.
+   FOOD FATIGUE 0-100 (higher = more drained):
+   - Glycemic crash: glucose spikes silence orexin/hypocretin wakefulness neurons
+     (Burdakov et al., J Neurosci 2005; Neuron 2006); amino acids blunt the effect
+     (Karnani et al. 2011). Carb-heavy + protein-light meals hit hardest.
+   - Serotonin tilt: carb-rich, protein-poor meals raise brain tryptophan/serotonin
+     (Wurtman, MIT) — weighted lightly, since it needs very little protein to show.
+   - Meal size: big meals trigger postprandial "rest and digest" sleepiness.
+   - Hydration: ~1.5% dehydration brings fatigue and mood dips (Ganio et al. 2011,
+     men; Armstrong et al. 2012, women).
+   - Under-fueling: low energy availability drains energy (RED-S / Mountjoy et al.).
+   - Alcohol: fragments sleep architecture (Parr et al. 2014) — the drag lands next day.
+   BLOAT 0-100 (higher = more bloated):
+   - Sodium: high-sodium diets raised bloating risk 27%; potassium helps excrete
+     sodium (Peng et al., Am J Gastroenterol 2019 — DASH-Sodium re-analysis).
+   - Fiber spike: high-fiber diets raised bloating risk 41% — gut bacteria ferment
+     sudden extra fiber into gas (same trial).
+   - Sugars, big/fatty meals (slow stomach emptying), low water, alcohol. */
+function mealMacros(ds){
+  const d = S.days[ds] || {meals:{}};
+  const out = {};
+  MEALS.forEach(m=>{
+    const t = {cal:0,p:0,c:0,f:0,fiber:0,sugars:0,sodium:0,pot:0};
+    (d.meals[m]||[]).forEach(e=>{
+      t.cal+=e.cal||0; t.p+=e.p||0; t.c+=e.c||0; t.f+=e.f||0;
+      (e.nutrs||[]).forEach(x=>{
+        const n = canonNutr(x.n), u = String(x.u||"").toLowerCase();
+        const mg = u==="g" ? x.amt*1000 : u==="mcg" ? x.amt/1000 : x.amt;
+        if(n==="Fiber") t.fiber += mg/1000;
+        else if(n==="Sugars"||n==="Added Sugars") t.sugars += mg/1000;
+        else if(n==="Sodium") t.sodium += mg;
+        else if(n==="Potassium") t.pot += mg;
+      });
+    });
+    out[m]=t;
+  });
+  return out;
+}
+function foodFatigue(ds){
+  ds = ds || todayStr();
+  const mm = mealMacros(ds), d = S.days[ds] || {water:0};
+  const t = {cal:0,p:0,c:0}; let logged = false;
+  MEALS.forEach(m=>{ t.cal+=mm[m].cal; t.p+=mm[m].p; t.c+=mm[m].c; if(mm[m].cal>0) logged=true; });
+  if(!logged) return {score:null, why:[], label:"–"};
   let pts = 0; const why = [];
-  const acute = [0,1,2,3,4,5,6].reduce((a,i)=>a+sess(addDays(todayStr(),-i)),0);
-  let csum = 0;
-  for(let wI=1;wI<=4;wI++){ let n=0; for(let i=0;i<7;i++) n+=sess(addDays(todayStr(),-(wI*7+i))); csum+=n; }
-  const chronic = csum/4;
-  let acwr = null;
-  if(acute>0 && chronic>0){
-    acwr = acute/chronic;
-    if(acwr>1.5){ pts+=30; why.push("Training load spiked to "+acwr.toFixed(1)+"× your 4-week average — over 1.5× carries 2–4× injury risk (Gabbett 2016)."); }
-    else if(acwr>1.3){ pts+=15; why.push("Training load is "+acwr.toFixed(1)+"× your average — above the 0.8–1.3 sweet spot."); }
-  } else if(acute>0 && chronic===0){ pts+=10; why.push("Training with no 4-week baseline yet — ramp up gradually."); }
-  let consec = 0;
-  for(let i=0;i<14;i++){ if(sess(addDays(todayStr(),-i))) consec++; else break; }
-  if(consec>=4){ pts+=20; why.push(consec+" days in a row without a rest day — muscles need ~48h between hard sessions (ACSM)."); }
-  else if(consec===3){ pts+=10; why.push("3 days straight — a rest day soon keeps you fresh."); }
-  const hw = hardWeekStreak();
-  if(hw>=5){ pts+=20; why.push(hw+" hard weeks (4+ sessions) in a row — deload territory."); }
-  else if(hw>=3){ pts+=10; why.push(hw+" hard weeks in a row — fatigue accumulates."); }
+  const mname = m => m.charAt(0).toUpperCase()+m.slice(1);
+  let worst = null;
+  MEALS.forEach(m=>{
+    const x = mm[m]; if(x.cal<=0) return;
+    const netC = Math.max(0, x.c - x.fiber);
+    const risk = (netC>=60 && x.p<20) ? 2 : (netC>=40 && x.p<15) ? 1 : 0;
+    if(!worst || risk>worst.risk) worst = {m, risk, netC, p:x.p};
+  });
+  if(worst && worst.risk===2){ pts+=28; why.push(mname(worst.m)+" was carb-heavy ("+Math.round(worst.netC)+"g net carbs, "+Math.round(worst.p)+"g protein) — a glucose spike quiets the brain's orexin wakefulness neurons: the classic food coma (Burdakov et al. 2005, 2006)."); }
+  else if(worst && worst.risk===1){ pts+=14; why.push(mname(worst.m)+" leaned carb-heavy ("+Math.round(worst.netC)+"g net carbs, "+Math.round(worst.p)+"g protein) — expect a dip an hour or two later."); }
+  let sugars = 0; MEALS.forEach(m=>sugars+=mm[m].sugars);
+  if(sugars>=75){ pts+=12; why.push(Math.round(sugars)+"g sugar so far — every spike sets up another crash."); }
+  else if(sugars>=50){ pts+=6; why.push(Math.round(sugars)+"g sugar — enough for a mid-afternoon dip."); }
+  if(t.cal>0 && (t.c*4)/t.cal>0.6 && (t.p*4)/t.cal<0.12){ pts+=8; why.push("Very carb-heavy and protein-light overall — that mix tilts brain chemistry toward serotonin and drowsiness (Wurtman, MIT)."); }
+  let big = 0; MEALS.forEach(m=>{ big=Math.max(big, mm[m].cal); });
+  if(big>=1000){ pts+=16; why.push("Biggest meal was "+Math.round(big).toLocaleString()+" kcal — big meals trigger heavy rest-and-digest sleepiness."); }
+  else if(big>=700){ pts+=8; why.push("Biggest meal was "+Math.round(big).toLocaleString()+" kcal — on the sleepy side of filling."); }
+  const w = waterCalc(), wr = w.target>0 ? (d.water||0)/w.target : 1;
+  if(w.target>0 && wr<0.5){ pts+=18; why.push("Only "+(d.water||0)+" of "+w.target+" glasses of water — even ~1.5% dehydration brings on fatigue (Ganio 2011; Armstrong 2012)."); }
+  else if(w.target>0 && wr<0.75){ pts+=10; why.push("Water is at "+Math.round(wr*100)+"% of target — mild dehydration drags energy down."); }
+  else if(w.target>0 && wr<0.9){ pts+=5; why.push("A little behind on water ("+Math.round(wr*100)+"% of target)."); }
   const goal = goalTotal();
-  if(goal>0 && acute>=3){
-    let sum=0, n=0;
-    for(let i=0;i<7;i++){ const t = totals(addDays(todayStr(),-i)); if(t.cal>0){ sum+=t.cal; n++; } }
-    if(n>=4 && sum/n < goal*0.9){ pts+=15; why.push("Averaging "+Math.round(sum/n).toLocaleString()+" kcal vs a "+Math.round(goal).toLocaleString()+" goal while training "+acute+"×/wk — under-fueling slows recovery."); }
+  if(goal>0 && t.cal<goal*0.85){ pts+=12; why.push("Only "+Math.round(t.cal).toLocaleString()+" of "+Math.round(goal).toLocaleString()+" kcal so far — running a deficit drains energy (low energy availability, RED-S research)."); }
+  else if(goal>0 && t.cal<goal*0.95){ pts+=5; why.push("Slightly under your calorie goal — a small energy dip is likely."); }
+  const alc = d.alc||0;
+  if(alc>0){ pts+=Math.min(15, alc*5); why.push(alc+" drink"+(alc>1?"s":"")+" — alcohol fragments sleep, so the drag lands tomorrow."); }
+  const score = Math.min(100, Math.round(pts));
+  return {score, why, label: score<=25?"Energized":score<=45?"Steady":score<=65?"Heavy":"Drained"};
+}
+function bloatScore(ds){
+  ds = ds || todayStr();
+  const mm = mealMacros(ds), d = S.days[ds] || {water:0};
+  let sodium=0, fiber=0, sugars=0, pot=0, big=0, bigFat=0, logged=false;
+  MEALS.forEach(m=>{ const x=mm[m]; sodium+=x.sodium; fiber+=x.fiber; sugars+=x.sugars; pot+=x.pot;
+    big=Math.max(big,x.cal); bigFat=Math.max(bigFat,x.f); if(x.cal>0) logged=true; });
+  if(!logged) return {score:null, why:[], label:"–"};
+  let pts = 0; const why = [];
+  if(sodium>=3500){ pts+=30; why.push(Math.round(sodium).toLocaleString()+"mg sodium — high salt drives water retention and bloating (high-sodium diets raised bloating risk 27%: Peng et al. 2019)."); }
+  else if(sodium>=2300){ pts+=16; why.push(Math.round(sodium).toLocaleString()+"mg sodium is over the 2,300mg daily value — expect some water retention."); }
+  else if(sodium>=1500){ pts+=7; why.push("Sodium is climbing ("+Math.round(sodium).toLocaleString()+"mg) — watch it if the next meal is salty."); }
+  if(pot>=3500 && sodium>=2300){ pts-=8; why.push("Good potassium ("+Math.round(pot).toLocaleString()+"mg) helps flush sodium — blunting the bloat."); }
+  let fsum=0, fn=0;
+  for(let i=1;i<=7;i++){
+    const dd = S.days[addDays(todayStr(),-i)]; if(!dd) continue;
+    let f=0;
+    MEALS.forEach(m=>(dd.meals[m]||[]).forEach(e=>(e.nutrs||[]).forEach(x=>{
+      if(canonNutr(x.n)==="Fiber"){ const u=String(x.u||"").toLowerCase(); f += u==="g"?x.amt : u==="mg"?x.amt/1000 : u==="mcg"?x.amt/1e6 : x.amt; }
+    })));
+    if(f>0){ fsum+=f; fn++; }
   }
-  const score = Math.min(100, pts);
-  return {score, why, acwr, label: score<=25?"Fresh":score<=50?"Normal":score<=75?"Elevated":"High"};
+  const favg = fn>0 ? fsum/fn : 0;
+  if(favg>=5 && fiber>=20 && fiber>favg*1.5){ pts+=25; why.push("Fiber jumped to "+Math.round(fiber)+"g vs your usual "+Math.round(favg)+"g — gut bacteria ferment the sudden extra fiber into gas."); }
+  else if(fiber>=40){ pts+=12; why.push("Very high-fiber day ("+Math.round(fiber)+"g) — healthy, but gas-producing."); }
+  if(sugars>=75){ pts+=14; why.push(Math.round(sugars)+"g sugar — excess sugar ferments in the gut and adds gas."); }
+  else if(sugars>=50){ pts+=7; why.push(Math.round(sugars)+"g sugar — a mild gas risk."); }
+  if(big>=900 || bigFat>=40){ pts+=14; why.push("Big"+(bigFat>=40?", fatty":"")+" meal ("+Math.round(big).toLocaleString()+" kcal) — fat slows stomach emptying, so the fullness lingers."); }
+  else if(big>=650){ pts+=7; why.push("Hearty meal ("+Math.round(big).toLocaleString()+" kcal) — some fullness expected."); }
+  const w = waterCalc(), wr = w.target>0 ? (d.water||0)/w.target : 1;
+  if(w.target>0 && wr<0.75){ pts+=10; why.push("Behind on water ("+Math.round(wr*100)+"% of target) — when you're dry the body holds onto water, adding to the puff."); }
+  const alc = d.alc||0;
+  if(alc>0){ pts+=5; why.push("Alcohol irritates the gut lining — a small extra bloat nudge."); }
+  const score = Math.max(0, Math.min(100, Math.round(pts)));
+  return {score, why, label: score<=25?"Comfortable":score<=50?"Full":score<=75?"Bloated":"Very bloated"};
 }
 function scoreInfoHTML(){
-  const a = adherenceStats(), f = fatigueStats();
+  const a = adherenceStats(), f = foodFatigue(), b = bloatScore();
   const aRow = a.pct===null
     ? `<div class="irow"><b>Adherence:</b> no logged days in the last 2 weeks yet — log meals and this fills in.</div>`
     : `<div class="irow"><b>Adherence: ${a.pct}%</b> — ${a.hit} of ${a.n} logged days (last 14) hit calories within ±10% of goal and protein ≥90%. Research finds sticking to the plan predicts results better than the plan itself (Burke et al. 2011).</div>`;
+  const fHead = `<div class="irow"><b>Food fatigue: ${f.score===null?"–":f.score+"/100 — "+f.label}.</b> A prediction of your energy from what you've logged today — not your training. Carb-heavy meals spike glucose, which silences the brain's orexin wakefulness neurons (Burdakov et al. 2005, 2006); protein and fiber blunt the crash. Even ~1.5% dehydration brings fatigue (Ganio et al. 2011; Armstrong et al. 2012).</div>`;
   const fRows = f.why.length
     ? f.why.map(w=>`<div class="irow">• ${esc(w)}</div>`).join("")
-    : `<div class="irow">Nothing driving fatigue right now — training load and fueling look balanced.</div>`;
-  return aRow+
-    `<div class="irow"><b>Fatigue: ${f.score}/100 — ${f.label}.</b> Built from your training log: acute:chronic workload ratio (Gabbett 2016 — 0.8–1.3 is the sweet spot, over 1.5 spikes injury risk), rest days, hard-week streaks, and whether you're eating enough to recover.</div>`+
-    fRows+
-    `<div class="irow" style="color:var(--muted)">A rough guide, not a medical verdict — soreness, sleep, and stress matter too, and the app can't see those yet.</div>`;
+    : `<div class="irow">${f.score===null?"Log food today and this predicts your energy.":"Nothing dragging your energy down today."}</div>`;
+  const bHead = `<div class="irow"><b>Bloat: ${b.score===null?"–":b.score+"/100 — "+b.label}.</b> Predicted from today's sodium, fiber, sugar, meal size, water, and alcohol. In a randomized trial, high-sodium diets raised bloating risk 27% and high-fiber diets 41% (Peng et al., Am J Gastroenterol 2019).</div>`;
+  const bRows = b.why.length
+    ? b.why.map(w=>`<div class="irow">• ${esc(w)}</div>`).join("")
+    : `<div class="irow">${b.score===null?"Log food today and this predicts bloating.":"Nothing bloating you today."}</div>`;
+  return aRow+fHead+fRows+bHead+bRows+
+    `<div class="irow" style="color:var(--muted)">Rough predictions from your log, not medical verdicts — sleep, stress, and illness matter too, and the app can't see those.</div>`;
 }
 
 /* ============ SCORE WHEEL (Settings profile) ============ */
 function paintScoreWheel(){
-  const a = adherenceStats(), f = fatigueStats();
-  const C = 2*Math.PI*36, arc = document.getElementById("adhArc");
+  const a = adherenceStats(), f = foodFatigue(), b = bloatScore();
+  const C = 2*Math.PI*36;
+  const arc = document.getElementById("adhArc");
   arc.style.strokeDasharray = C;
   arc.style.strokeDashoffset = a.pct===null ? C : C*(1-Math.min(a.pct,100)/100);
   arc.style.stroke = a.pct===null ? "#c9c9d6" : a.pct>=80 ? "#12cfae" : a.pct>=50 ? "#5b5bf0" : "#fb6f84";
   document.getElementById("adhNum").textContent = a.pct===null ? "–" : a.pct+"%";
-  const fcol = f.score<=25?"#12cfae":f.score<=50?"#5b5bf0":f.score<=75?"#e8a13d":"#fb6f84";
-  document.getElementById("fatigueLine").innerHTML = (a.pct===null && !f.why.length)
-    ? "Log meals and training — your adherence wheel and fatigue score live here."
-    : `Adherence <b>${a.pct===null?"–":a.pct+"%"}</b> (${a.hit}/${a.n} days) · Fatigue <b style="color:${fcol}">${f.label}</b> — tap the wheel for the breakdown.`;
+  const farc = document.getElementById("fatArc");
+  farc.style.strokeDasharray = C;
+  farc.style.strokeDashoffset = f.score===null ? C : C*(1-f.score/100);
+  const fcol = f.score===null ? "#c9c9d6" : f.score<=25?"#12cfae":f.score<=45?"#5b5bf0":f.score<=65?"#e8a13d":"#fb6f84";
+  farc.style.stroke = fcol;
+  document.getElementById("fatNum").textContent = f.score===null ? "–" : f.score;
+  const bcol = b.score===null ? "#c9c9d6" : b.score<=25?"#12cfae":b.score<=50?"#5b5bf0":b.score<=75?"#e8a13d":"#fb6f84";
+  const fill = document.getElementById("bloatFill");
+  fill.style.width = b.score===null ? "0%" : b.score+"%";
+  fill.style.background = bcol;
+  const bv = document.getElementById("bloatVal");
+  bv.textContent = b.score===null ? "–" : b.score+" · "+b.label;
+  bv.style.color = b.score===null ? "var(--muted)" : bcol;
+  document.getElementById("scoreLine").innerHTML = (a.pct===null && f.score===null && b.score===null)
+    ? "Log meals — your adherence wheel, fatigue circle, and bloat scale live here."
+    : `Fatigue <b style="color:${fcol}">${f.score===null?"–":f.label}</b> · Bloat <b style="color:${bcol}">${b.score===null?"–":b.label}</b> — tap a wheel for the full breakdown.`;
 }
 document.getElementById("scoreWheel").onclick = ()=>openInfo("scores");
+document.getElementById("fatWheel").onclick = ()=>openInfo("scores");
 
 /* ============ PROGRESS PHOTOS ============ */
 let photoOrder = [], photoIdx = 0;
@@ -2369,7 +2473,7 @@ function infoContent(k){
     `<div class="irow"><b>Auto-adjust as I gain weight:</b> when you log a new weight in Progress, Fuel recalculates maintenance and re-derives your macros (protein 2.2 g/kg, fat 25%, carbs fill the rest) — unless you've switched macros to manual. Turn it off to control everything manually.</div>
      <div class="irow"><b>Auto-tune maintenance:</b> when 2+ weeks of weigh-ins show your real gain rate missing the target band, Fuel nudges maintenance ±150 kcal — max once per 2 weeks.</div>
      <div class="irow">The formulas are only ±10% accurate — your weigh-in trend is the calibration instrument.</div>`};
-  if(k==="scores") return {t:"Adherence & fatigue", b: scoreInfoHTML()};
+  if(k==="scores") return {t:"Energy & bloat", b: scoreInfoHTML()};
 }
 function openInfo(k){
   const c = infoContent(k); if(!c) return;
@@ -2434,9 +2538,9 @@ function openGsec(name){
   });
 }
 /* ============ TRAINING ============
-   The training calendar UI was removed in 2026.09.18-ay. What stays:
-   trainDay() (alcohol warnings + the fatigue score read it) and the
-   deload-streak helpers (the fatigue score reads hardWeekStreak). */
+   The training calendar UI was removed in 2026.09.18-ay, and the training-load
+   fatigue model was retired in 2026.09.18-az (fatigue is now predicted from food).
+   What stays: trainDay() (alcohol warnings read it). */
 function addDays(ds, n){ const d = new Date(ds+"T12:00:00"); d.setDate(d.getDate()+n); return dstr(d); }
 function trainDay(ds){
   const t = S.training || (S.training = {sched:{}, done:{}});
@@ -2448,20 +2552,6 @@ function trainDay(ds){
   return {train:false};
 }
 /* deload tracking: consecutive weeks (Sun-start) with 4+ completed sessions */
-function weekStart(ds){ const d = new Date(ds+"T12:00:00"); const s = new Date(d); s.setDate(d.getDate()-d.getDay()); return dstr(s); }
-function hardWeekStreak(){
-  const tr = S.training || {};
-  const dl = tr.deloads || {};
-  let streak = 0, ws = weekStart(todayStr());
-  for(let i=0;i<104;i++){
-    if(dl[ws]) break;
-    let n = 0;
-    for(const k in (tr.done||{})){ if(weekStart(k)===ws) n++; }
-    if(n>=4) streak++; else break;
-    ws = addDays(ws,-7);
-  }
-  return streak;
-}
 /* ============ MUSCLE GAIN ESTIMATE ============
    Only a scan (DEXA etc.) truly measures muscle, so this is an honest estimate:
    weight gained x an estimated lean share. Lean share starts at 0.45 for a lean
