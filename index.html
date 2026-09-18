@@ -441,8 +441,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
           <div class="center">
             <span class="ctitle">Calorie Intake</span>
             <b id="calEaten">0</b>
-            <span class="flagkc" id="flagKcal"></span>
-            <span class="flagsur" id="flagSur"></span>
           </div>
         </div>
         <div class="macros">
@@ -940,7 +938,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-ag";
+const APP_VERSION = "2026.09.18-ah";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
@@ -1089,12 +1087,8 @@ function renderDiary(){
   $("calEaten").textContent = Math.round(t.cal).toLocaleString();
   const mCal = g.maintenance>0 ? g.maintenance : 0;
   const tCal = mCal + (g.surplus>0 ? g.surplus : 0);
-  const left = tCal - t.cal, eCal = t.cal;
+  const eCal = t.cal;
   ringPaint("ringCal","ringSurp",eCal,mCal,tCal);
-  $("flagKcal").innerHTML = FLAGI + (left >= 0 ? Math.round(left).toLocaleString()+" kcal" : Math.round(-left).toLocaleString()+" over");
-  const fsur = $("flagSur");
-  if(eCal > mCal){ fsur.innerHTML = FLAGI + "+"+Math.round(eCal-mCal).toLocaleString()+" SUR"; fsur.classList.add("on"); }
-  else { fsur.innerHTML = FLAGI + Math.round(mCal-eCal).toLocaleString()+" to SUR"; fsur.classList.remove("on"); }
   const st = statusInfo();
   const fill = $("spFill");
   fill.style.width = (st.tCal>0 ? Math.min(st.eCal/st.tCal,1)*100 : 0)+"%";
