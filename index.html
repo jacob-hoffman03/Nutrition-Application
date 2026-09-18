@@ -161,6 +161,10 @@ button{font-family:inherit;}
 .alcrow{display:flex; align-items:center; justify-content:space-between; padding:7px 2px; border-top:1px solid #f0f0f4;}
 .alcrow .anm b{display:block; font-size:14.5px;}
 .alcrow .anm span{font-size:11.5px; color:var(--muted);}
+.msugg{margin-top:10px; background:#f4f4fa; border-radius:12px; padding:10px 12px;}
+.msrow{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+.msrow b{display:block; font-size:13.5px;}
+.msrow span{display:block; font-size:12px; color:var(--muted); margin-top:2px;}
 .alcring{flex:none; width:52px; height:52px;}
 .vapelevels{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
 .vchip{border:1px solid var(--line); background:#fff; border-radius:20px; padding:7px 14px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer;}
@@ -1056,7 +1060,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bk";
+const APP_VERSION = "2026.09.18-bl";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -2420,14 +2424,51 @@ function weightTrend(){
           hi: Math.max(...vals), lo: Math.min(...vals), n: ws.length,
           cur: ws[ws.length-1].w, first: ws[0].w};
 }
+/* ============ 1-MONTH MILESTONE (research 2026-09-18) ============
+   Suggests a weight goal one month out, anchored to the profile update date
+   (S.goals.profile.updatedAt, stamped by commitGoalsInputs). Rates:
+   gain 0.4%/wk of bodyweight (range 0.25–0.5 — coach consensus, MASS / Helms /
+   Henselmans circles; textbook 1 lb/wk rules rest on limited evidence per
+   Larson-Meyer review); cut 0.7%/wk (range 0.5–1.0 — Ruiz-Castellano et al.,
+   Nutrients 2021). Cross-checks: McDonald beginner max ~2 lb muscle/month;
+   Aragon beginner 1–1.5% BW/month muscle; Helms et al. 2023 (SMO): a 15%
+   surplus built no more muscle than 5% — just more fat. */
+function suggestedMilestone(){
+  const cur = curBodyWeight(); if(!(cur>0)) return null;
+  const g = S.goals.weight;
+  let dir = 0;
+  if(g>0) dir = Math.sign(g-cur);
+  else if(S.goals.surplus>0) dir = 1;
+  else if(S.goals.surplus<0) dir = -1;
+  if(dir===0) return null;
+  const pctWk = dir>0 ? 0.4 : 0.7;
+  const delta = dir*cur*(pctWk/100)*(30/7);
+  let target = Math.round((cur+delta)*2)/2;
+  if(g>0){ target = dir>0 ? Math.min(target,g) : Math.max(target,g); }
+  if(target===cur || (g>0 && Math.abs(target-g)<0.01)) return null;
+  const base = (S.goals.profile||{}).updatedAt || todayStr();
+  const dt = new Date(base+"T12:00:00"); dt.setDate(dt.getDate()+30);
+  return {target, dateStr: dt.toLocaleDateString(undefined,{month:"short",day:"numeric"}),
+          perWk: Math.abs(cur*(pctWk/100)), dir};
+}
+function milestoneHtml(ms){
+  const wu = wUnit(), d1 = v => wDisp(v).toFixed(1);
+  const ev = ms.dir>0
+    ? `Paced at +${d1(ms.perWk)} ${wu}/week (~0.4% of bodyweight) — the lean-bulk guideline from the evidence-based coaching consensus (MASS / Helms / Henselmans). Beginners max out around 2 lb of muscle a month (McDonald; Aragon: 1–1.5% BW/month), and a 15% surplus built no more muscle than 5% — just more fat (Helms et al., Sports Med Open 2023).`
+    : `Paced at −${d1(ms.perWk)} ${wu}/week (~0.7% of bodyweight) — the range that best preserves muscle while cutting (Ruiz-Castellano et al., Nutrients 2021; Garthe et al., IJSNEM 2011).`;
+  return `<div class="msugg"><div class="msrow"><div><b>Suggested 1-month milestone</b><span>${d1(ms.target)} ${wu} by ${ms.dateStr} — one month from your profile update</span></div><button class="chip" id="msUse">Use as goal</button></div>`+
+    `<div class="rangenote" style="margin-top:6px">${ev} Early weeks read high — that's glycogen and water, not tissue. Judge the 4-week trend, not week 1.</div></div>`;
+}
 function paintWtGoal(){
   const val = document.getElementById("wtGoalVal"), box = document.getElementById("wtGoalProg");
   const g = S.goals.weight, wu = wUnit();
   const d1 = v => wDisp(v).toFixed(1); /* display magnitude in current units */
   val.textContent = g>0 ? d1(g)+" "+wu : "Set goal";
   const cur = curBodyWeight();
-  if(!(g>0)){ box.innerHTML = `<div class="rangenote">Set a target weight — this tracks progress and estimates your pace from weigh-ins.</div>`; return; }
-  if(!(cur>0)){ box.innerHTML = `<div class="rangenote">Log your weight below to start tracking progress toward ${d1(g)} ${wu}.</div>`; return; }
+  const ms = suggestedMilestone(), msHtml = ms ? milestoneHtml(ms) : "";
+  const wireMs = ()=>{ const b = document.getElementById("msUse"); if(b && ms) b.onclick = ()=>{ S.goals.weight = ms.target; save(); renderProgress(); }; };
+  if(!(g>0)){ box.innerHTML = `<div class="rangenote">Set a target weight — this tracks progress and estimates your pace from weigh-ins.</div>`+msHtml; wireMs(); return; }
+  if(!(cur>0)){ box.innerHTML = `<div class="rangenote">Log your weight below to start tracking progress toward ${d1(g)} ${wu}.</div>`+msHtml; wireMs(); return; }
   const ws = sortedWeights(), start = ws.length ? ws[0].w : cur;
   const toGo = g - cur;
   const done = toGo===0 ? "At goal" : toGo>0 ? d1(toGo)+" "+wu+" to go" : d1(toGo)+" "+wu+" above goal";
@@ -2444,7 +2485,8 @@ function paintWtGoal(){
   box.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:13px"><b>${done}</b><span style="color:var(--muted)">${pct.toFixed(0)}%</span></div>`+
     `<div class="wgoalbar"><i style="width:${pct.toFixed(1)}%"></i></div>`+
     (toGo===0 ? `<div class="rangenote" style="margin-top:6px">Goal reached — set a new one to keep going.</div>`
-              : `<div class="rangenote" style="margin-top:6px">${justStarted ? "Starting point set — log weigh-ins and this bar tracks your run at the "+d1(g)+" "+wu+" goal." : "Pace from your weigh-ins"+eta+". Daily weight swings ±1–2%, so 2+ weeks smooths the noise."}</div>`);
+              : `<div class="rangenote" style="margin-top:6px">${justStarted ? "Starting point set — log weigh-ins and this bar tracks your run at the "+d1(g)+" "+wu+" goal." : "Pace from your weigh-ins"+eta+". Daily weight swings ±1–2%, so 2+ weeks smooths the noise."}</div>`)+msHtml;
+  wireMs();
 }
 /* ================= ANALYTICS ENGINE — BODY METRICS =================
    Research sources (2026 refresh): BMI WHO 2006 cutoffs (screening, not diagnosis —
@@ -2814,6 +2856,7 @@ function commitMacroInputs(){
 function commitGoalsInputs(){
   commitMacroInputs();
   readProfile();
+  S.goals.profile.updatedAt = todayStr(); /* anchors the 1-month milestone suggestion */
 }
 function renderProfile(){
   const p = S.goals.profile, met = p.units==="met";
