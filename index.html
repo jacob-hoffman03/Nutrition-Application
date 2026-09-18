@@ -244,6 +244,13 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .cfrow input{border:none; background:transparent; text-align:right; font-size:15px; font-weight:600; color:var(--muted); outline:none; width:150px; font-family:inherit;}
 .cfrow input::placeholder{color:#b9b9c4;}
 .cfrow .ph{font-size:15px; color:#b9b9c4; font-weight:600;}
+.cphotorow{display:flex; align-items:center; gap:12px; padding:14px 0;}
+#cPhotoPreview{width:72px; height:72px; border-radius:14px; object-fit:cover; flex:none;}
+.cphotobtn{border:1.5px dashed #c9c9d6; background:#fafafa; border-radius:14px; color:var(--acc); font-weight:700; font-size:15px; padding:14px 18px; font-family:inherit;}
+.cphotodel{border:none; background:none; color:var(--red); font-weight:700; font-size:14px; font-family:inherit; padding:8px 4px;}
+.frow .fim img{width:100%; height:100%; object-fit:cover; display:block;}
+.dhead{display:flex; align-items:center; gap:12px;}
+#dPhoto{width:56px; height:56px; border-radius:14px; object-fit:cover; flex:none;}
 .morelink{display:block; text-align:center; color:var(--acc); font-weight:700; font-size:15px; background:none; border:none; padding:14px; width:100%;}
 .favstar{border:none; background:none; padding:4px; display:flex; align-items:center;}
 .empty{color:var(--muted); font-size:13px; padding:8px 2px;}
@@ -487,8 +494,14 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       </div>
       <div id="sheetDetail" style="display:none">
         <div class="card" style="margin-bottom:4px">
-          <b id="dName" style="font-size:16px"></b>
-          <div class="hint" id="dMacros" style="margin-top:4px"></div>
+          <div class="dhead">
+            <img id="dPhoto" alt="Food photo" style="display:none">
+            <div>
+              <b id="dName" style="font-size:16px"></b>
+              <div class="hint" id="dMacros" style="margin-top:4px"></div>
+            </div>
+          </div>
+        </div>
         </div>
         <div class="label">Servings</div>
         <div class="qtyrow">
@@ -526,6 +539,15 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <button class="xbtn" id="cX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
     <h2>Create Custom Food</h2>
     <div class="body">
+      <div class="cfsec">Photo <span style="font-weight:400">(optional)</span></div>
+      <div class="cfcard">
+        <div class="cphotorow">
+          <img id="cPhotoPreview" alt="Food photo" style="display:none">
+          <button type="button" class="cphotobtn" id="cPhotoBtn">+ Add photo</button>
+          <button type="button" class="cphotodel" id="cPhotoDel" style="display:none">Remove</button>
+          <input type="file" id="cPhotoFile" accept="image/*" style="display:none">
+        </div>
+      </div>
       <div class="cfsec">Basic Information</div>
       <div class="cfcard">
         <div class="cfrow"><span><span class="req">*</span>Name</span><input id="cName" placeholder="Required"></div>
@@ -576,7 +598,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-j";
+const APP_VERSION = "2026.09.18-k";
 
 /* ============ STATE ============ */
 const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:375, fat:83, water:10, weight:150});
@@ -819,6 +841,8 @@ function showDetail(){
   document.getElementById("sheetDetail").style.display = "";
   document.getElementById("sheetTitle").textContent = "Log food";
   document.getElementById("dName").textContent = sheetFood.n;
+  const dp = document.getElementById("dPhoto");
+  if(sheetFood.img){ dp.src = sheetFood.img; dp.style.display = ""; } else { dp.removeAttribute("src"); dp.style.display = "none"; }
   document.getElementById("dMacros").textContent = `${sheetFood.s} · ${Math.round(sheetFood.cal)} cal · P ${r1(sheetFood.p)}g C ${r1(sheetFood.c)}g F ${r1(sheetFood.f)}g`;
   document.querySelectorAll("#mealChips .chip").forEach(c=>c.classList.toggle("sel", c.dataset.m===sheetMeal));
   updateQty();
@@ -863,7 +887,7 @@ function renderFoods(){
   document.getElementById("foodCount").textContent = list.length ? list.length+" item"+(list.length>1?"s":"") : "";
   const box = document.getElementById("foodResults");
   box.innerHTML = list.slice(0,60).map(f =>
-    `<div class="frow"><span class="fim">${MEAL_ICON.snacks}</span>
+    `<div class="frow"><span class="fim">${f.img?`<img src="${f.img}" alt="">`:MEAL_ICON.snacks}</span>
      <div class="fnm"><b>${isCustom(f.n)?'<span class="diy">DIY</span>':""}${esc(f.n)}</b><span>${Math.round(f.cal)}kcal / ${esc(f.s)}</span></div>
      <button class="favstar" data-n="${esc(f.n)}">${isFav(f.n)?STAR_ON:STAR_OFF}</button>
      <button class="fadd" data-n="${esc(f.n)}">+</button></div>`
@@ -875,9 +899,41 @@ function renderFoods(){
 document.getElementById("foodSearch").addEventListener("input", renderFoods);
 document.querySelectorAll("#foodTabs .segtab").forEach(t=>t.onclick=()=>{ foodTab=t.dataset.t; renderFoods(); });
 const csheet = document.getElementById("csheet");
-document.getElementById("newCustomBtn").onclick = ()=>csheet.classList.add("open");
+let cPhotoData = "";
+function setCPhoto(data){
+  cPhotoData = data || "";
+  const prev = document.getElementById("cPhotoPreview");
+  prev.style.display = cPhotoData ? "" : "none";
+  if(cPhotoData) prev.src = cPhotoData; else prev.removeAttribute("src");
+  document.getElementById("cPhotoBtn").style.display = cPhotoData ? "none" : "";
+  document.getElementById("cPhotoDel").style.display = cPhotoData ? "" : "none";
+}
+function resetCustomForm(){
+  ["cName","cServ","cCal","cP","cC","cF"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("cPhotoFile").value = "";
+  setCPhoto("");
+}
+document.getElementById("newCustomBtn").onclick = ()=>{ resetCustomForm(); csheet.classList.add("open"); };
 document.getElementById("cScrim").onclick = ()=>csheet.classList.remove("open");
 document.getElementById("cX").onclick = ()=>csheet.classList.remove("open");
+document.getElementById("cPhotoBtn").onclick = ()=>document.getElementById("cPhotoFile").click();
+document.getElementById("cPhotoDel").onclick = ()=>{ document.getElementById("cPhotoFile").value=""; setCPhoto(""); };
+document.getElementById("cPhotoFile").onchange = e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = ()=>{
+    const max = 320, scale = Math.min(1, max/Math.max(img.width, img.height));
+    const cv = document.createElement("canvas");
+    cv.width = Math.round(img.width*scale); cv.height = Math.round(img.height*scale);
+    cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+    URL.revokeObjectURL(url);
+    setCPhoto(cv.toDataURL("image/jpeg", 0.8));
+  };
+  img.onerror = ()=>{ URL.revokeObjectURL(url); alert("Couldn't read that photo."); };
+  img.src = url;
+};
 document.getElementById("cSave").onclick = ()=>{
   const n = document.getElementById("cName").value.trim();
   if(!n){ alert("Give the food a name."); return; }
@@ -885,8 +941,8 @@ document.getElementById("cSave").onclick = ()=>{
   if(!(cal>0)){ alert("Enter calories for the food."); return; }
   const num = id => parseFloat(document.getElementById(id).value) || 0;
   S.customFoods.push({n, s:document.getElementById("cServ").value.trim()||"1 serving",
-    cal, p:num("cP"), c:num("cC"), f:num("cF")});
-  ["cName","cServ","cCal","cP","cC","cF"].forEach(id=>document.getElementById(id).value="");
+    cal, p:num("cP"), c:num("cC"), f:num("cF"), img:cPhotoData});
+  resetCustomForm();
   save(); csheet.classList.remove("open"); renderFoods();
 };
 
