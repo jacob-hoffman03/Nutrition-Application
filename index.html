@@ -397,11 +397,17 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <p class="goalsub">Your daily intake goal, based on your maintenance + surplus plan.</p>
     <div class="secttl" style="margin-top:2px">Profile</div>
     <div class="card">
-      <div class="cfrow"><span>Weight</span><span><input id="pfWeight" type="number" inputmode="decimal" style="width:90px"> <span class="ph">lb</span></span></div>
-      <div class="cfrow"><span>Body fat</span><span><input id="pfFat" type="number" inputmode="decimal" style="width:90px"> <span class="ph">%</span></span></div>
+      <div class="cfrow"><span>Units</span><span class="chips" id="pfUnits" style="margin:0"><button class="chip" data-u="imp">Imperial</button><button class="chip" data-u="met">Metric</button></span></div>
+      <div class="cfrow"><span>Sex</span><span class="chips" id="pfSex" style="margin:0"><button class="chip" data-x="m">Male</button><button class="chip" data-x="f">Female</button></span></div>
+      <div class="cfrow"><span>Age</span><span><input id="pfAge" type="number" inputmode="numeric" style="width:90px"> <span class="ph">yrs</span></span></div>
+      <div class="cfrow" id="htImpRow"><span>Height</span><span><input id="pfHtFt" type="number" inputmode="numeric" style="width:52px"> <span class="ph">ft</span> <input id="pfHtIn" type="number" inputmode="numeric" style="width:52px"> <span class="ph">in</span></span></div>
+      <div class="cfrow" id="htMetRow" style="display:none"><span>Height</span><span><input id="pfHtCm" type="number" inputmode="decimal" style="width:90px"> <span class="ph">cm</span></span></div>
+      <div class="cfrow"><span>Weight</span><span><input id="pfWeight" type="number" inputmode="decimal" style="width:90px"> <span class="ph" id="pfWeightUnit">lb</span></span></div>
+      <div class="cfrow"><span>Body fat <span class="ph">(optional)</span></span><span><input id="pfFat" type="number" inputmode="decimal" style="width:90px"> <span class="ph">%</span></span></div>
     </div>
     <div class="rangenote" style="margin:10px 2px 2px">Activity level</div>
     <div class="chips" id="pfAct">
+      <button class="chip" data-a="1.2">Sedentary</button>
       <button class="chip" data-a="1.375">Light</button>
       <button class="chip" data-a="1.55">Moderate</button>
       <button class="chip" data-a="1.725">Active</button>
@@ -409,12 +415,21 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     </div>
     <button class="bigbtn" id="pfCalc" style="margin-top:4px">Calculate maintenance</button>
     <div class="rangenote" id="pfNote"></div>
+    <div class="cfrow" style="margin-top:8px"><span><b style="font-size:14px">Auto-adjust as I gain weight</b><br><span class="ph">Recalculates maintenance + macros when you log a new weight</span></span><button class="chip" id="pfAuto">Off</button></div>
+    <div class="rangenote" id="pfAutoNote"></div>
     <div class="card goalbig" style="margin-top:14px">
       <div class="glabel">Your Daily Calorie Goal</div>
       <div class="gnum"><span id="goalTotal">3000</span> <small>kcal</small></div>
       <div class="gsub" id="goalSub"></div>
       <div class="gsub" id="gainProj" style="font-weight:700"></div>
     </div>
+    <div class="rangenote" style="margin:10px 2px 2px">Goal</div>
+    <div class="chips" id="goalMode">
+      <button class="chip" data-m="lean" data-s="250">Lean Bulk</button>
+      <button class="chip" data-m="bulk" data-s="500">Bulk</button>
+      <button class="chip" data-m="maintain" data-s="0">Maintain</button>
+    </div>
+    <div class="rangenote" id="modeNote"></div>
     <div class="card">
       <input type="range" id="goalSlider" min="1500" max="6000" step="25" value="3000">
       <div class="rangelabels"><span id="goalMin">1500 kcal</span><span id="goalMax">6000 kcal</span></div>
@@ -623,12 +638,13 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-m";
+const APP_VERSION = "2026.09.18-n";
 
 /* ============ STATE ============ */
-const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:413, fat:83, water:10, weight:150, profile:{weightLb:123, bodyFat:6, activity:1.55}});
+const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activity:1.55, auto:true});
+const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:413, fat:83, water:10, weight:150, mode:"custom", profile:defProfile()});
 function load(){
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; if(!(s.goals.surplus>0)){ const d=(s.goals.cal>0?s.goals.cal:3000)-s.goals.maintenance; s.goals.surplus = d>0?Math.round(d):300; } delete s.goals.cal; if(!s.goals.profile) s.goals.profile = {weightLb:123, bodyFat:6, activity:1.55}; s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); return s; } } catch(e){}
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; if(!(s.goals.surplus>0)){ const d=(s.goals.cal>0?s.goals.cal:3000)-s.goals.maintenance; s.goals.surplus = d>0?Math.round(d):300; } delete s.goals.cal; if(!s.goals.profile) s.goals.profile = defProfile(); else { const dp = defProfile(); for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; } if(!s.goals.mode) s.goals.mode = "custom"; s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); return s; } } catch(e){}
   return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals()};
 }
 let S = load();
@@ -1025,17 +1041,25 @@ document.getElementById("weightAdd").onclick = ()=>{
   const k = todayStr();
   S.weights = S.weights.filter(p=>p.d!==k); S.weights.push({d:k, w:v});
   document.getElementById("weightInput").value = "";
+  maybeAutoAdjust(v, k);
   save(); renderProgress();
 };
 
 /* ============ GOALS VIEW ============ */
 function goalTotal(){ return (S.goals.maintenance>0?S.goals.maintenance:0) + (S.goals.surplus>0?S.goals.surplus:0); }
-/* Katch-McArdle BMR from lean mass x activity = maintenance */
+/* Katch-McArdle (body fat known) or Mifflin-St Jeor x activity = maintenance */
 function calcMaintenance(){
   const p = S.goals.profile;
-  const lbmKg = (p.weightLb/2.20462) * (1 - p.bodyFat/100);
-  const bmr = 370 + 21.6*lbmKg;
-  return {bmr: Math.round(bmr), maint: Math.round(bmr * p.activity)};
+  const kg = p.weightLb/2.20462;
+  let bmr, formula;
+  if(p.bodyFat>0){
+    bmr = 370 + 21.6*(kg*(1-p.bodyFat/100));
+    formula = "Katch-McArdle";
+  } else {
+    bmr = 10*kg + 6.25*(p.heightIn*2.54) - 5*p.age + (p.sex==="f" ? -161 : 5);
+    formula = "Mifflin-St Jeor";
+  }
+  return {bmr: Math.round(bmr), maint: Math.round(bmr*p.activity), formula};
 }
 function paintGainProj(){
   const s = S.goals.surplus>0 ? S.goals.surplus : 0;
@@ -1045,14 +1069,67 @@ function paintGainProj(){
 }
 function paintMaintNote(){
   const p = S.goals.profile, cm = calcMaintenance();
-  document.getElementById("pfNote").textContent = "Katch-McArdle: BMR "+cm.bmr.toLocaleString()+" × "+p.activity+" = "+cm.maint.toLocaleString()+" kcal maintenance";
+  document.getElementById("pfNote").textContent = cm.formula+": BMR "+cm.bmr.toLocaleString()+" × "+p.activity+" = "+cm.maint.toLocaleString()+" kcal maintenance";
+}
+function paintModeNote(){
+  const m = S.goals.mode, el = document.getElementById("modeNote"), maint = S.goals.maintenance;
+  const pct = s => maint>0 ? Math.round(s/maint*100) : 0;
+  if(m==="lean") el.textContent = "Lean bulk: +250 kcal (~"+pct(250)+"% over maintenance) · ≈+0.5 lb/week · maximal muscle, minimal fat.";
+  else if(m==="bulk") el.textContent = "Bulk: +500 kcal (~"+pct(500)+"% over maintenance) · ≈+1 lb/week · faster gains, more fat.";
+  else if(m==="maintain") el.textContent = "Maintain: eat at maintenance to hold your weight steady.";
+  else el.textContent = "";
 }
 function readProfile(){
-  const p = S.goals.profile;
-  const w = parseFloat(document.getElementById("pfWeight").value);
+  const p = S.goals.profile, met = p.units==="met";
+  const age = parseInt(document.getElementById("pfAge").value);
+  if(age>=10 && age<=100) p.age = age;
+  if(met){
+    const cm = parseFloat(document.getElementById("pfHtCm").value);
+    if(cm>100 && cm<250) p.heightIn = cm/2.54;
+    const kg = parseFloat(document.getElementById("pfWeight").value);
+    if(kg>20 && kg<700) p.weightLb = kg*2.20462;
+  } else {
+    const ft = parseFloat(document.getElementById("pfHtFt").value)||0;
+    const inch = parseFloat(document.getElementById("pfHtIn").value)||0;
+    if(ft>2 && ft<9 && inch>=0 && inch<12) p.heightIn = ft*12+inch;
+    const lb = parseFloat(document.getElementById("pfWeight").value);
+    if(lb>40 && lb<1500) p.weightLb = lb;
+  }
   const f = parseFloat(document.getElementById("pfFat").value);
-  if(w>0 && w<1500) p.weightLb = w;
-  if(f>=0 && f<=70) p.bodyFat = f;
+  p.bodyFat = (f>=0 && f<=70) ? f : 0;
+}
+function renderProfile(){
+  const p = S.goals.profile, met = p.units==="met";
+  document.querySelectorAll("#pfUnits .chip").forEach(c=>c.classList.toggle("sel", c.dataset.u===p.units));
+  document.querySelectorAll("#pfSex .chip").forEach(c=>c.classList.toggle("sel", c.dataset.x===p.sex));
+  document.getElementById("pfAge").value = p.age;
+  document.getElementById("htImpRow").style.display = met?"none":"flex";
+  document.getElementById("htMetRow").style.display = met?"flex":"none";
+  if(met) document.getElementById("pfHtCm").value = Math.round(p.heightIn*2.54);
+  else { document.getElementById("pfHtFt").value = Math.floor(p.heightIn/12); document.getElementById("pfHtIn").value = Math.round(p.heightIn%12); }
+  document.getElementById("pfWeight").value = met ? (p.weightLb/2.20462).toFixed(1) : Math.round(p.weightLb*10)/10;
+  document.getElementById("pfWeightUnit").textContent = met?"kg":"lb";
+  document.getElementById("pfFat").value = p.bodyFat>0 ? p.bodyFat : "";
+  document.querySelectorAll("#pfAct .chip").forEach(c=>c.classList.toggle("sel", +c.dataset.a===p.activity));
+  const at = document.getElementById("pfAuto");
+  at.textContent = p.auto?"On":"Off"; at.classList.toggle("sel", !!p.auto);
+  document.getElementById("pfAutoNote").textContent = S.goals.autoNote || "";
+  paintMaintNote();
+}
+/* auto-adjust everything when body weight changes: maintenance, protein (1g/lb floor), fat 25%, carbs rest */
+function maybeAutoAdjust(newLb, dateStr){
+  const p = S.goals.profile;
+  if(!p.auto || !(newLb>0)) return false;
+  if(Math.abs(newLb - p.weightLb) < 0.05) return false;
+  p.weightLb = newLb;
+  S.goals.maintenance = calcMaintenance().maint;
+  const pTarget = Math.round(newLb);
+  if(pTarget > S.goals.protein) S.goals.protein = pTarget;
+  const tot = goalTotal();
+  S.goals.fat = Math.max(0, Math.round(tot*0.25/9));
+  S.goals.carbs = Math.max(0, Math.round((tot - S.goals.protein*4 - S.goals.fat*9)/4));
+  S.goals.autoNote = "Auto-adjusted from "+(Math.round(newLb*10)/10)+" lb on "+dateStr+" — maintenance and macros recalculated.";
+  return true;
 }
 function renderGoals(){
   const g = S.goals, tot = goalTotal();
@@ -1065,12 +1142,10 @@ function renderGoals(){
   document.getElementById("goalTotal").textContent = Math.round(tot).toLocaleString();
   document.getElementById("goalSub").textContent = Math.round(g.maintenance).toLocaleString()+" maintenance + "+Math.round(g.surplus>0?g.surplus:0).toLocaleString()+" surplus";
   document.getElementById("gmC").value = g.carbs; document.getElementById("gmP").value = g.protein; document.getElementById("gmF").value = g.fat;
-  const p = g.profile;
-  document.getElementById("pfWeight").value = p.weightLb;
-  document.getElementById("pfFat").value = p.bodyFat;
-  document.querySelectorAll("#pfAct .chip").forEach(c=>c.classList.toggle("sel", +c.dataset.a === p.activity));
+  renderProfile();
+  document.querySelectorAll("#goalMode .chip").forEach(c=>c.classList.toggle("sel", c.dataset.m===g.mode));
   document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", +c.dataset.s === Math.round(g.surplus)));
-  paintMaintNote(); paintGainProj();
+  paintModeNote(); paintGainProj();
   updateMacroSplit();
 }
 function updateMacroSplit(){
@@ -1091,10 +1166,12 @@ function updateMacroSplit(){
 document.getElementById("goalSlider").addEventListener("input", e=>{
   const tot = +e.target.value;
   S.goals.surplus = Math.max(0, Math.round(tot - S.goals.maintenance));
+  S.goals.mode = "custom";
   document.getElementById("goalTotal").textContent = Math.round(goalTotal()).toLocaleString();
   document.getElementById("goalSub").textContent = Math.round(S.goals.maintenance).toLocaleString()+" maintenance + "+Math.round(S.goals.surplus).toLocaleString()+" surplus";
+  document.querySelectorAll("#goalMode .chip").forEach(c=>c.classList.remove("sel"));
   document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", +c.dataset.s === S.goals.surplus));
-  paintGainProj();
+  paintModeNote(); paintGainProj();
   updateMacroSplit();
 });
 ["gmC","gmP","gmF"].forEach(id=>document.getElementById(id).addEventListener("input", updateMacroSplit));
@@ -1103,8 +1180,28 @@ document.querySelectorAll("#pfAct .chip").forEach(c=>c.onclick=()=>{
   document.querySelectorAll("#pfAct .chip").forEach(x=>x.classList.toggle("sel", x===c));
   paintMaintNote();
 });
+document.querySelectorAll("#pfUnits .chip").forEach(c=>c.onclick=()=>{
+  readProfile();
+  S.goals.profile.units = c.dataset.u;
+  save(); renderProfile();
+});
+document.querySelectorAll("#pfSex .chip").forEach(c=>c.onclick=()=>{
+  S.goals.profile.sex = c.dataset.x;
+  document.querySelectorAll("#pfSex .chip").forEach(x=>x.classList.toggle("sel", x===c));
+  save(); paintMaintNote();
+});
+document.getElementById("pfAuto").onclick = ()=>{
+  S.goals.profile.auto = !S.goals.profile.auto;
+  save(); renderProfile();
+};
+document.querySelectorAll("#goalMode .chip").forEach(c=>c.onclick=()=>{
+  S.goals.mode = c.dataset.m;
+  S.goals.surplus = +c.dataset.s;
+  save(); renderGoals(); renderDiary();
+});
 document.querySelectorAll("#surpChips .chip").forEach(c=>c.onclick=()=>{
   S.goals.surplus = +c.dataset.s;
+  S.goals.mode = "custom";
   save(); renderGoals(); renderDiary();
 });
 document.getElementById("pfCalc").onclick = ()=>{
@@ -1114,7 +1211,8 @@ document.getElementById("pfCalc").onclick = ()=>{
 };
 document.getElementById("macroAuto").onclick = ()=>{
   const tot = goalTotal();
-  const p = Math.max(0, Math.round(parseFloat(document.getElementById("gmP").value)||S.goals.protein||150));
+  const entered = Math.max(0, Math.round(parseFloat(document.getElementById("gmP").value)||S.goals.protein||150));
+  const p = Math.max(entered, Math.round(S.goals.profile.weightLb));
   const f = Math.max(0, Math.round(tot*0.25/9));
   const c = Math.max(0, Math.round((tot - p*4 - f*9)/4));
   document.getElementById("gmP").value = p;
