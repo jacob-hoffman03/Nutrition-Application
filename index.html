@@ -1043,7 +1043,7 @@ if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"lig
   if(!Array.isArray(s.bottles) || !s.bottles.length) s.bottles=[{id:"b0",name:"Glass",oz:8}];
   return s; } } catch(e){}
   flagSet("zeroReset",1); /* fresh boot / unreadable state: nothing to reset, mark it done */
-  return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:"Jay", img:""}};
+  return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:"Jay", img:""}, bottles:[{id:"b0",name:"Glass",oz:8}], waterV2:1};
 }
 let S = load();
 /* save() is defined up near KEY — quota-aware, trims oldest progress photos when storage is full */
