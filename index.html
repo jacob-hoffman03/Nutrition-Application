@@ -646,6 +646,20 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div class="rangenote" id="calCheckOut" style="margin-top:6px">Log your weight for 2+ weeks and this compares your real rate of gain against your target.</div>
       <div id="calCheckApply" style="margin-top:10px; display:none"><button class="bigbtn" id="calApplyBtn"></button></div>
     </div>
+    <div class="secttl">Muscle Gain</div>
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;"><b style="font-size:16px">Estimated muscle gained</b><button class="ginfo" id="muscleInfo" aria-label="How this is estimated">i</button></div>
+      <div style="display:flex; gap:16px; align-items:center; margin-top:10px">
+        <svg id="muscleRing" width="118" height="118" viewBox="0 0 120 120" style="flex:none">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="#ececf1" stroke-width="11"/>
+          <circle id="muscleArc" cx="60" cy="60" r="52" fill="none" stroke="#5b5bf0" stroke-width="11" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="0 327"/>
+          <text id="muscleNum" x="60" y="58" text-anchor="middle" font-size="21" font-weight="800" fill="#1c1c1e">–</text>
+          <text x="60" y="79" text-anchor="middle" font-size="11" fill="#8a8a98">lb muscle</text>
+        </svg>
+        <div id="muscleOut" style="flex:1; font-size:13.5px; line-height:1.6"></div>
+      </div>
+      <button class="srow" id="muscleGoalBtn" style="margin-top:8px"><span>Muscle goal: <b id="muscleGoalLbl">4 lb</b></span><span class="chev2">›</span></button>
+    </div>
     <div class="secttl">7-Day Calories</div>
     <div class="card">
       <div class="bars7" id="bars7"></div>
@@ -926,15 +940,15 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-ae";
+const APP_VERSION = "2026.09.18-af";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
-const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:413, fat:83, water:0, waterV:1, weight:150, mode:"custom", nutrTargets:{}, profile:defProfile()});
+const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:413, fat:83, water:0, waterV:1, weight:150, mode:"custom", nutrTargets:{}, profile:defProfile(), muscleGoal:4});
 function load(){
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; if(!(s.goals.surplus>0)){ const d=(s.goals.cal>0?s.goals.cal:3000)-s.goals.maintenance; s.goals.surplus = d>0?Math.round(d):300; } delete s.goals.cal; if(!s.goals.profile) s.goals.profile = defProfile(); else { const dp = defProfile(); for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; }
 /* migrate legacy numeric activity factor to FAO tier key */
-if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); if(!s.training) s.training = {sched:{}, done:{}, deloads:{}}; if(!s.training.deloads) s.training.deloads = {}; if(!s.profile) s.profile = {name:"Jay", img:""}; return s; } } catch(e){}
+if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!(s.goals.muscleGoal>0)) s.goals.muscleGoal = 4; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); if(!s.training) s.training = {sched:{}, done:{}, deloads:{}}; if(!s.training.deloads) s.training.deloads = {}; if(!s.profile) s.profile = {name:"Jay", img:""}; return s; } } catch(e){}
   return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:"Jay", img:""}};
 }
 let S = load();
@@ -1775,6 +1789,7 @@ function renderProgress(){
   wh.innerHTML = w.slice(-5).reverse().map(p=>
     `<div class="wrow"><span>${new Date(p.d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span><b>${p.w} lb</b></div>`).join("");
   paintCalCheck();
+  paintMuscle();
 }
 document.getElementById("weightAdd").onclick = ()=>{
   const v = parseFloat(document.getElementById("weightInput").value);
@@ -2247,6 +2262,69 @@ function openRecoveryInfo(){
     `<div class="irow"><b>Deload every 4–6 weeks.</b><br><span style="color:var(--muted)">One lighter week: same lifts, ~half the volume. Competitive lifters average a deload every ~5–6 weeks (Rogerson et al. 2024).</span></div>`;
   document.getElementById("infoSheet").classList.add("open");
 }
+/* ============ MUSCLE GAIN ESTIMATE ============
+   Only a scan (DEXA etc.) truly measures muscle, so this is an honest estimate:
+   weight gained x an estimated lean share. Lean share starts at 0.45 for a lean
+   bulk and moves with logged data: surplus <=20% over maintenance (+0.10),
+   protein >= 1.6 g/kg (Morton et al. 2018, +0.10), 3+ sessions/week (+0.10);
+   a big surplus pushes the other way (-0.10). Clamped to [0.25, 0.70].
+   Realistic beginner rate: ~0.5-1.5 lb muscle/month (Aragon/Helms models). */
+function muscleStats(){
+  const ws = (S.weights||[]).slice().sort((a,b)=>a.d<b.d?-1:1);
+  if(ws.length < 4) return {ok:false, why:"Log your weight for 2+ weeks (at least 4 weigh-ins) and this estimates muscle gained from your logged food, protein, and training."};
+  const T = p => new Date(p.d+"T12:00:00").getTime();
+  const spanD = Math.round((T(ws[ws.length-1])-T(ws[0]))/86400000);
+  if(spanD < 14) return {ok:false, why:"Need weigh-ins spanning 2+ weeks ("+spanD+"d so far). Daily weight swings ±1–2%, so 2–3 weeks reveals the real trend."};
+  const mid = (T(ws[0])+T(ws[ws.length-1]))/2;
+  const early = ws.filter(p=>T(p)<=mid), recent = ws.filter(p=>T(p)>mid);
+  if(early.length<2 || recent.length<2) return {ok:false, why:"Log a couple more weigh-ins spread across the 2 weeks so both halves have data."};
+  const avgW = a => a.reduce((x,p)=>x+p.w,0)/a.length, avgT = a => a.reduce((x,p)=>x+T(p),0)/a.length;
+  const dW = avgW(recent)-avgW(early), weeks = (avgT(recent)-avgT(early))/86400000/7, wAvg = (avgW(early)+avgW(recent))/2;
+  /* logged food over the span */
+  const goal = goalTotal(), maint = S.goals.maintenance>0 ? S.goals.maintenance : goal;
+  let calSur = 0, prot = 0, n = 0;
+  for(let i=0;i<=spanD;i++){ const t = totals(addDays(ws[0].d, i)); if(t.cal>0){ n++; calSur += t.cal-goal; prot += t.p; } }
+  const avgSurPct = (n && maint>0) ? (calSur/n)/maint*100 : 0;
+  const protPerKg = (n && wAvg>0) ? (prot/n)/(wAvg/2.20462) : 0;
+  let sess = 0;
+  for(const k in S.training.done) if(k>=ws[0].d && k<=ws[ws.length-1].d) sess++;
+  const sessWk = weeks>0 ? sess/weeks : 0;
+  let lean = 0.45;
+  if(avgSurPct>0 && avgSurPct<=20) lean += 0.10;
+  else if(avgSurPct>20) lean -= 0.10;
+  if(protPerKg>=1.6) lean += 0.10;
+  if(sessWk>=3) lean += 0.10;
+  lean = Math.min(0.70, Math.max(0.25, lean));
+  const muscle = Math.max(0, dW)*lean;
+  return {ok:true, dW, weeks, muscle, fat:Math.max(0,dW)-muscle, lean, avgSurPct, protPerKg, sessWk, n, rateMo: weeks>0 ? muscle/weeks*4.33 : 0};
+}
+function paintMuscle(){
+  const ring = document.getElementById("muscleArc"), num = document.getElementById("muscleNum"), out = document.getElementById("muscleOut");
+  const goal = S.goals.muscleGoal>0 ? S.goals.muscleGoal : 4;
+  document.getElementById("muscleGoalLbl").textContent = goal+" lb";
+  const C = 2*Math.PI*52, st = muscleStats();
+  if(!st.ok){ ring.setAttribute("stroke-dasharray","0 "+C); num.textContent = "–"; out.textContent = st.why; return; }
+  ring.setAttribute("stroke-dasharray", (Math.min(1,st.muscle/goal)*C)+" "+C);
+  num.textContent = st.muscle.toFixed(1);
+  const f1 = v => (v>=0?"+":"")+v.toFixed(1);
+  let h = "Scale: <b>"+f1(st.dW)+" lb</b> over "+Math.max(2,Math.round(st.weeks))+" wks<br>";
+  h += "Est. muscle: <b>"+f1(st.muscle)+" lb</b> · est. fat: "+f1(st.fat)+" lb<br>";
+  h += "<span style=\"color:var(--muted)\">Lean share "+Math.round(st.lean*100)+"% — surplus "+st.avgSurPct.toFixed(0)+"%, protein "+st.protPerKg.toFixed(1)+" g/kg, "+st.sessWk.toFixed(1)+" sessions/wk.</span><br>";
+  if(st.rateMo>0){
+    const eta = st.muscle<goal ? Math.ceil((goal-st.muscle)/(st.rateMo/4.33)) : 0;
+    h += st.muscle>=goal ? "<b style=\"color:var(--green)\">Goal hit.</b> Set a bigger one."
+      : "Pace: <b>"+st.rateMo.toFixed(1)+" lb/mo</b> — realistic for a beginner is 0.5–1.5 lb/mo."+(eta>0?" At this pace the goal lands in ~"+eta+" wk"+(eta>1?"s":"")+".":"");
+  } else h += "Not gaining yet — the scale has to move up first.";
+  out.innerHTML = h;
+}
+function openMuscleInfo(){
+  document.getElementById("infoTitle").textContent = "Muscle estimate";
+  document.getElementById("infoBody").innerHTML =
+    `<div class="irow"><b>An honest estimate, not a measurement.</b><br><span style="color:var(--muted)">Only DEXA or similar truly measures muscle. This takes your scale trend and multiplies it by an estimated lean share.</span></div>`+
+    `<div class="irow"><b>Lean share starts at 45%.</b><br><span style="color:var(--muted)">It rises when your logged surplus stays at or under 20% over maintenance, protein hits 1.6 g/kg/day (Morton et al. 2018), and you train 3+×/week — the behaviors research ties to leaner gains.</span></div>`+
+    `<div class="irow"><b>Realistic pace: 0.5–1.5 lb/month</b><br><span style="color:var(--muted)">for a beginner (Aragon/Helms models). The ring goal defaults to 4 lb — about 3–4 months of solid beginner gains. Weigh-ins are the real answer.</span></div>`;
+  document.getElementById("infoSheet").classList.add("open");
+}
 document.getElementById("calInfo").onclick = openRecoveryInfo;
 const MEDAL_DEFS = [
   {id:"silver", name:"Silver", color:"#a9b0c2", desc:"Log any food today — showing up counts."},
@@ -2487,6 +2565,14 @@ document.getElementById("exportBtn").onclick = ()=>{
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 };
 document.getElementById("importBtn").onclick = ()=>document.getElementById("importFile").click();
+document.getElementById("muscleInfo").onclick = openMuscleInfo;
+document.getElementById("muscleGoalBtn").onclick = ()=>{
+  const cur = S.goals.muscleGoal>0 ? S.goals.muscleGoal : 4;
+  const v = prompt("Muscle goal (lb)", cur);
+  if(v===null) return;
+  const n = Math.round(parseFloat(v)*10)/10;
+  if(n>0 && n<=50){ S.goals.muscleGoal = n; save(); paintMuscle(); }
+};
 document.getElementById("importFile").onchange = e=>{
   const file = e.target.files[0];
   e.target.value = "";
