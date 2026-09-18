@@ -112,21 +112,37 @@ button{font-family:inherit;}
 .logrow .lthumb img{width:100%; height:100%; object-fit:cover; display:block;}
 .logdel{border:none; background:none; color:#c9c9d2; font-size:18px; width:28px; height:28px;}
 /* water */
-.glasses{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
-.glass{width:40px; height:52px; border:2px solid #d9d9e2; border-bottom-width:4px; border-radius:6px 6px 14px 14px; background:#fff; position:relative; overflow:hidden;}
-.glass.full{border-color:var(--acc);}
-.glass.full::after{content:""; position:absolute; left:0; right:0; bottom:0; top:18%; background:linear-gradient(#8f8ff7,var(--acc));}
 .whint{font-size:12px; color:var(--muted); margin-top:10px;}
-/* water ring */
-.wrow{display:flex; gap:16px; align-items:center;}
-.wring{position:relative; width:88px; height:88px; flex:none;}
-.wring svg{display:block;}
-.wcenter{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1;}
-.wcenter b{font-size:20px;}
-.wcenter span{font-size:10px; color:var(--muted); font-weight:600;}
+.whead{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
+.whead b{font-size:16px;}
+.whead .wlbl{font-size:14px; color:var(--muted); font-weight:600;}
+.wtrack{margin:2px 0 12px;}
+.wfill{background:linear-gradient(90deg,#5aa2ff,#2f6df6);}
+.bottlerow{display:flex; gap:8px; flex-wrap:wrap;}
+.bottle{border:2px solid #d9d9e2; background:#fff; border-radius:14px; padding:8px 14px; display:flex; flex-direction:column; align-items:center; gap:2px; min-width:76px;}
+.bottle b{font-size:15px; color:var(--acc);}
+.bottle span{font-size:11px; color:var(--muted); font-weight:600; max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.bottle:active{border-color:var(--acc); background:#f2f3ff; transform:scale(.96);}
+.wfoot{display:flex; gap:18px; margin-top:10px;}
+.wlink{border:none; background:none; color:var(--acc); font-weight:700; font-size:13px; padding:4px 0;}
+.botrow{display:flex; align-items:center; gap:10px; padding:10px 2px; border-bottom:1px solid #f0f0f4;}
+.botrow .bnm{flex:1; min-width:0;}
+.botrow .bnm b{display:block; font-size:15px;}
+.botrow .bnm span{font-size:12px; color:var(--muted);}
+.botdel{border:none; background:none; color:#ff5c5c; font-size:20px; width:32px; height:32px; flex:none;}
+.botform{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
+.botform input{border:2px solid #e3e3ea; border-radius:12px; padding:9px 10px; font:inherit; font-size:14px;}
+.unitseg{display:flex; border:2px solid #e3e3ea; border-radius:12px; overflow:hidden;}
+.unitseg button{border:none; background:#fff; padding:9px 12px; font:inherit; font-size:14px; font-weight:600; color:var(--muted);}
+.unitseg button.sel{background:var(--acc); color:#fff;}
 .winfo{flex:1; min-width:0;}
 .winfo b{font-size:16px;}
 .winfo .wlbl{font-size:14px; color:var(--muted); font-weight:600; margin-left:8px;}
+/* pull to refresh */
+#ptr{position:fixed; top:0; left:50%; transform:translate(-50%,-64px); z-index:200; width:46px; height:46px; border-radius:50%; background:#fff; box-shadow:0 2px 12px rgba(20,30,60,.18); display:flex; align-items:center; justify-content:center;}
+.ptrspin{width:22px; height:22px; border-radius:50%; border:3px solid #dfe3f5; border-top-color:var(--acc);}
+#ptr.on .ptrspin{animation:ptrspin .7s linear infinite;}
+@keyframes ptrspin{to{transform:rotate(360deg);}}
 .alccard{padding:14px 16px;}
 .arow{display:flex; align-items:center; justify-content:space-between; gap:12px;}
 .astep{display:flex; align-items:center; gap:10px;}
@@ -465,21 +481,11 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <div class="card mealcard" id="meals"></div>
 
     <div class="card watercard">
-      <div class="wrow">
-        <div class="wring">
-          <svg width="88" height="88" viewBox="0 0 88 88">
-            <defs><linearGradient id="wgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6ea8ff"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs>
-            <circle cx="44" cy="44" r="36" fill="none" stroke="#ececf1" stroke-width="10"/>
-            <circle id="waterRing" cx="44" cy="44" r="36" fill="none" stroke="url(#wgrad)" stroke-width="10" stroke-linecap="round" transform="rotate(-90 44 44)"/>
-          </svg>
-          <div class="wcenter"><b id="waterNum">0</b><span>glasses</span></div>
-        </div>
-        <div class="winfo">
-          <b>Water</b><span class="wlbl" id="waterLabel"></span>
-          <div class="whint" id="waterNote" style="margin-top:6px"></div>
-        </div>
-      </div>
-      <div class="glasses" id="glasses"></div>
+      <div class="whead"><b>Water</b><span class="wlbl" id="waterLabel"></span></div>
+      <div class="sbtrack wtrack"><div class="sbfill wfill" id="waterFill"></div></div>
+      <div class="bottlerow" id="bottleRow"></div>
+      <div class="wfoot"><button class="wlink" id="bottleMgr">My bottles</button><button class="wlink" id="waterUndo" style="display:none">Undo</button></div>
+      <div class="whint" id="waterNote" style="margin-top:6px"></div>
     </div>
 
     <div class="card alccard">
@@ -777,6 +783,19 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
   </div>
 </div>
 
+<!-- WATER BOTTLES SHEET -->
+<div class="sheet" id="bottleSheet">
+  <div class="scrim" id="bottleScrim"></div>
+  <div class="panel" style="padding-bottom:8px">
+    <button class="xbtn" id="bottleX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    <div class="infttl">Water bottles</div>
+    <div class="infbody" id="bottleBody"></div>
+  </div>
+</div>
+
+<!-- PULL TO REFRESH -->
+<div id="ptr"><div class="ptrspin"></div></div>
+
 <!-- PHOTO LIGHTBOX -->
 <div class="lightbox" id="photoBox">
   <button class="lbx" id="photoX" aria-label="Close">✕</button>
@@ -998,7 +1017,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-az";
+const APP_VERSION = "2026.09.18-ba";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1018,7 +1037,11 @@ if(!flagGet().zeroReset){ s.goals = defGoals(); flagSet("zeroReset",1); }
 else { const dg = defGoals(); for(const k in dg) if(s.goals[k]===undefined) s.goals[k]=dg[k]; const dp = defProfile(); if(!s.goals.profile) s.goals.profile = dp; else for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; }
 delete s.goals.cal;
 /* migrate legacy numeric activity factor to FAO tier key */
-if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); if(!s.training) s.training = {sched:{}, done:{}, deloads:{}}; if(!s.training.deloads) s.training.deloads = {}; if(!s.profile) s.profile = {name:"Jay", img:""}; return s; } } catch(e){}
+if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); if(!s.training) s.training = {sched:{}, done:{}, deloads:{}}; if(!s.training.deloads) s.training.deloads = {}; if(!s.profile) s.profile = {name:"Jay", img:""};
+  /* Water 2.0: intake moves from glasses to fluid oz; bottles are user-defined */
+  if(!s.waterV2){ for(const k in (s.days||{})){ const dd=s.days[k]; if(dd.waterOz===undefined) dd.waterOz=Math.round(((dd.water||0)*8)*10)/10; delete dd.water; } s.waterV2=1; }
+  if(!Array.isArray(s.bottles) || !s.bottles.length) s.bottles=[{id:"b0",name:"Glass",oz:8}];
+  return s; } } catch(e){}
   flagSet("zeroReset",1); /* fresh boot / unreadable state: nothing to reset, mark it done */
   return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:"Jay", img:""}};
 }
@@ -1034,14 +1057,14 @@ const dstr = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"
 const todayStr = () => dstr(new Date());
 let dayOffset = 0;
 const viewDate = () => { const d = new Date(); d.setDate(d.getDate()+dayOffset); return dstr(d); };
-function day(){ const k = viewDate(); if(!S.days[k]) S.days[k] = {meals:{breakfast:[],lunch:[],dinner:[],snacks:[],supplements:[]}, water:0}; return S.days[k]; }
+function day(){ const k = viewDate(); if(!S.days[k]) S.days[k] = {meals:{breakfast:[],lunch:[],dinner:[],snacks:[],supplements:[]}, waterOz:0}; return S.days[k]; }
 function allFoods(){ return FOODS.concat(S.customFoods); }
 function findFood(name){ return allFoods().find(f=>f.n===name); }
 function isFav(name){ return S.favorites.includes(name); }
 function isCustom(name){ return S.customFoods.some(f=>f.n===name); }
 function toggleFav(name){ const i=S.favorites.indexOf(name); if(i>=0) S.favorites.splice(i,1); else S.favorites.push(name); save(); }
 function totals(k){
-  const d = S.days[k] || {meals:{breakfast:[],lunch:[],dinner:[],snacks:[],supplements:[]}, water:0};
+  const d = S.days[k] || {meals:{breakfast:[],lunch:[],dinner:[],snacks:[],supplements:[]}, waterOz:0};
   const t = {cal:0,p:0,c:0,f:0};
   MEALS.forEach(m => (d.meals[m]||[]).forEach(e=>{ t.cal+=e.cal; t.p+=e.p; t.c+=e.c; t.f+=e.f; }));
   return t;
@@ -1208,24 +1231,26 @@ function renderDiary(){
     save(); renderDiary();
   });
 
-  const wt = waterTarget();
-  const nGlass = wt>0 ? wt : 8; /* blank slate: no target yet, but logging still works */
-  $("waterLabel").textContent = wt>0 ? d.water+" / "+wt+" glasses" : d.water+" glasses";
-  $("waterNum").textContent = d.water;
-  const C = 2*Math.PI*36, wr = document.getElementById("waterRing");
-  wr.style.strokeDasharray = C;
-  wr.style.strokeDashoffset = wt>0 ? C*(1-Math.min(d.water/wt,1)) : C;
-  const gw = $("glasses"); gw.innerHTML = "";
-  for(let i=0;i<nGlass;i++){
-    const gl = document.createElement("div");
-    gl.className = "glass"+(i<d.water?" full":"");
-    gl.onclick = ()=>{ const dd=day(); dd.water = (i<dd.water)? i : i+1; save(); renderDiary(); };
-    gw.appendChild(gl);
-  }
+  const wtOz = waterTarget()*8; /* target in oz; 0 = unset, logging still works */
+  const oz = Math.round((d.waterOz||0)*10)/10;
+  $("waterLabel").textContent = wtOz>0 ? oz+" / "+wtOz+" oz" : oz+" oz";
+  $("waterFill").style.width = (wtOz>0 ? Math.min(oz/wtOz,1)*100 : 0)+"%";
+  const br = $("bottleRow"); br.innerHTML = "";
+  (S.bottles||[]).forEach(b=>{
+    const btn = document.createElement("button");
+    btn.className = "bottle";
+    btn.innerHTML = "<b>+"+b.oz+" oz</b><span>"+esc(b.name)+"</span>";
+    btn.onclick = ()=>{ const dd=day(); dd.waterOz=Math.round(((dd.waterOz||0)+b.oz)*10)/10; (dd.waterHist=dd.waterHist||[]).push(b.oz); save(); renderDiary(); };
+    br.appendChild(btn);
+  });
+  const un = $("waterUndo"), hist = d.waterHist||[];
+  un.style.display = hist.length ? "" : "none";
+  un.onclick = ()=>{ const dd=day(), h=dd.waterHist||[]; if(h.length){ const last=h.pop(); dd.waterOz=Math.max(0,Math.round(((dd.waterOz||0)-last)*10)/10); save(); renderDiary(); } };
+  $("bottleMgr").onclick = openBottleSheet;
   $("waterNote").textContent = S.goals.water>0
     ? "Manual target — change it in Goals › Water."
-    : (wt>0
-        ? "Auto target from your maintenance + activity (IOM 1.0–1.5 mL/kcal)" + (dayHasXW() ? " + 2 glasses for a creatine-type supplement." : ". Tap a glass to add, tap a full one to remove.")
+    : (wtOz>0
+        ? "Auto target from your maintenance + activity (IOM 1.0–1.5 mL/kcal)" + (dayHasXW() ? " + 16 oz for a creatine-type supplement." : ". Tap a bottle to log it.")
         : "No auto target yet — set your maintenance in Goals › Profile, or pick a manual target in Goals › Water.");
   renderAlc();
   renderWeek();
@@ -1288,6 +1313,53 @@ function closeCopySheet(){ document.getElementById("copySheet").classList.remove
 document.getElementById("copyX").onclick = closeCopySheet;
 document.getElementById("copyScrim").onclick = closeCopySheet;
 
+/* ============ WATER BOTTLES ============ */
+/* Bottles are user-defined: name + size, logged with one tap. Intake is stored
+   in fluid oz (d.waterOz); the target stays in glasses internally and is shown
+   as oz (×8) so bottles and target speak the same unit. */
+const OZ_PER_ML = 0.033814;
+function openBottleSheet(){
+  const body = document.getElementById("bottleBody");
+  const list = (S.bottles||[]).map(b=>
+    `<div class="botrow"><span class="bnm"><b>${esc(b.name)}</b><span>${b.oz} oz · ${Math.round(b.oz/OZ_PER_ML)} mL</span></span><button class="botdel" data-id="${b.id}" aria-label="Delete bottle">×</button></div>`
+  ).join("");
+  body.innerHTML =
+    `<div class="fhead"><span class="flabel">Quick add</span></div>
+     <div class="botform"><input id="qOz" type="number" inputmode="decimal" placeholder="oz" style="width:90px"><button class="chip" id="qAdd">Log</button></div>
+     <div class="fhead" style="margin-top:14px"><span class="flabel">My bottles</span></div>
+     ${list||'<div class="rangenote">No bottles yet.</div>'}
+     <div class="fhead" style="margin-top:14px"><span class="flabel">Add a bottle</span></div>
+     <div class="botform"><input id="bName" placeholder="Name (e.g. Gym bottle)" style="flex:1;min-width:120px"><input id="bSize" type="number" inputmode="decimal" placeholder="Size" style="width:80px">
+     <span class="unitseg" id="bUnit"><button data-u="oz" class="sel">oz</button><button data-u="ml">mL</button></span>
+     <button class="chip" id="bAdd">Add</button></div>`;
+  let unit = "oz";
+  body.querySelectorAll("#bUnit button").forEach(x=>x.onclick=()=>{ unit=x.dataset.u; body.querySelectorAll("#bUnit button").forEach(y=>y.classList.toggle("sel",y===x)); });
+  body.querySelector("#qAdd").onclick = ()=>{
+    const v = parseFloat(body.querySelector("#qOz").value);
+    if(!(v>0)) return;
+    const dd = day(); dd.waterOz=Math.round(((dd.waterOz||0)+v)*10)/10; (dd.waterHist=dd.waterHist||[]).push(v);
+    save(); renderDiary(); closeBottleSheet();
+  };
+  body.querySelector("#bAdd").onclick = ()=>{
+    const nm = body.querySelector("#bName").value.trim()||"Bottle";
+    const sz = parseFloat(body.querySelector("#bSize").value);
+    if(!(sz>0)) return;
+    const oz = unit==="ml" ? Math.round(sz*OZ_PER_ML*10)/10 : Math.round(sz*10)/10;
+    S.bottles.push({id:"b"+Date.now(), name:nm, oz});
+    save(); openBottleSheet(); renderDiary();
+  };
+  body.querySelectorAll(".botdel").forEach(x=>x.onclick=()=>{
+    if(!confirm("Delete this bottle?")) return;
+    S.bottles = S.bottles.filter(b=>b.id!==x.dataset.id);
+    if(!S.bottles.length) S.bottles=[{id:"b"+Date.now(),name:"Glass",oz:8}];
+    save(); openBottleSheet(); renderDiary();
+  });
+  document.getElementById("bottleSheet").classList.add("open");
+}
+function closeBottleSheet(){ document.getElementById("bottleSheet").classList.remove("open"); }
+document.getElementById("bottleX").onclick = closeBottleSheet;
+document.getElementById("bottleScrim").onclick = closeBottleSheet;
+
 /* ============ ADHERENCE + FATIGUE SCORES ============ */
 /* Adherence: % of logged days (last 14) hitting calories within ±10% of goal and
    protein ≥90%. Self-monitoring adherence is the strongest predictor of nutrition
@@ -1345,7 +1417,7 @@ function mealMacros(ds){
 }
 function foodFatigue(ds){
   ds = ds || todayStr();
-  const mm = mealMacros(ds), d = S.days[ds] || {water:0};
+  const mm = mealMacros(ds), d = S.days[ds] || {waterOz:0};
   const t = {cal:0,p:0,c:0}; let logged = false;
   MEALS.forEach(m=>{ t.cal+=mm[m].cal; t.p+=mm[m].p; t.c+=mm[m].c; if(mm[m].cal>0) logged=true; });
   if(!logged) return {score:null, why:[], label:"–"};
@@ -1367,8 +1439,8 @@ function foodFatigue(ds){
   let big = 0; MEALS.forEach(m=>{ big=Math.max(big, mm[m].cal); });
   if(big>=1000){ pts+=16; why.push("Biggest meal was "+Math.round(big).toLocaleString()+" kcal — big meals trigger heavy rest-and-digest sleepiness."); }
   else if(big>=700){ pts+=8; why.push("Biggest meal was "+Math.round(big).toLocaleString()+" kcal — on the sleepy side of filling."); }
-  const w = waterCalc(), wr = w.target>0 ? (d.water||0)/w.target : 1;
-  if(w.target>0 && wr<0.5){ pts+=18; why.push("Only "+(d.water||0)+" of "+w.target+" glasses of water — even ~1.5% dehydration brings on fatigue (Ganio 2011; Armstrong 2012)."); }
+  const w = waterCalc(), woz = w.target*8, wr = w.target>0 ? (d.waterOz||0)/woz : 1;
+  if(w.target>0 && wr<0.5){ pts+=18; why.push("Only "+Math.round(d.waterOz||0)+" of "+woz+" oz of water — even ~1.5% dehydration brings on fatigue (Ganio 2011; Armstrong 2012)."); }
   else if(w.target>0 && wr<0.75){ pts+=10; why.push("Water is at "+Math.round(wr*100)+"% of target — mild dehydration drags energy down."); }
   else if(w.target>0 && wr<0.9){ pts+=5; why.push("A little behind on water ("+Math.round(wr*100)+"% of target)."); }
   const goal = goalTotal();
@@ -1381,7 +1453,7 @@ function foodFatigue(ds){
 }
 function bloatScore(ds){
   ds = ds || todayStr();
-  const mm = mealMacros(ds), d = S.days[ds] || {water:0};
+  const mm = mealMacros(ds), d = S.days[ds] || {waterOz:0};
   let sodium=0, fiber=0, sugars=0, pot=0, big=0, bigFat=0, logged=false;
   MEALS.forEach(m=>{ const x=mm[m]; sodium+=x.sodium; fiber+=x.fiber; sugars+=x.sugars; pot+=x.pot;
     big=Math.max(big,x.cal); bigFat=Math.max(bigFat,x.f); if(x.cal>0) logged=true; });
@@ -1407,7 +1479,7 @@ function bloatScore(ds){
   else if(sugars>=50){ pts+=7; why.push(Math.round(sugars)+"g sugar — a mild gas risk."); }
   if(big>=900 || bigFat>=40){ pts+=14; why.push("Big"+(bigFat>=40?", fatty":"")+" meal ("+Math.round(big).toLocaleString()+" kcal) — fat slows stomach emptying, so the fullness lingers."); }
   else if(big>=650){ pts+=7; why.push("Hearty meal ("+Math.round(big).toLocaleString()+" kcal) — some fullness expected."); }
-  const w = waterCalc(), wr = w.target>0 ? (d.water||0)/w.target : 1;
+  const w = waterCalc(), wr = w.target>0 ? (d.waterOz||0)/(w.target*8) : 1;
   if(w.target>0 && wr<0.75){ pts+=10; why.push("Behind on water ("+Math.round(wr*100)+"% of target) — when you're dry the body holds onto water, adding to the puff."); }
   const alc = d.alc||0;
   if(alc>0){ pts+=5; why.push("Alcohol irritates the gut lining — a small extra bloat nudge."); }
@@ -2063,7 +2135,7 @@ function streak(){
   let s=0; const d=new Date();
   for(let i=0;i<365;i++){ const k=dstr(d);
     const dd=S.days[k];
-    const has = dd && (MEALS.some(m=>(dd.meals[m]||[]).length) || dd.water>0);
+    const has = dd && (MEALS.some(m=>(dd.meals[m]||[]).length) || (dd.waterOz||0)>0);
     if(has) s++; else if(i>0 || k!==todayStr()) break;
     d.setDate(d.getDate()-1);
   }
@@ -2465,9 +2537,9 @@ function infoContent(k){
      <div class="irow">Or type a manual target below and it takes over immediately.</div>`};
     const pk = w.perKcal.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
     return {t:"Water target", b:
-    `<div class="irow"><b>Auto</b> builds your target from maintenance: <b>${w.target} glasses</b> = ${Math.round(w.tdee).toLocaleString()} kcal × ${w.tier} activity at ${pk} mL/kcal.</div>
+    `<div class="irow"><b>Auto</b> builds your target from maintenance: <b>${w.target*8} oz (${w.target} glasses)</b> = ${Math.round(w.tdee).toLocaleString()} kcal × ${w.tier} activity at ${pk} mL/kcal.</div>
      <div class="irow">The formula follows the <b>IOM</b> guideline of ~1.0–1.5 mL per kcal of energy expenditure, with ~80% of total water assumed to come from fluids (NASEM AI: 3.7 L men / 2.7 L women; EFSA: 2.5 L / 2.0 L).</div>
-     <div class="irow"><b>+2 glasses</b> on days you log a creatine-type supplement — creatine pulls ~0.5–1.0 L into muscle (Kreider 2017, ISSN) and extra water keeps that covered.</div>`};
+     <div class="irow"><b>+16 oz</b> on days you log a creatine-type supplement — creatine pulls ~0.5–1.0 L into muscle (Kreider 2017, ISSN) and extra water keeps that covered.</div>`};
   }
   if(k==="advanced") return {t:"Advanced", b:
     `<div class="irow"><b>Auto-adjust as I gain weight:</b> when you log a new weight in Progress, Fuel recalculates maintenance and re-derives your macros (protein 2.2 g/kg, fat 25%, carbs fill the rest) — unless you've switched macros to manual. Turn it off to control everything manually.</div>
@@ -2630,7 +2702,7 @@ function medalsFor(ds){
   const silver = t.cal > 0;
   const gold = silver && g.protein>0 && t.p >= g.protein*0.9;
   const d = S.days[ds];
-  const diamond = gold && d && waterTarget()>0 && (d.water||0)>=waterTarget();
+  const diamond = gold && d && waterTarget()>0 && (d.waterOz||0)>=waterTarget()*8;
   return {silver:!!silver, gold:!!gold, diamond:!!diamond};
 }
 function medalSVG(color, earned){
@@ -2708,9 +2780,9 @@ document.getElementById("pPhotoFile").onchange = e=>{
 /* ============ WATER TARGET (settings UI) ============ */
 function waterBreakdown(){
   const w = waterCalc();
-  if(w.manual) return "Manual target of "+w.target+" glasses. Switch to Auto for the research-based formula.";
+  if(w.manual) return "Manual target of "+(w.target*8)+" oz ("+w.target+" glasses). Switch to Auto for the research-based formula.";
   if(w.unset) return "Auto needs your maintenance first — set your profile in Goals › Profile, then tap Calculate maintenance.";
-  return "Auto: "+w.target+" glasses from "+Math.round(w.tdee).toLocaleString()+" kcal maintenance × "+w.tier+" activity"+(w.xw?" — +2 glasses for a creatine-type supplement logged today":" — +2 glasses on days you log a creatine-type supplement")+".";
+  return "Auto: "+(w.target*8)+" oz ("+w.target+" glasses) from "+Math.round(w.tdee).toLocaleString()+" kcal maintenance × "+w.tier+" activity"+(w.xw?" — +16 oz for a creatine-type supplement logged today":" — +16 oz on days you log a creatine-type supplement")+".";
 }
 function paintWater(){
   const g = S.goals;
@@ -2901,7 +2973,7 @@ function renderSettings(){
   const g = S.goals;
   renderProfileCard();
   document.getElementById("goalRowVal").textContent = Math.round(goalTotal()).toLocaleString()+" kcal";
-  document.getElementById("waterRowVal").textContent = g.water>0 ? g.water+" glasses" : (waterTarget()>0 ? "Auto ("+waterTarget()+" glasses)" : "Auto (set maintenance first)");
+  document.getElementById("waterRowVal").textContent = g.water>0 ? (g.water*8)+" oz" : (waterTarget()>0 ? "Auto ("+(waterTarget()*8)+" oz)" : "Auto (set maintenance first)");
   document.getElementById("dDays").textContent = Object.keys(S.days).length;
   document.getElementById("appVer").textContent = "Fuel " + APP_VERSION;
   document.getElementById("dFoods").textContent = Object.values(S.days).reduce((a,d)=>a+MEALS.reduce((x,m)=>x+(d.meals[m]||[]).length,0),0);
@@ -2978,6 +3050,65 @@ function mealForNow(){ const h = new Date().getHours(); return h<11?"breakfast":
 document.getElementById("diarySearch").onclick = ()=>openSheet(mealForNow());
 document.getElementById("trayIco").insertAdjacentHTML("afterbegin", FOOD_ICON);
 renderAll();
+</script>
+<script>
+/* ============ PULL TO REFRESH ============ */
+/* Native-style pull-to-refresh on every view: pull down from the very top and a
+   refresh circle follows your finger; release past the threshold and the current
+   view re-renders. Data is on-device, so "refresh" = a full fresh render. */
+(function(){
+  const el = document.getElementById("ptr");
+  const spin = el.querySelector(".ptrspin");
+  let pulling = false, sy = 0, pid = null;
+  const busy = ()=>!!document.querySelector(".sheet.open")||!!document.querySelector(".lightbox.open");
+  document.addEventListener("touchstart", e=>{
+    pulling = false;
+    if(busy() || e.target.closest(".tabbar") || e.touches.length!==1) return;
+    if(window.scrollY<=0){ pulling = true; sy = e.touches[0].clientY; pid = e.touches[0].identifier; }
+  }, {passive:true});
+  document.addEventListener("touchmove", e=>{
+    if(!pulling) return;
+    const t = Array.prototype.find.call(e.touches, x=>x.identifier===pid);
+    if(!t) return;
+    const dy = t.clientY - sy;
+    if(dy>8 && window.scrollY<=0){
+      e.preventDefault();
+      const p = Math.min(dy*0.55, 120);
+      el.style.transform = "translate(-50%,"+(-64+p)+"px)";
+      spin.style.transform = "rotate("+(p*3.6)+"deg)";
+      el.dataset.p = p;
+    }else if(dy<=0){
+      el.style.transform = "translate(-50%,-64px)";
+      spin.style.transform = "";
+      el.dataset.p = 0;
+    }
+  }, {passive:false});
+  const snapBack = ()=>{
+    el.style.transition = "transform .2s ease";
+    el.style.transform = "translate(-50%,-64px)";
+    spin.style.transform = "";
+    setTimeout(()=>{ el.style.transition = ""; }, 220);
+  };
+  document.addEventListener("touchend", ()=>{
+    if(!pulling) return;
+    pulling = false;
+    const p = +el.dataset.p||0;
+    el.dataset.p = 0;
+    if(p>52){
+      el.style.transition = "";
+      el.style.transform = "translate(-50%,10px)";
+      spin.style.transform = "";
+      el.classList.add("on");
+      try{
+        renderAll();
+        if(typeof curView!=="undefined" && curView==="analysis") renderAnalysis();
+        if(typeof curView!=="undefined" && curView==="goals") renderGoals();
+      }catch(err){}
+      setTimeout(()=>{ el.classList.remove("on"); snapBack(); }, 750);
+    }else snapBack();
+  }, {passive:true});
+  document.addEventListener("touchcancel", ()=>{ pulling=false; snapBack(); }, {passive:true});
+})();
 </script>
 </body>
 </html>
