@@ -161,6 +161,10 @@ button{font-family:inherit;}
 .alcrow{display:flex; align-items:center; justify-content:space-between; padding:7px 2px; border-top:1px solid #f0f0f4;}
 .alcrow .anm b{display:block; font-size:14.5px;}
 .alcrow .anm span{font-size:11.5px; color:var(--muted);}
+.alcring{flex:none; width:52px; height:52px;}
+.vapelevels{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+.vchip{border:1px solid var(--line); background:#fff; border-radius:20px; padding:7px 14px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer;}
+.vchip.sel{background:#5b5bf0; border-color:#5b5bf0; color:#fff;}
 .alcwarn{margin-top:10px; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:13px; line-height:1.45; border-radius:12px; padding:10px 12px;}
 /* collapsible goal sections */
 .ghead{display:flex; align-items:center; gap:8px; font-size:21px; font-weight:800; margin:20px 2px 12px; letter-spacing:-.3px; cursor:pointer; user-select:none;}
@@ -515,6 +519,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
           <b>Alcohol</b><span class="wlbl" id="alcLabel"></span>
           <div class="whint" id="alcNote" style="margin-top:6px"></div>
         </div>
+        <div class="alcring" id="alcRing" title="Alcohol calories so far"></div>
       </div>
       <div id="alcRows"></div>
       <div class="alcwarn" id="alcWarn" style="display:none"></div>
@@ -526,10 +531,8 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
           <b>Nicotine (vape)</b><span class="wlbl" id="vapeLabel"></span>
           <div class="whint" id="vapeNote" style="margin-top:6px"></div>
         </div>
-        <div class="astep">
-          <button id="vapeMinus" aria-label="Fewer disposables">−</button><b id="vapeNum">0</b><button id="vapePlus" aria-label="More disposables">+</button>
-        </div>
       </div>
+      <div class="vapelevels" id="vapeLevels"></div>
       <div class="alcwarn" id="vapeWarn" style="display:none"></div>
     </div>
   </section>
@@ -1053,7 +1056,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bj";
+const APP_VERSION = "2026.09.18-bk";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -1358,6 +1361,16 @@ function bacPct(stdDrinks){
   const w = curBodyWeight()>0 ? curBodyWeight() : 120;
   return stdDrinks*0.6*5.14/(w*0.68); /* Widmark, male r=0.68; ignores metabolism (~0.015%/hr) */
 }
+function paintAlcRing(kcal){
+  const el = $("alcRing"); if(!el) return;
+  const goal = goalTotal()>0 ? goalTotal() : 3000;
+  const frac = Math.min(1, kcal/goal), C = 2*Math.PI*20;
+  el.innerHTML = `<svg viewBox="0 0 52 52" width="52" height="52" role="img" aria-label="${Math.round(kcal)} alcohol calories">`+
+    `<circle cx="26" cy="26" r="20" fill="none" stroke="#eeeef4" stroke-width="6"/>`+
+    `<circle cx="26" cy="26" r="20" fill="none" stroke="#f27a1a" stroke-width="6" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-frac)).toFixed(1)}" transform="rotate(-90 26 26)"/>`+
+    `<text x="26" y="25" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)">${Math.round(kcal)}</text>`+
+    `<text x="26" y="36" text-anchor="middle" font-size="8" fill="var(--muted)">kcal</text></svg>`;
+}
 function renderAlc(){
   const k = viewDate(), d = day();
   const {a, std, kcal} = alcData(d);
@@ -1380,6 +1393,7 @@ function renderAlc(){
     ? `≈ ${std.toFixed(1)} standard drinks · ${Math.round(kcal).toLocaleString()} kcal from alcohol, roughly — not counted in your ring`+
       (bac>=0.02 ? ` · ≈${bac.toFixed(2)}% BAC at your weight` : "")
     : "1.5 oz 80-proof shot = 1 standard drink ≈ 97 kcal. Shots spike BAC faster than beer.";
+  paintAlcRing(kcal);
   const warn = $("alcWarn");
   let msg = "";
   if(std>0){
@@ -1399,28 +1413,54 @@ function renderAlc(){
   renderVape();
 }
 /* ============ NICOTINE / VAPE (research 2026-09-18) ============
-   Log disposables finished. A typical 5% (50 mg/mL) 15 mL disposable ≈ 750 mg
-   nicotine content ≈ 3–4 packs' worth of nicotine content (11 mg/cig).
+   Once-a-day check-in: hits can't be tracked, so one tap records intensity.
+   Levels follow researcher session bands (CDC/EC-Dependence-Index style):
+   light 1–4 sessions, moderate 5–9, heavy 10–19, nonstop 20+. Nicotine per puff
+   ≈0.07 mg delivered (Goniewicz 2019; PR-ENDS 2023) — estimated, flagged in UI.
+   Jay's pace (~1 × 15 mL 5% device/month, hit every ~15 min) ≈ 330 puffs/day,
+   ~23 mg nicotine/day ≈ 15 cigarettes' worth = nonstop, top of the scale.
    Mineur et al. 2011 (Science): nicotine activates hypothalamic POMC neurons →
-   appetite suppression — directly fights a bulk. Heavy use also shortens deep
-   sleep and raises 24-h burn ~100–200 kcal (mostly cigarette studies). Vaping is
-   far less harmful than smoking, not harmless; long-term effects unknown. */
+   appetite suppression — directly fights a bulk. Sleep: smokers take ~5–8 min
+   longer to fall asleep, get ~14 min less sleep, lose ~20–30 min of deep sleep
+   (Jaehne et al.; Zhang 2006; Tab-OSA 2026); no vaping-specific sleep studies
+   exist yet — nicotine pharmacology is the same. Former smokers match
+   never-smokers: the sleep damage appears reversible. */
+const VAPE_LEVELS = {
+  none:    {label:"None",     puffs:"0",       mg:"0",    cigs:"0"},
+  light:   {label:"Light",    puffs:"~10–50",  mg:"~1–3", cigs:"~1–2"},
+  moderate:{label:"Moderate", puffs:"~60–110", mg:"~4–8", cigs:"~3–5"},
+  heavy:   {label:"Heavy",    puffs:"~120–230",mg:"~8–16",cigs:"~6–11"},
+  nonstop: {label:"Nonstop",  puffs:"240+",    mg:"~17+", cigs:"~12+"}
+};
+function vapeLevel(d){
+  let v = d.vape;
+  if(typeof v === "number") v = v===0 ? "none" : "nonstop"; /* migrate old counter */
+  return VAPE_LEVELS[v] ? v : "none";
+}
 function renderVape(){
-  const d = day(), n = d.vape||0;
-  $("vapeNum").textContent = n;
-  $("vapeLabel").textContent = n===1 ? "1 disposable today" : n+" disposables today";
-  const mg = n*750, packs = mg/(11*20);
-  $("vapeNote").textContent = n>0
-    ? `≈ ${mg.toLocaleString()} mg nicotine content — like ~${packs.toFixed(1)} packs' worth`
-    : "Log disposables finished — 1 typical 5% disposable ≈ 750 mg nicotine (≈3–4 packs' worth).";
-  $("vapePlus").onclick = ()=>{ const dd=day(); dd.vape=(dd.vape||0)+1; save(); renderVape(); };
-  $("vapeMinus").onclick = ()=>{ const dd=day(); dd.vape=Math.max(0,(dd.vape||0)-1); save(); renderVape(); };
+  const d = day(), lv = vapeLevel(d);
+  d.vape = lv;
+  const box = $("vapeLevels"); box.innerHTML = "";
+  Object.keys(VAPE_LEVELS).forEach(k=>{
+    const b = document.createElement("button");
+    b.className = "vchip"+(k===lv?" sel":"");
+    b.textContent = VAPE_LEVELS[k].label;
+    b.setAttribute("aria-label", "Vaped "+VAPE_LEVELS[k].label.toLowerCase()+" today");
+    b.onclick = ()=>{ const dd=day(); dd.vape=k; save(); renderVape(); };
+    box.appendChild(b);
+  });
+  const info = VAPE_LEVELS[lv];
+  $("vapeLabel").textContent = lv==="none" ? "" : info.label+" · "+info.mg+" mg nicotine today";
+  $("vapeNote").textContent = lv==="none"
+    ? "One tap — how much did you vape today? Nicotine per puff ≈0.07 mg, estimated (Goniewicz 2019; PR-ENDS 2023)."
+    : `≈ ${info.puffs} puffs · like ~${info.cigs} cigarettes' worth of nicotine.`;
   const warn = $("vapeWarn");
-  if(n>0){
+  if(lv!=="none"){
     const goal = Math.round(goalTotal()||3000).toLocaleString();
     warn.style.display = "";
-    warn.textContent = `Nicotine flips your brain's "I'm full" switch — it directly fights your ${goal} kcal/day goal (Mineur et al. 2011). `+
-      `Heavy use also costs deep sleep and burns ~100–200 kcal/day extra — both work against the bulk. Far less harmful than smoking, but not harmless.`;
+    warn.textContent = `Nicotine flips your brain's "I'm full" switch — it directly fights your ${goal} kcal/day goal (Mineur et al. 2011, Science). `+
+      (lv==="nonstop" ? "At your pace (~1 device a month, every ~15 min) that's ~23 mg nicotine a day — the top of the scale, like ~15 cigarettes. " : "")+
+      `Nicotine users take ~5–8 min longer to fall asleep, get ~14 min less sleep, and lose ~20–30 min of deep sleep (Jaehne et al.; Tab-OSA 2026) — no vaping-specific sleep studies exist yet, but the pharmacology is the same. Quitting reverses it: former smokers sleep like never-smokers. Vaping is far less harmful than smoking, but not harmless.`;
   } else warn.style.display = "none";
 }
 
@@ -1623,8 +1663,20 @@ function foodFatigue(ds){
   const goal = goalTotal();
   if(goal>0 && t.cal<goal*0.85){ pts+=12; why.push("Only "+Math.round(t.cal).toLocaleString()+" of "+Math.round(goal).toLocaleString()+" kcal so far — running a deficit drains energy (low energy availability, RED-S research)."); }
   else if(goal>0 && t.cal<goal*0.95){ pts+=5; why.push("Slightly under your calorie goal — a small energy dip is likely."); }
+  /* Alcohol — dose tiers from sleep research (Ebrahim et al. 2013; Finnish n=4,098
+     HRV study; Penning et al. 2012). 1–2 drinks: next-day fatigue unproven, so only
+     the sleep-recovery hit is scored; 5+: next-day fatigue is proven. */
   const alc = alcData(d).std;
-  if(alc>0){ pts+=Math.min(15, alc*5); why.push(alc+" drink"+(alc>1?"s":"")+" — alcohol fragments sleep, so the drag lands tomorrow."); }
+  if(alc>=5){ pts+=20; why.push("5+ drinks — next-day fatigue is the #1 hangover symptom and overnight recovery drops ~39% on heavy nights (Penning et al. 2012)."); }
+  else if(alc>=3){ pts+=12; why.push("3–4 drinks cut REM sleep and dropped overnight recovery ~24% — expect a groggy morning (Ebrahim et al. 2013)."); }
+  else if(alc>0){ pts+=6; why.push("Even 1–2 drinks delay REM and fragment the second half of sleep — the recovery half (Ebrahim et al. 2013)."); }
+  /* Nicotine — chronic sleep-quality drag by daily level (Jaehne et al.; Zhang 2006;
+     Tab-OSA 2026). No vaping-specific sleep studies exist; smoker/patch data is the
+     proxy. Reversible: former smokers sleep like never-smokers. */
+  const vl = vapeLevel(d);
+  if(vl==="nonstop"){ pts+=8; why.push("Nonstop vaping — nicotine users lose ~14 min of sleep and ~20–30 min of deep sleep a night, and take longer to fall asleep (Jaehne et al.; Tab-OSA 2026)."); }
+  else if(vl==="heavy"){ pts+=5; why.push("Heavy vaping — nicotine shortens deep sleep and delays falling asleep (Jaehne et al.)."); }
+  else if(vl==="moderate"||vl==="light"){ pts+=2; why.push("Some vaping today — nicotine is a stimulant that trims sleep quality."); }
   const score = Math.min(100, Math.round(pts));
   return {score, why, label: score<=25?"Energized":score<=45?"Steady":score<=65?"Heavy":"Drained"};
 }
@@ -1668,7 +1720,7 @@ function scoreInfoHTML(){
   const aRow = a.pct===null
     ? `<div class="irow"><b>Adherence:</b> no logged days in the last 2 weeks yet — log meals and this fills in.</div>`
     : `<div class="irow"><b>Adherence: ${a.pct}%</b> — ${a.hit} of ${a.n} logged days (last 14) hit calories within ±10% of goal and protein ≥90%. Research finds sticking to the plan predicts results better than the plan itself (Burke et al. 2011).</div>`;
-  const fHead = `<div class="irow"><b>Food fatigue: ${f.score===null?"–":f.score+"/100 — "+f.label}.</b> A prediction of your energy from what you've logged today — not your training. Carb-heavy meals spike glucose, which silences the brain's orexin wakefulness neurons (Burdakov et al. 2005, 2006); protein and fiber blunt the crash. Even ~1.5% dehydration brings fatigue (Ganio et al. 2011; Armstrong et al. 2012).</div>`;
+  const fHead = `<div class="irow"><b>Food fatigue: ${f.score===null?"–":f.score+"/100 — "+f.label}.</b> A prediction of your energy from what you've logged today — not your training. Carb-heavy meals spike glucose, which silences the brain's orexin wakefulness neurons (Burdakov et al. 2005, 2006); protein and fiber blunt the crash. Even ~1.5% dehydration brings fatigue (Ganio et al. 2011; Armstrong et al. 2012). Alcohol is scored by dose — even 1–2 drinks fragment the second half of sleep (Ebrahim et al. 2013) — and nicotine by daily level, since users lose ~20–30 min of deep sleep a night (Tab-OSA 2026).</div>`;
   const fRows = f.why.length
     ? f.why.map(w=>`<div class="irow">• ${esc(w)}</div>`).join("")
     : `<div class="irow">${f.score===null?"Log food today and this predicts your energy.":"Nothing dragging your energy down today."}</div>`;
