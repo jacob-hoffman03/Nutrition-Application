@@ -127,6 +127,12 @@ button{font-family:inherit;}
 .winfo{flex:1; min-width:0;}
 .winfo b{font-size:16px;}
 .winfo .wlbl{font-size:14px; color:var(--muted); font-weight:600; margin-left:8px;}
+.alccard{padding:14px 16px;}
+.arow{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+.astep{display:flex; align-items:center; gap:10px;}
+.astep button{width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:#fff; font-size:20px; line-height:1; color:var(--ink); cursor:pointer;}
+.astep b{font-size:20px; min-width:30px; text-align:center; font-variant-numeric:tabular-nums;}
+.alcwarn{margin-top:10px; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:13px; line-height:1.45; border-radius:12px; padding:10px 12px;}
 /* collapsible goal sections */
 .ghead{display:flex; align-items:center; gap:8px; font-size:21px; font-weight:800; margin:20px 2px 12px; letter-spacing:-.3px; cursor:pointer; user-select:none;}
 .ghead::before{content:""; width:5px; height:20px; border-radius:3px; background:var(--acc); flex:none;}
@@ -447,11 +453,12 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div class="sumrow">
         <div class="ring" style="width:184px;height:184px">
           <svg width="184" height="184" viewBox="0 0 128 128">
-            <circle cx="64" cy="64" r="54" fill="none" stroke="#ececf1" stroke-width="12"/>
-            <circle id="ringCal" cx="64" cy="64" r="54" fill="none" stroke="#ffb066" stroke-width="12"
-              stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29"/>
-            <circle id="ringSurp" cx="64" cy="64" r="54" fill="none" stroke="#f27a1a" stroke-width="12"
-              stroke-linecap="round" stroke-dasharray="0 339.29" stroke-dashoffset="0" style="display:none"/>
+            <circle cx="64" cy="64" r="56" fill="none" stroke="#ececf1" stroke-width="11"/>
+            <circle id="ringMaint" cx="64" cy="64" r="56" fill="none" stroke="#ffb066" stroke-width="11"
+              stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
+            <circle id="ringSurpTrack" cx="64" cy="64" r="40" fill="none" stroke="#ececf1" stroke-width="10"/>
+            <circle id="ringSurp" cx="64" cy="64" r="40" fill="none" stroke="#f27a1a" stroke-width="10"
+              stroke-linecap="round" stroke-dasharray="251.33" stroke-dashoffset="251.33"/>
           </svg>
           <div class="center">
             <span class="ctitle">Calorie Intake</span>
@@ -495,6 +502,19 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
         </div>
       </div>
       <div class="glasses" id="glasses"></div>
+    </div>
+
+    <div class="card alccard">
+      <div class="arow">
+        <div class="winfo">
+          <b>Alcohol</b><span class="wlbl" id="alcLabel"></span>
+          <div class="whint" id="alcNote" style="margin-top:6px"></div>
+        </div>
+        <div class="astep">
+          <button id="alcMinus" aria-label="Remove a drink">−</button><b id="alcNum">0</b><button id="alcPlus" aria-label="Add a drink">+</button>
+        </div>
+      </div>
+      <div class="alcwarn" id="alcWarn" style="display:none"></div>
     </div>
   </section>
 
@@ -998,7 +1018,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-aq";
+const APP_VERSION = "2026.09.18-ar";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1131,19 +1151,22 @@ function waterCalc(){
 function waterTarget(){ return waterCalc().target; }
 
 /* ============ DIARY ============ */
-function ringPaint(calId, surpId, eCal, mCal, tCal){
-  const C = 339.29;
-  const baseFrac = tCal>0 ? Math.min(eCal, mCal)/tCal : 0;
-  const ring = $(calId);
-  ring.style.strokeDashoffset = C*(1-baseFrac);
-  const surp = $(surpId);
-  const sFrac = tCal>mCal ? Math.min(Math.max(eCal-mCal,0), tCal-mCal)/tCal : 0;
-  if(sFrac > 0.004){
-    surp.style.display = "";
-    surp.style.strokeDasharray = (C*sFrac)+" "+C;
-    surp.style.strokeDashoffset = -C*(tCal>0 ? mCal/tCal : 0);
-    surp.style.stroke = (tCal-eCal) < 0 ? "#ff5c5c" : "#f27a1a";
-  } else surp.style.display = "none";
+/* Dual concentric rings, Apple-Health style: the big outer ring fills to maintenance,
+   then the smaller inner ring starts filling the surplus once the outer is full. */
+function ringPaint(eCal, mCal, tCal){
+  const C1 = 2*Math.PI*56, C2 = 2*Math.PI*40;
+  const mFrac = mCal>0 ? Math.min(eCal/mCal, 1) : 0;
+  const maint = $("ringMaint");
+  maint.style.strokeDasharray = C1;
+  maint.style.strokeDashoffset = C1*(1-mFrac);
+  const sGoal = tCal - mCal, track = $("ringSurpTrack"), surp = $("ringSurp");
+  if(mCal>0 && sGoal>0){
+    track.style.display = ""; surp.style.display = "";
+    const sFrac = Math.min(Math.max(eCal-mCal,0)/sGoal, 1);
+    surp.style.strokeDasharray = C2;
+    surp.style.strokeDashoffset = C2*(1-sFrac);
+    surp.style.stroke = eCal > tCal ? "#ff5c5c" : "#f27a1a";
+  } else { track.style.display = "none"; surp.style.display = "none"; }
 }
 function renderDiary(){
   const k = viewDate(), d = day(), g = S.goals, t = totals(k);
@@ -1156,7 +1179,7 @@ function renderDiary(){
   const mCal = g.maintenance>0 ? g.maintenance : 0;
   const tCal = mCal + (g.surplus>0 ? g.surplus : 0);
   const left = tCal - t.cal, eCal = t.cal;
-  ringPaint("ringCal","ringSurp",eCal,mCal,tCal);
+  ringPaint(eCal,mCal,tCal);
   $("flagKcal").textContent = left >= 0 ? Math.round(left).toLocaleString()+" kcal" : Math.round(-left).toLocaleString()+" over";
   const fsur = $("flagSur");
   if(eCal > mCal){ fsur.textContent = "+"+Math.round(eCal-mCal).toLocaleString()+" SUR"; fsur.classList.add("on"); }
@@ -1218,7 +1241,36 @@ function renderDiary(){
     : (wt>0
         ? "Auto target from your maintenance + activity (IOM 1.0–1.5 mL/kcal)" + (dayHasXW() ? " + 2 glasses for a creatine-type supplement." : ". Tap a glass to add, tap a full one to remove.")
         : "No auto target yet — set your maintenance in Goals › Profile, or pick a manual target in Goals › Water.");
+  renderAlc();
   renderWeek();
+}
+
+/* ============ ALCOHOL (research #10) ============ */
+/* Log drinks; warn when drinking lands in the post-workout window or hits binge
+   levels. Parr et al. 2014: ~1.5 g/kg alcohol post-exercise cut muscle protein
+   synthesis 24% (with protein) to 37% (with carbs). Effects of 1-2 drinks are unstudied. */
+function renderAlc(){
+  const k = viewDate(), d = day();
+  const n = d.alc||0;
+  $("alcNum").textContent = n;
+  $("alcLabel").textContent = n===1 ? "1 drink" : n+" drinks";
+  $("alcNote").textContent = n>0
+    ? "≈ "+(n*100).toLocaleString()+" kcal from alcohol, roughly — not counted in your ring"
+    : "1 standard drink ≈ 100 kcal of alcohol, roughly.";
+  $("alcPlus").onclick = ()=>{ const dd=day(); dd.alc=(dd.alc||0)+1; save(); renderAlc(); };
+  $("alcMinus").onclick = ()=>{ const dd=day(); dd.alc=Math.max(0,(dd.alc||0)-1); save(); renderAlc(); };
+  const warn = $("alcWarn");
+  let msg = "";
+  if(n>0){
+    const dn = ((S.training||{}).done||{})[k];
+    const hrs = dn && dn.at ? (Date.now()-dn.at)/36e5 : null;
+    const trained = trainDay(k).done;
+    if(n>=4) msg = "4+ drinks is binge territory — that's the dose range where research shows muscle building and recovery take a real hit (Parr et al. 2014; Murphy et al. 2020). The effect of 1–2 drinks hasn't been studied.";
+    else if(trained && hrs!==null && hrs<8) msg = "You trained under 8 hours ago — alcohol's biggest cost is in the hours right after lifting. A heavy post-workout session cut muscle building ~24–37% even with protein (Parr et al. 2014).";
+    else if(trained) msg = "You trained today. Alcohol's biggest cost is in the hours right after lifting — earlier is worse.";
+  }
+  if(msg){ warn.style.display = ""; warn.textContent = msg; }
+  else warn.style.display = "none";
 }
 
 /* ============ COPY MEAL ============ */
@@ -2479,11 +2531,11 @@ function paintDayBody(ds){
   const tb = document.getElementById("dayTrainBtn");
   if(tb) tb.onclick = ()=>{
     if(S.training.done[ds]) delete S.training.done[ds];
-    else S.training.done[ds] = {split: td.split};
+    else S.training.done[ds] = {split: td.split, at: Date.now()};
     save(); renderCalendar(); paintDayBody(ds);
   };
   document.querySelectorAll("#daySplits .chip").forEach(c=>c.onclick=()=>{
-    S.training.done[ds] = {split: c.dataset.s};
+    S.training.done[ds] = {split: c.dataset.s, at: Date.now()};
     save(); renderCalendar(); paintDayBody(ds);
   });
 }
