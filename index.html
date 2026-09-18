@@ -147,41 +147,6 @@ button{font-family:inherit;}
 .infbody{padding:2px 18px 24px; font-size:14.5px; line-height:1.65; color:#3a3a42;}
 .infbody b{color:var(--ink);}
 .infbody .irow{margin-bottom:10px;}
-/* training calendar */
-.calhead{display:flex; align-items:center; justify-content:space-between; padding:4px 2px 8px;}
-.calhead b{font-size:17px; font-weight:800;}
-.calgrid{display:grid; grid-template-columns:repeat(7,1fr); gap:2px;}
-.caldow{font-size:11px; color:var(--muted); font-weight:700; text-align:center; padding:6px 0;}
-.calday{aspect-ratio:.92; border:none; background:none; border-radius:12px; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:4px; font-size:14px; font-weight:600; color:var(--ink); cursor:pointer; padding:0;}
-.calday:active{background:var(--card);}
-.calday.dim{color:#c9c9d4;}
-.calday .cdn{width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%;}
-.calday .cdn.today{background:var(--acc-soft); color:var(--acc); font-weight:800;}
-.cdot{width:7px; height:7px; border-radius:50%; display:inline-block; flex:none;}
-.cdot.rec{background:#34c759; width:6px; height:6px;}
-.cdot.rec.pri{background:#1f9d44; width:9px; height:9px; box-shadow:0 0 0 2.5px #d2f0da;}
-.callegend{display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:12px; font-size:12px; color:var(--muted); font-weight:600;}
-.callegend .leg{display:flex; align-items:center; gap:6px;}
-.schedrow{margin:12px 0 4px;}
-.schedrow .flabel{margin-bottom:8px;}
-.schedcustom{width:100%; margin-top:8px; border:1.5px solid var(--line); border-radius:12px; padding:10px 12px; font-size:14px; font-weight:600; color:var(--ink); outline:none;}
-.schedcustom::placeholder{color:#b9b9c4;}
-.dayline{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
-.spd{width:12px; height:12px; border-radius:50%; flex:none;}
-.daybtn{width:100%; margin-top:4px;}
-/* training recovery analysis */
-.calday.ovl{box-shadow:inset 0 0 0 2px var(--orange);}
-.ovlsw{width:11px; height:11px; border-radius:50%; box-shadow:inset 0 0 0 2px var(--orange); display:inline-block; flex:none;}
-.scheck{margin-top:12px; border-top:1px solid var(--line); padding-top:8px;}
-.scheckrow{display:flex; gap:9px; align-items:flex-start; font-size:13px; padding:7px 0; border-bottom:1px solid var(--line); line-height:1.5;}
-.scheckrow:last-child{border-bottom:none;}
-.scheckrow .cdot{margin-top:5px; flex:none;}
-.recrow{display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:13.5px; padding:7px 0; border-bottom:1px solid var(--line);}
-.recrow:last-child{border-bottom:none;}
-.recok{color:var(--green); font-weight:700; white-space:nowrap;}
-.recwarn{color:#e07b00; font-weight:700; white-space:nowrap;}
-.deloadbar{background:#fff8e9; border:1px solid #f0d48a; border-radius:14px; padding:12px 14px; margin:12px 2px 0; font-size:13.5px; line-height:1.55;}
 /* profile strip + medals */
 .pstrip{display:flex; align-items:center; gap:12px; padding:2px 2px 12px;}
 .pavatar{width:46px; height:46px; border-radius:50%; object-fit:cover; flex:none; background:var(--acc-soft); color:var(--acc);
@@ -440,7 +405,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <button class="tbtn" id="dayPrev" aria-label="Previous day">‹</button>
       <h1 id="dayTitle">Today</h1>
       <div class="ticons">
-        <button id="calBtn" aria-label="Training calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button>
         <button id="gearBtn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       </div>
     </div>
@@ -729,27 +693,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     </div>
   </section>
 
-  <!-- CALENDAR -->
-  <section class="view" id="view-calendar">
-    <div class="topbar">
-      <button class="tbtn" id="calBack" aria-label="Back">‹</button>
-      <h1>Training</h1>
-      <div class="ticons"><button class="ginfo" id="calInfo" aria-label="About recovery">i</button></div>
-    </div>
-    <div class="card" style="margin-top:12px">
-      <div class="calhead">
-        <button class="tbtn" id="calPrev" aria-label="Previous month">‹</button>
-        <b id="calTitle"></b>
-        <button class="tbtn" id="calNext" aria-label="Next month">›</button>
-      </div>
-      <div class="calgrid" id="calGrid"></div>
-      <div class="callegend" id="calLegend"></div>
-    </div>
-    <button class="bigbtn" id="schedBtn" style="margin-top:12px">Set training schedule</button>
-    <div class="rangenote" id="calHint" style="margin:10px 2px 0"></div>
-    <div id="deloadBar"></div>
-  </section>
-
   <!-- SETTINGS -->
   <section class="view" id="view-settings">
     <div class="topbar">
@@ -836,32 +779,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <button class="xbtn" id="infoX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
     <div class="infttl" id="infoTitle"></div>
     <div class="infbody" id="infoBody"></div>
-  </div>
-</div>
-
-<!-- TRAINING SCHEDULE SHEET -->
-<div class="sheet" id="schedSheet">
-  <div class="scrim" id="schedScrim"></div>
-  <div class="panel" style="padding-bottom:8px">
-    <button class="xbtn" id="schedX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
-    <div class="infttl">Training schedule</div>
-    <div class="infbody">
-      <div class="flabel">Training days</div>
-      <div class="chips" id="schedDays"></div>
-      <div id="schedRows"></div>
-      <button class="bigbtn" id="schedSave" style="margin-top:14px">Save schedule</button>
-      <div class="scheck" id="schedCheck"></div>
-    </div>
-  </div>
-</div>
-
-<!-- CALENDAR DAY SHEET -->
-<div class="sheet" id="daySheet">
-  <div class="scrim" id="dayScrim"></div>
-  <div class="panel" style="padding-bottom:8px">
-    <button class="xbtn" id="dayX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
-    <div class="infttl" id="daySheetTitle"></div>
-    <div class="infbody" id="dayBody"></div>
   </div>
 </div>
 
@@ -1068,7 +985,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-ax";
+const APP_VERSION = "2026.09.18-ay";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2516,11 +2433,11 @@ function openGsec(name){
     if(t===name) s.classList.remove("closed");
   });
 }
-/* ============ TRAINING CALENDAR ============ */
-const SPLITS = ["Push","Pull","Legs","Upper","Lower","Full Body","Cardio"];
-const SPLIT_COLORS = {Push:"#5b5bf0", Pull:"#12cfae", Legs:"#f27a1a", Upper:"#7e7ef2", Lower:"#fb6f84", "Full Body":"#a78bfa", Cardio:"#3b82f6"};
-const splitColor = s => SPLIT_COLORS[s] || "#8a8a98";
-const WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+/* ============ TRAINING ============
+   The training calendar UI was removed in 2026.09.18-ay. What stays:
+   trainDay() (alcohol warnings + the fatigue score read it) and the
+   deload-streak helpers (the fatigue score reads hardWeekStreak). */
+function addDays(ds, n){ const d = new Date(ds+"T12:00:00"); d.setDate(d.getDate()+n); return dstr(d); }
 function trainDay(ds){
   const t = S.training || (S.training = {sched:{}, done:{}});
   const wd = new Date(ds+"T12:00:00").getDay();
@@ -2530,277 +2447,20 @@ function trainDay(ds){
   if(plan) return {train:true, split:plan.split, done:false};
   return {train:false};
 }
-/* consecutive training days ending the day before ds — drives priority-recovery detection */
-function trainStreakBefore(ds){
-  let n = 0; const d = new Date(ds+"T12:00:00");
-  for(let i=0;i<60;i++){ d.setDate(d.getDate()-1); if(trainDay(dstr(d)).train) n++; else break; }
-  return n;
-}
-let calY = null, calM = null;
-function renderCalendar(){
-  const now = new Date();
-  if(calY===null){ calY = now.getFullYear(); calM = now.getMonth(); }
-  document.getElementById("calTitle").textContent =
-    new Date(calY, calM, 1).toLocaleString("en-US",{month:"long", year:"numeric"});
-  const g = document.getElementById("calGrid");
-  const todayS = todayStr();
-  let h = WD.map(w=>`<div class="caldow">${w}</div>`).join("");
-  const first = new Date(calY, calM, 1).getDay();
-  const dim = new Date(calY, calM+1, 0).getDate();
-  const prevDim = new Date(calY, calM, 0).getDate();
-  const cells = [];
-  for(let i=first-1;i>=0;i--) cells.push(new Date(calY, calM-1, prevDim-i));
-  for(let d=1;d<=dim;d++) cells.push(new Date(calY, calM, d));
-  while(cells.length%7){ const l = cells[cells.length-1]; cells.push(new Date(l.getFullYear(), l.getMonth(), l.getDate()+1)); }
-  cells.forEach(cd=>{
-    const ds = dstr(cd), td = trainDay(ds);
-    const inMonth = cd.getMonth()===calM;
-    let dot;
-    if(td.train) dot = `<span class="cdot" style="background:${splitColor(td.split)}${td.done?"":";opacity:.35"}"></span>`;
-    else { const st = trainStreakBefore(ds); dot = `<span class="cdot rec${st>=3?" pri":""}"></span>`; }
-    let ovl = "";
-    if(td.train){
-      const ps = splitOn(addDays(ds,-1));
-      if(ps && overlapMuscles(ps, td.split).length) ovl = " ovl";
-    }
-    h += `<button class="calday${inMonth?"":" dim"}${ovl}" data-ds="${ds}"><span class="cdn${ds===todayS?" today":""}">${cd.getDate()}</span>${dot}</button>`;
-  });
-  g.innerHTML = h;
-  g.querySelectorAll(".calday").forEach(b=>b.onclick=()=>openDaySheet(b.dataset.ds));
-  const used = {};
-  Object.values(S.training.sched).forEach(p=>{ if(p) used[p.split] = 1; });
-  Object.values(S.training.done).forEach(dn=>{ used[dn.split] = 1; });
-  document.getElementById("calLegend").innerHTML =
-    Object.keys(used).map(s=>`<span class="leg"><span class="cdot" style="background:${splitColor(s)}"></span>${s}</span>`).join("")+
-    `<span class="leg"><span class="cdot rec"></span>Recovery</span><span class="leg"><span class="cdot rec pri"></span>Priority recovery</span><span class="leg"><span class="ovlsw"></span>Muscle overlap</span>`;
-  const sched = S.training.sched, nDays = Object.keys(sched).length;
-  const hint = document.getElementById("calHint");
-  if(!nDays){ hint.textContent = "Set your training schedule to see workout and recovery days on the calendar."; return; }
-  let best = {n:0, s:null, e:null}, cur = 0, cs = null;
-  for(let d=1;d<=dim;d++){
-    const ds = dstr(new Date(calY, calM, d));
-    if(trainDay(ds).train){ if(!cur) cs = ds; cur++; }
-    else { if(cur>best.n) best = {n:cur, s:cs, e:dstr(new Date(calY, calM, d-1))}; cur = 0; }
-  }
-  if(cur>best.n) best = {n:cur, s:cs, e:dstr(new Date(calY, calM, dim))};
-  hint.textContent = best.n>=2
-    ? "Longest training stretch this month: "+best.n+" days"+(best.n>=3?" — the rest day after a 3+ day stretch is marked as a priority recovery day":"")+"."
-    : "Recovery days are green. Train 3+ days in a row and the rest day after gets flagged as priority recovery.";
-  renderDeloadBar();
-}
-document.getElementById("calPrev").onclick = ()=>{ calM--; if(calM<0){calM=11;calY--;} renderCalendar(); };
-document.getElementById("calNext").onclick = ()=>{ calM++; if(calM>11){calM=0;calY++;} renderCalendar(); };
-document.getElementById("calBack").onclick = ()=>showView("diary");
-/* ---- day detail sheet ---- */
-function openDaySheet(ds){
-  const d = new Date(ds+"T12:00:00");
-  document.getElementById("daySheetTitle").textContent = d.toLocaleString("en-US",{weekday:"long", month:"short", day:"numeric"});
-  paintDayBody(ds);
-  document.getElementById("daySheet").classList.add("open");
-}
-function paintDayBody(ds){
-  const td = trainDay(ds), t = totals(ds), goal = goalTotal();
-  let h = "";
-  if(td.train){
-    h += `<div class="dayline"><span class="spd" style="background:${splitColor(td.split)}"></span><b style="font-size:16px">${td.split}</b><span style="color:var(--muted); font-size:13px">${td.done?"· trained":"· planned"}</span></div>`;
-    h += `<button class="bigbtn daybtn" id="dayTrainBtn">${td.done?"Undo trained":"Mark trained"}</button>`;
-  } else {
-    const st = trainStreakBefore(ds);
-    h += `<div class="dayline"><span class="spd" style="background:${st>=3?"#1f9d44":"#34c759"}"></span><b style="font-size:16px">${st>=3?"Priority recovery day":"Recovery day"}</b></div>`;
-    if(st>0) h += `<div class="rangenote" style="margin:0 0 10px">${st} training day${st>1?"s":""} in a row before this — ${st>=3?"your body needs this one most.":"a good spot to recover."}</div>`;
-    h += `<div class="flabel" style="margin:6px 0 8px">Trained anyway? Log it:</div><div class="chips" id="daySplits">`+
-      SPLITS.map(s=>`<button class="chip" data-s="${s}">${s}</button>`).join("")+`</div>`;
-  }
-  h += recoveryHTML(ds);
-  h += `<div class="rangenote" style="margin-top:12px">${Math.round(t.cal).toLocaleString()} / ${goal.toLocaleString()} kcal logged</div>`;
-  document.getElementById("dayBody").innerHTML = h;
-  const tb = document.getElementById("dayTrainBtn");
-  if(tb) tb.onclick = ()=>{
-    if(S.training.done[ds]) delete S.training.done[ds];
-    else S.training.done[ds] = {split: td.split, at: Date.now()};
-    save(); renderCalendar(); paintDayBody(ds);
-  };
-  document.querySelectorAll("#daySplits .chip").forEach(c=>c.onclick=()=>{
-    S.training.done[ds] = {split: c.dataset.s, at: Date.now()};
-    save(); renderCalendar(); paintDayBody(ds);
-  });
-}
-document.getElementById("dayScrim").onclick = ()=>document.getElementById("daySheet").classList.remove("open");
-document.getElementById("dayX").onclick = ()=>document.getElementById("daySheet").classList.remove("open");
-/* ---- schedule sheet ---- */
-let schedDraft = {};
-function openSched(){
-  schedDraft = {};
-  Object.keys(S.training.sched).forEach(wd=>{ schedDraft[wd] = S.training.sched[wd].split; });
-  paintSched();
-  document.getElementById("schedSheet").classList.add("open");
-}
-function paintSched(){
-  const dg = document.getElementById("schedDays");
-  dg.innerHTML = WD.map((w,i)=>`<button class="chip${schedDraft[i]!==undefined?" sel":""}" data-wd="${i}">${w}</button>`).join("");
-  dg.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
-    const wd = c.dataset.wd;
-    if(schedDraft[wd]!==undefined) delete schedDraft[wd];
-    else schedDraft[wd] = "Push";
-    paintSched();
-  });
-  const rows = document.getElementById("schedRows");
-  rows.innerHTML = Object.keys(schedDraft).sort((a,b)=>a-b).map(wd=>{
-    const cur = schedDraft[wd], isCustom = SPLITS.indexOf(cur)<0;
-    return `<div class="schedrow"><div class="flabel">${WD[wd]} — split</div>
-      <div class="chips">`+SPLITS.map(s=>`<button class="chip${cur===s?" sel":""}" data-wd="${wd}" data-s="${s}">${s}</button>`).join("")+`</div>
-      <input class="schedcustom" data-wd="${wd}" placeholder="Custom split (optional)" value="${isCustom?cur.replace(/"/g,"&quot;"):""}"></div>`;
-  }).join("");
-  rows.querySelectorAll(".chips .chip").forEach(c=>c.onclick=()=>{ schedDraft[c.dataset.wd] = c.dataset.s; paintSched(); });
-  renderSchedCheck();
-}
-document.getElementById("schedBtn").onclick = openSched;
-document.getElementById("schedScrim").onclick = ()=>document.getElementById("schedSheet").classList.remove("open");
-document.getElementById("schedX").onclick = ()=>document.getElementById("schedSheet").classList.remove("open");
-document.getElementById("schedSave").onclick = ()=>{
-  S.training.sched = draftSched();
-  save();
-  document.getElementById("schedSheet").classList.remove("open");
-  renderCalendar();
-};
-/* ============ TRAINING RECOVERY SCIENCE ============
-   48h between sessions for the same muscle group (ACSM position stand — MPS
-   returns to baseline ~48h post-exercise in trained lifters); 2x/week per
-   muscle beats 1x for hypertrophy (Schoenfeld, Ogborn & Krieger 2016;
-   2018 update: total weekly volume is the main driver, frequency is how you
-   split it); deloads every ~4-8 weeks for ~6 days, same lifts at ~half volume
-   (Rogerson et al., Sports Medicine - Open 2024). */
-const SPLIT_MUSCLES = {
-  "Push": ["Chest","Shoulders","Arms"],
-  "Pull": ["Back","Arms"],
-  "Legs": ["Legs"],
-  "Upper": ["Chest","Back","Shoulders","Arms"],
-  "Lower": ["Legs"],
-  "Full Body": ["Chest","Back","Shoulders","Arms","Legs"],
-  "Cardio": []
-};
-function musclesFor(split){ return SPLIT_MUSCLES[split] || []; }
-function overlapMuscles(a, b){
-  const ma = musclesFor(a), mb = musclesFor(b);
-  return ma.filter(m=>mb.indexOf(m)>=0);
-}
-function addDays(ds, n){ const d = new Date(ds+"T12:00:00"); d.setDate(d.getDate()+n); return dstr(d); }
-/* effective split for a date: a logged workout wins, else the scheduled split */
-function splitOn(ds){
-  const dn = S.training.done[ds];
-  if(dn && dn.split) return dn.split;
-  const p = S.training.sched[new Date(ds+"T12:00:00").getDay()];
-  return p ? p.split : null;
-}
-/* effective schedule from the open schedule sheet (draft + custom text) */
-function draftSched(){
-  const ns = {};
-  Object.keys(schedDraft).forEach(wd=>{
-    const inp = document.querySelector(`.schedcustom[data-wd="${wd}"]`);
-    const custom = inp ? inp.value.trim() : "";
-    ns[wd] = {split: custom || schedDraft[wd] || "Push"};
-  });
-  return ns;
-}
-function analyzeSchedule(sched){
-  const days = Object.keys(sched).map(Number).sort((a,b)=>a-b);
-  const warns = [], oks = [];
-  const nDays = days.length;
-  if(!nDays) return {warns, oks, nDays, freq:{}};
-  for(let i=0;i<days.length;i++){
-    const wd = days[i], nx = days[(i+1)%days.length];
-    if((nx-wd+7)%7===1){
-      const ov = overlapMuscles(sched[wd].split, sched[nx].split);
-      if(ov.length) warns.push(`Back-to-back overlap: ${WD[wd]} ${sched[wd].split} → ${WD[nx]} ${sched[nx].split} hits ${ov.join(", ")} two days in a row. Muscles need ~48h — swap a day or change one of the splits.`);
-    }
-  }
-  const freq = {};
-  days.forEach(wd=>musclesFor(sched[wd].split).forEach(m=>freq[m]=(freq[m]||0)+1));
-  Object.keys(freq).sort().forEach(m=>{
-    if(freq[m]===1) warns.push(`${m}: only 1×/week. Research finds 2×/week beats 1× for growth (Schoenfeld et al. 2016) — consider hitting it twice.`);
-    else if(freq[m]>=3) warns.push(`${m}: ${freq[m]}×/week is high frequency. It only works if volume per session stays low, otherwise fatigue piles up fast.`);
-    else oks.push(`${m} ${freq[m]}×/week — right in the sweet spot.`);
-  });
-  let run=1, best=1;
-  for(let i=1;i<=days.length;i++){
-    if((days[i%days.length]-days[i-1]+7)%7===1) run++; else { best=Math.max(best,run); run=1; }
-  }
-  best = Math.max(best,run);
-  if(nDays===7) warns.push("7 training days, zero full rest days. Even advanced lifters cap around 6 days/week (ACSM) — joints and connective tissue need a full day off.");
-  else if(best>=5) warns.push(`${best} days in a row every week. Guard those rest days — recovery is when the muscle actually gets built.`);
-  else oks.push(`${nDays} sessions/week with real rest days — solid structure.`);
-  if(nDays>=5) warns.push(`At ${nDays} sessions/week, plan a lighter deload week every 4–6 weeks (same lifts, ~half the volume). Competitive lifters average one every ~5–6 weeks (Rogerson et al. 2024).`);
-  return {warns, oks, nDays, freq};
-}
-function renderSchedCheck(){
-  const el = document.getElementById("schedCheck");
-  const a = analyzeSchedule(draftSched());
-  if(!a.nDays){ el.innerHTML = ""; return; }
-  let h = `<div class="flabel" style="margin:2px 0 4px">Schedule check <span style="color:var(--muted); font-weight:400">— recovery science</span></div>`;
-  a.warns.forEach(t=>{ h += `<div class="scheckrow"><span class="cdot" style="background:var(--orange)"></span><span>${t}</span></div>`; });
-  a.oks.forEach(t=>{ h += `<div class="scheckrow"><span class="cdot" style="background:var(--green)"></span><span>${t}</span></div>`; });
-  el.innerHTML = h;
-}
-/* per-muscle recovery status for a day's detail sheet */
-function recoveryHTML(ds){
-  const sp = splitOn(ds);
-  if(!sp) return "";
-  const muscles = musclesFor(sp);
-  if(!muscles.length) return "";
-  let h = `<div class="flabel" style="margin:14px 0 4px">Recovery</div>`;
-  const tm = splitOn(addDays(ds,1));
-  if(tm){
-    const ov = overlapMuscles(sp, tm);
-    if(ov.length) h += `<div class="scheckrow"><span class="cdot" style="background:var(--orange)"></span><span><b>${ov.join(", ")}</b> gets hit again tomorrow (${tm}) — under 48h. Go lighter or swap.</span></div>`;
-  }
-  muscles.forEach(m=>{
-    let last = null;
-    for(let i=1;i<=14;i++){ const p = addDays(ds,-i), s2 = splitOn(p); if(s2 && musclesFor(s2).indexOf(m)>=0){ last = p; break; } }
-    let st;
-    if(!last) st = `<span style="color:var(--muted)">fresh — not hit in 2 weeks</span>`;
-    else {
-      const gap = Math.round((new Date(ds+"T12:00:00")-new Date(last+"T12:00:00"))/864e5);
-      st = gap>=2 ? `<span class="recok">recovered (${gap}d)</span>` : `<span class="recwarn">hit yesterday — needs rest</span>`;
-    }
-    h += `<div class="recrow"><span>${m}</span>${st}</div>`;
-  });
-  return h;
-}
 /* deload tracking: consecutive weeks (Sun-start) with 4+ completed sessions */
 function weekStart(ds){ const d = new Date(ds+"T12:00:00"); const s = new Date(d); s.setDate(d.getDate()-d.getDay()); return dstr(s); }
 function hardWeekStreak(){
-  const dl = S.training.deloads || {};
+  const tr = S.training || {};
+  const dl = tr.deloads || {};
   let streak = 0, ws = weekStart(todayStr());
   for(let i=0;i<104;i++){
     if(dl[ws]) break;
     let n = 0;
-    for(const k in S.training.done){ if(weekStart(k)===ws) n++; }
+    for(const k in (tr.done||{})){ if(weekStart(k)===ws) n++; }
     if(n>=4) streak++; else break;
     ws = addDays(ws,-7);
   }
   return streak;
-}
-function renderDeloadBar(){
-  const el = document.getElementById("deloadBar");
-  const dl = S.training.deloads || {}, thisWk = weekStart(todayStr());
-  const streak = hardWeekStreak();
-  if(streak>=5 && !dl[thisWk]){
-    el.innerHTML = `<div class="deloadbar"><b>Deload suggested</b> — ${streak} hard weeks (4+ sessions) in a row. Research-backed practice: one lighter week, same lifts at ~half the volume, sets further from failure (Rogerson et al., Sports Medicine – Open 2024).<br><button class="bigbtn daybtn" id="deloadBtn" style="margin-top:10px">Mark this week as deload</button></div>`;
-    document.getElementById("deloadBtn").onclick = ()=>{
-      if(!S.training.deloads) S.training.deloads = {};
-      S.training.deloads[thisWk] = true;
-      save(); renderCalendar();
-    };
-  } else el.innerHTML = "";
-}
-function openRecoveryInfo(){
-  document.getElementById("infoTitle").textContent = "Training & recovery";
-  document.getElementById("infoBody").innerHTML =
-    `<div class="irow"><b>48 hours per muscle.</b><br><span style="color:var(--muted)">ACSM guidelines: allow at least 48h before training the same muscle group again — muscle protein synthesis returns to baseline around then.</span></div>`+
-    `<div class="irow"><b>2× per week beats 1×.</b><br><span style="color:var(--muted)">A meta-analysis (Schoenfeld, Ogborn & Krieger 2016) found training each muscle twice weekly grows more than once; newer data says total weekly volume is the main driver — frequency is how you split it.</span></div>`+
-    `<div class="irow"><b>Orange ring = overlap.</b><br><span style="color:var(--muted)">A training day ringed in orange hits muscles that were trained the day before — under-recovered. Check the day's Recovery section.</span></div>`+
-    `<div class="irow"><b>Deload every 4–6 weeks.</b><br><span style="color:var(--muted)">One lighter week: same lifts, ~half the volume. Competitive lifters average a deload every ~5–6 weeks (Rogerson et al. 2024).</span></div>`;
-  document.getElementById("infoSheet").classList.add("open");
 }
 /* ============ MUSCLE GAIN ESTIMATE ============
    Only a scan (DEXA etc.) truly measures muscle, so this is an honest estimate:
@@ -2870,7 +2530,6 @@ function openMuscleInfo(){
     `<div class="irow"><b>Realistic pace: 0.5–1.5 lb/month</b><br><span style="color:var(--muted)">for a beginner (Aragon/Helms models). The ring goal defaults to 4 lb — about 3–4 months of solid beginner gains. Weigh-ins are the real answer.</span></div>`;
   document.getElementById("infoSheet").classList.add("open");
 }
-document.getElementById("calInfo").onclick = openRecoveryInfo;
 const MEDAL_DEFS = [
   {id:"silver", name:"Silver", color:"#a9b0c2", desc:"Log any food today — showing up counts."},
   {id:"gold", name:"Gold", color:"#f2b705", desc:"Hit at least 90% of your protein goal."},
@@ -3210,20 +2869,18 @@ function showView(v){
   curView = v;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active", x.id==="view-"+v));
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",
-    t.dataset.v===v || (v==="analysis"&&t.dataset.v==="diary") || (v==="goals"&&t.dataset.v==="settings") || (v==="calendar"&&t.dataset.v==="diary")));
+    t.dataset.v===v || (v==="analysis"&&t.dataset.v==="diary") || (v==="goals"&&t.dataset.v==="settings")));
   if(v==="progress") renderProgress();
   if(v==="settings") renderSettings();
   if(v==="foods") renderFoods();
   if(v==="analysis") renderAnalysis();
   if(v==="goals") renderGoals();
-  if(v==="calendar") renderCalendar();
   window.scrollTo(0,0);
 }
 function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.v));
 document.getElementById("dayPrev").onclick = ()=>{ dayOffset--; renderDiary(); };
 document.getElementById("todayPill").onclick = ()=>{ dayOffset = 0; renderDiary(); };
-document.getElementById("calBtn").onclick = ()=>{ calY = null; showView("calendar"); };
 document.getElementById("gearBtn").onclick = ()=>showView("settings");
 document.getElementById("analysisLink").onclick = ()=>showView("analysis");
 document.getElementById("analysisBack").onclick = ()=>showView("diary");
