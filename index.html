@@ -437,6 +437,15 @@ header.appbar{
     </div>
   </div>
 </div>
+<div class="sheet" id="zoneSheet">
+  <div class="scrim" id="zoneScrim"></div>
+  <div class="panel">
+    <div class="grab"></div>
+    <button class="xbtn" id="zoneX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    <h2>What the colors mean</h2>
+    <div class="body" id="zoneBody"></div>
+  </div>
+</div>
 <script>
 "use strict";
 /* ============ DATA ============ */
@@ -451,7 +460,7 @@ const ICONS = {
 };
 const MEAL_LABEL = {breakfast:"Breakfast", lunch:"Lunch", dinner:"Dinner", snacks:"Snacks"};
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-f";
+const APP_VERSION = "2026.09.18-g";
 
 /* ============ STATE ============ */
 const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:375, fat:83, water:10, weight:150});
@@ -843,14 +852,5 @@ document.getElementById("diarySearch").onclick = ()=>{
 };
 renderAll();
 </script>
-<div class="sheet" id="zoneSheet">
-  <div class="scrim" id="zoneScrim"></div>
-  <div class="panel">
-    <div class="grab"></div>
-    <button class="xbtn" id="zoneX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
-    <h2>What the colors mean</h2>
-    <div class="body" id="zoneBody"></div>
-  </div>
-</div>
 </body>
 </html>
