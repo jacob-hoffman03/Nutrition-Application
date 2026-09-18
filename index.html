@@ -356,10 +356,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wrow{display:flex; align-items:center; justify-content:space-between; padding:9px 2px; border-top:1px solid var(--line); font-size:14px;}
 .wrow b{font-variant-numeric:tabular-nums;}
 .wlogrow{display:flex; gap:8px; margin-top:10px;}
-.wlegend{display:flex; gap:14px; align-items:center; justify-content:center; font-size:11px; color:var(--muted); margin-top:4px;}
-.wlegend .wdot{display:inline-block; width:8px; height:8px; border-radius:50%; background:#c3c3ee; margin-right:4px;}
-.wlegend .wtline{display:inline-block; width:16px; height:3px; border-radius:2px; background:#5b5bf0; vertical-align:middle; margin-right:4px;}
-.wlegend .wtnote{font-style:italic;}
 .wlogrow input{flex:1; border:1.5px solid var(--line); border-radius:12px; padding:11px; font-size:16px; background:#fff; outline:none;}
 .wlogbtn{background:var(--acc); color:#fff; border:none; border-radius:12px; padding:11px 18px; font-weight:800;}
 .wrange{display:flex; background:#f1f1f6; border-radius:16px; padding:4px; margin-top:10px;}
@@ -1073,7 +1069,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bq";
+const APP_VERSION = "2026.09.18-br";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -2424,14 +2420,7 @@ function weightTrend(){
   const ma = trendMA(ws).filter(m=>m.n>=2);
   const rs = ma.length>=3 ? ma : ws;
   const spanD = Math.max(1, Math.round((T(rs[rs.length-1])-T(rs[0]))/86400000));
-  const mid = (T(rs[0])+T(rs[rs.length-1]))/2;
-  const early = rs.filter(p=>T(p)<=mid), recent = rs.filter(p=>T(p)>mid);
-  let rateWk = null;
-  if(early.length && recent.length){
-    const avgW = a=>a.reduce((x,p)=>x+p.w,0)/a.length, avgT = a=>a.reduce((x,p)=>x+T(p),0)/a.length;
-    const dDays = Math.max(1,(avgT(recent)-avgT(early))/86400000);
-    rateWk = (avgW(recent)-avgW(early))/dDays*7;
-  }
+  const rateWk = halvesRate(rs);
   const vals = ws.map(p=>p.w);
   return {rateWk, daily: rateWk==null?null:rateWk/7, change: ws[ws.length-1].w-ws[0].w, spanD,
           hi: Math.max(...vals), lo: Math.min(...vals), n: ws.length,
@@ -2662,32 +2651,25 @@ function trendMA(ws){
     return {d:p.d, w:win.reduce((a,q)=>a+q.w,0)/win.length, n:win.length};
   });
 }
-function smoothPath(p){
-  /* Catmull-Rom -> cubic bezier: a calm curve through the points */
-  if(p.length<2) return "";
-  if(p.length===2) return `M${p[0][0].toFixed(1)},${p[0][1].toFixed(1)} L${p[1][0].toFixed(1)},${p[1][1].toFixed(1)}`;
-  let d = `M${p[0][0].toFixed(1)},${p[0][1].toFixed(1)}`;
-  for(let i=0;i<p.length-1;i++){
-    const p0=p[Math.max(0,i-1)], p1=p[i], p2=p[i+1], p3=p[Math.min(p.length-1,i+2)];
-    d += ` C${(p1[0]+(p2[0]-p0[0])/6).toFixed(1)},${(p1[1]+(p2[1]-p0[1])/6).toFixed(1)} ${(p2[0]-(p3[0]-p1[0])/6).toFixed(1)},${(p2[1]-(p3[1]-p1[1])/6).toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
-  }
-  return d;
-}
 let wRange = 90; /* chart range in days; 0 = all */
-function wRangeStats(pts){
-  /* halves-by-date rate on a filtered point list (same method as weightTrend) */
-  if(pts.length<2) return {rateWk:null, change:0, hi:pts.length?pts[0].w:0, lo:pts.length?pts[0].w:0};
+function halvesRate(pts){
+  /* Weekly rate via halves-by-date split (MacroFactor convention): the time window
+     is cut in half and the mean of each half is compared, so the two windows never
+     overlap. Points are {d:"YYYY-MM-DD", w:lb} — raw weigh-ins or trend-MA points. */
+  if(pts.length<2) return null;
   const T = p => new Date(p.d+"T12:00:00").getTime();
-  const t0 = T(pts[0]), t1 = T(pts[pts.length-1]), mid = (t0+t1)/2;
+  const mid = (T(pts[0])+T(pts[pts.length-1]))/2;
   const early = pts.filter(p=>T(p)<=mid), recent = pts.filter(p=>T(p)>mid);
-  let rateWk = null;
-  if(early.length && recent.length){
-    const avgW = a=>a.reduce((x,p)=>x+p.w,0)/a.length, avgT = a=>a.reduce((x,p)=>x+T(p),0)/a.length;
-    const dDays = Math.max(1,(avgT(recent)-avgT(early))/86400000);
-    rateWk = (avgW(recent)-avgW(early))/dDays*7;
-  }
+  if(!early.length || !recent.length) return null;
+  const avgW = a=>a.reduce((x,p)=>x+p.w,0)/a.length, avgT = a=>a.reduce((x,p)=>x+T(p),0)/a.length;
+  const dDays = Math.max(1,(avgT(recent)-avgT(early))/86400000);
+  return (avgW(recent)-avgW(early))/dDays*7;
+}
+function wRangeStats(pts){
+  /* display stats for the visible chart range: rate via shared halvesRate, rest raw */
+  if(pts.length<2) return {rateWk:null, change:0, hi:pts.length?pts[0].w:0, lo:pts.length?pts[0].w:0};
   const vals = pts.map(p=>p.w);
-  return {rateWk, change: pts[pts.length-1].w-pts[0].w, hi: Math.max(...vals), lo: Math.min(...vals)};
+  return {rateWk: halvesRate(pts), change: pts[pts.length-1].w-pts[0].w, hi: Math.max(...vals), lo: Math.min(...vals)};
 }
 function smoothLine(pts){
   /* Catmull-Rom -> cubic Bezier through the points */
