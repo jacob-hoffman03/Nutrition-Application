@@ -395,16 +395,38 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div style="width:44px"></div>
     </div>
     <p class="goalsub">Your daily intake goal, based on your maintenance + surplus plan.</p>
-    <div class="card goalbig">
+    <div class="secttl" style="margin-top:2px">Profile</div>
+    <div class="card">
+      <div class="cfrow"><span>Weight</span><span><input id="pfWeight" type="number" inputmode="decimal" style="width:90px"> <span class="ph">lb</span></span></div>
+      <div class="cfrow"><span>Body fat</span><span><input id="pfFat" type="number" inputmode="decimal" style="width:90px"> <span class="ph">%</span></span></div>
+    </div>
+    <div class="rangenote" style="margin:10px 2px 2px">Activity level</div>
+    <div class="chips" id="pfAct">
+      <button class="chip" data-a="1.375">Light</button>
+      <button class="chip" data-a="1.55">Moderate</button>
+      <button class="chip" data-a="1.725">Active</button>
+      <button class="chip" data-a="1.9">Very active</button>
+    </div>
+    <button class="bigbtn" id="pfCalc" style="margin-top:4px">Calculate maintenance</button>
+    <div class="rangenote" id="pfNote"></div>
+    <div class="card goalbig" style="margin-top:14px">
       <div class="glabel">Your Daily Calorie Goal</div>
       <div class="gnum"><span id="goalTotal">3000</span> <small>kcal</small></div>
       <div class="gsub" id="goalSub"></div>
+      <div class="gsub" id="gainProj" style="font-weight:700"></div>
     </div>
     <div class="card">
       <input type="range" id="goalSlider" min="1500" max="6000" step="25" value="3000">
       <div class="rangelabels"><span id="goalMin">1500 kcal</span><span id="goalMax">6000 kcal</span></div>
       <div class="rangenote">*Adjusting the slider changes your surplus on top of maintenance.</div>
+      <div class="chips" id="surpChips" style="margin-top:10px">
+        <button class="chip" data-s="250">+0.5 lb/wk</button>
+        <button class="chip" data-s="375">+0.75 lb/wk</button>
+        <button class="chip" data-s="500">+1 lb/wk</button>
+        <button class="chip" data-s="625">+1.25 lb/wk</button>
+      </div>
     </div>
+    <div class="fhead"><span class="flabel">Macro split</span><button class="createbtn" id="macroAuto">Auto-split</button></div>
     <div class="macro3">
       <div class="m3 c"><div class="mn">Carbs</div><div class="mp" id="gmCp">50%</div><div class="mg"><input id="gmC" type="number" inputmode="numeric"> g</div></div>
       <div class="m3 p"><div class="mn">Protein</div><div class="mp" id="gmPp">20%</div><div class="mg"><input id="gmP" type="number" inputmode="numeric"> g</div></div>
@@ -601,12 +623,12 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-l";
+const APP_VERSION = "2026.09.18-m";
 
 /* ============ STATE ============ */
-const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:375, fat:83, water:10, weight:150});
+const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:413, fat:83, water:10, weight:150, profile:{weightLb:123, bodyFat:6, activity:1.55}});
 function load(){
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; if(!(s.goals.surplus>0)){ const d=(s.goals.cal>0?s.goals.cal:3000)-s.goals.maintenance; s.goals.surplus = d>0?Math.round(d):300; } delete s.goals.cal; s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); return s; } } catch(e){}
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) { if(!(s.goals.maintenance>0)) s.goals.maintenance = 2700; if(!(s.goals.surplus>0)){ const d=(s.goals.cal>0?s.goals.cal:3000)-s.goals.maintenance; s.goals.surplus = d>0?Math.round(d):300; } delete s.goals.cal; if(!s.goals.profile) s.goals.profile = {weightLb:123, bodyFat:6, activity:1.55}; s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); return s; } } catch(e){}
   return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals()};
 }
 let S = load();
@@ -1008,6 +1030,30 @@ document.getElementById("weightAdd").onclick = ()=>{
 
 /* ============ GOALS VIEW ============ */
 function goalTotal(){ return (S.goals.maintenance>0?S.goals.maintenance:0) + (S.goals.surplus>0?S.goals.surplus:0); }
+/* Katch-McArdle BMR from lean mass x activity = maintenance */
+function calcMaintenance(){
+  const p = S.goals.profile;
+  const lbmKg = (p.weightLb/2.20462) * (1 - p.bodyFat/100);
+  const bmr = 370 + 21.6*lbmKg;
+  return {bmr: Math.round(bmr), maint: Math.round(bmr * p.activity)};
+}
+function paintGainProj(){
+  const s = S.goals.surplus>0 ? S.goals.surplus : 0;
+  const el = document.getElementById("gainProj");
+  if(s <= 0){ el.textContent = "At maintenance — no projected gain"; return; }
+  el.textContent = "≈ +"+(s*7/3500).toFixed(2)+" lb/week · +"+(s*30/3500).toFixed(1)+" lb/month at this surplus";
+}
+function paintMaintNote(){
+  const p = S.goals.profile, cm = calcMaintenance();
+  document.getElementById("pfNote").textContent = "Katch-McArdle: BMR "+cm.bmr.toLocaleString()+" × "+p.activity+" = "+cm.maint.toLocaleString()+" kcal maintenance";
+}
+function readProfile(){
+  const p = S.goals.profile;
+  const w = parseFloat(document.getElementById("pfWeight").value);
+  const f = parseFloat(document.getElementById("pfFat").value);
+  if(w>0 && w<1500) p.weightLb = w;
+  if(f>=0 && f<=70) p.bodyFat = f;
+}
 function renderGoals(){
   const g = S.goals, tot = goalTotal();
   const sl = document.getElementById("goalSlider");
@@ -1019,6 +1065,12 @@ function renderGoals(){
   document.getElementById("goalTotal").textContent = Math.round(tot).toLocaleString();
   document.getElementById("goalSub").textContent = Math.round(g.maintenance).toLocaleString()+" maintenance + "+Math.round(g.surplus>0?g.surplus:0).toLocaleString()+" surplus";
   document.getElementById("gmC").value = g.carbs; document.getElementById("gmP").value = g.protein; document.getElementById("gmF").value = g.fat;
+  const p = g.profile;
+  document.getElementById("pfWeight").value = p.weightLb;
+  document.getElementById("pfFat").value = p.bodyFat;
+  document.querySelectorAll("#pfAct .chip").forEach(c=>c.classList.toggle("sel", +c.dataset.a === p.activity));
+  document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", +c.dataset.s === Math.round(g.surplus)));
+  paintMaintNote(); paintGainProj();
   updateMacroSplit();
 }
 function updateMacroSplit(){
@@ -1041,12 +1093,39 @@ document.getElementById("goalSlider").addEventListener("input", e=>{
   S.goals.surplus = Math.max(0, Math.round(tot - S.goals.maintenance));
   document.getElementById("goalTotal").textContent = Math.round(goalTotal()).toLocaleString();
   document.getElementById("goalSub").textContent = Math.round(S.goals.maintenance).toLocaleString()+" maintenance + "+Math.round(S.goals.surplus).toLocaleString()+" surplus";
+  document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", +c.dataset.s === S.goals.surplus));
+  paintGainProj();
   updateMacroSplit();
 });
 ["gmC","gmP","gmF"].forEach(id=>document.getElementById(id).addEventListener("input", updateMacroSplit));
+document.querySelectorAll("#pfAct .chip").forEach(c=>c.onclick=()=>{
+  S.goals.profile.activity = +c.dataset.a;
+  document.querySelectorAll("#pfAct .chip").forEach(x=>x.classList.toggle("sel", x===c));
+  paintMaintNote();
+});
+document.querySelectorAll("#surpChips .chip").forEach(c=>c.onclick=()=>{
+  S.goals.surplus = +c.dataset.s;
+  save(); renderGoals(); renderDiary();
+});
+document.getElementById("pfCalc").onclick = ()=>{
+  readProfile();
+  S.goals.maintenance = calcMaintenance().maint;
+  save(); renderGoals(); renderDiary();
+};
+document.getElementById("macroAuto").onclick = ()=>{
+  const tot = goalTotal();
+  const p = Math.max(0, Math.round(parseFloat(document.getElementById("gmP").value)||S.goals.protein||150));
+  const f = Math.max(0, Math.round(tot*0.25/9));
+  const c = Math.max(0, Math.round((tot - p*4 - f*9)/4));
+  document.getElementById("gmP").value = p;
+  document.getElementById("gmF").value = f;
+  document.getElementById("gmC").value = c;
+  updateMacroSplit();
+};
 document.getElementById("goalsDone").onclick = ()=>{
   const num=(id,fb)=>{ const v=parseFloat(document.getElementById(id).value); return v>=0?v:fb; };
   S.goals.carbs = num("gmC",S.goals.carbs); S.goals.protein = num("gmP",S.goals.protein); S.goals.fat = num("gmF",S.goals.fat);
+  readProfile();
   save(); showView("settings"); renderDiary();
 };
 document.getElementById("goalsBack").onclick = ()=>showView("settings");
