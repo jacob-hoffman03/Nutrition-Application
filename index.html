@@ -45,6 +45,11 @@ button{font-family:inherit;}
 .secttl::before{content:""; width:5px; height:20px; border-radius:3px; background:var(--acc);}
 /* week strip */
 .wkcard{padding:12px 10px 8px;}
+/* diary hero: week strip + zone bar + ring/macros as one seamless surface */
+.herocard{padding:14px 12px 10px;}
+.herocard .weekstrip{margin-bottom:2px;}
+.herocard .statusbar{padding:10px 2px 0;}
+.herocard .sumrow{margin-top:12px;}
 .wkrow{display:flex; align-items:center; justify-content:space-between; margin-bottom:2px;}
 .todaypill{background:var(--acc-soft); color:var(--acc); border:none; border-radius:99px; padding:8px 14px; font-weight:800; font-size:13px; white-space:nowrap;}
 .weekstrip{display:flex;}
@@ -72,10 +77,10 @@ button{font-family:inherit;}
 .ring svg{transform:rotate(-90deg); display:block;}
 .ring .center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;}
 .ring .center .ctitle{font-size:12px; color:var(--muted); font-weight:600;}
-.ring .center b{font-size:37px; font-weight:800; letter-spacing:-.5px; line-height:1.15; font-variant-numeric:tabular-nums;}
+.ring .center b{font-size:44px; font-weight:800; letter-spacing:-.5px; line-height:1.15; font-variant-numeric:tabular-nums;}
 .flagkc{font-size:13px !important; font-weight:800; color:#ef7d12 !important; display:flex; align-items:center; gap:3px;}
 .flagsur{font-size:12px !important; font-weight:700; color:var(--muted) !important; display:flex; align-items:center; gap:3px;}
-.flagsur.on{color:var(--green) !important;}
+.flagsur.on{color:#f27a1a !important;}
 .fico{width:12px; height:12px;}
 .macros{flex:1; min-width:0; display:flex; flex-direction:column; gap:13px;}
 .macrow .mhead{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;}
@@ -269,27 +274,25 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
         <button id="gearBtn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       </div>
     </div>
-    <div class="card wkcard">
+    <div class="card herocard">
       <div class="wkrow">
         <span style="font-size:13px;color:var(--muted);font-weight:600" id="daySub"></span>
         <button id="todayPill" class="todaypill" style="visibility:hidden">↩ Today</button>
       </div>
       <div class="weekstrip" id="weekStrip"></div>
-    </div>
 
-    <div class="statusbar" id="statusPill" role="button" tabindex="0" aria-label="Intake details">
-      <div class="sbtrack"><div class="sbfill" id="spFill"></div><div class="sbmark" id="spMark"></div></div>
-      <span class="sbinfo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.6" r="1.4" fill="currentColor" stroke="none"/></svg></span>
-    </div>
+      <div class="statusbar" id="statusPill" role="button" tabindex="0" aria-label="Intake details">
+        <div class="sbtrack"><div class="sbfill" id="spFill"></div><div class="sbmark" id="spMark"></div></div>
+        <span class="sbinfo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.6" r="1.4" fill="currentColor" stroke="none"/></svg></span>
+      </div>
 
-    <div class="card sumcard">
       <div class="sumrow">
-        <div class="ring" style="width:150px;height:150px">
-          <svg width="150" height="150" viewBox="0 0 128 128">
+        <div class="ring" style="width:184px;height:184px">
+          <svg width="184" height="184" viewBox="0 0 128 128">
             <circle cx="64" cy="64" r="54" fill="none" stroke="#ececf1" stroke-width="12"/>
-            <circle id="ringCal" cx="64" cy="64" r="54" fill="none" stroke="#1f9ede" stroke-width="12"
+            <circle id="ringCal" cx="64" cy="64" r="54" fill="none" stroke="#ffb066" stroke-width="12"
               stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29"/>
-            <circle id="ringSurp" cx="64" cy="64" r="54" fill="none" stroke="#2fbf71" stroke-width="12"
+            <circle id="ringSurp" cx="64" cy="64" r="54" fill="none" stroke="#f27a1a" stroke-width="12"
               stroke-linecap="round" stroke-dasharray="0 339.29" stroke-dashoffset="0" style="display:none"/>
           </svg>
           <div class="center">
@@ -598,7 +601,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-k";
+const APP_VERSION = "2026.09.18-l";
 
 /* ============ STATE ============ */
 const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:375, fat:83, water:10, weight:150});
@@ -703,7 +706,7 @@ function ringPaint(calId, surpId, eCal, mCal, tCal){
     surp.style.display = "";
     surp.style.strokeDasharray = (C*sFrac)+" "+C;
     surp.style.strokeDashoffset = -C*(tCal>0 ? mCal/tCal : 0);
-    surp.style.stroke = (tCal-eCal) < 0 ? "#ff5c5c" : "#2fbf71";
+    surp.style.stroke = (tCal-eCal) < 0 ? "#ff5c5c" : "#f27a1a";
   } else surp.style.display = "none";
 }
 function renderDiary(){
