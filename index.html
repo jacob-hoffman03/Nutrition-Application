@@ -684,6 +684,8 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     </div>
     <div class="card" style="padding-top:4px; padding-bottom:4px;">
       <button class="srow" id="exportBtn"><span>Export my data (JSON)</span><span class="chev2">›</span></button>
+      <button class="srow" id="importBtn"><span>Restore from backup (JSON)</span><span class="chev2">›</span></button>
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none">
       <button class="srow danger" id="wipeBtn"><span>Erase all data</span><span class="chev2">›</span></button>
     </div>
     <div class="card">
@@ -910,7 +912,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-ac";
+const APP_VERSION = "2026.09.18-ad";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
@@ -2328,6 +2330,29 @@ document.getElementById("exportBtn").onclick = ()=>{
   const a = document.createElement("a"); a.href=URL.createObjectURL(blob);
   a.download="fuel-data.json"; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+};
+document.getElementById("importBtn").onclick = ()=>document.getElementById("importFile").click();
+document.getElementById("importFile").onchange = e=>{
+  const file = e.target.files[0];
+  e.target.value = "";
+  if(!file) return;
+  const rd = new FileReader();
+  rd.onload = ()=>{
+    try{
+      const obj = JSON.parse(rd.result);
+      if(!obj || typeof obj!=="object" || !obj.goals || typeof obj.goals!=="object") throw new Error("bad");
+      if(!confirm("Replace everything in the app with this backup? This can't be undone.")) return;
+      S = obj;
+      if(!S.profile) S.profile = {name:"Jay", img:""};
+      if(!S.training) S.training = {sched:{}, done:{}};
+      if(!S.goals.profHash){ const p0=S.goals.profile||{}; S.goals.profHash=[p0.weightLb,p0.heightIn,p0.age,p0.sex,p0.bodyFat,p0.activityKey].join("|"); }
+      if(!S.days) S.days = {};
+      save(); dayOffset = 0; renderAll(); showView("diary");
+      alert("Backup restored.");
+    }catch(err){ alert("That file doesn't look like a Fuel backup."); }
+  };
+  rd.onerror = ()=>alert("Couldn't read that file.");
+  rd.readAsText(file);
 };
 document.getElementById("wipeBtn").onclick = ()=>{
   if(confirm("Erase ALL logged data? This cannot be undone.")){ localStorage.removeItem(KEY); S=load(); dayOffset=0; renderAll(); showView("diary"); }
