@@ -469,14 +469,9 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <div class="searchrow">
       <input class="searchinput" id="foodSearch" placeholder="Search your foods" autocomplete="off">
     </div>
-    <div class="segtabs" id="foodTabs">
-      <button class="segtab sel" data-t="recent">Recent</button>
-      <button class="segtab" data-t="favorites">Favorites</button>
-      <button class="segtab" data-t="custom">Custom</button>
-    </div>
+    <button class="bigbtn" id="newCustomBtn" style="margin:4px 0 12px">+ Add custom food</button>
     <div class="fhead">
       <span class="flabel" id="foodCount"></span>
-      <button class="createbtn" id="newCustomBtn">+ New food</button>
     </div>
     <div class="card" style="padding-top:2px; padding-bottom:6px;">
       <div id="foodResults"></div>
@@ -801,7 +796,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-x";
+const APP_VERSION = "2026.09.18-y";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
@@ -1293,7 +1288,6 @@ document.getElementById("confirmAdd").onclick = ()=>{
 };
 
 /* ============ FOODS TAB ============ */
-let foodTab = "recent";
 function recentFoods(){
   const seen = new Map();
   const days = Object.keys(S.days).sort().reverse().slice(0,14);
@@ -1302,27 +1296,31 @@ function recentFoods(){
   })));
   return [...seen.values()];
 }
+function delCustomFood(name){
+  if(!confirm(`Delete "${name}"? Your past log entries keep their data.`)) return;
+  S.customFoods = S.customFoods.filter(f=>f.n!==name);
+  const fi = S.favorites.indexOf(name); if(fi>=0) S.favorites.splice(fi,1);
+  save(); renderFoods();
+}
 function renderFoods(){
-  document.querySelectorAll("#foodTabs .segtab").forEach(t=>t.classList.toggle("sel", t.dataset.t===foodTab));
   const q = document.getElementById("foodSearch").value.trim().toLowerCase();
-  let list = foodTab==="recent" ? recentFoods()
-    : foodTab==="favorites" ? allFoods().filter(f=>isFav(f.n))
-    : S.customFoods.slice().reverse();
+  let list = S.customFoods.slice().reverse();
   if(q) list = list.filter(f=>f.n.toLowerCase().includes(q));
   document.getElementById("foodCount").textContent = list.length ? list.length+" item"+(list.length>1?"s":"") : "";
   const box = document.getElementById("foodResults");
   box.innerHTML = list.slice(0,60).map(f =>
     `<div class="arow2" data-n="${esc(f.n)}"><span class="athumb">${foodThumb(f)}</span>
-     <div class="anm"><b>${isCustom(f.n)?'<span class="diy">DIY</span>':""}${esc(f.n)}</b><span>${Math.round(f.cal)}kcal / ${esc(f.s)}</span></div>
+     <div class="anm"><b><span class="diy">DIY</span>${esc(f.n)}</b><span>${Math.round(f.cal)}kcal / ${esc(f.s)}</span></div>
      <button class="favstar" data-n="${esc(f.n)}">${isFav(f.n)?STAR_ON:STAR_OFF}</button>
-     <button class="aplus" data-n="${esc(f.n)}">+</button></div>`
-  ).join("") || `<div class="empty">${foodTab==="recent" ? "Nothing logged yet — foods you log will show up here." : foodTab==="favorites" ? "Tap the star on any food to pin it here." : "No custom foods yet. Tap + Create."}</div>`;
+     <button class="aplus" data-n="${esc(f.n)}">+</button>
+     <button class="ndel" data-n="${esc(f.n)}" aria-label="Delete food">×</button></div>`
+  ).join("") || `<div class="empty">No custom foods yet — tap + Add custom food to create your first one.</div>`;
   box.querySelectorAll(".favstar").forEach(b=>b.onclick=e=>{ e.stopPropagation(); toggleFav(b.dataset.n); renderFoods(); });
   box.querySelectorAll(".aplus").forEach(b=>b.onclick=e=>{ e.stopPropagation(); openSheet("lunch"); openDetail(findFood(b.dataset.n)); });
+  box.querySelectorAll(".ndel").forEach(b=>b.onclick=e=>{ e.stopPropagation(); delCustomFood(b.dataset.n); });
   box.querySelectorAll(".arow2").forEach(r=>r.onclick=()=>{ openSheet("lunch"); openDetail(findFood(r.dataset.n)); });
 }
 document.getElementById("foodSearch").addEventListener("input", renderFoods);
-document.querySelectorAll("#foodTabs .segtab").forEach(t=>t.onclick=()=>{ foodTab=t.dataset.t; renderFoods(); });
 const csheet = document.getElementById("csheet");
 let cPhotoData = "";
 function setCPhoto(data){
