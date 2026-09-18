@@ -585,7 +585,8 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       </div>
     </div>
     <div class="secttl">Macros</div>
-    <div class="fhead"><span class="flabel">Macro split</span><span class="ph">type your targets — the analysis below is live</span></div>
+    <div class="fhead"><span class="flabel">Macro split</span><button class="chip" id="macroAutoBtn">Auto</button></div>
+    <div class="rangenote" id="macroAutoNote" style="margin:2px 0 10px"></div>
     <div class="macro3">
       <div class="m3 c"><div class="mn">Carbs</div><div class="mp" id="gmCp">–</div><div class="mg"><input id="gmC" type="number" inputmode="numeric"> g</div><div class="mkcal" id="gmCk"></div></div>
       <div class="m3 p"><div class="mn">Protein</div><div class="mp" id="gmPp">–</div><div class="mg"><input id="gmP" type="number" inputmode="numeric"> g</div><div class="mkcal" id="gmPk"></div></div>
@@ -945,13 +946,13 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-ao";
+const APP_VERSION = "2026.09.18-ap";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
    new app — Jay fills them in himself. (2026.09.18-ak) */
 const defProfile = () => ({units:"imp", sex:"", age:0, heightIn:0, weightLb:0, bodyFat:0, activityKey:"", auto:false});
-const defGoals = () => ({maintenance:0, surplus:0, protein:0, carbs:0, fat:0, water:0, waterV:1, weight:0, mode:"custom", nutrTargets:{}, profile:defProfile(), muscleGoal:0});
+const defGoals = () => ({maintenance:0, surplus:0, protein:0, carbs:0, fat:0, water:0, waterV:1, weight:0, mode:"custom", nutrTargets:{}, profile:defProfile(), muscleGoal:0, macroAuto:true});
 function load(){
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) {
 /* 2026.09.18-ak blank-slate reset: Jay asked for every goal, nutrient target, and profile/setting
@@ -1878,6 +1879,7 @@ function paintCalCheck(){
     btn.onclick = ()=>{
       S.goals.surplus = Math.max(0, Math.round((S.goals.surplus>0?S.goals.surplus:0) + suggest));
       S.goals.mode = "custom";
+      autoDeriveMacros();
       S.goals.autoNote = "Calibration "+todayStr()+": surplus "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal based on your weight trend.";
       save(); renderGoals(); renderProgress(); renderDiary();
     };
@@ -1949,6 +1951,18 @@ document.getElementById("wtGoalBtn").onclick = ()=>{
 
 /* ============ GOALS VIEW ============ */
 function goalTotal(){ return (S.goals.maintenance>0?S.goals.maintenance:0) + (S.goals.surplus>0?S.goals.surplus:0); }
+/* Auto macros: derived from the calorie goal whenever it changes, so Jay never has
+   to type them. Protein 2.2 g/kg (top of the Morton 2018 research range = 1 g/lb),
+   fat 25% of goal calories, carbs fill the rest. Typing any macro switches to manual. */
+function deriveMacros(){
+  const tot = goalTotal();
+  if(!(tot>0)){ S.goals.protein=0; S.goals.carbs=0; S.goals.fat=0; return; }
+  const wKg = (S.goals.profile.weightLb>0 ? S.goals.profile.weightLb : 150)/2.20462;
+  S.goals.protein = Math.round(wKg*2.2);
+  S.goals.fat = Math.max(0, Math.round(tot*0.25/9));
+  S.goals.carbs = Math.max(0, Math.round((tot - S.goals.protein*4 - S.goals.fat*9)/4));
+}
+function autoDeriveMacros(){ if(S.goals.macroAuto!==false) deriveMacros(); }
 /* Katch-McArdle (body fat known) or Mifflin-St Jeor x FAO activity factor = maintenance.
    The old 1.2-1.9 ladder is a pre-doubly-labelled-water legacy that underestimates active
    people; FAO/WHO/UNU 2004 bands (1.40-1.69 light, 1.70-1.99 moderate, 2.00-2.40 vigorous)
@@ -2061,6 +2075,7 @@ function maybeAutoTune(suggest){
   if(since < 14) return false;
   S.goals.maintenance = Math.max(1200, Math.round(S.goals.maintenance + suggest));
   applyModePct();
+  autoDeriveMacros();
   S.goals.lastAutoTune = todayStr();
   S.goals.tuneNote = "Auto-tune "+todayStr()+": maintenance "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal from your weight trend.";
   return true;
@@ -2077,12 +2092,8 @@ function syncWeightFromLog(newLb, dateStr){
   if(p.auto && changed && newLb>0){
     S.goals.maintenance = calcMaintenance().maint;
     applyModePct();
-    const pTarget = Math.round(newLb/2.20462*1.6); /* Morton 2018: gains top out ~1.6 g/kg */
-    if(pTarget > S.goals.protein) S.goals.protein = pTarget;
-    const tot = goalTotal();
-    S.goals.fat = Math.max(0, Math.round(tot*0.25/9));
-    S.goals.carbs = Math.max(0, Math.round((tot - S.goals.protein*4 - S.goals.fat*9)/4));
-    S.goals.autoNote = "Auto-adjusted from "+wDisp(newLb)+" "+wUnit()+" on "+dateStr+" — maintenance and macros recalculated.";
+    autoDeriveMacros(); /* auto macros follow the new goal; manual macros stay untouched */
+    S.goals.autoNote = "Auto-adjusted from "+wDisp(newLb)+" "+wUnit()+" on "+dateStr+" — maintenance"+(S.goals.macroAuto!==false?" and macros":"")+" recalculated.";
     tuned = true;
   }
   S.goals.profHash = profHash();
@@ -2101,7 +2112,7 @@ function infoContent(k){
      <div class="irow">Adjusting the slider changes your surplus on top of maintenance. Surplus presets are % of maintenance — research supports <b>5–20%</b> for lean gains.</div>`};
   if(k==="macros") return {t:"Macros", b:
     `<div class="irow"><b>Protein:</b> muscle gains top out near <b>1.6 g/kg/day</b> (Morton 2018 meta-analysis); up to <b>2.2 g/kg</b> (1 g/lb) is the supported ceiling.</div>
-     <div class="irow"><b>Auto-split:</b> keeps protein as entered, sets fat to 25% of your calorie goal, and fills the rest with carbs.</div>`};
+     <div class="irow"><b>Auto:</b> protein 2.2 g/kg of body weight, fat 25% of your calorie goal, carbs fill the rest — re-derived every time your goal changes. Typing a number switches to manual; tap Auto to re-sync.</div>`};
   if(k==="water"){
     const w = waterCalc();
     if(w.unset) return {t:"Water target", b:
@@ -2638,6 +2649,13 @@ function renderGoals(){
    uncapped — if the numbers go past 100% that's the truth, not a bug. */
 function updateMacroSplit(){
   const g = S.goals, tot = goalTotal();
+  const auto = g.macroAuto!==false;
+  const ab = document.getElementById("macroAutoBtn");
+  ab.classList.toggle("sel", auto);
+  document.getElementById("macroAutoNote").textContent = auto
+    ? (tot>0 ? "Auto from your "+tot.toLocaleString()+" kcal goal — protein 2.2 g/kg, fat 25% of calories, carbs fill the rest. Type a number to take over manually."
+             : "Auto is on — calculate your maintenance above and macros fill in themselves.")
+    : "Manual — your numbers stay as typed. Tap Auto to re-sync from your calorie goal.";
   const c = Math.max(0, parseFloat(document.getElementById("gmC").value)||0);
   const p = Math.max(0, parseFloat(document.getElementById("gmP").value)||0);
   const f = Math.max(0, parseFloat(document.getElementById("gmF").value)||0);
@@ -2686,13 +2704,18 @@ document.getElementById("goalSlider").addEventListener("input", e=>{
   document.querySelectorAll("#goalMode .chip").forEach(c=>c.classList.remove("sel"));
   document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", S.goals.maintenance>0 && +c.dataset.p === Math.round(S.goals.surplus/S.goals.maintenance*100)));
   paintGainProj();
+  autoDeriveMacros();
   updateMacroSplit();
 });
-["gmC","gmP","gmF","gmFi"].forEach(id=>document.getElementById(id).addEventListener("input", ()=>{
-  /* save on every keystroke — no blur needed, so tapping away (back arrow, tab bar,
-     app switch) can never lose a typed macro target */
+["gmC","gmP","gmF"].forEach(id=>document.getElementById(id).addEventListener("input", ()=>{
+  /* typing a macro takes over manually — Auto switches off so the next recalculation
+     won't overwrite what he typed. Tap Auto to re-sync from the calorie goal. */
+  if(S.goals.macroAuto!==false){ S.goals.macroAuto = false; }
   commitMacroInputs(); save(); updateMacroSplit();
 }));
+document.getElementById("gmFi").addEventListener("input", ()=>{
+  commitMacroInputs(); save(); updateMacroSplit();
+});
 document.querySelectorAll("#pfAct .chip").forEach(c=>c.onclick=()=>{
   commitGoalsInputs();
   S.goals.profile.activityKey = c.dataset.k;
@@ -2727,6 +2750,7 @@ document.querySelectorAll("#goalMode .chip").forEach(c=>c.onclick=()=>{
   if(!(S.goals.maintenance>0)){ alert("Calculate your maintenance first."); return; }
   S.goals.mode = c.dataset.m;
   S.goals.surplus = Math.round(S.goals.maintenance*(+c.dataset.pct)/100);
+  autoDeriveMacros();
   save(); renderGoals(); renderDiary();
 });
 document.querySelectorAll("#surpChips .chip").forEach(c=>c.onclick=()=>{
@@ -2734,11 +2758,13 @@ document.querySelectorAll("#surpChips .chip").forEach(c=>c.onclick=()=>{
   if(!(S.goals.maintenance>0)){ alert("Calculate your maintenance first."); return; }
   S.goals.surplus = Math.round(S.goals.maintenance*(+c.dataset.p)/100);
   S.goals.mode = "custom";
+  autoDeriveMacros();
   save(); renderGoals(); renderDiary();
 });
 document.getElementById("pfCalc").onclick = ()=>{
   commitGoalsInputs();
   recalcMaint();
+  autoDeriveMacros(); /* macros follow the fresh calculation — nothing to type */
   save(); renderGoals(); renderDiary();
   /* never silently "not work": if there's still nothing to calculate from, put the cursor on the missing weight field */
   if(!(S.goals.profile.weightLb>0)) document.getElementById("pfWeight").focus();
@@ -2747,9 +2773,15 @@ document.getElementById("fiberAutoBtn").onclick = ()=>{
   if(S.goals.nutrTargets) delete S.goals.nutrTargets["Fiber"];
   save(); renderGoals();
 };
+document.getElementById("macroAutoBtn").onclick = ()=>{
+  commitGoalsInputs();
+  S.goals.macroAuto = true;
+  deriveMacros();
+  save(); renderGoals();
+};
 document.getElementById("goalsDone").onclick = ()=>{
   commitGoalsInputs();
-  if(profHash()!==S.goals.profHash) recalcMaint(); /* profile changed → goal can never go stale */
+  if(profHash()!==S.goals.profHash){ recalcMaint(); autoDeriveMacros(); } /* profile changed → goal can never go stale */
   save(); showView("settings"); renderDiary();
 };
 /* Typed values commit on every field change (blur/return), so nothing the user
