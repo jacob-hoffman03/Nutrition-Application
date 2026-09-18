@@ -291,6 +291,16 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .stat{background:var(--card); border-radius:var(--radius); padding:14px 10px; text-align:center;}
 .stat b{display:block; font-size:20px; font-weight:800; font-variant-numeric:tabular-nums;}
 .stat span{font-size:11px; color:var(--muted); font-weight:600;}
+.pill{display:inline-block; font-size:12px; font-weight:700; padding:3px 10px; border-radius:20px; margin-left:6px; vertical-align:middle;}
+.bmibar{position:relative; height:10px; border-radius:6px; margin-top:12px; background:linear-gradient(90deg,#2f9df0 0%,#2f9df0 22.5%,#2fbf71 22.5%,#2fbf71 55%,#f0a02f 55%,#f0a02f 80%,#ff5c5c 80%,#ff5c5c 100%);}
+.bmibar i{position:absolute; top:50%; width:16px; height:16px; border-radius:50%; background:#fff; border:3px solid #1c1c1e; transform:translate(-50%,-50%); box-shadow:0 1px 3px rgba(0,0,0,.25);}
+.bmilbls{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:4px; font-variant-numeric:tabular-nums;}
+.statgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.stat2{background:#f4f4f7; border-radius:14px; padding:12px 14px;}
+.stat2 b{display:block; font-size:17px; font-weight:800; font-variant-numeric:tabular-nums;}
+.stat2 span{font-size:12px; color:var(--muted); font-weight:600;}
+.wgoalbar{height:8px; border-radius:5px; background:#ececf1; overflow:hidden; margin-top:6px;}
+.wgoalbar i{display:block; height:100%; background:linear-gradient(90deg,#5b5bf0,#8a8af5); border-radius:5px; transition:width .3s;}
 .bars7{display:flex; align-items:flex-end; gap:6px; height:110px; margin-top:8px;}
 .bars7 .bcol{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end;}
 .bars7 .bar{width:100%; max-width:30px; background:linear-gradient(#8f8ff7,var(--acc)); border-radius:6px 6px 3px 3px; min-height:4px;}
@@ -617,12 +627,23 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     </div>
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:baseline;"><b style="font-size:16px">Body weight</b><b id="curWeight" style="font-size:20px">—</b></div>
+      <button class="srow" id="wtGoalBtn" style="padding-top:10px"><span>Weight goal</span><span class="sval"><b id="wtGoalVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
+      <div id="wtGoalProg" style="margin-top:2px"></div>
       <svg id="weightChart" width="100%" height="120" viewBox="0 0 340 120" preserveAspectRatio="none" style="margin-top:8px"></svg>
       <div class="wlogrow">
         <input id="weightInput" type="number" inputmode="decimal" step="0.1" placeholder="Today's weight (lb)">
         <button class="wlogbtn" id="weightAdd">Log</button>
       </div>
       <div id="weightHist" style="margin-top:6px"></div>
+    </div>
+    <div class="secttl">Weight analysis</div>
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;"><b style="font-size:16px">BMI</b><span><b id="bmiVal" style="font-size:20px">—</b><span class="pill" id="bmiPill" style="display:none"></span></span></div>
+      <div class="bmibar"><i id="bmiMark" style="display:none"></i></div>
+      <div class="bmilbls"><span>14</span><span>18.5</span><span>25</span><span>30</span><span>34</span></div>
+      <div class="rangenote" id="bmiNote" style="margin-top:8px"></div>
+      <div class="statgrid" id="wtStats" style="margin-top:10px"></div>
+      <div class="rangenote" id="wtContext" style="margin-top:10px"></div>
     </div>
     <div class="secttl">Calorie Check</div>
     <div class="card">
@@ -691,7 +712,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <div class="card" style="padding-top:4px; padding-bottom:4px; margin-top:12px;">
       <button class="srow" id="goalRow"><span>Goal Settings</span><span class="sval"><b id="goalRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
       <button class="srow" id="waterRow"><span>Water target</span><span class="sval"><b id="waterRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
-      <button class="srow" id="weightRow"><span>Weight goal (lb)</span><span class="sval"><b id="weightRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
     </div>
     <div class="card" style="padding-top:4px; padding-bottom:4px;">
       <button class="srow" id="exportBtn"><span>Export my data (JSON)</span><span class="chev2">›</span></button>
@@ -924,7 +944,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-al";
+const APP_VERSION = "2026.09.18-am";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1715,6 +1735,92 @@ function targetRateBand(){
   const r = s*7/3500/w*100;
   return [r*0.6, r*1.4];
 }
+/* ============ WEIGHT GOAL + ANALYSIS (Progress) ============ */
+function sortedWeights(){ return (S.weights||[]).slice().sort((a,b)=>a.d<b.d?-1:1); }
+function curBodyWeight(){
+  const ws = sortedWeights();
+  if(ws.length) return ws[ws.length-1].w;
+  const p = S.goals.profile||{};
+  return p.weightLb>0 ? p.weightLb : 0;
+}
+/* Trend from weigh-ins: halves-by-date split so the two windows never overlap (same method as Calorie Check). */
+function weightTrend(){
+  const ws = sortedWeights();
+  if(ws.length < 2) return null;
+  const T = p => new Date(p.d+"T12:00:00").getTime();
+  const spanD = Math.max(1, Math.round((T(ws[ws.length-1])-T(ws[0]))/86400000));
+  const mid = (T(ws[0])+T(ws[ws.length-1]))/2;
+  const early = ws.filter(p=>T(p)<=mid), recent = ws.filter(p=>T(p)>mid);
+  let rateWk = null;
+  if(early.length && recent.length){
+    const avgW = a=>a.reduce((x,p)=>x+p.w,0)/a.length, avgT = a=>a.reduce((x,p)=>x+T(p),0)/a.length;
+    const dDays = Math.max(1,(avgT(recent)-avgT(early))/86400000);
+    rateWk = (avgW(recent)-avgW(early))/dDays*7;
+  }
+  const vals = ws.map(p=>p.w);
+  return {rateWk, daily: rateWk==null?null:rateWk/7, change: ws[ws.length-1].w-ws[0].w, spanD,
+          hi: Math.max(...vals), lo: Math.min(...vals), n: ws.length,
+          cur: ws[ws.length-1].w, first: ws[0].w};
+}
+function paintWtGoal(){
+  const val = document.getElementById("wtGoalVal"), box = document.getElementById("wtGoalProg");
+  const g = S.goals.weight;
+  val.textContent = g>0 ? g+" lb" : "Set goal";
+  const cur = curBodyWeight();
+  if(!(g>0)){ box.innerHTML = `<div class="rangenote">Set a target weight — this tracks progress and estimates your pace from weigh-ins.</div>`; return; }
+  if(!(cur>0)){ box.innerHTML = `<div class="rangenote">Log your weight below to start tracking progress toward ${g} lb.</div>`; return; }
+  const ws = sortedWeights(), start = ws.length ? ws[0].w : cur;
+  const toGo = g - cur, f1 = v => (v>=0?"+":"")+v.toFixed(1);
+  const done = toGo===0 ? "At goal" : toGo>0 ? toGo.toFixed(1)+" lb to go" : Math.abs(toGo).toFixed(1)+" lb above goal";
+  const pct = g===start ? 100 : Math.min(100, Math.max(0,(cur-start)/(g-start)*100));
+  const tr = weightTrend();
+  let eta = "";
+  if(tr && tr.rateWk!=null && Math.abs(tr.rateWk)>=0.05){
+    if(toGo>0 && tr.rateWk>0) eta = ` · ≈${Math.ceil(toGo/tr.rateWk)} wk at ${f1(tr.rateWk)} lb/wk`;
+    else if(toGo<0 && tr.rateWk<0) eta = ` · ≈${Math.ceil(Math.abs(toGo)/Math.abs(tr.rateWk))} wk at ${f1(tr.rateWk)} lb/wk`;
+    else eta = ` · trending ${f1(tr.rateWk)} lb/wk (away from goal)`;
+  }
+  box.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:13px"><b>${done}</b><span style="color:var(--muted)">${pct.toFixed(0)}%</span></div>`+
+    `<div class="wgoalbar"><i style="width:${pct.toFixed(1)}%"></i></div>`+
+    (toGo===0 ? `<div class="rangenote" style="margin-top:6px">Goal reached — set a new one to keep going.</div>`
+              : `<div class="rangenote" style="margin-top:6px">Pace from your weigh-ins${eta}. Daily weight swings ±1–2%, so 2+ weeks smooths the noise.</div>`);
+}
+function paintWtAnalysis(){
+  const p = S.goals.profile||{}, hIn = p.heightIn>0 ? p.heightIn : 0, w = curBodyWeight();
+  const bv = document.getElementById("bmiVal"), pill = document.getElementById("bmiPill"),
+        mark = document.getElementById("bmiMark"), note = document.getElementById("bmiNote"),
+        stats = document.getElementById("wtStats"), ctx = document.getElementById("wtContext");
+  if(!(w>0) || !(hIn>0)){
+    bv.textContent = "—"; pill.style.display = "none"; mark.style.display = "none";
+    note.textContent = "Add height in Goals › Profile and log weigh-ins for BMI, a healthy range, and rate stats.";
+    stats.innerHTML = ""; ctx.textContent = "";
+    return;
+  }
+  const bmi = w/(hIn*hIn)*703;
+  const cat = bmi<18.5 ? ["Underweight","#2f9df0","#e8f3fe"] : bmi<25 ? ["Healthy","#1e9e5a","#e6f6ec"] : bmi<30 ? ["Overweight","#d98a12","#fdf3e2"] : ["Obese","#e5484d","#fdecec"];
+  bv.textContent = bmi.toFixed(1);
+  pill.style.display = ""; pill.textContent = cat[0]; pill.style.color = cat[1]; pill.style.background = cat[2];
+  mark.style.display = ""; mark.style.left = Math.min(100,Math.max(0,(bmi-14)/20*100)).toFixed(1)+"%";
+  const m = hIn*0.0254, lo = 18.5*m*m*2.20462, hi = 24.9*m*m*2.20462;
+  const ht = Math.floor(hIn/12)+"'"+Math.round(hIn%12)+'"';
+  const g = S.goals.weight;
+  note.textContent = `Healthy range for ${ht}: ${Math.round(lo)}–${Math.round(hi)} lb (WHO BMI 18.5–24.9).` +
+    (g>0 ? (g>=lo-0.5 && g<=hi+0.5 ? ` Your ${g} lb goal sits inside it.` : ` Your ${g} lb goal is outside it — worth a second look.`) : "");
+  const tr = weightTrend(), f1 = v => (v>=0?"+":"")+v.toFixed(1);
+  stats.innerHTML = tr ? [
+      [tr.daily==null?"—":f1(tr.daily)+" lb","Daily rate"],
+      [f1(tr.change)+" lb","Change · "+tr.spanD+"d"],
+      [tr.hi.toFixed(1)+" lb","Highest"],
+      [tr.lo.toFixed(1)+" lb","Lowest"]
+    ].map(x=>`<div class="stat2"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("")
+    : `<div class="stat2"><b>—</b><span>Log 2+ weigh-ins for rate stats</span></div>`;
+  let c;
+  if(bmi<18.5) c = "Under 18.5 is classified as underweight (WHO/CDC). BMI can't tell muscle from fat — as you train, judge the scale alongside strength and photos. A 5–20% calorie surplus with 1.6–2.2 g/kg protein is the research-backed way to gain.";
+  else if(bmi<25) c = "BMI is in the healthy range (WHO/CDC 18.5–24.9). It still can't separate muscle from fat — lifters often read higher than their body-fat % suggests.";
+  else if(bmi<30) c = "BMI 25–29.9 is classified as overweight (WHO/CDC). For lifters this often overstates fat — waist and body-fat % tell the truer story.";
+  else c = "BMI 30+ is classified as obese (WHO/CDC). BMI is a screening tool, not a diagnosis — body-fat % and waist give the fuller picture.";
+  ctx.textContent = c;
+}
 function paintCalCheck(){
   const out = document.getElementById("calCheckOut"), wrap = document.getElementById("calCheckApply"), btn = document.getElementById("calApplyBtn");
   wrap.style.display = "none";
@@ -1792,6 +1898,7 @@ function renderProgress(){
   const wh = document.getElementById("weightHist");
   wh.innerHTML = w.slice(-5).reverse().map(p=>
     `<div class="wrow"><span>${new Date(p.d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span><b>${p.w} lb</b></div>`).join("");
+  paintWtGoal(); paintWtAnalysis();
   paintCalCheck();
   paintMuscle();
 }
@@ -1803,6 +1910,14 @@ document.getElementById("weightAdd").onclick = ()=>{
   document.getElementById("weightInput").value = "";
   maybeAutoAdjust(v, k);
   save(); renderProgress();
+};
+document.getElementById("wtGoalBtn").onclick = ()=>{
+  const v = prompt("Weight goal (lb) — leave blank to clear:", S.goals.weight>0 ? S.goals.weight : "");
+  if(v===null) return;
+  if(v.trim()===""){ S.goals.weight = 0; save(); renderProgress(); return; }
+  const n = parseFloat(v);
+  if(n>50 && n<600){ S.goals.weight = n; save(); renderProgress(); }
+  else alert("Enter a weight between 50 and 600 lb.");
 };
 
 /* ============ GOALS VIEW ============ */
@@ -2606,18 +2721,12 @@ function renderSettings(){
   renderProfileCard();
   document.getElementById("goalRowVal").textContent = Math.round(goalTotal()).toLocaleString()+" kcal";
   document.getElementById("waterRowVal").textContent = g.water>0 ? g.water+" glasses" : (waterTarget()>0 ? "Auto ("+waterTarget()+" glasses)" : "Auto (set maintenance first)");
-  document.getElementById("weightRowVal").textContent = g.weight+" lb";
   document.getElementById("dDays").textContent = Object.keys(S.days).length;
   document.getElementById("appVer").textContent = "Fuel " + APP_VERSION;
   document.getElementById("dFoods").textContent = Object.values(S.days).reduce((a,d)=>a+MEALS.reduce((x,m)=>x+(d.meals[m]||[]).length,0),0);
 }
 document.getElementById("goalRow").onclick = ()=>{ renderGoals(); showView("goals"); };
 document.getElementById("waterRow").onclick = ()=>{ renderGoals(); showView("goals"); openGsec("Water"); };
-document.getElementById("weightRow").onclick = ()=>{
-  const v = prompt("Weight goal (lb):", S.goals.weight);
-  if(v===null) return; const n = parseFloat(v);
-  if(n>50 && n<600){ S.goals.weight = n; save(); renderSettings(); }
-};
 document.getElementById("settingsBack").onclick = ()=>showView("diary");
 document.getElementById("exportBtn").onclick = ()=>{
   const blob = new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
