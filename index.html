@@ -263,6 +263,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:26px; hei
 input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; background:#fff; border:3px solid #ff9f43;}
 .rangelabels{display:flex; justify-content:space-between; font-size:13px; color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums;}
 .rangenote{font-size:12px; color:var(--muted); margin-top:8px;}
+.linkbtn{background:none; border:none; padding:0; color:var(--acc); font:inherit; font-weight:700; cursor:pointer; text-decoration:underline;}
 .macro3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:12px;}
 .m3{border-radius:18px; padding:14px 8px; text-align:center;}
 .m3.c{background:rgba(126,126,242,.13);} .m3.p{background:rgba(18,207,174,.13);} .m3.f{background:rgba(251,111,132,.13);}
@@ -944,7 +945,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-am";
+const APP_VERSION = "2026.09.18-ao";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1764,26 +1765,29 @@ function weightTrend(){
 }
 function paintWtGoal(){
   const val = document.getElementById("wtGoalVal"), box = document.getElementById("wtGoalProg");
-  const g = S.goals.weight;
-  val.textContent = g>0 ? g+" lb" : "Set goal";
+  const g = S.goals.weight, wu = wUnit();
+  const d1 = v => wDisp(v).toFixed(1); /* display magnitude in current units */
+  val.textContent = g>0 ? d1(g)+" "+wu : "Set goal";
   const cur = curBodyWeight();
   if(!(g>0)){ box.innerHTML = `<div class="rangenote">Set a target weight — this tracks progress and estimates your pace from weigh-ins.</div>`; return; }
-  if(!(cur>0)){ box.innerHTML = `<div class="rangenote">Log your weight below to start tracking progress toward ${g} lb.</div>`; return; }
+  if(!(cur>0)){ box.innerHTML = `<div class="rangenote">Log your weight below to start tracking progress toward ${d1(g)} ${wu}.</div>`; return; }
   const ws = sortedWeights(), start = ws.length ? ws[0].w : cur;
-  const toGo = g - cur, f1 = v => (v>=0?"+":"")+v.toFixed(1);
-  const done = toGo===0 ? "At goal" : toGo>0 ? toGo.toFixed(1)+" lb to go" : Math.abs(toGo).toFixed(1)+" lb above goal";
+  const toGo = g - cur;
+  const done = toGo===0 ? "At goal" : toGo>0 ? d1(toGo)+" "+wu+" to go" : d1(toGo)+" "+wu+" above goal";
   const pct = g===start ? 100 : Math.min(100, Math.max(0,(cur-start)/(g-start)*100));
   const tr = weightTrend();
+  const f1 = v => (v>=0?"+":"")+d1(v);
   let eta = "";
   if(tr && tr.rateWk!=null && Math.abs(tr.rateWk)>=0.05){
-    if(toGo>0 && tr.rateWk>0) eta = ` · ≈${Math.ceil(toGo/tr.rateWk)} wk at ${f1(tr.rateWk)} lb/wk`;
-    else if(toGo<0 && tr.rateWk<0) eta = ` · ≈${Math.ceil(Math.abs(toGo)/Math.abs(tr.rateWk))} wk at ${f1(tr.rateWk)} lb/wk`;
-    else eta = ` · trending ${f1(tr.rateWk)} lb/wk (away from goal)`;
+    if(toGo>0 && tr.rateWk>0) eta = ` · ≈${Math.ceil(toGo/tr.rateWk)} wk at ${f1(tr.rateWk)} ${wu}/wk`;
+    else if(toGo<0 && tr.rateWk<0) eta = ` · ≈${Math.ceil(Math.abs(toGo)/Math.abs(tr.rateWk))} wk at ${f1(tr.rateWk)} ${wu}/wk`;
+    else eta = ` · trending ${f1(tr.rateWk)} ${wu}/wk (away from goal)`;
   }
+  const justStarted = ws.length <= 1;
   box.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:13px"><b>${done}</b><span style="color:var(--muted)">${pct.toFixed(0)}%</span></div>`+
     `<div class="wgoalbar"><i style="width:${pct.toFixed(1)}%"></i></div>`+
     (toGo===0 ? `<div class="rangenote" style="margin-top:6px">Goal reached — set a new one to keep going.</div>`
-              : `<div class="rangenote" style="margin-top:6px">Pace from your weigh-ins${eta}. Daily weight swings ±1–2%, so 2+ weeks smooths the noise.</div>`);
+              : `<div class="rangenote" style="margin-top:6px">${justStarted ? "Starting point set — log weigh-ins and this bar tracks your run at the "+d1(g)+" "+wu+" goal." : "Pace from your weigh-ins"+eta+". Daily weight swings ±1–2%, so 2+ weeks smooths the noise."}</div>`);
 }
 function paintWtAnalysis(){
   const p = S.goals.profile||{}, hIn = p.heightIn>0 ? p.heightIn : 0, w = curBodyWeight();
@@ -1792,7 +1796,14 @@ function paintWtAnalysis(){
         stats = document.getElementById("wtStats"), ctx = document.getElementById("wtContext");
   if(!(w>0) || !(hIn>0)){
     bv.textContent = "—"; pill.style.display = "none"; mark.style.display = "none";
-    note.textContent = "Add height in Goals › Profile and log weigh-ins for BMI, a healthy range, and rate stats.";
+    const needH = !(hIn>0), needW = !(w>0);
+    note.innerHTML = (needH && needW)
+      ? `Log your weight below and add your height in <button class="linkbtn" id="bmiGoProf">Goals › Profile</button> for BMI, a healthy range, and rate stats.`
+      : needH
+      ? `Add your height in <button class="linkbtn" id="bmiGoProf">Goals › Profile</button> for BMI and your healthy weight range.`
+      : `Log your weight below for BMI and rate stats.`;
+    const go = document.getElementById("bmiGoProf");
+    if(go) go.onclick = ()=>{ commitGoalsInputs(); save(); renderGoals(); showView("goals"); };
     stats.innerHTML = ""; ctx.textContent = "";
     return;
   }
@@ -1804,14 +1815,16 @@ function paintWtAnalysis(){
   const m = hIn*0.0254, lo = 18.5*m*m*2.20462, hi = 24.9*m*m*2.20462;
   const ht = Math.floor(hIn/12)+"'"+Math.round(hIn%12)+'"';
   const g = S.goals.weight;
-  note.textContent = `Healthy range for ${ht}: ${Math.round(lo)}–${Math.round(hi)} lb (WHO BMI 18.5–24.9).` +
-    (g>0 ? (g>=lo-0.5 && g<=hi+0.5 ? ` Your ${g} lb goal sits inside it.` : ` Your ${g} lb goal is outside it — worth a second look.`) : "");
-  const tr = weightTrend(), f1 = v => (v>=0?"+":"")+v.toFixed(1);
+  const wu3 = wUnit();
+  note.textContent = `Healthy range for ${ht}: ${Math.round(wDisp(lo))}–${Math.round(wDisp(hi))} ${wu3} (WHO BMI 18.5–24.9).` +
+    (g>0 ? (g>=lo-0.5 && g<=hi+0.5 ? ` Your ${wDisp(g)} ${wu3} goal sits inside it.` : ` Your ${wDisp(g)} ${wu3} goal is outside it — worth a second look.`) : "");
+  const tr = weightTrend(), wu2 = wUnit();
+  const f1 = v => (v>=0?"+":"")+wDisp(v).toFixed(1);
   stats.innerHTML = tr ? [
-      [tr.daily==null?"—":f1(tr.daily)+" lb","Daily rate"],
-      [f1(tr.change)+" lb","Change · "+tr.spanD+"d"],
-      [tr.hi.toFixed(1)+" lb","Highest"],
-      [tr.lo.toFixed(1)+" lb","Lowest"]
+      [tr.daily==null?"—":f1(tr.daily)+" "+wu2,"Daily rate"],
+      [f1(tr.change)+" "+wu2,"Change · "+tr.spanD+"d"],
+      [wDisp(tr.hi).toFixed(1)+" "+wu2,"Highest"],
+      [wDisp(tr.lo).toFixed(1)+" "+wu2,"Lowest"]
     ].map(x=>`<div class="stat2"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("")
     : `<div class="stat2"><b>—</b><span>Log 2+ weigh-ins for rate stats</span></div>`;
   let c;
@@ -1838,8 +1851,10 @@ function paintCalCheck(){
   const wAvg = (avgW(early)+avgW(recent))/2;
   const rate = (avgW(recent)-avgW(early))/((avgT(recent)-avgT(early))/86400000)*7, pct = rate/wAvg*100;
   const bd = targetRateBand();
+  const wu = wUnit();
   const f2 = v => (v>=0?"+":"")+v.toFixed(2);
-  let msg = "Actual: "+f2(rate)+" lb/wk ("+f2(pct)+"%/wk). Target: "+bd[0].toFixed(2)+" to "+bd[1].toFixed(2)+"%/wk. ";
+  const f2w = v => (v>=0?"+":"")+wDisp(Math.abs(v)).toFixed(2); /* weight rate in display units */
+  let msg = "Actual: "+f2w(rate)+" "+wu+"/wk ("+f2(pct)+"%/wk). Target: "+bd[0].toFixed(2)+" to "+bd[1].toFixed(2)+"%/wk. ";
   let suggest = 0;
   if(pct < bd[0]-0.05) suggest = 150;
   else if(pct > bd[1]+0.05) suggest = -150;
@@ -1883,7 +1898,9 @@ function renderProgress(){
     bb.appendChild(c);
   });
   const w = S.weights.slice().sort((a,b)=>a.d<b.d?-1:1);
-  document.getElementById("curWeight").textContent = w.length ? w[w.length-1].w+" lb" : "—";
+  const wu = wUnit();
+  document.getElementById("weightInput").placeholder = "Today's weight ("+wu+")";
+  document.getElementById("curWeight").textContent = w.length ? wDisp(w[w.length-1].w)+" "+wu : "—";
   const svg = document.getElementById("weightChart");
   const pts = w.slice(-14);
   if(pts.length >= 2){
@@ -1894,30 +1911,40 @@ function renderProgress(){
     svg.innerHTML = `<polyline points="${path}" fill="none" stroke="#5b5bf0" stroke-width="3" stroke-linecap="round"/>` +
       (gy?`<line x1="10" y1="${gy}" x2="330" y2="${gy}" stroke="#2fbf71" stroke-width="1.5" stroke-dasharray="5,4"/>`:"") +
       pts.map((p,i)=>`<circle cx="${(i/(pts.length-1)*320+10).toFixed(1)}" cy="${(110-((p.w-mn)/rg*90)).toFixed(1)}" r="3.5" fill="#5b5bf0"/>`).join("");
+  } else if(pts.length === 1){
+    svg.innerHTML = `<circle cx="170" cy="55" r="4.5" fill="#5b5bf0"/><text x="170" y="95" text-anchor="middle" fill="#9a9aa5" font-size="12">Log another weigh-in to draw your trend</text>`;
   } else svg.innerHTML = `<text x="170" y="62" text-anchor="middle" fill="#9a9aa5" font-size="13">Log weight to see your trend</text>`;
   const wh = document.getElementById("weightHist");
   wh.innerHTML = w.slice(-5).reverse().map(p=>
-    `<div class="wrow"><span>${new Date(p.d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span><b>${p.w} lb</b></div>`).join("");
+    `<div class="wrow"><span>${new Date(p.d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span><b>${wDisp(p.w)} ${wu}</b></div>`).join("");
   paintWtGoal(); paintWtAnalysis();
   paintCalCheck();
   paintMuscle();
 }
+/* display helpers: weigh-ins are stored in lb; the UI follows the profile units toggle */
+const wIsMet = () => (S.goals.profile||{}).units==="met";
+const wUnit = () => wIsMet() ? "kg" : "lb";
+const wDisp = lb => wIsMet() ? Math.round(lb/2.20462*10)/10 : Math.round(lb*10)/10;
+const wToLb = v => wIsMet() ? v*2.20462 : v;
 document.getElementById("weightAdd").onclick = ()=>{
-  const v = parseFloat(document.getElementById("weightInput").value);
-  if(!v || v<50 || v>600){ alert("Enter a valid weight."); return; }
-  const k = todayStr();
+  const raw = parseFloat(document.getElementById("weightInput").value);
+  const lo = wIsMet()?23:50, hi = wIsMet()?275:600;
+  if(!raw || raw<lo || raw>hi){ alert(wIsMet() ? "Enter a valid weight in kg." : "Enter a valid weight."); return; }
+  const v = Math.round(wToLb(raw)*10)/10, k = todayStr();
   S.weights = S.weights.filter(p=>p.d!==k); S.weights.push({d:k, w:v});
   document.getElementById("weightInput").value = "";
-  maybeAutoAdjust(v, k);
+  syncWeightFromLog(v, k);
   save(); renderProgress();
 };
 document.getElementById("wtGoalBtn").onclick = ()=>{
-  const v = prompt("Weight goal (lb) — leave blank to clear:", S.goals.weight>0 ? S.goals.weight : "");
+  const wu = wUnit(), lo = wIsMet()?23:50, hi = wIsMet()?275:600;
+  const cur = S.goals.weight>0 ? wDisp(S.goals.weight) : "";
+  const v = prompt("Weight goal ("+wu+") — leave blank to clear:", cur);
   if(v===null) return;
   if(v.trim()===""){ S.goals.weight = 0; save(); renderProgress(); return; }
   const n = parseFloat(v);
-  if(n>50 && n<600){ S.goals.weight = n; save(); renderProgress(); }
-  else alert("Enter a weight between 50 and 600 lb.");
+  if(n>lo && n<hi){ S.goals.weight = Math.round(wToLb(n)*10)/10; save(); renderProgress(); }
+  else alert("Enter a weight between "+lo+" and "+hi+" "+wu+".");
 };
 
 /* ============ GOALS VIEW ============ */
@@ -1959,7 +1986,8 @@ function paintGainProj(){
   if(s <= 0){ el.textContent = S.goals.maintenance>0 ? "At maintenance — no projected gain" : "Calculate your maintenance above to see your projected gain"; return; }
   const w = S.goals.profile.weightLb>0 ? S.goals.profile.weightLb : 150;
   const lbWk = s*7/3500; /* 3500 kcal/lb: rough first-week heuristic, overestimates over time */
-  el.textContent = "≈ +"+lbWk.toFixed(2)+" lb/week ("+(lbWk/w*100).toFixed(2)+"% of body weight) at this surplus — rough estimate; your weigh-ins are the real answer";
+  const wu = wUnit();
+  el.textContent = "≈ +"+wDisp(lbWk).toFixed(2)+" "+wu+"/week ("+(lbWk/w*100).toFixed(2)+"% of body weight) at this surplus — rough estimate; your weigh-ins are the real answer";
 }
 function paintMaintNote(){
   const p = S.goals.profile;
@@ -1990,7 +2018,7 @@ function readProfile(){
 /* Commit every typed value on the Goals page into S.goals (memory; callers save).
    Called before ANY re-render and on every field change, so a tap can never
    silently wipe an edit the user typed but hadn't saved yet. */
-function commitGoalsInputs(){
+function commitMacroInputs(){
   const num=(id,fb)=>{ const v=parseFloat(document.getElementById(id).value); return v>=0?v:fb; };
   S.goals.carbs = num("gmC",S.goals.carbs); S.goals.protein = num("gmP",S.goals.protein); S.goals.fat = num("gmF",S.goals.fat);
   /* fiber goal lives in the nutrient-target store: a typed value overrides the 14 g/1,000 kcal auto-target, clearing it goes back to auto */
@@ -1998,6 +2026,9 @@ function commitGoalsInputs(){
   S.goals.nutrTargets = S.goals.nutrTargets||{};
   if(fv>0) S.goals.nutrTargets["Fiber"] = {val:fv, unit:"g"};
   else delete S.goals.nutrTargets["Fiber"];
+}
+function commitGoalsInputs(){
+  commitMacroInputs();
   readProfile();
 }
 function renderProfile(){
@@ -2034,22 +2065,28 @@ function maybeAutoTune(suggest){
   S.goals.tuneNote = "Auto-tune "+todayStr()+": maintenance "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal from your weight trend.";
   return true;
 }
-/* auto-adjust everything when body weight changes: maintenance, protein (1g/lb floor), fat 25%, carbs rest */
-function maybeAutoAdjust(newLb, dateStr){
+/* The scale is the single source of truth for body weight: every weigh-in updates the
+   profile weight, so Calculate maintenance, BMI, calorie check, and the diary all
+   read the same number. The auto-adjust toggle only gates the *recalculation*
+   (maintenance + macro re-split) — the weight itself always syncs. */
+function syncWeightFromLog(newLb, dateStr){
   const p = S.goals.profile;
-  if(!p.auto || !(newLb>0)) return false;
-  if(Math.abs(newLb - p.weightLb) < 0.05) return false;
+  const changed = Math.abs(newLb - (p.weightLb||0)) >= 0.05;
   p.weightLb = newLb;
-  S.goals.maintenance = calcMaintenance().maint;
-  applyModePct();
+  let tuned = false;
+  if(p.auto && changed && newLb>0){
+    S.goals.maintenance = calcMaintenance().maint;
+    applyModePct();
+    const pTarget = Math.round(newLb/2.20462*1.6); /* Morton 2018: gains top out ~1.6 g/kg */
+    if(pTarget > S.goals.protein) S.goals.protein = pTarget;
+    const tot = goalTotal();
+    S.goals.fat = Math.max(0, Math.round(tot*0.25/9));
+    S.goals.carbs = Math.max(0, Math.round((tot - S.goals.protein*4 - S.goals.fat*9)/4));
+    S.goals.autoNote = "Auto-adjusted from "+wDisp(newLb)+" "+wUnit()+" on "+dateStr+" — maintenance and macros recalculated.";
+    tuned = true;
+  }
   S.goals.profHash = profHash();
-  const pTarget = Math.round(newLb/2.20462*1.6); /* Morton 2018: gains top out ~1.6 g/kg */
-  if(pTarget > S.goals.protein) S.goals.protein = pTarget;
-  const tot = goalTotal();
-  S.goals.fat = Math.max(0, Math.round(tot*0.25/9));
-  S.goals.carbs = Math.max(0, Math.round((tot - S.goals.protein*4 - S.goals.fat*9)/4));
-  S.goals.autoNote = "Auto-adjusted from "+(Math.round(newLb*10)/10)+" lb on "+dateStr+" — maintenance and macros recalculated.";
-  return true;
+  return tuned;
 }
 /* ============ GOALS: collapsible sections + info buttons ============ */
 /* Goals section explainers shown behind the ⓘ buttons */
@@ -2439,21 +2476,23 @@ function muscleStats(){
 function paintMuscle(){
   const ring = document.getElementById("muscleArc"), num = document.getElementById("muscleNum"), out = document.getElementById("muscleOut");
   const goal = S.goals.muscleGoal||0; /* blank slate: honest zero, no hidden 4 lb default */
-  document.getElementById("muscleGoalLbl").textContent = goal+" lb";
+  const wu = wUnit();
+  const wd = v => wDisp(v).toFixed(1);
+  document.getElementById("muscleGoalLbl").textContent = goal>0 ? wd(goal)+" "+wu : "Set goal";
   const C = 2*Math.PI*52, st = muscleStats();
   if(!st.ok){ ring.setAttribute("stroke-dasharray","0 "+C); num.textContent = "–"; out.textContent = st.why; return; }
   ring.setAttribute("stroke-dasharray", (goal>0?Math.min(1,st.muscle/goal)*C:0)+" "+C);
-  num.textContent = st.muscle.toFixed(1);
-  const f1 = v => (v>=0?"+":"")+v.toFixed(1);
-  let h = "Scale: <b>"+f1(st.dW)+" lb</b> over "+Math.max(2,Math.round(st.weeks))+" wks<br>";
-  h += "Est. muscle: <b>"+f1(st.muscle)+" lb</b> · est. fat: "+f1(st.fat)+" lb<br>";
+  num.textContent = wd(st.muscle);
+  const f1 = v => (v>=0?"+":"")+wd(v);
+  let h = "Scale: <b>"+f1(st.dW)+" "+wu+"</b> over "+Math.max(2,Math.round(st.weeks))+" wks<br>";
+  h += "Est. muscle: <b>"+f1(st.muscle)+" "+wu+"</b> · est. fat: "+wd(st.fat)+" "+wu+"<br>";
   h += "<span style=\"color:var(--muted)\">Lean share "+Math.round(st.lean*100)+"% — surplus "+st.avgSurPct.toFixed(0)+"%, protein "+st.protPerKg.toFixed(1)+" g/kg, "+st.sessWk.toFixed(1)+" sessions/wk.</span><br>";
   if(st.rateMo>0){
     if(goal<=0){ h += "Set a muscle goal above to track against it."; }
     else {
       const eta = st.muscle<goal ? Math.ceil((goal-st.muscle)/(st.rateMo/4.33)) : 0;
       h += st.muscle>=goal ? "<b style=\"color:var(--green)\">Goal hit.</b> Set a bigger one."
-        : "Pace: <b>"+st.rateMo.toFixed(1)+" lb/mo</b> — realistic for a beginner is 0.5–1.5 lb/mo."+(eta>0?" At this pace the goal lands in ~"+eta+" wk"+(eta>1?"s":"")+".":"");
+        : "Pace: <b>"+wd(st.rateMo)+" "+wu+"/mo</b> — realistic for a beginner is 0.5–1.5 "+wu+"/mo."+(eta>0?" At this pace the goal lands in ~"+eta+" wk"+(eta>1?"s":"")+".":"");
     }
   } else h += "Not gaining yet — the scale has to move up first.";
   out.innerHTML = h;
@@ -2649,7 +2688,11 @@ document.getElementById("goalSlider").addEventListener("input", e=>{
   paintGainProj();
   updateMacroSplit();
 });
-["gmC","gmP","gmF","gmFi"].forEach(id=>document.getElementById(id).addEventListener("input", updateMacroSplit));
+["gmC","gmP","gmF","gmFi"].forEach(id=>document.getElementById(id).addEventListener("input", ()=>{
+  /* save on every keystroke — no blur needed, so tapping away (back arrow, tab bar,
+     app switch) can never lose a typed macro target */
+  commitMacroInputs(); save(); updateMacroSplit();
+}));
 document.querySelectorAll("#pfAct .chip").forEach(c=>c.onclick=()=>{
   commitGoalsInputs();
   S.goals.profile.activityKey = c.dataset.k;
@@ -2713,7 +2756,7 @@ document.getElementById("goalsDone").onclick = ()=>{
    typed can ever be lost or silently reverted — Save changes just finalizes. */
 ["gmC","gmP","gmF","gmFi"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); updateMacroSplit(); }));
 ["pfAge","pfHtFt","pfHtIn","pfHtCm","pfWeight","pfFat"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); paintMaintNote(); }));
-document.getElementById("goalsBack").onclick = ()=>showView("settings");
+document.getElementById("goalsBack").onclick = ()=>{ commitGoalsInputs(); save(); showView("settings"); };
 
 /* ============ SETTINGS ============ */
 function renderSettings(){
@@ -2737,10 +2780,10 @@ document.getElementById("exportBtn").onclick = ()=>{
 document.getElementById("importBtn").onclick = ()=>document.getElementById("importFile").click();
 document.getElementById("muscleInfo").onclick = openMuscleInfo;
 document.getElementById("muscleGoalBtn").onclick = ()=>{
-  const cur = S.goals.muscleGoal||0;
-  const v = prompt("Muscle goal (lb)", cur);
+  const cur = S.goals.muscleGoal||0, wu = wUnit();
+  const v = prompt("Muscle goal ("+wu+")", cur>0 ? wDisp(cur) : "");
   if(v===null) return;
-  const n = Math.round(parseFloat(v)*10)/10;
+  const n = Math.round(wToLb(parseFloat(v))*10)/10;
   if(n>0 && n<=50){ S.goals.muscleGoal = n; save(); paintMuscle(); }
 };
 document.getElementById("importFile").onchange = e=>{
@@ -2770,7 +2813,12 @@ document.getElementById("wipeBtn").onclick = ()=>{
 };
 
 /* ============ NAV ============ */
+let curView = "diary";
 function showView(v){
+  /* leaving the Goals page by any path (tab bar, back arrow, Done) commits typed
+     values first — a tap can never silently wipe an edit */
+  if(curView==="goals" && v!=="goals"){ commitGoalsInputs(); save(); }
+  curView = v;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active", x.id==="view-"+v));
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",
     t.dataset.v===v || (v==="analysis"&&t.dataset.v==="diary") || (v==="goals"&&t.dataset.v==="settings") || (v==="calendar"&&t.dataset.v==="diary")));
