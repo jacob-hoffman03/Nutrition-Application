@@ -1073,7 +1073,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bp";
+const APP_VERSION = "2026.09.18-bq";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -1110,7 +1110,7 @@ document.getElementById("testFoodsRow").onclick = ()=>{
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
    new app — Jay fills them in himself. (2026.09.18-ak) */
 const defProfile = () => ({units:"imp", sex:"", age:0, heightIn:0, weightLb:0, bodyFat:0, waistIn:0, activityKey:"", auto:false});
-const defGoals = () => ({maintenance:0, surplus:0, protein:0, carbs:0, fat:0, water:0, waterV:1, weight:0, mode:"custom", nutrTargets:{}, profile:defProfile(), muscleGoal:0, macroAuto:true});
+const defGoals = () => ({maintenance:0, surplus:0, protein:0, carbs:0, fat:0, water:0, waterV:1, weight:0, weightStart:0, mode:"custom", nutrTargets:{}, profile:defProfile(), muscleGoal:0, macroAuto:true});
 function load(){
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) {
 /* 2026.09.18-ak blank-slate reset: Jay asked for every goal, nutrient target, and profile/setting
@@ -2516,10 +2516,10 @@ function paintWtGoal(){
   val.textContent = g>0 ? d1(g)+" "+wu : "Set goal";
   const cur = curBodyWeight();
   const ms = suggestedMilestone(), msHtml = ms ? milestoneHtml(ms) : "";
-  const wireMs = ()=>{ const b = document.getElementById("msUse"); if(b && ms) b.onclick = ()=>{ S.goals.weight = ms.target; save(); renderProgress(); }; };
+  const wireMs = ()=>{ const b = document.getElementById("msUse"); if(b && ms) b.onclick = ()=>{ S.goals.weightStart = cur; S.goals.weight = ms.target; save(); renderProgress(); }; };
   if(!(g>0)){ box.innerHTML = `<div class="rangenote">Set a target weight — this tracks progress and estimates your pace from weigh-ins.</div>`+msHtml; wireMs(); return; }
   if(!(cur>0)){ box.innerHTML = `<div class="rangenote">Log your weight below to start tracking progress toward ${d1(g)} ${wu}.</div>`+msHtml; wireMs(); return; }
-  const ws = sortedWeights(), start = ws.length ? ws[0].w : cur;
+  const ws = sortedWeights(), start = (S.goals.weightStart>0) ? S.goals.weightStart : (ws.length ? ws[0].w : cur);
   const toGo = g - cur;
   const done = toGo===0 ? "At goal" : toGo>0 ? d1(toGo)+" "+wu+" to go" : d1(toGo)+" "+wu+" above goal";
   const pct = g===start ? 100 : Math.min(100, Math.max(0,(cur-start)/(g-start)*100));
@@ -2736,13 +2736,24 @@ function paintWeightChart(w){
     s += `<line x1="${PL}" y1="${y.toFixed(1)}" x2="${W-PR+6}" y2="${y.toFixed(1)}" stroke="#eeeef3" stroke-width="1"/>`+
          `<text x="${W-2}" y="${(y+3.5).toFixed(1)}" text-anchor="end" fill="#9a9aa5" font-size="10">${f1(v)}</text>`;
   }
-  /* x labels: month starts for long ranges, 4 even ticks for short ones */
+  /* x labels: month starts for long spans, day ticks (unique, unclipped) for short ones */
+  const spanD = (tEnd-tStart)/86400000;
   let xticks = [];
-  if(wRange>=60){ const d = new Date(tStart); d.setDate(1); d.setHours(12,0,0,0);
+  if(spanD>62){ const d = new Date(tStart); d.setDate(1); d.setHours(12,0,0,0);
     if(d.getTime()<tStart) d.setMonth(d.getMonth()+1);
     while(d.getTime()<=tEnd){ xticks.push({t:d.getTime(), l:d.toLocaleDateString(undefined,{month:"short"})}); d.setMonth(d.getMonth()+1); }
-  } else { for(let i=0;i<4;i++){ const t = tStart+(tEnd-tStart)*i/3; xticks.push({t, l:dFmtS(t)}); } }
-  xticks.forEach(x=>{ s += `<text x="${X(x.t).toFixed(1)}" y="${H-6}" text-anchor="middle" fill="#9a9aa5" font-size="10">${x.l}</text>`; });
+  } else {
+    const step = Math.max(1, Math.ceil(spanD/3));
+    const d0 = new Date(tStart); d0.setHours(12,0,0,0);
+    for(let t=d0.getTime(); t<=tEnd; t+=step*86400000) xticks.push({t, l:dFmtS(t)});
+    if(!xticks.length || xticks[xticks.length-1].t<tEnd-12*3600000) xticks.push({t:tEnd, l:dFmtS(tEnd)});
+  }
+  let lastL = "";
+  xticks.forEach(x=>{
+    if(x.l===lastL) return; lastL = x.l; /* never print the same label twice */
+    const xa = Math.min(Math.max(X(x.t), PL+22), W-PR-22);
+    s += `<text x="${xa.toFixed(1)}" y="${H-6}" text-anchor="middle" fill="#9a9aa5" font-size="10">${x.l}</text>`;
+  });
   /* goal flag: dashed line + pennant, never styled like the data series */
   if(flag){
     const gy = Y(flag.v);
@@ -2824,7 +2835,8 @@ document.getElementById("weightAdd").onclick = ()=>{
   const lo = wIsMet()?23:50, hi = wIsMet()?275:600;
   if(!raw || raw<lo || raw>hi){ alert(wIsMet() ? "Enter a valid weight in kg." : "Enter a valid weight."); return; }
   let k = document.getElementById("weightDate").value || todayStr();
-  if(k>todayStr() || k<"2000-01-01") k = todayStr(); /* no future weigh-ins */
+  if(k>todayStr()){ alert("That date is in the future — pick today or an earlier date."); return; }
+  if(k<"2000-01-01") k = todayStr();
   const v = Math.round(wToLb(raw)*10)/10;
   S.weights = S.weights.filter(p=>p.d!==k); S.weights.push({d:k, w:v});
   document.getElementById("weightInput").value = "";
@@ -2842,9 +2854,9 @@ document.getElementById("wtGoalBtn").onclick = ()=>{
   const cur = S.goals.weight>0 ? wDisp(S.goals.weight) : "";
   const v = prompt("Weight goal ("+wu+") — leave blank to clear:", cur);
   if(v===null) return;
-  if(v.trim()===""){ S.goals.weight = 0; save(); renderProgress(); return; }
+  if(v.trim()===""){ S.goals.weight = 0; S.goals.weightStart = 0; save(); renderProgress(); return; }
   const n = parseFloat(v);
-  if(n>lo && n<hi){ S.goals.weight = Math.round(wToLb(n)*10)/10; save(); renderProgress(); }
+  if(n>lo && n<hi){ S.goals.weight = Math.round(wToLb(n)*10)/10; S.goals.weightStart = curBodyWeight(); save(); renderProgress(); }
   else alert("Enter a weight between "+lo+" and "+hi+" "+wu+".");
 };
 
