@@ -467,7 +467,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div style="width:44px"></div>
     </div>
     <div class="searchrow">
-      <input class="searchinput" id="foodSearch" placeholder="Search for Food" autocomplete="off">
+      <input class="searchinput" id="foodSearch" placeholder="Search your foods" autocomplete="off">
     </div>
     <div class="segtabs" id="foodTabs">
       <button class="segtab sel" data-t="recent">Recent</button>
@@ -476,7 +476,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     </div>
     <div class="fhead">
       <span class="flabel" id="foodCount"></span>
-      <button class="createbtn" id="newCustomBtn">+ Create</button>
+      <button class="createbtn" id="newCustomBtn">+ New food</button>
     </div>
     <div class="card" style="padding-top:2px; padding-bottom:6px;">
       <div id="foodResults"></div>
@@ -646,15 +646,15 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <h2 id="sheetTitle">Add food</h2>
     <div class="body">
       <div id="sheetSearchWrap">
-        <input class="searchinput" id="sheetSearch" placeholder="Search for Food" autocomplete="off" style="margin-bottom:8px">
+        <input class="searchinput" id="sheetSearch" placeholder="Search your foods" autocomplete="off" style="margin-bottom:8px">
         <div class="segtabs" id="sheetTabs">
           <button class="segtab sel" data-t="recent">Recent</button>
           <button class="segtab" data-t="favorites">Favorites</button>
-          <button class="segtab" data-t="custom">Custom</button>
+          <button class="segtab" data-t="custom">All</button>
         </div>
+        <button class="bigbtn" id="sheetCreate" style="margin:10px 0 4px">+ Create new food</button>
         <div class="fhead">
           <span class="flabel"><select id="sheetSort" style="border:none;background:none;font:inherit;color:inherit;font-weight:600"><option value="time">Sort by Time ⌄</option><option value="name">Sort by Name ⌄</option></select></span>
-          <button class="createbtn" id="sheetCreate">Create</button>
         </div>
         <div id="sheetResults"></div>
         <div id="trayBar" style="display:none">
@@ -791,7 +791,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-u";
+const APP_VERSION = "2026.09.18-v";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
@@ -1176,7 +1176,7 @@ function renderSheetResults(q){
   if(!q && sheetTab==="recent" && !list.length) list = allFoods();
   if(sheetSort==="name") list = list.slice().sort((a,b)=>a.n.localeCompare(b.n));
   box.innerHTML = list.slice(0, 40).map(sheetRowHtml).join("") ||
-    '<div class="empty">No matches. Tap Create to add a custom food.</div>';
+    '<div class="empty">No matches. Tap + Create new food to add it.</div>';
   box.querySelectorAll(".aplus").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const f=findFood(b.dataset.n); if(f) addToTray(f, 1); });
   box.querySelectorAll(".arow2").forEach(r=>r.onclick=()=>openDetail(findFood(r.dataset.n)));
 }
@@ -1331,7 +1331,7 @@ function resetCustomForm(){
   document.querySelectorAll("#cKindChips .chip").forEach(x=>x.classList.toggle("sel", x.dataset.kind==="food"));
   document.getElementById("cSuppSec").style.display = "none";
   document.querySelectorAll("#cUnitChips .chip").forEach(x=>x.classList.toggle("sel", x.dataset.u==="capsule"));
-  document.getElementById("cNutrRows").innerHTML = "";
+  seedNutrRows();
   document.getElementById("cXW").checked = false;
   const sv = document.getElementById("cServ"); sv.dataset.dirty = "";
   document.getElementById("cCal").placeholder = "Required";
@@ -1401,13 +1401,33 @@ document.querySelectorAll("#cKindChips .chip").forEach(c=>c.onclick=()=>{
   document.getElementById("cCal").placeholder = cKind==="supp" ? "0" : "Required";
   const sv = document.getElementById("cServ");
   if(cKind==="supp" && !sv.dataset.dirty) sv.value = "1 "+cUnit;
+  if(nutrRowsPristine()) seedNutrRows();
 });
-function addNutrRow(){
+/* Default nutrient rows, from FDA label research (2026-09-18):
+   - Food: the 4 vitamins/minerals FDA requires on every Nutrition Facts label
+     (Vitamin D, Calcium, Iron, Potassium), with their label units.
+   - Supplement: the most common dietary ingredients on Supplement Facts labels.
+   Empty rows are dropped on save, so these are just fill-in-the-blank. */
+const NUTR_DEFAULTS = {
+  food:[["Vitamin D","mcg"],["Calcium","mg"],["Iron","mg"],["Potassium","mg"]],
+  supp:[["Vitamin D","mcg"],["Magnesium","mg"],["Zinc","mg"],["Vitamin B12","mcg"]]
+};
+function addNutrRow(name, unit){
   const r = document.createElement("div");
   r.className = "nutrrow";
-  r.innerHTML = `<input type="text" placeholder="e.g. Vitamin D3"><input type="number" inputmode="decimal" placeholder="Amt"><select>${NUTR_UNITS.map(u=>`<option>${u}</option>`).join("")}</select><button type="button" class="ndel" aria-label="Remove">×</button>`;
+  r.innerHTML = `<input type="text" placeholder="e.g. Vitamin D3" value="${esc(name||"")}"><input type="number" inputmode="decimal" placeholder="Amt"><select>${NUTR_UNITS.map(u=>`<option${u===unit?" selected":""}>${u}</option>`).join("")}</select><button type="button" class="ndel" aria-label="Remove">×</button>`;
   r.querySelector(".ndel").onclick = ()=>r.remove();
   document.getElementById("cNutrRows").appendChild(r);
+}
+let cNutrSeed = "";
+function nutrRowsPristine(){
+  const cur = [...document.querySelectorAll("#cNutrRows .nutrrow")].map(r=>r.children[0].value+"|"+r.children[2].value).join(";");
+  return cur===cNutrSeed && [...document.querySelectorAll("#cNutrRows .nutrrow")].every(r=>!String(r.children[1].value).trim());
+}
+function seedNutrRows(){
+  document.getElementById("cNutrRows").innerHTML = "";
+  (NUTR_DEFAULTS[cKind]||[]).forEach(([n,u])=>addNutrRow(n,u));
+  cNutrSeed = [...document.querySelectorAll("#cNutrRows .nutrrow")].map(r=>r.children[0].value+"|"+r.children[2].value).join(";");
 }
 document.getElementById("cNutrAdd").onclick = addNutrRow;
 document.getElementById("cName").addEventListener("input", e=>{
