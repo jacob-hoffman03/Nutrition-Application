@@ -1051,7 +1051,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-au";
+const APP_VERSION = "2026.09.18-av";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2438,7 +2438,7 @@ function openInfo(k){
 }
 /* Minecraft-totem style medal celebration: the medal pops big in the center of the
    screen for a moment, then fades. Medals also pay pack points for the Pack Shop. */
-const PTS = {silver:10, gold:25, diamond:50};
+const PTS = {silver:2, gold:3, diamond:5};
 function totemPop(md, pts){
   const wrap = document.getElementById("totemWrap");
   document.getElementById("totemMedal").innerHTML = medalSVG(md.color, true);
@@ -2853,15 +2853,15 @@ function openMuscleInfo(){
 document.getElementById("calInfo").onclick = openRecoveryInfo;
 const MEDAL_DEFS = [
   {id:"silver", name:"Silver", color:"#a9b0c2", desc:"Log any food today — showing up counts."},
-  {id:"gold", name:"Gold", color:"#f2b705", desc:"Finish within ±10% of your calorie goal and hit your protein goal."},
-  {id:"diamond", name:"Diamond", color:"#5ec8f2", desc:"Gold, plus your water target, plus a trained workout."}
+  {id:"gold", name:"Gold", color:"#f2b705", desc:"Hit at least 90% of your protein goal."},
+  {id:"diamond", name:"Diamond", color:"#5ec8f2", desc:"Gold, plus your water target. No workout needed."}
 ];
 function medalsFor(ds){
-  const t = totals(ds), g = S.goals, goal = goalTotal();
+  const t = totals(ds), g = S.goals;
   const silver = t.cal > 0;
-  const gold = silver && goal>0 && g.protein>0 && t.cal>=goal*0.9 && t.cal<=goal*1.1 && t.p>=g.protein;
+  const gold = silver && g.protein>0 && t.p >= g.protein*0.9;
   const d = S.days[ds];
-  const diamond = gold && d && (d.water||0)>=waterTarget() && trainDay(ds).done;
+  const diamond = gold && d && waterTarget()>0 && (d.water||0)>=waterTarget();
   return {silver:!!silver, gold:!!gold, diamond:!!diamond};
 }
 function medalSVG(color, earned){
@@ -2879,7 +2879,7 @@ function openMedalInfo(){
   document.getElementById("infoTitle").textContent = "Daily medals";
   document.getElementById("infoBody").innerHTML = MEDAL_DEFS.map(md=>
     `<div class="irow"><b style="color:${md.color}">${md.name}</b> ${m[md.id]?"— earned today":"— not yet"}<br><span style="color:var(--muted)">${md.desc}</span></div>`).join("")+
-    `<div class="irow" style="color:var(--muted)">Medals reset every day. Diamond needs a training day, so planned recovery days top out at Gold.</div>`;
+    `<div class="irow" style="color:var(--muted)">Medals reset every day.</div>`;
   document.getElementById("infoSheet").classList.add("open");
 }
 function avatarHTML(pr, px){
