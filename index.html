@@ -1069,7 +1069,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bs";
+const APP_VERSION = "2026.09.18-bt";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -2510,7 +2510,7 @@ function paintWtGoal(){
   if(!(cur>0)){ box.innerHTML = `<div class="rangenote">Log your weight below to start tracking progress toward ${d1(g)} ${wu}.</div>`+msHtml; wireMs(); return; }
   const ws = sortedWeights(), start = (S.goals.weightStart>0) ? S.goals.weightStart : (ws.length ? ws[0].w : cur);
   const toGo = g - cur;
-  const done = toGo===0 ? "At goal" : toGo>0 ? d1(toGo)+" "+wu+" to go" : d1(toGo)+" "+wu+" above goal";
+  const done = toGo===0 ? "At goal" : toGo>0 ? d1(toGo)+" "+wu+" to go" : d1(Math.abs(toGo))+" "+wu+" above goal";
   const pct = g===start ? 100 : Math.min(100, Math.max(0,(cur-start)/(g-start)*100));
   const tr = weightTrend();
   const f1 = v => (v>=0?"+":"")+d1(v);
@@ -2929,6 +2929,7 @@ function paintMaintNote(){
 }
 function readProfile(){
   const p = S.goals.profile, met = p.units==="met";
+  const oldW = p.weightLb||0;
   const age = parseInt(document.getElementById("pfAge").value);
   if(age>=10 && age<=100) p.age = age;
   if(met){
@@ -2948,6 +2949,14 @@ function readProfile(){
   const wst = parseFloat(document.getElementById("pfWaist").value);
   if(met) p.waistIn = (wst>40 && wst<200) ? wst/2.54 : 0; /* cm → in */
   else p.waistIn = (wst>15 && wst<80) ? wst : 0;
+  /* A manual profile-weight edit IS a weigh-in: it becomes today's entry (replacing
+     any existing one) so the Progress header, chart, and history always agree with
+     the profile field. Editing any other field leaves weigh-ins untouched. */
+  if(p.weightLb>0 && Math.abs(p.weightLb-oldW)>=0.05){
+    const t = todayStr(), w = Math.round(p.weightLb*10)/10;
+    S.weights = (S.weights||[]).filter(x=>x.d!==t); S.weights.push({d:t, w});
+    syncWeightFromLog(w, t);
+  }
 }
 /* Commit every typed value on the Goals page into S.goals (memory; callers save).
    Called before ANY re-render and on every field change, so a tap can never
