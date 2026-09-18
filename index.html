@@ -264,6 +264,14 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .crow{display:flex; gap:12px; align-items:flex-start; font-size:15px; font-weight:700; padding:14px 0; cursor:pointer;}
 .crow input{width:22px; height:22px; margin-top:1px; accent-color:var(--acc); flex:none;}
 .chint{display:block; font-weight:400; color:var(--muted); font-size:12px; margin-top:3px; line-height:1.45;}
+.nrow{padding:12px 0; border-bottom:1px solid var(--line);}
+.nrow:last-child{border-bottom:none;}
+.nhead{display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:15px; font-weight:700;}
+.nhead b{font-weight:700; color:var(--muted); white-space:nowrap;}
+.nhead b i{font-style:normal;}
+.nhead b i.met{color:var(--acc);}
+.nbar{height:6px; background:#f0f0f5; border-radius:4px; margin-top:8px; overflow:hidden;}
+.nbar i{display:block; height:100%; background:linear-gradient(90deg,#5b5bf0,#8b8bf5); border-radius:4px;}
 .cphotodel{border:none; background:none; color:var(--red); font-weight:700; font-size:14px; font-family:inherit; padding:8px 4px;}
 .frow .fim img{width:100%; height:100%; object-fit:cover; display:block;}
 .dhead{display:flex; align-items:center; gap:12px;}
@@ -373,6 +381,11 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div class="macrow" style="padding:10px 0"><div class="mhead"><span>Protein</span><b><i id="avalPv">0</i> / <span id="avalPg">150</span>g</b></div><div class="mbar"><i id="abarP" style="background:linear-gradient(90deg,#12cfae,#54e6c4)"></i></div></div>
       <div class="macrow" style="padding:10px 0"><div class="mhead"><span>Fat</span><b><i id="avalFv">0</i> / <span id="avalFg">83</span>g</b></div><div class="mbar"><i id="abarF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></div></div>
     </div>
+    <div class="secttl">All Nutrients</div>
+    <div class="card" style="padding-top:2px; padding-bottom:10px">
+      <div id="nutrTable"></div>
+      <div class="rangenote" id="nutrNote" style="margin-top:8px"></div>
+    </div>
   </section>
 
   <!-- FOODS -->
@@ -430,6 +443,8 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <div class="rangenote" id="pfNote"></div>
     <div class="cfrow" style="margin-top:8px"><span><b style="font-size:14px">Auto-adjust as I gain weight</b><br><span class="ph">Recalculates maintenance + macros when you log a new weight</span></span><button class="chip" id="pfAuto">Off</button></div>
     <div class="rangenote" id="pfAutoNote"></div>
+    <div class="cfrow" style="margin-top:8px"><span><b style="font-size:14px">Auto-tune maintenance</b><br><span class="ph">Nudges maintenance ±150 kcal when your 2-week weigh-in trend misses your target — max once per 2 weeks</span></span><button class="chip" id="pfTune">Off</button></div>
+    <div class="rangenote" id="pfTuneNote"></div>
     <div class="card goalbig" style="margin-top:14px">
       <div class="glabel">Your Daily Calorie Goal</div>
       <div class="gnum"><span id="goalTotal">3000</span> <small>kcal</small></div>
@@ -608,11 +623,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div id="cSuppSec" style="display:none">
         <div class="cfsec">Serving unit</div>
         <div class="cfcard"><div class="chips" id="cUnitChips" style="padding:12px 0"></div></div>
-        <div class="cfsec">Nutrients <span style="font-weight:400">(optional)</span></div>
-        <div class="cfcard">
-          <div id="cNutrRows"></div>
-          <div style="padding:4px 0 14px"><button type="button" class="cphotobtn" id="cNutrAdd">+ Add nutrient</button></div>
-        </div>
         <div class="cfsec">Hydration</div>
         <div class="cfcard"><label class="crow"><input type="checkbox" id="cXW"><span>Needs extra water<span class="chint">e.g. creatine — adds +2 glasses to your water target on days you log it</span></span></label></div>
       </div>
@@ -636,6 +646,11 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
         <div class="cfrow"><span>Carbs (g)</span><input id="cC" type="number" inputmode="decimal" placeholder="Optional"></div>
         <div class="cfrow"><span>Protein (g)</span><input id="cP" type="number" inputmode="decimal" placeholder="Optional"></div>
         <div class="cfrow"><span>Fat (g)</span><input id="cF" type="number" inputmode="decimal" placeholder="Optional"></div>
+      </div>
+      <div class="cfsec">Vitamins &amp; minerals <span style="font-weight:400">(optional)</span></div>
+      <div class="cfcard">
+        <div id="cNutrRows"></div>
+        <div style="padding:4px 0 14px"><button type="button" class="cphotobtn" id="cNutrAdd">+ Add nutrient</button></div>
       </div>
       <button class="bigbtn" id="cSave">Save</button>
     </div>
@@ -676,7 +691,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-r";
+const APP_VERSION = "2026.09.18-s";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
@@ -839,7 +854,7 @@ function renderDiary(){
     const mc = items.reduce((a,e)=>a+e.cal,0);
     let html = `<div class="mrow${mi===MEALS.length-1 && !items.length ? "" : " noborder"}"><span class="mico" style="background:${MEAL_TINT[m]}">${MEAL_ICON[m]}</span><span class="mname">${MEAL_LABEL[m]}</span><span class="mkcal">${Math.round(mc)} kcal</span><button class="madd" data-add="${m}" aria-label="Add to ${MEAL_LABEL[m]}">+</button></div>`;
     html += items.length ? items.map(e=>{ const im = entryImg(e);
-      const sub = e.kind==="supp" && e.nutrs && e.nutrs.length
+      const sub = (e.nutrs && e.nutrs.length)
         ? `${esc(e.s)}${e.qty>1?` × ${e.qty}`:""} · ${e.nutrs.map(x=>`${r1(x.amt)} ${esc(x.u)}`).join(" + ")}`
         : `${e.qty} × ${esc(e.s)}`;
       return `<div class="logrow">${im?`<span class="lthumb"><img src="${im}" alt=""></span>`:""}<span class="nm">${esc(e.n)} <span>${sub}</span></span><span class="kc">${Math.round(e.cal)}</span><button class="logdel" data-m="${m}" data-id="${e.id}">×</button></div>`;
@@ -867,6 +882,85 @@ function renderDiary(){
     ? "Manual target — set to 0 in Settings for an auto target."
     : "Auto target from your maintenance + activity (IOM 1.0–1.5 mL/kcal)" + (dayHasXW() ? " + 2 glasses for a creatine-type supplement." : ". Tap a glass to add, tap a full one to remove.");
   renderWeek();
+}
+
+/* ============ MICRONUTRIENT TRACKING ============ */
+/* FDA Daily Values (adults) — shown as the target in All Nutrients */
+const NUTR_DV = {
+  "Vitamin A":{dv:900,unit:"mcg"}, "Vitamin C":{dv:90,unit:"mg"}, "Vitamin D":{dv:20,unit:"mcg",iu:40},
+  "Vitamin E":{dv:15,unit:"mg"}, "Vitamin K":{dv:120,unit:"mcg"},
+  "Thiamin":{dv:1.2,unit:"mg"}, "Riboflavin":{dv:1.3,unit:"mg"}, "Niacin":{dv:16,unit:"mg"},
+  "Vitamin B6":{dv:1.7,unit:"mg"}, "Folate":{dv:400,unit:"mcg"}, "Vitamin B12":{dv:2.4,unit:"mcg"},
+  "Biotin":{dv:30,unit:"mcg"}, "Pantothenic acid":{dv:5,unit:"mg"},
+  "Calcium":{dv:1300,unit:"mg"}, "Iron":{dv:18,unit:"mg"}, "Phosphorus":{dv:1250,unit:"mg"},
+  "Iodine":{dv:150,unit:"mcg"}, "Magnesium":{dv:420,unit:"mg"}, "Zinc":{dv:11,unit:"mg"},
+  "Selenium":{dv:55,unit:"mcg"}, "Copper":{dv:0.9,unit:"mg"}, "Manganese":{dv:2.3,unit:"mg"},
+  "Chromium":{dv:35,unit:"mcg"}, "Molybdenum":{dv:45,unit:"mcg"}, "Chloride":{dv:2300,unit:"mg"},
+  "Potassium":{dv:4700,unit:"mg"}, "Sodium":{dv:2300,unit:"mg"},
+  "Fiber":{dv:28,unit:"g"}, "Cholesterol":{dv:300,unit:"mg"}
+};
+const NUTR_ALIASES = [
+  [/vitamin\s*d|cholecalciferol/i,"Vitamin D"], [/vitamin\s*a|retinol/i,"Vitamin A"],
+  [/vitamin\s*b6|pyridoxine/i,"Vitamin B6"], [/vitamin\s*b12|cobalamin/i,"Vitamin B12"],
+  [/vitamin\s*c|ascorbic/i,"Vitamin C"], [/vitamin\s*e|tocopherol|tocotrienol/i,"Vitamin E"],
+  [/vitamin\s*k/i,"Vitamin K"], [/thiamin|vitamin\s*b1/i,"Thiamin"], [/riboflavin|vitamin\s*b2/i,"Riboflavin"],
+  [/niacin|nicotin|vitamin\s*b3/i,"Niacin"], [/folate|folic|vitamin\s*b9/i,"Folate"],
+  [/biotin|vitamin\s*b7/i,"Biotin"], [/pantothenic|vitamin\s*b5/i,"Pantothenic acid"],
+  [/calcium/i,"Calcium"], [/iron/i,"Iron"], [/magnesium/i,"Magnesium"], [/phosphorus/i,"Phosphorus"],
+  [/iodine/i,"Iodine"], [/zinc/i,"Zinc"], [/selenium/i,"Selenium"], [/copper/i,"Copper"],
+  [/manganese/i,"Manganese"], [/chromium/i,"Chromium"], [/molybdenum/i,"Molybdenum"],
+  [/potassium/i,"Potassium"], [/\bsodium\b/i,"Sodium"], [/chloride/i,"Chloride"],
+  [/fiber|fibre/i,"Fiber"], [/sugar/i,"Sugars"], [/cholesterol/i,"Cholesterol"], [/creatine/i,"Creatine"]
+];
+function canonNutr(name){
+  const t = String(name||"").trim();
+  for(const [re,d] of NUTR_ALIASES) if(re.test(t)) return d;
+  return t.replace(/\w\S*/g, w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase());
+}
+const WT2MG = {g:1000, mg:1, mcg:0.001};
+function dayNutrients(k){
+  const d = S.days[k], map = new Map();
+  if(d) MEALS.forEach(m=>(d.meals[m]||[]).forEach(e=>(e.nutrs||[]).forEach(x=>{
+    const disp = canonNutr(x.n), u = String(x.u||"").toLowerCase();
+    const cls = u==="iu" ? "iu" : u==="ml" ? "ml" : "wt";
+    const key = disp+"\x00"+cls;
+    const base = cls==="wt" ? x.amt*(WT2MG[u]||1) : x.amt;
+    if(!map.has(key)) map.set(key, {disp, cls, base:0});
+    map.get(key).base += base;
+  })));
+  const out = [];
+  map.forEach(v=>{
+    const dv = NUTR_DV[v.disp];
+    let val, unit, pct = null, target = null;
+    if(v.cls==="wt" && dv){
+      unit = dv.unit; val = v.base/(WT2MG[unit]||1); target = dv.dv; pct = val/dv.dv*100;
+    } else if(v.cls==="iu" && dv && dv.iu){
+      unit = "IU"; val = v.base; target = dv.dv*dv.iu; pct = val/target*100;
+    } else if(v.cls==="wt"){
+      val = v.base; unit = val>=1000 ? "g" : "mg"; if(unit==="g") val = val/1000;
+    } else { val = v.base; unit = v.cls==="iu" ? "IU" : "mL"; }
+    out.push({disp:v.disp, val, unit, target, pct});
+  });
+  out.sort((a,b)=>((b.pct===null?-1:b.pct)-(a.pct===null?-1:a.pct)) || a.disp.localeCompare(b.disp));
+  return out;
+}
+function paintNutrients(k){
+  const rows = dayNutrients(k), box = document.getElementById("nutrTable");
+  if(!rows.length){
+    box.innerHTML = `<div class="empty">No nutrient data yet.<br>Add vitamins &amp; minerals when creating custom foods.</div>`;
+  } else {
+    box.innerHTML = rows.map(r=>{
+      const vs = r1(r.val);
+      const right = r.target!=null
+        ? `<b><i class="${r.pct>=100?"met":""}">${vs}</i> / ${r1(r.target)}</b>`
+        : `<b>${vs}</b>`;
+      const bar = r.pct!=null ? `<div class="nbar"><i style="width:${Math.min(r.pct,100)}%"></i></div>` : "";
+      return `<div class="nrow"><div class="nhead"><span>${esc(r.disp)} (${r.unit})</span>${right}</div>${bar}</div>`;
+    }).join("");
+  }
+  document.getElementById("nutrNote").textContent = rows.length
+    ? "Combined from everything logged today. Targets are FDA Daily Values — add nutrients when creating custom foods for better data."
+    : "";
 }
 
 /* ============ ANALYSIS ============ */
@@ -901,6 +995,7 @@ function renderAnalysis(){
   $("avalCv").textContent = r1(t.c); $("avalCg").textContent = g.carbs;
   $("avalPv").textContent = r1(t.p); $("avalPg").textContent = g.protein;
   $("avalFv").textContent = r1(t.f); $("avalFg").textContent = g.fat;
+  paintNutrients(k);
 }
 </script>
 <script>
@@ -950,7 +1045,7 @@ function showDetail(){
   document.getElementById("dName").textContent = sheetFood.n;
   const dp = document.getElementById("dPhoto");
   if(sheetFood.img){ dp.src = sheetFood.img; dp.style.display = ""; } else { dp.removeAttribute("src"); dp.style.display = "none"; }
-  document.getElementById("dMacros").textContent = (sheetFood.kind==="supp" && sheetFood.nutrs && sheetFood.nutrs.length)
+  document.getElementById("dMacros").textContent = (sheetFood.nutrs && sheetFood.nutrs.length)
     ? `${sheetFood.s} · ${sheetFood.nutrs.map(x=>`${r1(x.amt)} ${x.u}`).join(" + ")}`
     : `${sheetFood.s} · ${Math.round(sheetFood.cal)} cal · P ${r1(sheetFood.p)}g C ${r1(sheetFood.c)}g F ${r1(sheetFood.f)}g`;
   document.querySelectorAll("#mealChips .chip").forEach(c=>c.classList.toggle("sel", c.dataset.m===sheetMeal));
@@ -973,7 +1068,7 @@ document.getElementById("confirmAdd").onclick = ()=>{
   const d = day(), f = sheetFood;
   d.meals[sheetMeal].push({id:uid(), n:f.n, s:f.s, qty:sheetQty, img:f.img||null,
     cal:f.cal*sheetQty, p:f.p*sheetQty, c:f.c*sheetQty, f:f.f*sheetQty,
-    kind:f.kind||"food", nutrs:f.nutrs||[], xw:!!f.xw});
+    kind:f.kind||"food", nutrs:(f.nutrs||[]).map(x=>({n:x.n, amt:x.amt*sheetQty, u:x.u})), xw:!!f.xw});
   save(); closeSheet(); renderDiary();
 };
 
@@ -1060,9 +1155,9 @@ document.getElementById("cSave").onclick = ()=>{
   if(!isSupp && !(cal>0)){ alert("Enter calories for the food."); return; }
   const num = id => parseFloat(document.getElementById(id).value) || 0;
   const sTxt = document.getElementById("cServ").value.trim() || (isSupp ? "1 "+cUnit : "1 serving");
-  const nutrs = isSupp ? [...document.querySelectorAll("#cNutrRows .nutrrow")].map(r=>({
+  const nutrs = [...document.querySelectorAll("#cNutrRows .nutrrow")].map(r=>({
     n:r.children[0].value.trim(), amt:parseFloat(r.children[1].value)||0, u:r.children[2].value
-  })).filter(x=>x.n && x.amt>0) : [];
+  })).filter(x=>x.n && x.amt>0);
   S.customFoods.push({n, s:sTxt,
     cal, p:num("cP"), c:num("cC"), f:num("cF"), img:cPhotoData,
     kind:isSupp?"supp":"food", unit:isSupp?cUnit:null, nutrs, xw:isSupp && document.getElementById("cXW").checked});
@@ -1149,12 +1244,23 @@ function paintCalCheck(){
   const f2 = v => (v>=0?"+":"")+v.toFixed(2);
   let msg = "Actual: "+f2(rate)+" lb/wk ("+f2(pct)+"%/wk). Target: "+bd[0].toFixed(2)+" to "+bd[1].toFixed(2)+"%/wk. ";
   let suggest = 0;
-  if(pct < bd[0]-0.05){ msg += "Below target — consider +100–150 kcal/day."; suggest = 150; }
-  else if(pct > bd[1]+0.05){ msg += "Above target — consider −100–150 kcal/day."; suggest = -150; }
-  else msg += "On target — hold steady and re-check in 2–3 weeks.";
-  msg += " Give any change 2–3 weeks before judging it.";
+  if(pct < bd[0]-0.05) suggest = 150;
+  else if(pct > bd[1]+0.05) suggest = -150;
+  const lastT = S.goals.lastAutoTune;
+  const sinceT = lastT ? Math.round((new Date(todayStr()+"T12:00:00")-new Date(lastT+"T12:00:00"))/86400000) : 999;
+  if(!suggest){
+    msg += "On target — hold steady and re-check in 2–3 weeks.";
+  } else if(maybeAutoTune(suggest)){
+    msg += "Auto-tuned just now: maintenance "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal applied from your trend. Re-check in 2–3 weeks.";
+    save(); renderGoals(); renderProgress(); renderDiary(); return;
+  } else if(sinceT < 21){
+    msg += (suggest>0?"Below target. ":"Above target. ")+"Maintenance was tuned on "+lastT+" — give it 2–3 weeks before changing again.";
+  } else {
+    msg += suggest>0 ? "Below target — consider +100–150 kcal/day." : "Above target — consider −100–150 kcal/day.";
+    msg += " Give any change 2–3 weeks before judging it.";
+  }
   out.textContent = msg;
-  if(suggest){
+  if(suggest && sinceT >= 21){
     wrap.style.display = "";
     btn.textContent = "Apply "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal/day";
     btn.onclick = ()=>{
@@ -1294,7 +1400,23 @@ function renderProfile(){
   const at = document.getElementById("pfAuto");
   at.textContent = p.auto?"On":"Off"; at.classList.toggle("sel", !!p.auto);
   document.getElementById("pfAutoNote").textContent = S.goals.autoNote || "";
+  const tn = document.getElementById("pfTune");
+  tn.textContent = S.goals.autoTune?"On":"Off"; tn.classList.toggle("sel", !!S.goals.autoTune);
+  document.getElementById("pfTuneNote").textContent = S.goals.tuneNote || "The formulas are only ±10% accurate — your weigh-in trend is the calibration instrument.";
   paintMaintNote();
+}
+/* Auto-tune: nudge maintenance itself toward the weigh-in trend (max once per 2 weeks).
+   The ±150 kcal cap keeps one noisy fortnight from swinging the target. */
+function maybeAutoTune(suggest){
+  if(!S.goals.autoTune || !suggest) return false;
+  const last = S.goals.lastAutoTune;
+  const since = last ? Math.round((new Date(todayStr()+"T12:00:00")-new Date(last+"T12:00:00"))/86400000) : 999;
+  if(since < 14) return false;
+  S.goals.maintenance = Math.max(1200, Math.round(S.goals.maintenance + suggest));
+  applyModePct();
+  S.goals.lastAutoTune = todayStr();
+  S.goals.tuneNote = "Auto-tune "+todayStr()+": maintenance "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal from your weight trend.";
+  return true;
 }
 /* auto-adjust everything when body weight changes: maintenance, protein (1g/lb floor), fat 25%, carbs rest */
 function maybeAutoAdjust(newLb, dateStr){
@@ -1373,6 +1495,10 @@ document.querySelectorAll("#pfSex .chip").forEach(c=>c.onclick=()=>{
 });
 document.getElementById("pfAuto").onclick = ()=>{
   S.goals.profile.auto = !S.goals.profile.auto;
+  save(); renderProfile();
+};
+document.getElementById("pfTune").onclick = ()=>{
+  S.goals.autoTune = !S.goals.autoTune;
   save(); renderProfile();
 };
 document.querySelectorAll("#goalMode .chip").forEach(c=>c.onclick=()=>{
