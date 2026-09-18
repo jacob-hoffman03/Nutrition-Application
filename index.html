@@ -24,18 +24,15 @@
 .targetline span{font-size:12px;}
 .field small{display:block;font-size:12px;color:var(--muted);margin-top:4px;}
 .ver{text-align:center;font-size:11px;color:var(--muted);margin:14px 0 4px;}
-.statuspill{border-radius:16px;padding:12px 14px 10px;margin-bottom:12px;transition:background-color .3s;cursor:pointer;-webkit-tap-highlight-color:transparent;}
-.sprow{display:flex;align-items:center;gap:12px;}
-.sptext{flex:1;min-width:0;}
-.spmore{color:var(--muted);flex:none;display:flex;}
-.spmore svg{width:18px;height:18px;}
-.sptrack{position:relative;height:10px;border-radius:99px;background:rgba(28,39,51,.08);margin-top:12px;}
-.spfill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;width:0;transition:width .45s ease,background-color .3s;}
-.spmark{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:2px;background:rgba(28,39,51,.4);}
-.splabels{position:relative;height:16px;margin-top:5px;font-size:11px;color:var(--muted);font-weight:600;}
-.splabels span{position:absolute;transform:translateX(-50%);white-space:nowrap;}
-.splabels .l0{left:0;transform:none;}
-.splabels .l2{left:100%;transform:translateX(-100%);}
+.statusbar{display:flex;align-items:center;gap:10px;padding:14px;margin-bottom:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.sbtrack{position:relative;flex:1;height:12px;border-radius:99px;background:#e9edf2;box-shadow:inset 0 1px 2px rgba(20,30,40,.10);}
+.sbfill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;width:0;transition:width .45s ease;}
+.sbmark{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:2px;background:rgba(28,39,51,.45);}
+.sbinfo{width:26px;height:26px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:#e9edf2;color:#7b8794;}
+.sbinfo svg{width:13px;height:13px;}
+.zonenow{background:#f4f7fa;border-radius:12px;padding:10px 12px;margin-bottom:4px;}
+.zonenow b{font-size:14px;}
+.zonenow p{margin:4px 0 0;font-size:13px;line-height:1.45;}
 .zonerow{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
 .zdot{width:38px;height:38px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;}
 .zdot svg{width:20px;height:20px;}
@@ -44,19 +41,6 @@
 .zonerow p{margin:5px 0 0;font-size:13px;line-height:1.45;}
 .zonerow p small{color:var(--muted);}
 .zonefoot{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.55;}
-.statuspill .spicon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;color:#fff;}
-.statuspill .spicon svg{width:21px;height:21px;}
-.statuspill.deficit{background:#fdeeee;}
-.statuspill.deficit .spicon{background:var(--red);}
-.statuspill.deficit .sptitle{color:#c93a3a;}
-.statuspill.surplus{background:#fdf3e2;}
-.statuspill.surplus .spicon{background:var(--orange);}
-.statuspill.surplus .sptitle{color:#b87a17;}
-.statuspill.ontrack{background:#e4f6ec;}
-.statuspill.ontrack .spicon{background:var(--green);}
-.statuspill.ontrack .sptitle{color:#1c8a4c;}
-.statuspill .sptitle{font-size:15px;font-weight:800;display:block;}
-.statuspill .spdet{font-size:12.5px;color:var(--muted);display:block;margin-top:2px;}
 .fico{width:12px;height:12px;vertical-align:-1px;margin-right:5px;}
 html,body{margin:0; padding:0;}
 body{
@@ -103,7 +87,7 @@ header.appbar{
 .macrow .mhead{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;}
 .macrow .mhead span{font-size:14px; font-weight:700;}
 .macrow .mhead b{font-size:13px; color:var(--muted); font-weight:600;}
-.macrow .mbar{height:10px; border-radius:99px; background:#f3ede8; overflow:hidden;}
+.macrow .mbar{height:10px; border-radius:99px; background:#f3ede8; overflow:hidden; box-shadow:inset 0 1px 2px rgba(20,30,40,.07);}
 .macrow .mbar i{display:block; height:100%; border-radius:99px; width:0;}
 .analysislink{display:block; margin:8px auto 0; background:none; border:none; color:var(--blue); font-size:16px; font-weight:800; padding:6px 12px;}
 .searchcard{padding:12px;}
@@ -228,14 +212,9 @@ header.appbar{
 
   <!-- DIARY -->
   <section class="view active" id="view-diary">
-    <div class="statuspill deficit" id="statusPill" role="button" tabindex="0" aria-label="What the colors mean">
-      <div class="sprow">
-        <span class="spicon" id="statusIcon"></span>
-        <div class="sptext"><span class="sptitle" id="statusTitle"></span><span class="spdet" id="statusDetail"></span></div>
-        <span class="spmore"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="8" r="1.2" fill="currentColor" stroke="none"/></svg></span>
-      </div>
-      <div class="sptrack"><div class="spfill" id="spFill"></div><div class="spmark" id="spMark"></div></div>
-      <div class="splabels"><span class="l0">0</span><span id="spMaintLbl"></span><span class="l2" id="spTargetLbl"></span></div>
+    <div class="statusbar" id="statusPill" role="button" tabindex="0" aria-label="Intake details">
+      <div class="sbtrack"><div class="sbfill" id="spFill"></div><div class="sbmark" id="spMark"></div></div>
+      <span class="sbinfo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.6" r="1.4" fill="currentColor" stroke="none"/></svg></span>
     </div>
     <div class="card weekcard">
       <div class="dhead">
@@ -264,9 +243,9 @@ header.appbar{
           </div>
         </div>
         <div class="macros">
-          <div class="macrow"><div class="mhead"><span>Carbs</span><b id="valC">0 / 375g</b></div><div class="mbar"><i id="barC" style="background:#ff9f43"></i></div></div>
-          <div class="macrow"><div class="mhead"><span>Protein</span><b id="valP">0 / 150g</b></div><div class="mbar"><i id="barP" style="background:#2fbf71"></i></div></div>
-          <div class="macrow"><div class="mhead"><span>Fat</span><b id="valF">0 / 83g</b></div><div class="mbar"><i id="barF" style="background:#8b7cf6"></i></div></div>
+          <div class="macrow"><div class="mhead"><span>Carbs</span><b id="valC">0 / 375g</b></div><div class="mbar"><i id="barC" style="background:linear-gradient(90deg,#ff9f43,#ffc53d)"></i></div></div>
+          <div class="macrow"><div class="mhead"><span>Protein</span><b id="valP">0 / 150g</b></div><div class="mbar"><i id="barP" style="background:linear-gradient(90deg,#1faa5c,#5fe08e)"></i></div></div>
+          <div class="macrow"><div class="mhead"><span>Fat</span><b id="valF">0 / 83g</b></div><div class="mbar"><i id="barF" style="background:linear-gradient(90deg,#7a68f0,#b3a5ff)"></i></div></div>
         </div>
       </div>
       <button class="analysislink" id="analysisLink">Nutrition Analysis <span>›</span></button>
@@ -460,7 +439,7 @@ const ICONS = {
 };
 const MEAL_LABEL = {breakfast:"Breakfast", lunch:"Lunch", dinner:"Dinner", snacks:"Snacks"};
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-g";
+const APP_VERSION = "2026.09.18-h";
 
 /* ============ STATE ============ */
 const defGoals = () => ({maintenance:2700, surplus:300, protein:150, carbs:375, fat:83, water:10, weight:150});
@@ -511,6 +490,27 @@ function renderWeek(){
 }
 
 /* ============ DIARY ============ */
+function statusInfo(){
+  const k = viewDate(), t = totals(k), g = S.goals;
+  const mCal = g.maintenance>0?g.maintenance:0, sAdd = g.surplus>0?g.surplus:0, tCal = mCal+sAdd, eCal = t.cal;
+  const defc = Math.round(mCal-eCal), dpct = mCal>0?Math.round(defc/mCal*100):0;
+  const pAte = Math.round(t.p||0), pGoal = g.protein||0, lowP = pGoal>0 && pAte < pGoal*0.8;
+  let cls,title,det,grad;
+  if(eCal < mCal){
+    cls="deficit"; title="Calorie deficit"; grad="linear-gradient(90deg,#ff3b30,#ff8a5c)";
+    const tier = defc>=500 ? "deep enough to stall muscle gain" : defc>=250 ? "big enough to slow gains if it keeps up" : "small gap — closable with a snack";
+    det = defc.toLocaleString()+" cal under maintenance ("+dpct+"%) — "+tier;
+    if(lowP) det += ". Protein only "+pAte+"g of "+pGoal+"g — low protein makes a deficit cost more muscle";
+  }else if(eCal < tCal){
+    cls="surplus"; title="Past maintenance"; grad="linear-gradient(90deg,#ff9f43,#ffd23d)";
+    det = Math.round(tCal-eCal).toLocaleString()+" cal to your daily target";
+    if(lowP) det += " · protein "+pAte+"g of "+pGoal+"g";
+  }else{
+    cls="ontrack"; title="On track"; grad="linear-gradient(90deg,#1faa5c,#66e39a)";
+    det = "+"+Math.round(eCal-mCal).toLocaleString()+" over maintenance — gaining zone";
+  }
+  return {cls,title,det,grad,eCal,mCal,tCal};
+}
 function renderDiary(){
   const k = viewDate(), d = day(), g = S.goals, t = totals(k);
   const dt = new Date(k+"T12:00:00");
@@ -542,38 +542,12 @@ function renderDiary(){
   const fsur = document.getElementById("flagSur");
   if(eCal > mCal){ fsur.innerHTML = FLAGI + "+"+Math.round(eCal-mCal).toLocaleString()+" SUR"; fsur.classList.add("on"); }
   else { fsur.innerHTML = FLAGI + Math.round(mCal-eCal).toLocaleString()+" to SUR"; fsur.classList.remove("on"); }
-  const pill = document.getElementById("statusPill");
-  const defc = Math.round(mCal - eCal);
-  const dpct = mCal>0 ? Math.round(defc/mCal*100) : 0;
-  const pAte = Math.round(t.p||0), pGoal = g.protein||0;
-  const lowP = pGoal>0 && pAte < pGoal*0.8;
-  let pcls, picon, ptitle, pdet, fillc;
-  if(eCal < mCal){
-    pcls="deficit"; picon=ICONS.warn; fillc="#ff5c5c"; ptitle="Calorie deficit";
-    const tier = defc>=500 ? "deep enough to stall muscle gain" : defc>=250 ? "big enough to slow gains if it keeps up" : "small gap — closable with a snack";
-    pdet = defc.toLocaleString()+" cal under maintenance ("+dpct+"%) — "+tier;
-    if(lowP) pdet += ". Protein only "+pAte+"g of "+pGoal+"g — low protein makes a deficit cost more muscle";
-  }else if(eCal < tCal){
-    pcls="surplus"; picon=ICONS.up; fillc="#ff9f43"; ptitle="Past maintenance";
-    pdet = Math.round(tCal-eCal).toLocaleString()+" cal to your daily target";
-    if(lowP) pdet += " · protein "+pAte+"g of "+pGoal+"g";
-  }else{
-    pcls="ontrack"; picon=ICONS.check; fillc="#2fbf71"; ptitle="On track";
-    pdet = "+"+Math.round(eCal-mCal).toLocaleString()+" over maintenance — gaining zone";
-  }
-  pill.className = "statuspill "+pcls;
-  document.getElementById("statusIcon").innerHTML = picon;
-  document.getElementById("statusTitle").textContent = ptitle;
-  document.getElementById("statusDetail").textContent = pdet;
+  const st = statusInfo();
   const fill = document.getElementById("spFill");
-  fill.style.width = (tCal>0 ? Math.min(eCal/tCal,1)*100 : 0)+"%";
-  fill.style.backgroundColor = fillc;
-  const mpct = tCal>0 ? mCal/tCal*100 : 0;
+  fill.style.width = (st.tCal>0 ? Math.min(st.eCal/st.tCal,1)*100 : 0)+"%";
+  fill.style.background = st.grad;
+  const mpct = st.tCal>0 ? st.mCal/st.tCal*100 : 0;
   document.getElementById("spMark").style.left = "calc("+mpct+"% - 1px)";
-  const ml = document.getElementById("spMaintLbl");
-  ml.textContent = Math.round(mCal).toLocaleString();
-  ml.style.left = Math.min(Math.max(mpct,10),90)+"%";
-  document.getElementById("spTargetLbl").textContent = Math.round(tCal).toLocaleString();
   const set = (bar,val,id,gval) => {
     document.getElementById(bar).style.width = Math.min(val/gval*100,100)+"%";
     document.getElementById(id).textContent = Math.round(val)+" / "+gval+"g";
@@ -630,7 +604,9 @@ function renderZoneSheet(){
   const g = S.goals, m = g.maintenance>0?g.maintenance:0, tc = m + (g.surplus>0?g.surplus:0);
   const zrow = (color, icon, name, range, html) =>
     `<div class="zonerow"><span class="zdot" style="background:${color}">${icon}</span><div><b>${name} <span class="zrange">${range}</span></b><p>${html}</p></div></div>`;
+  const st = statusInfo();
   document.getElementById("zoneBody").innerHTML =
+    `<div class="zonenow"><b>${st.title}</b><p>${st.det}</p></div>` +
     zrow("#ff5c5c", ICONS.warn, "Deficit", "under "+Math.round(m).toLocaleString()+" cal",
       "Below maintenance. Research: a sustained deficit around 500 cal/day can prevent lean mass gains, and undereating brings fatigue, worse sleep and stalled lifts.") +
     zrow("#ff9f43", ICONS.up, "Building", Math.round(m).toLocaleString()+" – "+Math.round(tc).toLocaleString()+" cal",
