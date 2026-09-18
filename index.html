@@ -173,6 +173,10 @@ button{font-family:inherit;}
 .micon span{font-size:11px; font-weight:700; color:var(--muted);}
 .micon.sel{background:var(--acc-soft);}
 .micon.sel span{color:var(--acc);}
+.micon svg{width:24px; height:24px;}
+.athumb svg{width:30px; height:30px;}
+.dthumb svg{width:38px; height:38px;}
+.trayico svg{width:26px; height:26px; display:block;}
 /* analysis nutrient rows tappable */
 .nrow{cursor:pointer;}
 /* nutrient target sheet */
@@ -654,7 +658,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
         </div>
         <div id="sheetResults"></div>
         <div id="trayBar" style="display:none">
-          <span class="trayinfo"><span class="trayico">🍽️<b id="trayCount">0</b></span><b id="trayKcal">0 kcal</b></span>
+          <span class="trayinfo"><span class="trayico" id="trayIco"><b id="trayCount">0</b></span><b id="trayKcal">0 kcal</b></span>
           <button class="trayadd" id="trayAdd" disabled>+ Add</button>
         </div>
       </div>
@@ -776,6 +780,7 @@ const MEAL_ICON = {
   supplements:'<svg viewBox="0 0 24 24" fill="none" stroke="#5b5bf0" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="9" width="17" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><line x1="10.2" y1="7.4" x2="13.8" y2="17.6"/></svg>'
 };
 const MEAL_TINT = {breakfast:"#fff3e2", lunch:"#fff3e2", dinner:"#eceeff", snacks:"#f3e9dc", supplements:"#eceeff"};
+const FOOD_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="#5b5bf0" stroke-width="2" stroke-linecap="round"><path d="M4 16.5h16"/><path d="M6.5 16.5a5.5 5.5 0 0 1 11 0"/><path d="M12 8.5v2"/><circle cx="12" cy="7" r="1.1" fill="#5b5bf0" stroke="none"/></svg>';
 const MEAL_SEG = {breakfast:"#ffdca8", lunch:"#ffab3d", dinner:"#ff8f3d", snacks:"#ff7f2a", supplements:"#8b8bf5"};
 const STAR_ON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="#e8a013"><path d="M12 2.6l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 17.5l-5.8 3.1 1.1-6.5L2.6 9.5l6.5-1z"/></svg>';
 const STAR_OFF = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#aeb9c4" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.6l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 17.5l-5.8 3.1 1.1-6.5L2.6 9.5l6.5-1z"/></svg>';
@@ -786,7 +791,7 @@ const ICONS = {
 };
 const FLAGI = '<svg class="fico" viewBox="0 0 24 24"><path d="M6 3v18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 4H20l-2.8 3.8L20 11.5H8.5z" fill="currentColor"/></svg>';
 const KEY = "fuel.v1";
-const APP_VERSION = "2026.09.18-t";
+const APP_VERSION = "2026.09.18-u";
 
 /* ============ STATE ============ */
 const defProfile = () => ({units:"imp", sex:"m", age:23, heightIn:70, weightLb:123, bodyFat:6, activityKey:"moderate", auto:true});
@@ -1137,7 +1142,6 @@ function renderAnalysis(){
 /* ============ ADD-FOOD SHEET ============ */
 let sheetMeal = "breakfast", sheetFood = null, sheetTab = "recent", sheetSort = "time", tray = [];
 const sheet = document.getElementById("sheet");
-const MEAL_EMOJI = {breakfast:"🌅", lunch:"☀️", dinner:"🌙", snacks:"🍿", supplements:"💊"};
 function openSheet(meal){
   sheetMeal = meal || "breakfast"; sheetFood = null; tray = [];
   document.getElementById("sheetSearch").value = "";
@@ -1154,8 +1158,9 @@ document.getElementById("statusPill").onclick = ()=>{ renderZoneSheet(); documen
 document.getElementById("statusPill").onkeydown = e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); document.getElementById("statusPill").click(); } };
 document.getElementById("zoneScrim").onclick = ()=>document.getElementById("zoneSheet").classList.remove("open");
 document.getElementById("zoneX").onclick = ()=>document.getElementById("zoneSheet").classList.remove("open");
+function foodThumb(f){ return f.img ? '<img src="'+f.img+'" alt="">' : (f.kind==="supp"?MEAL_ICON.supplements:FOOD_ICON); }
 function sheetRowHtml(f){
-  const thumb = f.img ? '<img src="'+f.img+'" alt="">' : (f.kind==="supp"?"💊":"🍽️");
+  const thumb = foodThumb(f);
   const diy = isCustom(f.n) ? '<span class="diy">DIY</span>' : "";
   return '<div class="arow2" data-n="'+esc(f.n)+'"><span class="athumb">'+thumb+'</span>'+
     '<div class="anm"><b>'+diy+esc(f.n)+'</b><span>'+Math.round(f.cal)+'kcal / '+esc(f.s)+'</span></div>'+
@@ -1216,7 +1221,7 @@ function showSearch(){
 let dQty = 1, dUnit = "serv", dMeal = "breakfast", dGramPer = 0;
 const round2 = x => Math.round(x*100)/100;
 function parseGrams(s){ const m = String(s||"").match(/(\d+(?:\.\d+)?)\s*g\b/i); return m ? parseFloat(m[1]) : 0; }
-function servUnitLabel(f){ return (f.kind==="supp" && f.cUnit) ? f.cUnit : "serving"; }
+function servUnitLabel(f){ return (f.kind==="supp" && (f.cUnit||f.unit)) ? (f.cUnit||f.unit) : "serving"; }
 function dServings(){
   if(dUnit==="g") return dQty/dGramPer;
   if(dUnit==="oz") return dQty*28.3495/dGramPer;
@@ -1232,12 +1237,12 @@ function openDetail(f){
   document.getElementById("sheetTitle").textContent = "Log food";
   document.getElementById("dName").textContent = f.n;
   document.getElementById("dSub").textContent = Math.round(f.cal)+"kcal / "+f.s;
-  document.getElementById("dThumb").innerHTML = f.img ? '<img src="'+f.img+'" alt="">' : (f.kind==="supp"?"💊":"🍽️");
+  document.getElementById("dThumb").innerHTML = foodThumb(f);
   const dm = document.getElementById("dMeals"); dm.innerHTML = "";
   MEALS.forEach(m=>{
     const b = document.createElement("button");
     b.className = "micon"+(m===dMeal?" sel":"");
-    b.innerHTML = MEAL_EMOJI[m]+"<span>"+m[0].toUpperCase()+m.slice(1)+"</span>";
+    b.innerHTML = MEAL_ICON[m]+"<span>"+m[0].toUpperCase()+m.slice(1)+"</span>";
     b.onclick = ()=>{ dMeal = m; dm.querySelectorAll(".micon").forEach(x=>x.classList.toggle("sel", x===b)); };
     dm.appendChild(b);
   });
@@ -1297,7 +1302,7 @@ function renderFoods(){
   document.getElementById("foodCount").textContent = list.length ? list.length+" item"+(list.length>1?"s":"") : "";
   const box = document.getElementById("foodResults");
   box.innerHTML = list.slice(0,60).map(f =>
-    `<div class="arow2" data-n="${esc(f.n)}"><span class="athumb">${f.img?`<img src="${f.img}" alt="">`:(f.kind==="supp"?"💊":"🍽️")}</span>
+    `<div class="arow2" data-n="${esc(f.n)}"><span class="athumb">${foodThumb(f)}</span>
      <div class="anm"><b>${isCustom(f.n)?'<span class="diy">DIY</span>':""}${esc(f.n)}</b><span>${Math.round(f.cal)}kcal / ${esc(f.s)}</span></div>
      <button class="favstar" data-n="${esc(f.n)}">${isFav(f.n)?STAR_ON:STAR_OFF}</button>
      <button class="aplus" data-n="${esc(f.n)}">+</button></div>`
@@ -1363,6 +1368,12 @@ document.getElementById("cSave").onclick = ()=>{
   const nutrs = [...document.querySelectorAll("#cNutrRows .nutrrow")].map(r=>({
     n:r.children[0].value.trim(), amt:parseFloat(r.children[1].value)||0, u:r.children[2].value
   })).filter(x=>x.n && x.amt>0);
+  for(const x of nutrs){
+    const dv = NUTR_DV[canonNutr(x.n)], u = String(x.u).toLowerCase();
+    if(dv && u==="g" && x.amt>=1 && dv.unit!=="g"){
+      if(!confirm(`Heads up: ${x.amt} g of ${x.n} is way over the daily value (${dv.dv} ${dv.unit}) — the unit is probably meant to be mg, not g.\n\nOK = save as ${x.amt} g anyway · Cancel = go back and fix it`)) return;
+    }
+  }
   S.customFoods.push({n, s:sTxt,
     cal, p:num("cP"), c:num("cC"), f:num("cF"), img:cPhotoData,
     kind:isSupp?"supp":"food", unit:isSupp?cUnit:null, nutrs, xw:isSupp && document.getElementById("cXW").checked});
@@ -1845,6 +1856,7 @@ document.getElementById("diarySearch").onclick = ()=>{
   const h = new Date().getHours();
   openSheet(h<11 ? "breakfast" : h<15 ? "lunch" : h<21 ? "dinner" : "snacks");
 };
+document.getElementById("trayIco").insertAdjacentHTML("afterbegin", FOOD_ICON);
 renderAll();
 </script>
 </body>
