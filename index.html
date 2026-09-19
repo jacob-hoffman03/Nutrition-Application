@@ -391,6 +391,12 @@ body{ background:var(--bg); }
 .prog-main{ display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; z-index:1; }
 .prog-pct b{ font-size:46px; font-weight:800; letter-spacing:-1px; line-height:1; font-variant-numeric:tabular-nums; }
 .prog-pct span{ display:block; font-size:12.5px; opacity:.8; font-weight:600; margin-top:6px; }
+/* hero mini wheels flanking the calorie ring */
+.hwheel{ width:56px; height:56px; }
+.hwheel svg{ width:56px; height:56px; }
+.hwheel .swnum b{ color:#fff; font-size:14px; }
+.hwheel .swnum i{ color:rgba(255,255,255,.72); font-size:7px; }
+.prog-pct-row{ margin:12px 0 2px; text-align:left; }
 .progcard .ring .center .ctitle{ color:rgba(255,255,255,.78); }
 .progcard .ring .center{ gap:3px; }
 .progcard .ring .center b{ color:#fff; }
@@ -613,7 +619,10 @@ body{ background:var(--bg); }
       </div>
       <div class="ptodayrow" style="display:none"><button id="todayPill" class="todaypill">↩ Today</button></div>
       <div class="prog-main">
-        <div class="prog-pct"><b id="progPct">0%</b><span id="progSub">of daily goal</span></div>
+        <button class="scorewheel hwheel" id="fatWheelH" aria-label="Food fatigue details">
+          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="fatArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+          <span class="swnum"><b id="fatNumH">–</b><i>fatigue</i></span>
+        </button>
         <div class="ring" style="width:196px;height:196px">
           <svg width="196" height="196" viewBox="0 0 128 128">
             <circle cx="64" cy="64" r="56" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="11"/>
@@ -630,7 +639,12 @@ body{ background:var(--bg); }
             <span class="flagsur" id="flagSur"></span>
           </div>
         </div>
+        <button class="scorewheel hwheel" id="adhWheelH" aria-label="Adherence details">
+          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="adhArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+          <span class="swnum"><b id="adhNumH">–</b><i>adherence</i></span>
+        </button>
       </div>
+      <div class="prog-pct prog-pct-row"><b id="progPct">0%</b><span id="progSub">of daily goal</span></div>
 
       <div class="statusbar" id="statusPill" role="button" tabindex="0" aria-label="Intake details">
         <div class="sbtrack"><div class="sbfill" id="spFill"></div><div class="sbmark" id="spMark"></div></div>
@@ -1284,7 +1298,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-ci";
+const APP_VERSION = "2026.09.19-cj";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -1561,6 +1575,7 @@ function renderDiary(){
   wn.textContent = wt; wn.style.display = wt ? "" : "none"; /* explainer lives in the ⓘ sheet */
   renderAlc();
   renderWeek();
+  paintScoreWheel();
 }
 
 /* ============ ALCOHOL (research #10) ============ */
@@ -1962,21 +1977,29 @@ function scoreInfoHTML(){
     `<div class="irow" style="color:var(--muted)">Rough predictions from your log, not medical verdicts — sleep, stress, and illness matter too, and the app can't see those.</div>`;
 }
 
-/* ============ SCORE WHEEL (Settings profile) ============ */
+/* ============ SCORE WHEEL (Settings profile + Diary hero minis) ============ */
+function paintWheel(arcId, numId, frac, color, label){
+  const arc = document.getElementById(arcId);
+  const C = 2*Math.PI*36;
+  arc.style.strokeDasharray = C;
+  arc.style.strokeDashoffset = frac===null ? C : C*(1-frac);
+  arc.style.stroke = color;
+  document.getElementById(numId).textContent = label;
+}
 function paintScoreWheel(){
   const a = adherenceStats(), f = foodFatigue(), b = bloatScore();
-  const C = 2*Math.PI*36;
-  const arc = document.getElementById("adhArc");
-  arc.style.strokeDasharray = C;
-  arc.style.strokeDashoffset = a.pct===null ? C : C*(1-Math.min(a.pct,100)/100);
-  arc.style.stroke = a.pct===null ? "#c9c9d6" : a.pct>=80 ? "#12cfae" : a.pct>=50 ? "#5b5bf0" : "#fb6f84";
-  document.getElementById("adhNum").textContent = a.pct===null ? "–" : a.pct+"%";
-  const farc = document.getElementById("fatArc");
-  farc.style.strokeDasharray = C;
-  farc.style.strokeDashoffset = f.score===null ? C : C*(1-f.score/100);
-  const fcol = f.score===null ? "#c9c9d6" : f.score<=25?"#12cfae":f.score<=45?"#5b5bf0":f.score<=65?"#e8a13d":"#fb6f84";
-  farc.style.stroke = fcol;
-  document.getElementById("fatNum").textContent = f.score===null ? "–" : f.score;
+  const aFrac = a.pct===null ? null : Math.min(a.pct,100)/100;
+  const aTxt = a.pct===null ? "–" : a.pct+"%";
+  const aCol = a.pct===null ? "#c9c9d6" : a.pct>=80 ? "#12cfae" : a.pct>=50 ? "#5b5bf0" : "#fb6f84";
+  const aColH = a.pct===null ? "rgba(255,255,255,.4)" : a.pct>=80 ? "#2fe3b6" : a.pct>=50 ? "#ffffff" : "#ff8a9d";
+  paintWheel("adhArc","adhNum",aFrac,aCol,aTxt);
+  paintWheel("adhArcH","adhNumH",aFrac,aColH,aTxt);
+  const fFrac = f.score===null ? null : f.score/100;
+  const fTxt = f.score===null ? "–" : String(f.score);
+  const fCol = f.score===null ? "#c9c9d6" : f.score<=25?"#12cfae":f.score<=45?"#5b5bf0":f.score<=65?"#e8a13d":"#fb6f84";
+  const fColH = f.score===null ? "rgba(255,255,255,.4)" : f.score<=25?"#2fe3b6":f.score<=45?"#ffffff":f.score<=65?"#ffd23d":"#ff8a9d";
+  paintWheel("fatArc","fatNum",fFrac,fCol,fTxt);
+  paintWheel("fatArcH","fatNumH",fFrac,fColH,fTxt);
   const bcol = b.score===null ? "#c9c9d6" : b.score<=25?"#12cfae":b.score<=50?"#5b5bf0":b.score<=75?"#e8a13d":"#fb6f84";
   const fill = document.getElementById("bloatFill");
   fill.style.width = b.score===null ? "0%" : b.score+"%";
@@ -1986,10 +2009,12 @@ function paintScoreWheel(){
   bv.style.color = b.score===null ? "var(--muted)" : bcol;
   document.getElementById("scoreLine").innerHTML = (a.pct===null && f.score===null && b.score===null)
     ? "Log meals — your adherence wheel, fatigue circle, and bloat scale live here."
-    : `Fatigue <b style="color:${fcol}">${f.score===null?"–":f.label}</b> · Bloat <b style="color:${bcol}">${b.score===null?"–":b.label}</b> — tap a wheel for the full breakdown.`;
+    : `Fatigue <b style="color:${fCol}">${f.score===null?"–":f.label}</b> · Bloat <b style="color:${bcol}">${b.score===null?"–":b.label}</b> — tap a wheel for the full breakdown.`;
 }
 document.getElementById("scoreWheel").onclick = ()=>openInfo("scores");
 document.getElementById("fatWheel").onclick = ()=>openInfo("scores");
+document.getElementById("adhWheelH").onclick = ()=>openInfo("scores");
+document.getElementById("fatWheelH").onclick = ()=>openInfo("scores");
 
 /* ============ PROGRESS PHOTOS ============ */
 let photoOrder = [], photoIdx = 0;
