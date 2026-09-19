@@ -46,7 +46,8 @@ button{font-family:inherit;}
 .secttl::before{content:""; width:5px; height:20px; border-radius:3px; background:var(--acc);}
 /* week strip */
 .wkrow{display:flex; align-items:center; justify-content:space-between; margin-bottom:2px;}
-.todaypill{background:var(--acc-soft); color:var(--acc); border:none; border-radius:99px; padding:8px 14px; font-weight:800; font-size:13px; white-space:nowrap;}
+.todaypill{background:var(--acc-soft); color:var(--acc); border:none; border-radius:99px; padding:8px 14px; font-weight:800; font-size:13px; white-space:nowrap; display:inline-flex; align-items:center; gap:6px;}
+.todaypill svg{ width:15px; height:15px; flex:none; }
 .weekstrip{display:flex;}
 .wknavrow{display:flex; align-items:center; gap:2px; margin-bottom:2px;}
 .wknavrow .weekstrip{flex:1;}
@@ -409,7 +410,7 @@ body{ background:var(--bg); }
 .progcard .ring .center .ctitle{ color:rgba(255,255,255,.78); }
 .progcard .ring .center{ gap:3px; }
 .progcard .ring .center b{ color:#fff; }
-.progcard .flagkc{ color:#ffd9a8 !important; }
+.progcard .flagkc{ color:#fff !important; }
 .progcard .flagsur{ color:rgba(255,255,255,.72) !important; }
 .progcard .flagsur.on{ color:#ffd9a8 !important; }
 /* week strip blended into the intake hero */
@@ -626,7 +627,7 @@ body{ background:var(--bg); }
         <div class="weekstrip" id="weekStrip"></div>
         <button class="wknav" id="wkNext" aria-label="Next week">›</button>
       </div>
-      <div class="ptodayrow" style="display:none"><button id="todayPill" class="todaypill">↩ Today</button></div>
+      <div class="ptodayrow" style="display:none"><button id="todayPill" class="todaypill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg><span>Today</span></button></div>
       <div class="prog-main">
         <button class="scorewheel hwheel" id="fatWheelH" aria-label="Food fatigue details">
           <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="fatArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
@@ -1309,7 +1310,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-cm";
+const APP_VERSION = "2026.09.19-cn";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
