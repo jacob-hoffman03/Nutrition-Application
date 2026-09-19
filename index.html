@@ -24,7 +24,7 @@ html,body{margin:0; padding:0;}
 body{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
   background:var(--bg); color:var(--ink); min-height:100vh;
-  padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  padding-bottom:calc(var(--tabbar-h) + 34px + env(safe-area-inset-bottom));
 }
 #app{max-width:430px; margin:0 auto; min-height:100vh;}
 button{font-family:inherit;}
@@ -441,14 +441,14 @@ body{ background:var(--bg); }
 .stat b{ font-size:21px; font-variant-numeric:tabular-nums; }
 .statgrid .tile{ background:#fff; border:none; border-radius:18px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
 /* progress: segmented range, reference style */
-.wrange{ background:#e9e9f2; border-radius:99px; padding:4px; margin-top:10px; gap:2px; }
+.wrange{ display:flex; background:#e9e9f2; border-radius:99px; padding:4px; margin-top:10px; gap:2px; }
 .wrange button{ flex:1; border:none; background:none; border-radius:99px; padding:8px 0; font-size:13px; font-weight:700; color:var(--muted); font-family:inherit; }
 .wrange button.on{ background:var(--acc); color:#fff; box-shadow:0 4px 12px rgba(91,91,240,.35); }
 /* 7-day bars: reference style — light bars, purple today */
 .bars7 .bar{ background:#e3e3f1; border-radius:8px; }
 .tabbar{ border-top:none; box-shadow:0 -8px 24px rgba(84,84,180,.08); }
 /* ---- Reference look: full-app pass (2026-09-19) ---- */
-.topbar{ background:rgba(243,243,249,.94); }
+.topbar{ background:#f3f3f9; }
 .topbar h1{ font-size:20px; font-weight:800; letter-spacing:-.3px; }
 /* analytics card */
 .anacard{ padding:18px 16px 14px; }
@@ -1291,7 +1291,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-ca";
+const APP_VERSION = "2026.09.19-cb";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
