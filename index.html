@@ -646,13 +646,6 @@ body{ background:var(--bg); }
       <div class="mcard"><div class="mlabel">Fat</div><div class="mval"><i id="valFv">0</i><small> / <span id="valFg">0</span>g</small></div><div class="mbar"><i id="barF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></div></div>
     </div>
     <div class="fiberbar"><span class="flabel">Fiber</span><div class="mbar"><i id="barFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div><span class="fval"><i id="valFiv">0</i><small> / <span id="valFig">0</span>g</small></span></div>
-    <div class="searchrow">
-      <button class="searchbtn" id="diarySearch">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a5a5b0" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <span>Search for Food</span>
-      </button>
-    </div>
-
     <div class="card mealcard" id="meals"></div>
 
     <div class="card watercard">
@@ -1291,7 +1284,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-cb";
+const APP_VERSION = "2026.09.19-cc";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -4111,7 +4104,6 @@ document.getElementById("gearBtn").onclick = ()=>showView("settings");
 document.getElementById("analysisLink").onclick = ()=>showView("analysis");
 document.getElementById("analysisBack").onclick = ()=>showView("diary");
 function mealForNow(){ const h = new Date().getHours(); return h<11?"breakfast":h<15?"lunch":h<21?"dinner":"snacks"; }
-document.getElementById("diarySearch").onclick = ()=>openSheet(mealForNow());
 document.getElementById("trayIco").insertAdjacentHTML("afterbegin", FOOD_ICON);
 renderAll();
 </script>
