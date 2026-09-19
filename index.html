@@ -443,6 +443,25 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .cphotodel{border:none; background:none; color:var(--red); font-weight:700; font-size:14px; font-family:inherit; padding:8px 4px;}
 .favstar{border:none; background:none; padding:4px; display:flex; align-items:center;}
 .empty{color:var(--muted); font-size:13px; padding:8px 2px;}
+/* ---- UI overhaul: polish ---- */
+.view{animation:fade .22s ease;}
+/* press feedback on tappables */
+.chip,.wlogbtn,.todaypill,.wday,.bottle,.srow,.wrange button,.segtab,.bigbtn,.ghostbtn,.aplus,.micon,.medal{transition:opacity .12s ease, transform .12s ease;}
+.chip:active,.wlogbtn:active,.todaypill:active,.bottle:active,.srow:active,.bigbtn:active,.ghostbtn:active{opacity:.72;}
+.wday:active,.segtab:active,.aplus:active,.micon:active{opacity:.6;}
+.wstat:active,.stat2:active,.stat:active,.m3:active{opacity:.75; transform:scale(.98);}
+.wstat,.stat2,.stat,.m3{transition:opacity .12s ease, transform .12s ease;}
+/* chart draws in on render */
+#weightChart{animation:chartIn .45s ease;}
+@keyframes chartIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+/* weigh-in history delete */
+.wdel{border:none; background:none; color:#c9c9d2; font-size:22px; line-height:1; width:36px; height:36px; flex:none;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;}
+.wdel:active{color:var(--red); transform:scale(1.15);}
+/* delta chip next to body weight */
+.wdelta{font-size:12.5px; color:var(--muted); font-weight:700; white-space:nowrap;}
+/* info button inside rows (never nested-button) */
+.srow .ginfo{margin:0;}
 </style>
 </head>
 <body>
@@ -648,7 +667,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <button class="chip" data-m="bulk" data-pct="15">Bulk</button>
       <button class="chip" data-m="maintain" data-pct="0">Maintain</button>
     </div>
-    <div class="rangenote" style="margin-top:6px">Bigger surpluses add fat, not extra muscle (Helms 2023) — +5–10% is the lean-gain sweet spot.</div>
     <div class="card">
       <input type="range" id="goalSlider" min="1500" max="6000" step="25" value="3000">
       <div class="rangelabels"><span id="goalMin">1500 kcal</span><span id="goalMax">6000 kcal</span></div>
@@ -702,8 +720,8 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div class="stat"><b id="stAvgP">0g</b><span>avg protein / 7d</span></div>
     </div>
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:baseline;"><b style="font-size:16px">Body weight</b><b id="curWeight" style="font-size:20px">—</b></div>
-      <button class="srow" id="wtGoalBtn" style="padding-top:10px"><span>Weight goal</span><span class="sval"><b id="wtGoalVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
+      <div style="display:flex; justify-content:space-between; align-items:baseline;"><b style="font-size:16px">Body weight</b><span style="display:flex; align-items:baseline; gap:8px;"><span class="wdelta" id="wtDelta"></span><b id="curWeight" style="font-size:20px">—</b></span></div>
+      <div class="srow" id="wtGoalRow" role="button" tabindex="0" style="padding-top:10px; cursor:pointer;"><span style="display:flex; align-items:center; gap:8px;">Weight goal<button class="ginfo" id="wtGoalInfo" aria-label="How the goal bar works">i</button></span><span class="sval"><b id="wtGoalVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></div>
       <div id="wtGoalProg" style="margin-top:2px"></div>
       <div class="wrange" id="wRange" role="group" aria-label="Chart range">
         <button data-r="7">W</button><button data-r="30">M</button><button data-r="90" class="on">3M</button><button data-r="365">Y</button><button data-r="0">All</button>
@@ -719,7 +737,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     </div>
     <div class="secttl">Weight analysis</div>
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center;"><b style="font-size:16px">BMI</b><span><b id="bmiVal" style="font-size:20px">—</b><span class="pill" id="bmiPill" style="display:none"></span></span></div>
+      <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center; gap:8px;"><b style="font-size:16px">BMI</b><button class="ginfo" id="bmiInfo" aria-label="About BMI">i</button></span><span><b id="bmiVal" style="font-size:20px">—</b><span class="pill" id="bmiPill" style="display:none"></span></span></div>
       <div class="bmibar"><i id="bmiMark" style="display:none"></i></div>
       <div class="bmilbls"><span>14</span><span>18.5</span><span>25</span><span>30</span><span>34</span></div>
       <div class="rangenote" id="bmiNote" style="margin-top:8px"></div>
@@ -729,7 +747,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     </div>
     <div class="secttl">Calorie Check</div>
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:baseline;"><b style="font-size:16px">Is your target working?</b></div>
+      <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center; gap:8px;"><b style="font-size:16px">Is your target working?</b><button class="ginfo" id="calCheckInfo" aria-label="How this checks your target">i</button></span></div>
       <div class="rangenote" id="calCheckOut" style="margin-top:6px">Log your weight for 2+ weeks and this compares your real rate of gain against your target.</div>
       <div id="calCheckApply" style="margin-top:10px; display:none"><button class="bigbtn" id="calApplyBtn"></button></div>
     </div>
@@ -1069,7 +1087,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bt";
+const APP_VERSION = "2026.09.18-bu";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -2476,6 +2494,7 @@ function suggestedMilestone(){
   return {target, dateStr: dt.toLocaleDateString(undefined,{month:"short",day:"numeric"}),
           lbWk, pctWk, dir, gap, basis, modeName: MODE_LABEL[S.goals.mode]||"Custom", passed};
 }
+let MS_EV = ""; /* milestone evidence text, shown in the ⓘ sheet */
 function milestoneHtml(ms){
   const wu = wUnit(), d1 = v => wDisp(v).toFixed(1);
   const sgn = ms.dir>0 ? "+" : "−";
@@ -2495,8 +2514,8 @@ function milestoneHtml(ms){
   } else {
     ev = `No deficit configured — paced at −${d1(ms.lbWk)} ${wu}/week (~0.7% of bodyweight), the range that best preserves muscle while cutting (Ruiz-Castellano et al., Nutrients 2021).`;
   }
-  return `<div class="msugg"><div class="msrow"><div><b>${ms.passed?"Goal reached — next milestone":"Suggested 1-month milestone"}</b><span>${d1(ms.target)} ${wu} by ${ms.dateStr} — ${ms.passed?"one month from today, rolling forward":"one month from your profile update"}</span></div><button class="chip" id="msUse">Use as goal</button></div>`+
-    `<div class="rangenote" style="margin-top:6px">${ev} Early weeks read high — that's glycogen and water, not tissue. Judge the 4-week trend, not week 1.</div></div>`;
+  MS_EV = ev+` Early weeks read high — that's glycogen and water, not tissue. Judge the 4-week trend, not week 1.`;
+  return `<div class="msugg"><div class="msrow"><div><b>${ms.passed?"Goal reached — next milestone":"Suggested 1-month milestone"}</b><span>${d1(ms.target)} ${wu} by ${ms.dateStr} — ${ms.passed?"one month from today, rolling forward":"one month from your profile update"}</span></div><div style="display:flex;gap:10px;align-items:center;flex:none"><button class="ginfo" id="msInfo" aria-label="How this milestone is estimated">i</button><button class="chip" id="msUse">Use as goal</button></div></div></div>`;
 }
 function paintWtGoal(){
   const val = document.getElementById("wtGoalVal"), box = document.getElementById("wtGoalProg");
@@ -2505,7 +2524,12 @@ function paintWtGoal(){
   val.textContent = g>0 ? d1(g)+" "+wu : "Set goal";
   const cur = curBodyWeight();
   const ms = suggestedMilestone(), msHtml = ms ? milestoneHtml(ms) : "";
-  const wireMs = ()=>{ const b = document.getElementById("msUse"); if(b && ms) b.onclick = ()=>{ S.goals.weightStart = cur; S.goals.weight = ms.target; save(); renderProgress(); }; };
+  const wireMs = ()=>{
+    const b = document.getElementById("msUse");
+    if(b && ms) b.onclick = ()=>{ S.goals.weightStart = cur; S.goals.weight = ms.target; save(); renderProgress(); };
+    const mi = document.getElementById("msInfo");
+    if(mi) mi.onclick = ()=>openInfo("milestone");
+  };
   if(!(g>0)){ box.innerHTML = `<div class="rangenote">Set a target weight — this tracks progress and estimates your pace from weigh-ins.</div>`+msHtml; wireMs(); return; }
   if(!(cur>0)){ box.innerHTML = `<div class="rangenote">Log your weight below to start tracking progress toward ${d1(g)} ${wu}.</div>`+msHtml; wireMs(); return; }
   const ws = sortedWeights(), start = (S.goals.weightStart>0) ? S.goals.weightStart : (ws.length ? ws[0].w : cur);
@@ -2524,16 +2548,18 @@ function paintWtGoal(){
   box.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:13px"><b>${done}</b><span style="color:var(--muted)">${pct.toFixed(0)}%</span></div>`+
     `<div class="wgoalbar"><i style="width:${pct.toFixed(1)}%"></i></div>`+
     (toGo===0 ? `<div class="rangenote" style="margin-top:6px">Goal reached — set a new one to keep going.</div>`
-              : `<div class="rangenote" style="margin-top:6px">${justStarted ? "Starting point set — log weigh-ins and this bar tracks your run at the "+d1(g)+" "+wu+" goal." : "Pace from your weigh-ins"+eta+". Daily weight swings ±1–2%, so 2+ weeks smooths the noise."}</div>`)+msHtml;
+              : `<div class="rangenote" style="margin-top:6px">${justStarted ? "Starting point set — log weigh-ins and this bar tracks your run." : "Pace from your weigh-ins"+eta+". <button class=\"linkbtn\" id=\"paceWhy\">Why it jumps around</button>"}</div>`)+msHtml;
   wireMs();
+  const pw = document.getElementById("paceWhy");
+  if(pw) pw.onclick = ()=>openInfo("wtgoal");
 }
 /* ================= ANALYTICS ENGINE — BODY METRICS =================
    Research sources (2026 refresh): BMI WHO 2006 cutoffs (screening, not diagnosis —
    cannot separate muscle from fat); waist-to-height ratio NICE NG246 2022
    (<0.5 lower, 0.5-0.59 increased, 0.6+ high central-adiposity risk). */
+let BMI_CTX = ""; /* full BMI explainer, shown in the ⓘ sheet */
 function paintWtAnalysis(){
-  const p = S.goals.profile||{}, hIn = p.heightIn>0 ? p.heightIn : 0, w = curBodyWeight();
-  const bv = document.getElementById("bmiVal"), pill = document.getElementById("bmiPill"),
+  const p = S.goals.profile||{}, hIn = p.heightIn>0 ? p.heightIn : 0, w = curBodyWeight();  const bv = document.getElementById("bmiVal"), pill = document.getElementById("bmiPill"),
         mark = document.getElementById("bmiMark"), note = document.getElementById("bmiNote"),
         stats = document.getElementById("wtStats"), ctx = document.getElementById("wtContext");
   if(!(w>0) || !(hIn>0)){
@@ -2546,7 +2572,7 @@ function paintWtAnalysis(){
       : `Log your weight below for BMI and rate stats.`;
     const go = document.getElementById("bmiGoProf");
     if(go) go.onclick = ()=>{ commitGoalsInputs(); save(); renderGoals(); showView("goals"); };
-    stats.innerHTML = ""; ctx.textContent = "";
+    stats.innerHTML = ""; ctx.textContent = ""; ctx.style.display = "none"; BMI_CTX = "";
     return;
   }
   const bmi = w/(hIn*hIn)*703;
@@ -2574,7 +2600,7 @@ function paintWtAnalysis(){
   else if(bmi<25) c = "BMI is in the healthy range (WHO/CDC 18.5–24.9). It still can't separate muscle from fat — lifters often read higher than their body-fat % suggests.";
   else if(bmi<30) c = "BMI 25–29.9 is classified as overweight (WHO/CDC). For lifters this often overstates fat — waist and body-fat % tell the truer story.";
   else c = "BMI 30+ is classified as obese (WHO/CDC). BMI is a screening tool, not a diagnosis — body-fat % and waist give the fuller picture.";
-  ctx.textContent = c;
+  BMI_CTX = c; ctx.style.display = "none"; ctx.textContent = ""; /* explainer lives in the ⓘ sheet */
   /* Waist-to-height ratio (NICE 2022): <0.5 lower central-adiposity risk, 0.5-0.59 increased, 0.6+ high. Needs waist + height in Goals › Profile. */
   const wn = document.getElementById("whtrNote"), waist = (S.goals.profile||{}).waistIn>0 ? S.goals.profile.waistIn : 0;
   if(waist>0 && hIn>0){
@@ -2806,10 +2832,23 @@ function renderProgress(){
   const wd = document.getElementById("weightDate");
   if(wd){ wd.max = todayStr(); if(!wd.value || wd.value>todayStr()) wd.value = todayStr(); }
   document.getElementById("curWeight").textContent = w.length ? wDisp(w[w.length-1].w)+" "+wu : "—";
+  const wdl = document.getElementById("wtDelta");
+  if(w.length>1){
+    const dd = w[w.length-1].w - w[w.length-2].w;
+    wdl.textContent = (dd>=0?"+":"−")+wDisp(Math.abs(dd)).toFixed(1)+" "+wu+" vs last";
+  } else wdl.textContent = "";
   paintWeightChart(w);
   const wh = document.getElementById("weightHist");
   wh.innerHTML = w.slice(-5).reverse().map(p=>
-    `<div class="wrow"><span>${new Date(p.d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span><b>${wDisp(p.w)} ${wu}</b></div>`).join("");
+    `<div class="wrow"><span>${new Date(p.d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span><span style="display:flex;align-items:center;gap:2px"><b>${wDisp(p.w)} ${wu}</b><button class="wdel" data-d="${p.d}" aria-label="Delete weigh-in">×</button></span></div>`).join("");
+  wh.querySelectorAll(".wdel").forEach(b=> b.onclick = ()=>{
+    const dstr = new Date(b.dataset.d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"});
+    if(!confirm("Delete the "+dstr+" weigh-in?")) return;
+    S.weights = S.weights.filter(p=>p.d!==b.dataset.d);
+    const rest = S.weights.slice().sort((a,c)=>a.d<c.d?-1:1);
+    if(rest.length) syncWeightFromLog(rest[rest.length-1].w, rest[rest.length-1].d);
+    save(); renderProgress();
+  });
   paintWtGoal(); paintWtAnalysis();
   paintCalCheck();
   paintMuscle();
@@ -2819,6 +2858,10 @@ const wIsMet = () => (S.goals.profile||{}).units==="met";
 const wUnit = () => wIsMet() ? "kg" : "lb";
 const wDisp = lb => wIsMet() ? Math.round(lb/2.20462*10)/10 : Math.round(lb*10)/10;
 const wToLb = v => wIsMet() ? v*2.20462 : v;
+document.getElementById("wtGoalRow").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); document.getElementById("wtGoalRow").click(); } });
+document.getElementById("wtGoalInfo").onclick = (e)=>{ e.stopPropagation(); openInfo("wtgoal"); };
+document.getElementById("bmiInfo").onclick = ()=>openInfo("bmi");
+document.getElementById("calCheckInfo").onclick = ()=>openInfo("calcheck");
 document.getElementById("weightAdd").onclick = ()=>{
   const raw = parseFloat(document.getElementById("weightInput").value);
   const lo = wIsMet()?23:50, hi = wIsMet()?275:600;
@@ -2838,7 +2881,8 @@ document.querySelectorAll("#wRange button").forEach(b=>{
     document.querySelectorAll("#wRange button").forEach(x=>x.classList.toggle("on", x===b));
     renderProgress(); };
 });
-document.getElementById("wtGoalBtn").onclick = ()=>{
+document.getElementById("wtGoalRow").onclick = (e)=>{
+  if(e.target.closest(".ginfo")) return;
   const wu = wUnit(), lo = wIsMet()?23:50, hi = wIsMet()?275:600;
   const cur = S.goals.weight>0 ? wDisp(S.goals.weight) : "";
   const v = prompt("Weight goal ("+wu+") — leave blank to clear:", cur);
@@ -3064,6 +3108,18 @@ function infoContent(k){
      <div class="irow"><b>Auto-tune maintenance:</b> when 2+ weeks of weigh-ins show your real gain rate missing the target band, Fuel nudges maintenance ±150 kcal — max once per 2 weeks.</div>
      <div class="irow">The formulas are only ±10% accurate — your weigh-in trend is the calibration instrument.</div>`};
   if(k==="scores") return {t:"Energy & bloat", b: scoreInfoHTML()};
+  if(k==="wtgoal") return {t:"Weight goal", b:
+    `<div class="irow">The bar measures your run from the <b>starting point</b> (your weight when the goal was set) to the goal — the % is how much of that run is done.</div>
+     <div class="irow">Pace comes from your weigh-ins (halves-by-date rate). Daily weight swings ±1–2%, so <b>2+ weeks</b> of entries smooths the noise — judge the trend, not any single day.</div>
+     <div class="irow">A manual weight edit in Goals › Profile becomes today's weigh-in, so the goal bar always tracks the same number as Progress.</div>`};
+  if(k==="milestone") return {t:"1-month milestone", b:
+    `<div class="irow">${MS_EV||"Log weigh-ins and set your calorie goal and this explains the suggested milestone."}</div>`};
+  if(k==="bmi") return {t:"BMI", b:
+    `<div class="irow">${BMI_CTX||"Add your height and weight to see your BMI analysis."}</div>
+     <div class="irow"><b>Healthy range</b> uses WHO BMI 18.5–24.9 for your height. BMI is a screening tool, not a diagnosis — it can't separate muscle from fat.</div>`};
+  if(k==="calcheck") return {t:"How this checks your target", b:
+    `<div class="irow">Needs <b>4+ weigh-ins spanning 2+ weeks</b>. It splits the span into halves by date and compares the average weight of each half — that gives your real %/week against the target band (0.25–0.5%/week for lean gains).</div>
+     <div class="irow">If you're clearly off-target and it's been 3+ weeks since the last tune, Fuel can nudge maintenance ±150 kcal — at most once every 2 weeks, and only with your tap.</div>`};
 }
 function openInfo(k){
   const c = infoContent(k); if(!c) return;
@@ -3349,9 +3405,9 @@ function updateMacroSplit(){
   const ab = document.getElementById("macroAutoBtn");
   ab.classList.toggle("sel", auto);
   document.getElementById("macroAutoNote").textContent = auto
-    ? (tot>0 ? "Auto from your "+tot.toLocaleString()+" kcal goal — protein 2.2 g/kg, fat 25% of calories, carbs fill the rest. Type a number to take over manually."
+    ? (tot>0 ? "Auto · protein 2.2 g/kg, fat 25%, carbs fill the rest. Type a number to go manual."
              : "Auto is on — calculate your maintenance above and macros fill in themselves.")
-    : "Manual — your numbers stay as typed. Tap Auto to re-sync from your calorie goal.";
+    : "Manual — tap Auto to re-sync.";
   const c = Math.max(0, parseFloat(document.getElementById("gmC").value)||0);
   const p = Math.max(0, parseFloat(document.getElementById("gmP").value)||0);
   const f = Math.max(0, parseFloat(document.getElementById("gmF").value)||0);
@@ -3375,10 +3431,8 @@ function updateMacroSplit(){
   const custom = !!((S.goals.nutrTargets||{}).Fiber);
   document.getElementById("fiberAutoTag").textContent = custom ? "your target" : "auto · "+fi+" g";
   document.getElementById("fiberNote").textContent = custom
-    ? "Your target. Clear the field to go back to auto."
-    : (tot>0
-      ? "Auto: 14 g per 1,000 kcal of your "+tot.toLocaleString()+" kcal goal (FDA / Institute of Medicine guideline)."
-      : "Auto follows your calorie goal: 14 g per 1,000 kcal (FDA / IOM). Calculate maintenance above to see it.");
+    ? "Your target — clear the field for auto."
+    : "Auto · 14 g per 1,000 kcal (FDA / IOM).";
   document.getElementById("fiberAutoBtn").style.display = custom ? "" : "none";
   /* do the macros actually add up to the goal? */
   const an = document.getElementById("macroAnalysis");
