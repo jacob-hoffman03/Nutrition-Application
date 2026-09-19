@@ -874,6 +874,11 @@ body{ background:var(--bg); }
       <h1>Progress</h1>
       <div style="width:44px"></div>
     </div>
+    <div class="segtabs" id="progTabs">
+      <button class="segtab sel" data-p="overview">Overview</button>
+      <button class="segtab" data-p="weight">Weight</button>
+    </div>
+    <div id="progOverview">
     <div class="card anacard">
       <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span></div><span class="ana-range">Last 7 days</span></div>
       <div class="bars7" id="bars7"></div>
@@ -902,12 +907,6 @@ body{ background:var(--bg); }
       </div>
       <svg id="weightChart" width="100%" height="200" viewBox="0 0 340 200" preserveAspectRatio="none" style="margin-top:8px"></svg>
       <div class="wstatgrid" id="wStatTiles" style="display:none"></div>
-      <div class="wlogrow">
-        <input id="weightDate" type="date" aria-label="Weigh-in date">
-        <input id="weightInput" type="number" inputmode="decimal" step="0.1" placeholder="Weight (lb)">
-        <button class="wlogbtn" id="weightAdd">Log</button>
-      </div>
-      <div id="weightHist" style="margin-top:6px"></div>
     </div>
     <div class="secttl">Weight analysis</div>
     <div class="card">
@@ -938,6 +937,18 @@ body{ background:var(--bg); }
         <div id="muscleOut" style="flex:1; font-size:13.5px; line-height:1.6"></div>
       </div>
       <button class="srow" id="muscleGoalBtn" style="margin-top:8px"><span>Muscle goal: <b id="muscleGoalLbl">0 lb</b></span><span class="chev2">›</span></button>
+    </div>
+    </div><!-- /progOverview -->
+    <div id="progWeight" style="display:none">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;"><b style="font-size:16px">Weigh-ins</b><span style="display:flex; align-items:baseline; gap:8px;"><span class="wdelta" id="wtDeltaW"></span><b id="curWeightW" style="font-size:20px">—</b></span></div>
+        <div class="wlogrow">
+          <input id="weightDate" type="date" aria-label="Weigh-in date">
+          <input id="weightInput" type="number" inputmode="decimal" step="0.1" placeholder="Weight (lb)">
+          <button class="wlogbtn" id="weightAdd">Log</button>
+        </div>
+        <div id="weightHist" style="margin-top:6px"></div>
+      </div>
     </div>
   </section>
 
@@ -1307,7 +1318,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-cr";
+const APP_VERSION = "2026.09.19-cs";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -3374,9 +3385,11 @@ function renderProgress(){
     const dd = w[w.length-1].w - w[w.length-2].w;
     wdl.textContent = (dd>=0?"+":"−")+wDisp(Math.abs(dd)).toFixed(1)+" "+wu+" vs last";
   } else wdl.textContent = "";
+  document.getElementById("curWeightW").textContent = document.getElementById("curWeight").textContent;
+  document.getElementById("wtDeltaW").textContent = wdl.textContent;
   paintWeightChart(w);
   const wh = document.getElementById("weightHist");
-  wh.innerHTML = w.slice(-5).reverse().map(p=>
+  wh.innerHTML = w.slice().reverse().map(p=>
     `<div class="wrow"><span>${new Date(p.d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span><span style="display:flex;align-items:center;gap:2px"><b>${wDisp(p.w)} ${wu}</b><button class="wdel" data-d="${p.d}" aria-label="Delete weigh-in">×</button></span></div>`).join("");
   wh.querySelectorAll(".wdel").forEach(b=> b.onclick = ()=>{
     const dstr = new Date(b.dataset.d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"});
@@ -4169,6 +4182,16 @@ function showView(v){
 }
 function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.v));
+/* Progress sub-tabs: Overview | Weight (weigh-in log lives on its own tab) */
+let progTab = "overview";
+function setProgTab(p){
+  progTab = p;
+  document.querySelectorAll("#progTabs .segtab").forEach(b=>b.classList.toggle("sel", b.dataset.p===p));
+  document.getElementById("progOverview").style.display = p==="overview" ? "" : "none";
+  document.getElementById("progWeight").style.display = p==="weight" ? "" : "none";
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("#progTabs .segtab").forEach(b=> b.onclick = ()=>setProgTab(b.dataset.p));
 document.getElementById("tabFab").onclick = ()=>openSheet(mealForNow());
 document.getElementById("dayPrev").onclick = ()=>{ dayOffset--; renderDiary(); };
 document.getElementById("todayPill").onclick = ()=>{ dayOffset = 0; weekOff = 0; renderDiary(); };
