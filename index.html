@@ -419,7 +419,7 @@ body{ background:var(--bg); }
 .progcard .wday .wd{ color:rgba(255,255,255,.62); }
 .progcard .wday .wn{ color:#fff; }
 .progcard .wday.istoday .wn{ background:rgba(255,255,255,.28); }
-.progcard .wday.sel .wn{ background:#fff; color:#4536f0; }
+.progcard .wday.sel .wn{ background:#fff; color:var(--acc); }
 .progcard .wday.sel .wd{ color:#fff; }
 .progcard .wday:disabled{ opacity:.45; }
 .progcard .wday .wdot.log{ background:rgba(255,255,255,.55); }
@@ -1309,7 +1309,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-cl";
+const APP_VERSION = "2026.09.19-cm";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
