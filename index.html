@@ -399,6 +399,7 @@ body{ background:var(--bg); }
 .prog-pct b{ font-size:46px; font-weight:800; letter-spacing:-1px; line-height:1; font-variant-numeric:tabular-nums; }
 .prog-pct span{ display:block; font-size:12.5px; opacity:.8; font-weight:600; margin-top:6px; }
 .progcard .ring .center .ctitle{ color:rgba(255,255,255,.78); }
+.progcard .ring .center{ gap:3px; }
 .progcard .ring .center b{ color:#fff; }
 .progcard .flagkc{ color:#ffd9a8 !important; }
 .progcard .flagsur{ color:rgba(255,255,255,.72) !important; }
@@ -597,8 +598,8 @@ body{ background:var(--bg); }
       <div class="prog-top"><span class="prog-label">Today's Intake</span><span class="prog-date" id="daySub"></span></div>
       <div class="prog-main">
         <div class="prog-pct"><b id="progPct">0%</b><span id="progSub">of daily goal</span></div>
-        <div class="ring" style="width:150px;height:150px">
-          <svg width="150" height="150" viewBox="0 0 128 128">
+        <div class="ring" style="width:196px;height:196px">
+          <svg width="196" height="196" viewBox="0 0 128 128">
             <circle cx="64" cy="64" r="56" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="11"/>
             <circle id="ringMaint" cx="64" cy="64" r="56" fill="none" stroke="#ffd9a8" stroke-width="11"
               stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
@@ -1282,7 +1283,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-by";
+const APP_VERSION = "2026.09.19-bz";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
