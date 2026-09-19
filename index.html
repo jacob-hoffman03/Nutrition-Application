@@ -619,9 +619,9 @@ body{ background:var(--bg); }
             <circle cx="64" cy="64" r="56" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="11"/>
             <circle id="ringMaint" cx="64" cy="64" r="56" fill="none" stroke="#ffffff" stroke-width="11"
               stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
-            <circle id="ringSurpTrack" cx="64" cy="64" r="40" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="10"/>
-            <circle id="ringSurp" cx="64" cy="64" r="40" fill="none" stroke="#d5d5e0" stroke-width="10"
-              stroke-linecap="round" stroke-dasharray="251.33" stroke-dashoffset="251.33"/>
+            <circle id="ringSurpTrack" cx="64" cy="64" r="46" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="5"/>
+            <circle id="ringSurp" cx="64" cy="64" r="46" fill="none" stroke="#d5d5e0" stroke-width="5"
+              stroke-linecap="round" stroke-dasharray="289.03" stroke-dashoffset="289.03"/>
           </svg>
           <div class="center">
             <span class="ctitle">Eaten</span>
@@ -1284,7 +1284,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-ch";
+const APP_VERSION = "2026.09.19-ci";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -1468,7 +1468,7 @@ function waterTarget(){ return waterCalc().target; }
 /* Dual concentric rings, Apple-Health style: the big outer ring fills to maintenance,
    then the smaller inner ring starts filling the surplus once the outer is full. */
 function ringPaint(eCal, mCal, tCal){
-  const C1 = 2*Math.PI*56, C2 = 2*Math.PI*40;
+  const C1 = 2*Math.PI*56, C2 = 2*Math.PI*46;
   const mFrac = mCal>0 ? Math.min(eCal/mCal, 1) : 0;
   const maint = $("ringMaint");
   maint.style.strokeDasharray = C1;
