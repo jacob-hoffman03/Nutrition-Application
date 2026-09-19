@@ -396,7 +396,9 @@ body{ background:var(--bg); }
 .hwheel svg{ width:56px; height:56px; }
 .hwheel .swnum b{ color:#fff; font-size:14px; }
 .hwheel .swnum i{ color:rgba(255,255,255,.72); font-size:7px; }
-.prog-pct-row{ margin:12px 0 2px; text-align:left; }
+.progcard .prog-pct-row{ margin:12px 0 2px; text-align:left; font-size:13px; font-weight:700; }
+.progcard .prog-pct-row b{ font-size:13px; letter-spacing:0; }
+.progcard .prog-pct-row span{ display:inline; font-size:13px; margin:0; }
 .progcard .ring .center .ctitle{ color:rgba(255,255,255,.78); }
 .progcard .ring .center{ gap:3px; }
 .progcard .ring .center b{ color:#fff; }
@@ -644,7 +646,7 @@ body{ background:var(--bg); }
           <span class="swnum"><b id="adhNumH">–</b><i>adherence</i></span>
         </button>
       </div>
-      <div class="prog-pct prog-pct-row"><b id="progPct">0%</b><span id="progSub">of daily goal</span></div>
+      <div class="prog-pct prog-pct-row"><b id="progPct">0%</b> <span id="progSub">of daily goal</span></div>
 
       <div class="statusbar" id="statusPill" role="button" tabindex="0" aria-label="Intake details">
         <div class="sbtrack"><div class="sbfill" id="spFill"></div><div class="sbmark" id="spMark"></div></div>
@@ -1298,7 +1300,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-cj";
+const APP_VERSION = "2026.09.19-ck";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
