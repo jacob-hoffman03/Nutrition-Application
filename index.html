@@ -163,7 +163,7 @@ button{font-family:inherit;}
 .alcring{flex:none; width:52px; height:52px;}
 .vapelevels{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
 .vchip{border:1px solid var(--line); background:#fff; border-radius:20px; padding:7px 14px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer;}
-.vchip.sel{background:#5b5bf0; border-color:#5b5bf0; color:#fff;}
+.vchip.sel{background:var(--acc); border-color:var(--acc); color:#fff;}
 .alcwarn{margin-top:10px; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:13px; line-height:1.45; border-radius:12px; padding:10px 12px;}
 /* collapsible goal sections */
 .ghead{display:flex; align-items:center; gap:8px; font-size:21px; font-weight:800; margin:20px 2px 12px; letter-spacing:-.3px; cursor:pointer; user-select:none;}
@@ -343,7 +343,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .stat2 b{display:block; font-size:17px; font-weight:800; font-variant-numeric:tabular-nums;}
 .stat2 span{font-size:12px; color:var(--muted); font-weight:600;}
 .wgoalbar{height:8px; border-radius:5px; background:#ececf1; overflow:hidden; margin-top:6px;}
-.wgoalbar i{display:block; height:100%; background:linear-gradient(90deg,#5b5bf0,#8a8af5); border-radius:5px; transition:width .3s;}
+.wgoalbar i{display:block; height:100%; background:linear-gradient(90deg,var(--acc-deep),var(--acc)); border-radius:5px; transition:width .3s;}
 .bars7{display:flex; align-items:flex-end; gap:6px; height:110px; margin-top:8px;}
 .bars7 .bcol{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; cursor:pointer;}
 /* recipes + barcode (2026-09-18) */
@@ -383,7 +383,7 @@ body{ background:var(--bg); }
 .card{ border:none; border-radius:var(--radius); box-shadow:0 10px 28px rgba(84,84,180,.08); }
 .secttl{ font-size:15px; }
 /* purple progress hero */
-.progcard{ background:linear-gradient(135deg,#6f63f6 0%,#4b3ff2 55%,#3d31e8 100%); color:#fff; padding:18px 16px 14px; overflow:hidden; position:relative; }
+.progcard{ background:linear-gradient(135deg,var(--acc) 0%,var(--acc-deep) 100%); color:#fff; padding:18px 16px 14px; overflow:hidden; position:relative; }
 .progcard::after{ content:""; position:absolute; width:230px; height:230px; border-radius:50%; background:rgba(255,255,255,.07); top:-80px; right:-60px; pointer-events:none; }
 .prog-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; position:relative; z-index:1; }
 .prog-label{ font-size:14px; font-weight:700; opacity:.95; }
@@ -399,6 +399,13 @@ body{ background:var(--bg); }
 .progcard .prog-pct-row{ margin:12px 0 2px; text-align:left; font-size:13px; font-weight:700; }
 .progcard .prog-pct-row b{ font-size:13px; letter-spacing:0; }
 .progcard .prog-pct-row span{ display:inline; font-size:13px; margin:0; }
+/* app theme picker */
+.themerow{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.themepick{ width:34px; height:34px; border-radius:50%; border:none; padding:0; cursor:pointer; flex:none;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.65), 0 1px 4px rgba(0,0,0,.18); position:relative; }
+.themepick.sel{ outline:3px solid var(--ink); outline-offset:2px; }
+.themepick.custom{ background:conic-gradient(#ff5c5c,#ffd23d,#2fe3b6,#2f8bff,#b06fff,#ff5c5c); overflow:hidden; }
+.themepick.custom input{ position:absolute; inset:-8px; opacity:0; cursor:pointer; }
 .progcard .ring .center .ctitle{ color:rgba(255,255,255,.78); }
 .progcard .ring .center{ gap:3px; }
 .progcard .ring .center b{ color:#fff; }
@@ -500,7 +507,7 @@ body{ background:var(--bg); }
 /* tab bar: reference style + center button */
 .tab{ color:#a5a5b0; }
 .tabfab{ flex:none; width:56px; height:56px; border-radius:50%; border:none; align-self:flex-start; margin-top:-26px;
-  background:linear-gradient(135deg,#6f63f6,#4b3ff2); box-shadow:0 10px 22px rgba(91,91,240,.45);
+  background:linear-gradient(135deg,var(--acc),var(--acc-deep)); box-shadow:0 10px 22px rgba(0,0,0,.28);
   display:flex; align-items:center; justify-content:center; }
 .tabfab svg{ width:24px; height:24px; }
 .tabfab:active{ transform:scale(.93); }
@@ -570,7 +577,7 @@ body{ background:var(--bg); }
 .nhead b i.met{color:var(--acc);}
 .nhead b i.lim{color:var(--red);}
 .nbar{height:6px; background:#f0f0f5; border-radius:4px; margin-top:8px; overflow:hidden;}
-.nbar i{display:block; height:100%; background:linear-gradient(90deg,#5b5bf0,#8b8bf5); border-radius:4px;}
+.nbar i{display:block; height:100%; background:linear-gradient(90deg,var(--acc-deep),var(--acc)); border-radius:4px;}
 .cphotodel{border:none; background:none; color:var(--red); font-weight:700; font-size:14px; font-family:inherit; padding:8px 4px;}
 .favstar{border:none; background:none; padding:4px; display:flex; align-items:center;}
 .empty{color:var(--muted); font-size:13px; padding:8px 2px;}
@@ -911,7 +918,7 @@ body{ background:var(--bg); }
       <div style="display:flex; gap:16px; align-items:center; margin-top:10px">
         <svg id="muscleRing" width="118" height="118" viewBox="0 0 120 120" style="flex:none">
           <circle cx="60" cy="60" r="52" fill="none" stroke="#ececf1" stroke-width="11"/>
-          <circle id="muscleArc" cx="60" cy="60" r="52" fill="none" stroke="#5b5bf0" stroke-width="11" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="0 327"/>
+          <circle id="muscleArc" cx="60" cy="60" r="52" fill="none" style="stroke:var(--acc)" stroke-width="11" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="0 327"/>
           <text id="muscleNum" x="60" y="58" text-anchor="middle" font-size="21" font-weight="800" fill="#1c1c1e">–</text>
           <text x="60" y="79" text-anchor="middle" font-size="11" fill="#8a8a98">lb muscle</text>
         </svg>
@@ -948,6 +955,8 @@ body{ background:var(--bg); }
         <div class="bloatbar"><div id="bloatFill"></div></div>
         <div class="rangenote" id="scoreLine" style="margin-top:6px"></div>
       </div>
+      <div class="flabel" style="margin:14px 0 8px">App theme</div>
+      <div class="themerow" id="themeRow"></div>
       <div class="flabel" style="margin:14px 0 8px">Progress photos</div>
       <div class="photostrip" id="photoStrip"></div>
       <div class="flabel" style="margin:14px 0 8px">Today's medals</div>
@@ -1258,10 +1267,10 @@ const MEAL_ICON = {
   lunch:'<svg viewBox="0 0 24 24" fill="none" stroke="#ff9f43" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5 5l1.8 1.8M17.2 17.2 19 19M19 5l-1.8 1.8M6.8 17.2 5 19"/></svg>',
   dinner:'<svg viewBox="0 0 24 24" fill="none" stroke="#7e7ef2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>',
   snacks:'<svg viewBox="0 0 24 24" fill="none" stroke="#b07d4f" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="9.5" cy="10" r="1" fill="#b07d4f" stroke="none"/><circle cx="14.5" cy="9" r="1" fill="#b07d4f" stroke="none"/><circle cx="11" cy="14.5" r="1" fill="#b07d4f" stroke="none"/><circle cx="15" cy="14" r="1" fill="#b07d4f" stroke="none"/></svg>',
-  supplements:'<svg viewBox="0 0 24 24" fill="none" stroke="#5b5bf0" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="9" width="17" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><line x1="10.2" y1="7.4" x2="13.8" y2="17.6"/></svg>'
+  supplements:'<svg viewBox="0 0 24 24" fill="none" style="stroke:var(--acc)" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="9" width="17" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><line x1="10.2" y1="7.4" x2="13.8" y2="17.6"/></svg>'
 };
 const MEAL_TINT = {breakfast:"#fff3e2", lunch:"#fff3e2", dinner:"#eceeff", snacks:"#f3e9dc", supplements:"#eceeff"};
-const FOOD_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="#5b5bf0" stroke-width="2" stroke-linecap="round"><path d="M4 16.5h16"/><path d="M6.5 16.5a5.5 5.5 0 0 1 11 0"/><path d="M12 8.5v2"/><circle cx="12" cy="7" r="1.1" fill="#5b5bf0" stroke="none"/></svg>';
+const FOOD_ICON = '<svg viewBox="0 0 24 24" fill="none" style="stroke:var(--acc)" stroke-width="2" stroke-linecap="round"><path d="M4 16.5h16"/><path d="M6.5 16.5a5.5 5.5 0 0 1 11 0"/><path d="M12 8.5v2"/><circle cx="12" cy="7" r="1.1" style="fill:var(--acc)" stroke="none"/></svg>';
 const MEAL_SEG = {breakfast:"#ffdca8", lunch:"#ffab3d", dinner:"#ff8f3d", snacks:"#ff7f2a", supplements:"#8b8bf5"};
 const STAR_ON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="#e8a013"><path d="M12 2.6l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 17.5l-5.8 3.1 1.1-6.5L2.6 9.5l6.5-1z"/></svg>';
 const STAR_OFF = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#aeb9c4" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.6l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 17.5l-5.8 3.1 1.1-6.5L2.6 9.5l6.5-1z"/></svg>';
@@ -1300,7 +1309,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-ck";
+const APP_VERSION = "2026.09.19-cl";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -1351,16 +1360,64 @@ if(!flagGet().zeroReset){ s.goals = defGoals(); flagSet("zeroReset",1); }
 else { const dg = defGoals(); for(const k in dg) if(s.goals[k]===undefined) s.goals[k]=dg[k]; const dp = defProfile(); if(!s.goals.profile) s.goals.profile = dp; else for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; }
 delete s.goals.cal;
 /* migrate legacy numeric activity factor to FAO tier key */
-if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); if(!s.training) s.training = {sched:{}, done:{}, deloads:{}}; if(!s.training.deloads) s.training.deloads = {}; if(!s.profile) s.profile = {name:"", img:""};
+if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); if(!s.training) s.training = {sched:{}, done:{}, deloads:{}}; if(!s.training.deloads) s.training.deloads = {}; if(!s.profile) s.profile = {name:"", img:"", theme:"#5b5bf0"}; else if(!/^#[0-9a-fA-F]{6}$/.test(s.profile.theme)) s.profile.theme = "#5b5bf0";
   /* Water 2.0: intake moves from glasses to fluid oz; bottles are user-defined */
   if(!s.waterV2){ for(const k in (s.days||{})){ const dd=s.days[k]; if(dd.waterOz===undefined) dd.waterOz=Math.round(((dd.water||0)*8)*10)/10; delete dd.water; } s.waterV2=1; }
   if(!Array.isArray(s.bottles) || !s.bottles.length) s.bottles=[{id:"b0",name:"Glass",oz:8}];
   if(!Array.isArray(s.recipes)) s.recipes=[]; /* recipes added 2026-09-18 */
   return s; } } catch(e){}
   flagSet("zeroReset",1); /* fresh boot / unreadable state: nothing to reset, mark it done */
-  return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:"", img:""}, bottles:[{id:"b0",name:"Glass",oz:8}], waterV2:1, recipes:[]};
+  return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:"", img:"", theme:"#5b5bf0"}, bottles:[{id:"b0",name:"Glass",oz:8}], waterV2:1, recipes:[]};
 }
 let S = load();
+/* ============ APP THEME ============ */
+/* User-pickable accent color (Settings › Profile › App theme). CSS surfaces read
+   var(--acc)/var(--acc-deep)/var(--acc-soft); JS-baked SVG strings use THEME.acc. */
+const THEME = { acc:"#5b5bf0" };
+function shadeHex(hex, f){
+  const n = parseInt(hex.slice(1), 16);
+  let r = (n>>16)&255, g = (n>>8)&255, b = n&255;
+  const t = f<0?0:255, p = Math.min(1, Math.abs(f));
+  r = Math.round((t-r)*p+r); g = Math.round((t-g)*p+g); b = Math.round((t-b)*p+b);
+  return "#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+function themeColor(){
+  const t = S.profile && S.profile.theme;
+  return /^#[0-9a-fA-F]{6}$/.test(t) ? t : "#5b5bf0";
+}
+function applyTheme(hex){
+  hex = /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : "#5b5bf0";
+  THEME.acc = hex;
+  const rs = document.documentElement.style;
+  rs.setProperty("--acc", hex);
+  rs.setProperty("--acc-deep", shadeHex(hex,-0.16));
+  rs.setProperty("--acc-soft", shadeHex(hex,0.85));
+  const m = document.querySelector('meta[name="theme-color"]');
+  if(m) m.setAttribute("content", hex);
+}
+const THEME_PRESETS = ["#5b5bf0","#6f63f6","#2f8bff","#12cfae","#fb6f84","#ff9f43"];
+function renderThemePicker(){
+  const row = document.getElementById("themeRow");
+  if(!row) return;
+  const cur = themeColor().toLowerCase();
+  const isPreset = THEME_PRESETS.some(c=>c===cur);
+  row.innerHTML = THEME_PRESETS.map(c=>
+    `<button type="button" class="themepick${c===cur?" sel":""}" data-c="${c}" style="background:${c}" aria-label="Theme color ${c}"></button>`
+  ).join("") +
+  `<label class="themepick custom${isPreset?"":" sel"}" aria-label="Custom theme color"><input type="color" id="themeCustom" value="${cur}"></label>`;
+  row.querySelectorAll('.themepick[data-c]').forEach(b=>{ b.onclick = ()=>setTheme(b.getAttribute("data-c")); });
+  const ci = document.getElementById("themeCustom");
+  ci.addEventListener("input", ()=>applyTheme(ci.value));
+  ci.addEventListener("change", ()=>setTheme(ci.value));
+}
+function setTheme(hex){
+  if(!S.profile) S.profile = {};
+  S.profile.theme = hex;
+  applyTheme(hex);
+  save();
+  renderThemePicker();
+  renderAll();
+}
 /* save() is defined up near KEY — quota-aware, trims oldest progress photos when storage is full */
 /* fingerprint of the profile inputs that feed calcMaintenance — if these changed since
    maintenance was last calculated, Save recalculates so the goal can never go stale */
@@ -1760,7 +1817,7 @@ function downscalePhoto(file, max, cb){
   img.onerror = ()=>{ URL.revokeObjectURL(url); alert("Couldn't read that photo."); };
   img.src = url;
 }
-const CAM_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="#5b5bf0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.2"/></svg>';
+const CAM_SVG = '<svg viewBox="0 0 24 24" fill="none" style="stroke:var(--acc)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.2"/></svg>';
 function openBottleSheet(){
   const body = document.getElementById("bottleBody");
   const list = (S.bottles||[]).map(b=>
@@ -1992,17 +2049,17 @@ function paintScoreWheel(){
   const a = adherenceStats(), f = foodFatigue(), b = bloatScore();
   const aFrac = a.pct===null ? null : Math.min(a.pct,100)/100;
   const aTxt = a.pct===null ? "–" : a.pct+"%";
-  const aCol = a.pct===null ? "#c9c9d6" : a.pct>=80 ? "#12cfae" : a.pct>=50 ? "#5b5bf0" : "#fb6f84";
+  const aCol = a.pct===null ? "#c9c9d6" : a.pct>=80 ? "#12cfae" : a.pct>=50 ? THEME.acc : "#fb6f84";
   const aColH = a.pct===null ? "rgba(255,255,255,.4)" : a.pct>=80 ? "#2fe3b6" : a.pct>=50 ? "#ffffff" : "#ff8a9d";
   paintWheel("adhArc","adhNum",aFrac,aCol,aTxt);
   paintWheel("adhArcH","adhNumH",aFrac,aColH,aTxt);
   const fFrac = f.score===null ? null : f.score/100;
   const fTxt = f.score===null ? "–" : String(f.score);
-  const fCol = f.score===null ? "#c9c9d6" : f.score<=25?"#12cfae":f.score<=45?"#5b5bf0":f.score<=65?"#e8a13d":"#fb6f84";
+  const fCol = f.score===null ? "#c9c9d6" : f.score<=25?"#12cfae":f.score<=45?THEME.acc:f.score<=65?"#e8a13d":"#fb6f84";
   const fColH = f.score===null ? "rgba(255,255,255,.4)" : f.score<=25?"#2fe3b6":f.score<=45?"#ffffff":f.score<=65?"#ffd23d":"#ff8a9d";
   paintWheel("fatArc","fatNum",fFrac,fCol,fTxt);
   paintWheel("fatArcH","fatNumH",fFrac,fColH,fTxt);
-  const bcol = b.score===null ? "#c9c9d6" : b.score<=25?"#12cfae":b.score<=50?"#5b5bf0":b.score<=75?"#e8a13d":"#fb6f84";
+  const bcol = b.score===null ? "#c9c9d6" : b.score<=25?"#12cfae":b.score<=50?THEME.acc:b.score<=75?"#e8a13d":"#fb6f84";
   const fill = document.getElementById("bloatFill");
   fill.style.width = b.score===null ? "0%" : b.score+"%";
   fill.style.background = bcol;
@@ -3237,28 +3294,28 @@ function paintWeightChart(w){
   /* goal flag: dashed line + pennant, never styled like the data series */
   if(flag){
     const gy = Y(flag.v);
-    s += `<line x1="${PL}" y1="${gy.toFixed(1)}" x2="${W-PR+6}" y2="${gy.toFixed(1)}" stroke="#5b5bf0" stroke-width="1.5" stroke-dasharray="6,5" opacity="0.85"/>`+
-      `<g transform="translate(${PL+2},${(gy-13).toFixed(1)})"><line x1="0" y1="0" x2="0" y2="13" stroke="#5b5bf0" stroke-width="2"/><path d="M1,1 L13,4.5 L1,8 Z" fill="#5b5bf0"/></g>`+
-      `<text x="${PL+18}" y="${(gy-3).toFixed(1)}" fill="#5b5bf0" font-size="11" font-weight="700">${flag.auto?"auto ":""}${f1(flag.v)}${wu}</text>`;
+    s += `<line x1="${PL}" y1="${gy.toFixed(1)}" x2="${W-PR+6}" y2="${gy.toFixed(1)}" stroke="${THEME.acc}" stroke-width="1.5" stroke-dasharray="6,5" opacity="0.85"/>`+
+      `<g transform="translate(${PL+2},${(gy-13).toFixed(1)})"><line x1="0" y1="0" x2="0" y2="13" stroke="${THEME.acc}" stroke-width="2"/><path d="M1,1 L13,4.5 L1,8 Z" fill="${THEME.acc}"/></g>`+
+      `<text x="${PL+18}" y="${(gy-3).toFixed(1)}" fill="${THEME.acc}" font-size="11" font-weight="700">${flag.auto?"auto ":""}${f1(flag.v)}${wu}</text>`;
   }
   const xy = pts.map(p=>[X(T(p)), Y(p.w)]);
   if(xy.length>=2){
     const line = smoothLine(xy);
     s += `<path d="${line}L${xy[xy.length-1][0].toFixed(1)},${H-PB}L${xy[0][0].toFixed(1)},${H-PB}Z" fill="rgba(91,91,240,0.08)"/>`+
-         `<path d="${line}" fill="none" stroke="#5b5bf0" stroke-width="3" stroke-linecap="round"/>`;
+         `<path d="${line}" fill="none" stroke="${THEME.acc}" stroke-width="3" stroke-linecap="round"/>`;
   }
-  s += xy.map(q=>`<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="4" fill="#fff" stroke="#5b5bf0" stroke-width="2.5"/>`).join("");
+  s += xy.map(q=>`<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="4" fill="#fff" stroke="${THEME.acc}" stroke-width="2.5"/>`).join("");
   /* min / max annotations */
   if(pts.length>=2){
     let iMn=0, iMx=0;
     pts.forEach((p,i)=>{ if(p.w<pts[iMn].w) iMn=i; if(p.w>pts[iMx].w) iMx=i; });
     if(iMn!==iMx){
-      s += `<text x="${xy[iMn][0].toFixed(1)}" y="${(xy[iMn][1]+16).toFixed(1)}" text-anchor="middle" fill="#5b5bf0" font-size="11" font-weight="700">${f1(pts[iMn].w)}${wu}</text>`+
-           `<text x="${xy[iMx][0].toFixed(1)}" y="${(xy[iMx][1]-9).toFixed(1)}" text-anchor="middle" fill="#5b5bf0" font-size="11" font-weight="700">${f1(pts[iMx].w)}${wu}</text>`;
+      s += `<text x="${xy[iMn][0].toFixed(1)}" y="${(xy[iMn][1]+16).toFixed(1)}" text-anchor="middle" fill="${THEME.acc}" font-size="11" font-weight="700">${f1(pts[iMn].w)}${wu}</text>`+
+           `<text x="${xy[iMx][0].toFixed(1)}" y="${(xy[iMx][1]-9).toFixed(1)}" text-anchor="middle" fill="${THEME.acc}" font-size="11" font-weight="700">${f1(pts[iMx].w)}${wu}</text>`;
     }
   }
   if(xy.length===1){
-    s += `<text x="${xy[0][0].toFixed(1)}" y="${(xy[0][1]-12).toFixed(1)}" text-anchor="middle" fill="#5b5bf0" font-size="11" font-weight="700">${f1(pts[0].w)}${wu}</text>`;
+    s += `<text x="${xy[0][0].toFixed(1)}" y="${(xy[0][1]-12).toFixed(1)}" text-anchor="middle" fill="${THEME.acc}" font-size="11" font-weight="700">${f1(pts[0].w)}${wu}</text>`;
   }
   svg.innerHTML = s;
   svg.setAttribute("role","img");
@@ -3287,7 +3344,7 @@ function renderProgress(){
   const max = Math.max(...days.map(x=>x.cal), (S.goals.maintenance>0?S.goals.maintenance:0)+(S.goals.surplus>0?S.goals.surplus:0), 1);
   days.forEach(x=>{
     const c = document.createElement("div"); c.className="bcol";
-    c.innerHTML = `<div class="bar" style="height:${Math.max(x.cal/max*100,2)}%;${x.k===todayStr()?"background:linear-gradient(#7e7ef2,#5b5bf0);":""}"></div><div class="bl">${x.label}</div>`;
+    c.innerHTML = `<div class="bar" style="height:${Math.max(x.cal/max*100,2)}%;${x.k===todayStr()?"background:linear-gradient(var(--acc),var(--acc-deep));":""}"></div><div class="bl">${x.label}</div>`;
     const bl = c.querySelector(".bl"), kcal = Math.round(x.cal).toLocaleString();
     c.onclick = ()=>{ const show = bl.dataset.k!=="1"; bl.dataset.k = show?"1":""; bl.textContent = show?kcal:x.label; };
     bb.appendChild(c);
@@ -3834,6 +3891,7 @@ function renderProfileCard(){
     n===0 ? "Log your first meal to earn Silver." :
     "Tap a medal to see what each one takes.";
   paintScoreWheel();
+  renderThemePicker();
   renderPhotoStrip();
 }
 document.getElementById("sAvatar").onclick = ()=>document.getElementById("pPhotoFile").click();
@@ -4132,6 +4190,7 @@ document.getElementById("analysisLink").onclick = ()=>showView("analysis");
 document.getElementById("analysisBack").onclick = ()=>showView("diary");
 function mealForNow(){ const h = new Date().getHours(); return h<11?"breakfast":h<15?"lunch":h<21?"dinner":"snacks"; }
 document.getElementById("trayIco").insertAdjacentHTML("afterbegin", FOOD_ICON);
+applyTheme(themeColor());
 renderAll();
 </script>
 <script>
