@@ -952,21 +952,6 @@ body{ background:var(--bg); }
       <div class="prow">
         <button class="pavatar" id="sAvatar" style="width:58px;height:58px;font-size:22px" aria-label="Change profile photo"></button>
         <div class="pmeta"><input class="sname" id="sName" placeholder="Your name" autocomplete="off"></div>
-        <div class="wheels">
-        <button class="scorewheel" id="scoreWheel" aria-label="Adherence details">
-          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="#ececf1" stroke-width="9"/><circle id="adhArc" cx="42" cy="42" r="36" fill="none" stroke="#5b5bf0" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
-          <span class="swnum"><b id="adhNum">–</b><i>adherence</i></span>
-        </button>
-        <button class="scorewheel" id="fatWheel" aria-label="Food fatigue details">
-          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="#ececf1" stroke-width="9"/><circle id="fatArc" cx="42" cy="42" r="36" fill="none" stroke="#5b5bf0" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
-          <span class="swnum"><b id="fatNum">–</b><i>fatigue</i></span>
-        </button>
-        </div>
-      </div>
-      <div style="margin-top:10px">
-        <div class="flabel" style="display:flex;justify-content:space-between;align-items:baseline"><span>Bloat</span><span id="bloatVal" style="color:var(--muted);font-weight:700">–</span></div>
-        <div class="bloatbar"><div id="bloatFill"></div></div>
-        <div class="rangenote" id="scoreLine" style="margin-top:6px"></div>
       </div>
       <div class="flabel" style="margin:14px 0 8px">App theme</div>
       <div class="themerow" id="themeRow"></div>
@@ -1322,7 +1307,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-cq";
+const APP_VERSION = "2026.09.19-cr";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -2049,7 +2034,7 @@ function scoreInfoHTML(){
     `<div class="irow" style="color:var(--muted)">Rough predictions from your log, not medical verdicts — sleep, stress, and illness matter too, and the app can't see those.</div>`;
 }
 
-/* ============ SCORE WHEEL (Settings profile + Diary hero minis) ============ */
+/* ============ SCORE WHEELS (Diary hero minis) ============ */
 function paintWheel(arcId, numId, frac, color, label){
   const arc = document.getElementById(arcId);
   const C = 2*Math.PI*36;
@@ -2062,33 +2047,17 @@ function paintScoreWheel(){
   const a = adherenceStats(), f = foodFatigue(), b = bloatScore();
   const aFrac = a.pct===null ? null : Math.min(a.pct,100)/100;
   const aTxt = a.pct===null ? "–" : a.pct+"%";
-  const aCol = a.pct===null ? "#c9c9d6" : a.pct>=80 ? "#12cfae" : a.pct>=50 ? THEME.acc : "#fb6f84";
   const aColH = a.pct===null ? "rgba(255,255,255,.4)" : a.pct>=80 ? "#2fe3b6" : a.pct>=50 ? "#ffffff" : "#ff8a9d";
-  paintWheel("adhArc","adhNum",aFrac,aCol,aTxt);
   paintWheel("adhArcH","adhNumH",aFrac,aColH,aTxt);
   const fFrac = f.score===null ? null : f.score/100;
   const fTxt = f.score===null ? "–" : f.score+"%";
-  const fCol = f.score===null ? "#c9c9d6" : f.score<=25?"#12cfae":f.score<=45?THEME.acc:f.score<=65?"#e8a13d":"#fb6f84";
   const fColH = f.score===null ? "rgba(255,255,255,.4)" : f.score<=25?"#2fe3b6":f.score<=45?"#ffffff":f.score<=65?"#ffd23d":"#ff8a9d";
-  paintWheel("fatArc","fatNum",fFrac,fCol,fTxt);
   paintWheel("fatArcH","fatNumH",fFrac,fColH,fTxt);
   const bFracH = b.score===null ? null : b.score/100;
   const bTxtH = b.score===null ? "–" : b.score+"%";
   const bColH = b.score===null ? "rgba(255,255,255,.4)" : b.score<=25?"#2fe3b6":b.score<=50?"#ffffff":b.score<=75?"#ffd23d":"#ff8a9d";
   paintWheel("bloatArcH","bloatNumH",bFracH,bColH,bTxtH);
-  const bcol = b.score===null ? "#c9c9d6" : b.score<=25?"#12cfae":b.score<=50?THEME.acc:b.score<=75?"#e8a13d":"#fb6f84";
-  const fill = document.getElementById("bloatFill");
-  fill.style.width = b.score===null ? "0%" : b.score+"%";
-  fill.style.background = bcol;
-  const bv = document.getElementById("bloatVal");
-  bv.textContent = b.score===null ? "–" : b.score+" · "+b.label;
-  bv.style.color = b.score===null ? "var(--muted)" : bcol;
-  document.getElementById("scoreLine").innerHTML = (a.pct===null && f.score===null && b.score===null)
-    ? "Log meals — your adherence wheel, fatigue circle, and bloat scale live here."
-    : `Fatigue <b style="color:${fCol}">${f.score===null?"–":f.label}</b> · Bloat <b style="color:${bcol}">${b.score===null?"–":b.label}</b> — tap a wheel for the full breakdown.`;
 }
-document.getElementById("scoreWheel").onclick = ()=>openInfo("scores");
-document.getElementById("fatWheel").onclick = ()=>openInfo("scores");
 document.getElementById("adhWheelH").onclick = ()=>openInfo("scores");
 document.getElementById("fatWheelH").onclick = ()=>openInfo("scores");
 document.getElementById("bloatWheelH").onclick = ()=>openInfo("scores");
