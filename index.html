@@ -397,6 +397,12 @@ body{ background:var(--bg); }
 .hwheel svg{ width:56px; height:56px; }
 .hwheel .swnum b{ color:#fff; font-size:14px; }
 .hwheel .swnum i{ color:rgba(255,255,255,.72); font-size:7px; }
+/* stacked mini column: fatigue wheel with tiny bloat wheel beneath, centered */
+.hside{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+.hwheel.hwheel-sm{ width:40px; height:40px; }
+.hwheel.hwheel-sm svg{ width:40px; height:40px; }
+.hwheel.hwheel-sm .swnum b{ font-size:10px; }
+.hwheel.hwheel-sm .swnum i{ font-size:6px; }
 .progcard .prog-pct-row{ margin:12px 0 2px; text-align:left; font-size:13px; font-weight:700; }
 .progcard .prog-pct-row b{ font-size:13px; letter-spacing:0; }
 .progcard .prog-pct-row span{ display:inline; font-size:13px; margin:0; }
@@ -629,10 +635,16 @@ body{ background:var(--bg); }
       </div>
       <div class="ptodayrow" style="display:none"><button id="todayPill" class="todaypill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg><span>Today</span></button></div>
       <div class="prog-main">
+        <div class="hside">
         <button class="scorewheel hwheel" id="fatWheelH" aria-label="Food fatigue details">
           <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="fatArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
           <span class="swnum"><b id="fatNumH">–</b><i>fatigue</i></span>
         </button>
+        <button class="scorewheel hwheel hwheel-sm" id="bloatWheelH" aria-label="Bloat details">
+          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="bloatArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+          <span class="swnum"><b id="bloatNumH">–</b><i>bloat</i></span>
+        </button>
+        </div>
         <div class="ring" style="width:196px;height:196px">
           <svg width="196" height="196" viewBox="0 0 128 128">
             <circle cx="64" cy="64" r="56" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="11"/>
@@ -1310,7 +1322,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-cp";
+const APP_VERSION = "2026.09.19-cq";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -2060,6 +2072,10 @@ function paintScoreWheel(){
   const fColH = f.score===null ? "rgba(255,255,255,.4)" : f.score<=25?"#2fe3b6":f.score<=45?"#ffffff":f.score<=65?"#ffd23d":"#ff8a9d";
   paintWheel("fatArc","fatNum",fFrac,fCol,fTxt);
   paintWheel("fatArcH","fatNumH",fFrac,fColH,fTxt);
+  const bFracH = b.score===null ? null : b.score/100;
+  const bTxtH = b.score===null ? "–" : b.score+"%";
+  const bColH = b.score===null ? "rgba(255,255,255,.4)" : b.score<=25?"#2fe3b6":b.score<=50?"#ffffff":b.score<=75?"#ffd23d":"#ff8a9d";
+  paintWheel("bloatArcH","bloatNumH",bFracH,bColH,bTxtH);
   const bcol = b.score===null ? "#c9c9d6" : b.score<=25?"#12cfae":b.score<=50?THEME.acc:b.score<=75?"#e8a13d":"#fb6f84";
   const fill = document.getElementById("bloatFill");
   fill.style.width = b.score===null ? "0%" : b.score+"%";
@@ -2075,6 +2091,7 @@ document.getElementById("scoreWheel").onclick = ()=>openInfo("scores");
 document.getElementById("fatWheel").onclick = ()=>openInfo("scores");
 document.getElementById("adhWheelH").onclick = ()=>openInfo("scores");
 document.getElementById("fatWheelH").onclick = ()=>openInfo("scores");
+document.getElementById("bloatWheelH").onclick = ()=>openInfo("scores");
 
 /* ============ PROGRESS PHOTOS ============ */
 let photoOrder = [], photoIdx = 0;
