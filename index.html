@@ -347,14 +347,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wgoalbar i{display:block; height:100%; background:linear-gradient(90deg,var(--acc-deep),var(--acc)); border-radius:5px; transition:width .3s;}
 .bars7{display:flex; align-items:flex-end; gap:6px; height:110px; margin-top:8px;}
 .bars7 .bcol{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; cursor:pointer;}
-/* recipes + barcode (2026-09-18) */
-.plink{background:none; border:none; color:var(--acc); font-weight:700; font-size:14px; font-family:inherit; padding:4px 2px;}
-.rstep{display:flex; align-items:center; gap:8px; flex:none;}
-.rstep button{width:30px; height:30px; border-radius:50%; border:1px solid var(--line); background:#fff; font-size:17px; line-height:1; color:var(--ink);}
-.rstep b{min-width:52px; text-align:center; font-variant-numeric:tabular-nums; font-size:13px; color:var(--muted); font-weight:600;}
-#rPhotoPreview{width:72px; height:72px; border-radius:14px; object-fit:cover; flex:none;}
-.wfull{width:100%; border:none; background:transparent; font-size:16px; font-weight:600; color:var(--ink); outline:none; font-family:inherit; padding:14px 2px;}
-.wfull::placeholder{color:#b9b9c9;}
 .bars7 .bar{width:100%; max-width:30px; background:linear-gradient(#8f8ff7,var(--acc)); border-radius:6px 6px 3px 3px; min-height:4px;}
 .bars7 .bl{font-size:10px; color:var(--muted);}
 .wrow{display:flex; align-items:center; justify-content:space-between; padding:9px 2px; border-top:1px solid var(--line); font-size:14px;}
@@ -501,7 +493,7 @@ body{ background:var(--bg); }
 .mstack-lbls{ display:flex; gap:8px; margin-top:6px; }
 .mstack-lbls span{ flex:1; text-align:center; font-size:10px; color:var(--muted); font-weight:600; }
 /* mini stat cards */
-.ministats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+.ministats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; margin-bottom:12px; }
 .ministat{ background:#fff; border-radius:18px; padding:14px; box-shadow:0 10px 28px rgba(84,84,180,.08); display:flex; flex-direction:column; gap:6px; }
 .ministat .ms-label{ font-size:12px; color:var(--muted); font-weight:700; }
 .ministat b{ font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.3px; }
@@ -770,14 +762,6 @@ body{ background:var(--bg); }
     </div>
     <div style="display:flex;gap:8px;margin:4px 0 12px">
       <button class="bigbtn" id="newCustomBtn" style="flex:1;margin:0">+ Add custom food</button>
-      <button class="ghostbtn" id="scanBtn" style="flex:1;margin:0">Scan barcode</button>
-    </div>
-    <div class="fhead">
-      <span class="flabel">My recipes</span>
-      <button class="plink" id="newRecipeBtn">+ New recipe</button>
-    </div>
-    <div class="card" style="padding-top:2px; padding-bottom:6px; margin-bottom:14px;">
-      <div id="recipeResults"></div>
     </div>
     <div class="fhead">
       <span class="flabel" id="foodCount"></span>
@@ -1204,67 +1188,6 @@ body{ background:var(--bg); }
 <!-- STORAGE WARNING -->
 <div id="saveWarn" hidden></div>
 
-<!-- RECIPE BUILDER -->
-<div class="sheet" id="rsheet">
-  <div class="scrim" id="rScrim"></div>
-  <div class="panel">
-    <div class="grab"></div>
-    <button class="xbtn" id="rX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
-    <h2 id="rTitle">New recipe</h2>
-    <div class="body">
-      <div class="cfsec">Name</div>
-      <div class="cfcard"><input id="rName" class="wfull" placeholder="e.g. Bulking breakfast bowl" autocomplete="off"></div>
-      <div class="cfsec">Photo <span style="font-weight:400">(optional)</span></div>
-      <div class="cfcard"><div class="cphotorow">
-        <img id="rPhotoPreview" alt="Recipe photo" style="display:none">
-        <button type="button" class="cphotobtn" id="rPhotoBtn">+ Add photo</button>
-        <button type="button" class="cphotodel" id="rPhotoDel" style="display:none">Remove</button>
-        <input type="file" id="rPhotoFile" accept="image/*" style="display:none">
-      </div></div>
-      <div class="cfsec">Ingredients <span id="rTotals" style="font-weight:400"></span></div>
-      <div class="cfcard"><div id="rItems"></div></div>
-      <div class="cfsec">Add foods</div>
-      <div class="cfcard">
-        <div class="searchrow"><input class="searchinput" id="rSearch" placeholder="Search your foods" autocomplete="off"></div>
-        <div id="rResults" style="max-height:200px;overflow:auto"></div>
-      </div>
-      <button class="bigbtn" id="rSave">Save recipe</button>
-    </div>
-  </div>
-</div>
-
-<!-- RECIPE LOG -->
-<div class="sheet" id="rlsheet">
-  <div class="scrim" id="rlScrim"></div>
-  <div class="panel">
-    <div class="grab"></div>
-    <button class="xbtn" id="rlX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
-    <h2 id="rlTitle">Log recipe</h2>
-    <div class="body">
-      <div class="cfsec">Log to</div>
-      <div class="cfcard"><div class="chips" id="rlMeals" style="padding:12px 0"></div></div>
-      <div class="whint" id="rlSummary" style="margin:8px 2px 0"></div>
-      <button class="bigbtn" id="rlGo">Log recipe</button>
-    </div>
-  </div>
-</div>
-
-<!-- BARCODE SCANNER -->
-<div class="sheet" id="bsheet">
-  <div class="scrim" id="bScrim"></div>
-  <div class="panel">
-    <div class="grab"></div>
-    <button class="xbtn" id="bX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
-    <h2>Scan barcode</h2>
-    <div class="body">
-      <video id="bVideo" playsinline muted style="width:100%;border-radius:14px;background:#000;display:none"></video>
-      <div class="cfsec" style="margin-top:10px">Or enter manually</div>
-      <div class="cfcard"><input id="bManual" class="wfull" inputmode="numeric" placeholder="Barcode number" autocomplete="off"></div>
-      <button class="bigbtn" id="bLookup">Look up</button>
-      <div class="whint" id="bStatus" style="margin:8px 2px 0"></div>
-    </div>
-  </div>
-</div>
 <script>
 "use strict";
 /* ============ DATA ============ */
@@ -1318,7 +1241,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-cs";
+const APP_VERSION = "2026.09.19-ct";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -2480,248 +2403,7 @@ function renderFoods(){
   box.querySelectorAll(".aplus").forEach(b=>b.onclick=e=>{ e.stopPropagation(); openSheet(mealForNow()); openDetail(findFood(b.dataset.n)); });
   box.querySelectorAll(".ndel").forEach(b=>b.onclick=e=>{ e.stopPropagation(); delCustomFood(b.dataset.n); });
   box.querySelectorAll(".arow2").forEach(r=>r.onclick=()=>{ openSheet(mealForNow()); openDetail(findFood(r.dataset.n)); });
-  renderRecipes();
 }
-/* ============ RECIPES (2026-09-18) ============ */
-let rEditId = null, rItems = [], rPhotoData = "";
-function recipeTotals(items){
-  let cal=0,p=0,c=0,f=0,n=0;
-  items.forEach(it=>{ const fd=findFood(it.n); if(!fd) return; n++; cal+=fd.cal*it.qty; p+=(fd.p||0)*it.qty; c+=(fd.c||0)*it.qty; f+=(fd.f||0)*it.qty; });
-  return {cal,p,c,f,n};
-}
-function fileToThumb(file, cb){
-  const url = URL.createObjectURL(file);
-  const img = new Image();
-  img.onload = ()=>{
-    const max=320, scale=Math.min(1, max/Math.max(img.width,img.height));
-    const cv=document.createElement("canvas");
-    cv.width=Math.max(1,Math.round(img.width*scale)); cv.height=Math.max(1,Math.round(img.height*scale));
-    cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
-    URL.revokeObjectURL(url); cb(cv.toDataURL("image/jpeg",0.8));
-  };
-  img.onerror = ()=>{ URL.revokeObjectURL(url); alert("Couldn't read that photo."); };
-  img.src = url;
-}
-function setRPhoto(data){
-  rPhotoData = data || "";
-  const prev = document.getElementById("rPhotoPreview");
-  prev.style.display = rPhotoData ? "" : "none";
-  if(rPhotoData) prev.src = rPhotoData; else prev.removeAttribute("src");
-  document.getElementById("rPhotoBtn").style.display = rPhotoData ? "none" : "";
-  document.getElementById("rPhotoDel").style.display = rPhotoData ? "" : "none";
-}
-function openRecipe(id){
-  rEditId = id || null; rItems = [];
-  const r = id ? S.recipes.find(x=>x.id===id) : null;
-  document.getElementById("rTitle").textContent = r ? "Edit recipe" : "New recipe";
-  document.getElementById("rName").value = r ? r.n : "";
-  if(r) rItems = r.items.map(it=>({n:it.n, qty:it.qty}));
-  setRPhoto(r && r.img ? r.img : "");
-  document.getElementById("rSearch").value = "";
-  renderRItems(); renderRResults("");
-  document.getElementById("rsheet").classList.add("open");
-}
-function closeRecipe(){ document.getElementById("rsheet").classList.remove("open"); }
-function renderRItems(){
-  const box = document.getElementById("rItems"); box.innerHTML = "";
-  if(!rItems.length) box.innerHTML = `<div class="empty">No ingredients yet — search below to add foods.</div>`;
-  rItems.forEach((it,i)=>{
-    const fd = findFood(it.n);
-    const row = document.createElement("div"); row.className = "arow2";
-    row.innerHTML = `<span class="athumb">${fd?foodThumb(fd):FOOD_ICON}</span>
-      <div class="anm"><b>${esc(it.n)}</b><span>${fd?Math.round(fd.cal*it.qty).toLocaleString()+" kcal · "+it.qty+" "+esc(servUnitLabel(fd)):"This food was deleted"}</span></div>
-      <div class="rstep"><button data-a="-" aria-label="Less">−</button><b>${it.qty}</b><button data-a="+" aria-label="More">+</button></div>
-      <button class="ndel" aria-label="Remove ingredient">×</button>`;
-    const [minus,plus] = row.querySelectorAll(".rstep button");
-    minus.onclick = ()=>{ it.qty=Math.round((it.qty-0.5)*100)/100; if(it.qty<=0) rItems.splice(i,1); renderRItems(); };
-    plus.onclick = ()=>{ it.qty=Math.round((it.qty+0.5)*100)/100; renderRItems(); };
-    row.querySelector(".ndel").onclick = ()=>{ rItems.splice(i,1); renderRItems(); };
-    box.appendChild(row);
-  });
-  const t = recipeTotals(rItems);
-  document.getElementById("rTotals").textContent = t.n ? `· ${Math.round(t.cal).toLocaleString()} kcal · ${r1(t.p)}p / ${r1(t.c)}c / ${r1(t.f)}f` : "";
-}
-function renderRResults(q){
-  q = (q||"").trim().toLowerCase();
-  let list = S.customFoods.slice().reverse();
-  if(q) list = list.filter(f=>f.n.toLowerCase().includes(q));
-  const box = document.getElementById("rResults");
-  box.innerHTML = list.slice(0,30).map(f=>
-    `<div class="arow2"><span class="athumb">${foodThumb(f)}</span>
-     <div class="anm"><b>${esc(f.n)}</b><span>${Math.round(f.cal)}kcal / ${esc(f.s)}</span></div>
-     <button class="aplus" data-n="${esc(f.n)}" aria-label="Add to recipe">+</button></div>`
-  ).join("") || `<div class="empty">${q?"No matches.":"Add custom foods first, then build recipes from them."}</div>`;
-  box.querySelectorAll(".aplus").forEach(b=>b.onclick=()=>{
-    const ex = rItems.find(it=>it.n===b.dataset.n);
-    if(ex) ex.qty = Math.round((ex.qty+1)*100)/100; else rItems.push({n:b.dataset.n, qty:1});
-    renderRItems();
-  });
-}
-document.getElementById("newRecipeBtn").onclick = ()=>openRecipe(null);
-document.getElementById("rScrim").onclick = closeRecipe;
-document.getElementById("rX").onclick = closeRecipe;
-document.getElementById("rPhotoBtn").onclick = ()=>document.getElementById("rPhotoFile").click();
-document.getElementById("rPhotoDel").onclick = ()=>{ document.getElementById("rPhotoFile").value=""; setRPhoto(""); };
-document.getElementById("rPhotoFile").onchange = e=>{ const f=e.target.files[0]; if(f) fileToThumb(f, setRPhoto); };
-document.getElementById("rSearch").addEventListener("input", e=>renderRResults(e.target.value));
-document.getElementById("rSave").onclick = ()=>{
-  const n = document.getElementById("rName").value.trim();
-  if(!n){ alert("Give the recipe a name."); return; }
-  const items = rItems.filter(it=>findFood(it.n)).map(it=>({n:it.n, qty:it.qty}));
-  if(!items.length){ alert("Add at least one food first."); return; }
-  if(rEditId){ const r=S.recipes.find(x=>x.id===rEditId); if(r){ r.n=n; r.img=rPhotoData||null; r.items=items; } }
-  else S.recipes.push({id:uid(), n, img:rPhotoData||null, items});
-  save(); closeRecipe(); renderRecipes();
-};
-function renderRecipes(){
-  const box = document.getElementById("recipeResults"); if(!box) return;
-  const list = S.recipes.slice().reverse();
-  box.innerHTML = list.map(r=>{
-    const t = recipeTotals(r.items);
-    return `<div class="arow2" data-id="${r.id}"><span class="athumb">${r.img?'<img src="'+r.img+'" alt="">':FOOD_ICON}</span>
-      <div class="anm"><b>${esc(r.n)}</b><span>${Math.round(t.cal).toLocaleString()} kcal · ${r.items.length} ingredient${r.items.length===1?"":"s"}</span></div>
-      <button class="plink" data-edit="${r.id}">Edit</button>
-      <button class="ndel" data-del="${r.id}" aria-label="Delete recipe">×</button></div>`;
-  }).join("") || `<div class="empty">No recipes yet — bundle foods you eat together and log them in one tap.</div>`;
-  box.querySelectorAll("[data-edit]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); openRecipe(b.dataset.edit); });
-  box.querySelectorAll("[data-del]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); delRecipe(b.dataset.del); });
-  box.querySelectorAll(".arow2").forEach(row=>row.onclick=()=>openRecipeLog(row.dataset.id));
-}
-function delRecipe(id){
-  const r = S.recipes.find(x=>x.id===id); if(!r) return;
-  if(!confirm(`Delete "${r.n}"? Your past log entries keep their data.`)) return;
-  S.recipes = S.recipes.filter(x=>x.id!==id); save(); renderRecipes();
-}
-let rlId = null, rlMeal = "breakfast";
-function openRecipeLog(id){
-  const r = S.recipes.find(x=>x.id===id); if(!r) return;
-  rlId = id; rlMeal = mealForNow();
-  if(rlMeal==="supplements") rlMeal = "breakfast";
-  document.getElementById("rlTitle").textContent = r.n;
-  const t = recipeTotals(r.items);
-  document.getElementById("rlSummary").textContent =
-    `${Math.round(t.cal).toLocaleString()} kcal · ${r1(t.p)}g protein · ${r1(t.c)}g carbs · ${r1(t.f)}g fat`;
-  const box = document.getElementById("rlMeals"); box.innerHTML = "";
-  MEALS.filter(m=>m!=="supplements").forEach(m=>{
-    const b = document.createElement("button"); b.className = "chip"+(m===rlMeal?" sel":"");
-    b.textContent = m[0].toUpperCase()+m.slice(1);
-    b.onclick = ()=>{ rlMeal=m; box.querySelectorAll(".chip").forEach(x=>x.classList.toggle("sel",x===b)); };
-    box.appendChild(b);
-  });
-  document.getElementById("rlsheet").classList.add("open");
-}
-document.getElementById("rlScrim").onclick = ()=>document.getElementById("rlsheet").classList.remove("open");
-document.getElementById("rlX").onclick = ()=>document.getElementById("rlsheet").classList.remove("open");
-document.getElementById("rlGo").onclick = ()=>{
-  const r = S.recipes.find(x=>x.id===rlId); if(!r) return;
-  const d = day(); let added = 0;
-  r.items.forEach(it=>{
-    const f = findFood(it.n); if(!f) return;
-    d.meals[rlMeal].push({id:uid(), n:f.n, s:f.s, qty:it.qty, img:f.img||null,
-      cal:f.cal*it.qty, p:(f.p||0)*it.qty, c:(f.c||0)*it.qty, f:(f.f||0)*it.qty,
-      kind:f.kind||"food", nutrs:(f.nutrs||[]).map(x=>({n:x.n, amt:x.amt*it.qty, u:x.u})), xw:!!f.xw, recipe:r.n});
-    added++;
-  });
-  save();
-  document.getElementById("rlsheet").classList.remove("open");
-  renderDiary();
-  if(!added) alert("Those foods are gone — this recipe has nothing to log.");
-};
-
-/* ============ BARCODE SCANNER (2026-09-18) ============ */
-let bStream = null, bDetector = null, bScanning = false;
-function bStatus(t){ document.getElementById("bStatus").textContent = t||""; }
-async function openScan(){
-  document.getElementById("bManual").value = ""; bStatus("");
-  document.getElementById("bsheet").classList.add("open");
-  const video = document.getElementById("bVideo");
-  video.style.display = "none"; bDetector = null;
-  try{
-    if(!("BarcodeDetector" in window)) throw new Error("no detector");
-    bDetector = new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e","code_128"]});
-    bStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
-    video.srcObject = bStream; await video.play();
-    video.style.display = ""; bScanning = true; scanLoop();
-  }catch(e){ bStatus("Camera scan isn't available here — type the barcode number instead."); }
-}
-async function scanLoop(){
-  if(!bScanning || !bDetector) return;
-  try{
-    const codes = await bDetector.detect(document.getElementById("bVideo"));
-    if(codes && codes.length && codes[0].rawValue){ lookupBarcode(codes[0].rawValue); return; }
-  }catch(e){}
-  setTimeout(scanLoop, 500);
-}
-function closeScan(){
-  bScanning = false;
-  if(bStream){ try{ bStream.getTracks().forEach(t=>t.stop()); }catch(e){} bStream = null; }
-  const v = document.getElementById("bVideo");
-  try{ v.pause(); }catch(e){}
-  v.removeAttribute("src"); v.srcObject = null; v.style.display = "none";
-  document.getElementById("bsheet").classList.remove("open");
-}
-function urlToThumb(url){
-  return new Promise((res, rej)=>{
-    const img = new Image(); img.crossOrigin = "anonymous";
-    const done = v => v ? res(v) : rej(new Error("thumb"));
-    img.onload = ()=>{
-      try{
-        const max=320, scale=Math.min(1, max/Math.max(img.width,img.height));
-        const cv=document.createElement("canvas");
-        cv.width=Math.max(1,Math.round(img.width*scale)); cv.height=Math.max(1,Math.round(img.height*scale));
-        cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
-        done(cv.toDataURL("image/jpeg",0.8));
-      }catch(e){ done(null); }
-    };
-    img.onerror = ()=>done(null);
-    img.src = url;
-    setTimeout(()=>done(null), 12000);
-  });
-}
-const OFF_NUTR = [["fiber_100g","Dietary Fiber","g",1],["sugars_100g","Total Sugars","g",1],["saturated-fat_100g","Saturated Fat","g",1],["trans-fat_100g","Trans Fat","g",1],["cholesterol_100g","Cholesterol","mg",1000],["sodium_100g","Sodium","mg",1000],["potassium_100g","Potassium","mg",1000],["calcium_100g","Calcium","mg",1000],["iron_100g","Iron","mg",1000]];
-async function lookupBarcode(code){
-  code = String(code||"").replace(/\D/g,"");
-  if(!code){ bStatus("Enter a barcode number first."); return; }
-  bScanning = false;
-  if(bStream){ try{ bStream.getTracks().forEach(t=>t.stop()); }catch(e){} bStream = null; }
-  bStatus("Looking up "+code+"…");
-  try{
-    const r = await fetch("https://world.openfoodfacts.org/api/v2/product/"+encodeURIComponent(code)+".json?fields=product_name,brands,serving_size,quantity,nutriments,image_url");
-    const j = await r.json();
-    if(!j || j.status!==1 || !j.product) throw new Error("not found");
-    const p = j.product, nut = p.nutriments||{};
-    const g100 = k => { const v = parseFloat(nut[k]); return v>0 ? v : 0; };
-    let kcal = g100("energy-kcal_100g");
-    if(!kcal && g100("energy_100g")) kcal = g100("energy_100g")/4.184;
-    if(!(kcal>0)) throw new Error("no kcal");
-    let servG = 0;
-    const m = String(p.serving_size||"").match(/([\d.,]+)\s*g/i);
-    if(m) servG = parseFloat(m[1].replace(",","."));
-    const scale = servG>0 ? servG/100 : 1;
-    let servTxt = servG>0 ? `1 serving · ${servG} g` : "100 g";
-    if(!(servG>0) && p.quantity) servTxt = String(p.quantity).slice(0,40);
-    const nutrs = OFF_NUTR.map(([k,nm,u,mul])=>{
-      const v = g100(k)*scale; return v>0 ? {n:nm, amt:Math.round(v*mul*100)/100, u} : null;
-    }).filter(Boolean);
-    let img = null;
-    if(p.image_url){ try{ img = await urlToThumb(p.image_url); }catch(e){} }
-    const name = [p.product_name, p.brands].filter(x=>x&&String(x).trim()).map(x=>String(x).trim()).join(" — ").slice(0,80) || ("Barcode "+code);
-    S.customFoods.push({n:name, s:servTxt, cal:Math.round(kcal*scale*10)/10,
-      p:Math.round(g100("proteins_100g")*scale*10)/10, c:Math.round(g100("carbohydrates_100g")*scale*10)/10, f:Math.round(g100("fat_100g")*scale*10)/10,
-      kind:"food", img:img||undefined, nutrs, barcode:code});
-    save(); renderFoods();
-    document.getElementById("bsheet").classList.remove("open");
-    alert(`Saved "${name}" to your foods.`);
-  }catch(e){
-    document.getElementById("bsheet").classList.add("open");
-    bStatus("No product found for that barcode — you can add it manually instead.");
-  }
-}
-document.getElementById("scanBtn").onclick = openScan;
-document.getElementById("bScrim").onclick = closeScan;
-document.getElementById("bX").onclick = closeScan;
-document.getElementById("bLookup").onclick = ()=>lookupBarcode(document.getElementById("bManual").value);
-
 document.getElementById("foodSearch").addEventListener("input", renderFoods);
 const csheet = document.getElementById("csheet");
 let cPhotoData = "";
