@@ -1310,7 +1310,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-co";
+const APP_VERSION = "2026.09.19-cp";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -2025,7 +2025,7 @@ function scoreInfoHTML(){
   const aRow = a.pct===null
     ? `<div class="irow"><b>Adherence:</b> no logged days in the last 2 weeks yet — log meals and this fills in.</div>`
     : `<div class="irow"><b>Adherence: ${a.pct}%</b> — ${a.hit} of ${a.n} logged days (last 14) hit calories within ±10% of goal and protein ≥90%. Research finds sticking to the plan predicts results better than the plan itself (Burke et al. 2011).</div>`;
-  const fHead = `<div class="irow"><b>Food fatigue: ${f.score===null?"–":f.score+"/100 — "+f.label}.</b> A prediction of your energy from what you've logged today — not your training. Carb-heavy meals spike glucose, which silences the brain's orexin wakefulness neurons (Burdakov et al. 2005, 2006); protein and fiber blunt the crash. Even ~1.5% dehydration brings fatigue (Ganio et al. 2011; Armstrong et al. 2012). Alcohol is scored by dose — even 1–2 drinks fragment the second half of sleep (Ebrahim et al. 2013) — and nicotine by daily level, since users lose ~20–30 min of deep sleep a night (Tab-OSA 2026).</div>`;
+  const fHead = `<div class="irow"><b>Food fatigue: ${f.score===null?"–":f.score+"% — "+f.label}.</b> A prediction of your energy from what you've logged today — not your training. Carb-heavy meals spike glucose, which silences the brain's orexin wakefulness neurons (Burdakov et al. 2005, 2006); protein and fiber blunt the crash. Even ~1.5% dehydration brings fatigue (Ganio et al. 2011; Armstrong et al. 2012). Alcohol is scored by dose — even 1–2 drinks fragment the second half of sleep (Ebrahim et al. 2013) — and nicotine by daily level, since users lose ~20–30 min of deep sleep a night (Tab-OSA 2026).</div>`;
   const fRows = f.why.length
     ? f.why.map(w=>`<div class="irow">• ${esc(w)}</div>`).join("")
     : `<div class="irow">${f.score===null?"Log food today and this predicts your energy.":"Nothing dragging your energy down today."}</div>`;
@@ -2055,7 +2055,7 @@ function paintScoreWheel(){
   paintWheel("adhArc","adhNum",aFrac,aCol,aTxt);
   paintWheel("adhArcH","adhNumH",aFrac,aColH,aTxt);
   const fFrac = f.score===null ? null : f.score/100;
-  const fTxt = f.score===null ? "–" : String(f.score);
+  const fTxt = f.score===null ? "–" : f.score+"%";
   const fCol = f.score===null ? "#c9c9d6" : f.score<=25?"#12cfae":f.score<=45?THEME.acc:f.score<=65?"#e8a13d":"#fb6f84";
   const fColH = f.score===null ? "rgba(255,255,255,.4)" : f.score<=25?"#2fe3b6":f.score<=45?"#ffffff":f.score<=65?"#ffd23d":"#ff8a9d";
   paintWheel("fatArc","fatNum",fFrac,fCol,fTxt);
