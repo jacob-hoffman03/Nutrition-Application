@@ -436,6 +436,58 @@ body{ background:var(--bg); }
 /* 7-day bars: reference style — light bars, purple today */
 .bars7 .bar{ background:#e3e3f1; border-radius:8px; }
 .tabbar{ border-top:none; box-shadow:0 -8px 24px rgba(84,84,180,.08); }
+/* ---- Reference look: full-app pass (2026-09-19) ---- */
+.topbar{ background:rgba(243,243,249,.94); }
+.topbar h1{ font-size:20px; font-weight:800; letter-spacing:-.3px; }
+/* analytics card */
+.anacard{ padding:18px 16px 14px; }
+.ana-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+.ana-top b{ font-size:30px; font-weight:800; letter-spacing:-.5px; font-variant-numeric:tabular-nums; }
+.ana-unit{ font-size:14px; color:var(--muted); font-weight:600; margin-left:4px; }
+.ana-range{ font-size:12px; color:var(--muted); font-weight:600; }
+/* goal days (challenge row) */
+.chal{ margin-top:14px; }
+.chal-head{ display:flex; align-items:center; gap:8px; font-size:15px; font-weight:800; margin-bottom:10px; }
+.chal-head svg{ width:20px; height:20px; }
+.chal-row{ display:flex; justify-content:space-between; }
+.chal-day{ display:flex; flex-direction:column; align-items:center; gap:6px; font-size:11px; color:var(--muted); font-weight:600; }
+.chal-dot{ width:30px; height:30px; border-radius:50%; border:2px solid #e2e2ee; display:flex; align-items:center; justify-content:center; background:#fff; color:#fff; }
+.chal-day.hit .chal-dot{ background:var(--acc); border-color:var(--acc); }
+.chal-day.today .chal-dot{ border-color:var(--acc); }
+/* stacked macro chart */
+.macrocard{ padding:16px; margin-top:12px; }
+.mc-head{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.mc-head b{ font-size:16px; font-weight:800; }
+.mc-legend{ display:flex; align-items:center; gap:5px; margin-left:auto; font-size:11px; color:var(--muted); font-weight:600; }
+.mc-legend i{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+.mc-week{ font-size:12px; color:var(--muted); font-weight:700; background:#f1f1f6; border-radius:10px; padding:5px 10px; }
+.mstack{ display:flex; align-items:flex-end; gap:8px; height:120px; }
+.mstack .mscol{ flex:1; display:flex; flex-direction:column; justify-content:flex-end; height:100%; }
+.mstack .msbar{ width:100%; max-width:34px; margin:0 auto; border-radius:8px; overflow:hidden; display:flex; flex-direction:column-reverse; }
+.mstack .msbar i{ display:block; width:100%; }
+.mstack-lbls{ display:flex; gap:8px; margin-top:6px; }
+.mstack-lbls span{ flex:1; text-align:center; font-size:10px; color:var(--muted); font-weight:600; }
+/* mini stat cards */
+.ministats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+.ministat{ background:#fff; border-radius:18px; padding:14px; box-shadow:0 10px 28px rgba(84,84,180,.08); display:flex; flex-direction:column; gap:6px; }
+.ministat .ms-label{ font-size:12px; color:var(--muted); font-weight:700; }
+.ministat b{ font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.3px; }
+.ministat b small{ font-size:12px; color:var(--muted); font-weight:600; }
+/* meals: reference-style add button */
+.madd{ width:38px; height:38px; border-radius:50%; background:#eef0ff; color:var(--acc); font-size:22px; font-weight:700; border:none; display:flex; align-items:center; justify-content:center; flex:none; }
+.madd:active{ transform:scale(.92); }
+/* search bars like reference */
+.searchbtn{ background:#fff; border-radius:18px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
+/* tab bar: reference style + center button */
+.tab{ color:#a5a5b0; }
+.tabfab{ flex:none; width:56px; height:56px; border-radius:50%; border:none; align-self:flex-start; margin-top:-26px;
+  background:linear-gradient(135deg,#6f63f6,#4b3ff2); box-shadow:0 10px 22px rgba(91,91,240,.45);
+  display:flex; align-items:center; justify-content:center; }
+.tabfab svg{ width:24px; height:24px; }
+.tabfab:active{ transform:scale(.93); }
+/* sheets + primary buttons */
+.sheet .panel{ border-radius:28px 28px 0 0; }
+.bigbtn{ border-radius:99px; }
 /* sheets */
 .sheet{position:fixed; inset:0; z-index:50; display:none;}
 .sheet.open{display:block;}
@@ -784,11 +836,24 @@ body{ background:var(--bg); }
       <h1>Progress</h1>
       <div style="width:44px"></div>
     </div>
-    <div class="secttl">This Week</div>
-    <div class="stat3">
-      <div class="stat"><b id="stStreak">0</b><span>day streak</span></div>
-      <div class="stat"><b id="stAvgCal">0</b><span>avg cal / 7d</span></div>
-      <div class="stat"><b id="stAvgP">0g</b><span>avg protein / 7d</span></div>
+    <div class="card anacard">
+      <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span></div><span class="ana-range">Last 7 days</span></div>
+      <div class="bars7" id="bars7"></div>
+      <div class="chal">
+        <div class="chal-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Goal days</div>
+        <div class="chal-row" id="goalDays"></div>
+      </div>
+    </div>
+    <div class="card macrocard">
+      <div class="mc-head"><b>Macros</b><span class="mc-legend"><i style="background:#8b8bf5"></i>Carbs<i style="background:#f5a623"></i>Protein<i style="background:#34c77b"></i>Fat</span><span class="mc-week">Weekly</span></div>
+      <div class="mstack" id="macroStack"></div>
+      <div class="mstack-lbls" id="macroStackLbls"></div>
+    </div>
+    <div class="ministats">
+      <div class="ministat"><span class="ms-label">Day streak</span><b id="stStreak">0</b></div>
+      <div class="ministat"><span class="ms-label">Avg kcal / 7d</span><b id="stAvgCal">0</b></div>
+      <div class="ministat"><span class="ms-label">Avg protein / 7d</span><b id="stAvgP">0g</b></div>
+      <div class="ministat"><span class="ms-label">Water today</span><b id="stWater">0 <small>oz</small></b></div>
     </div>
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:baseline;"><b style="font-size:16px">Body weight</b><span style="display:flex; align-items:baseline; gap:8px;"><span class="wdelta" id="wtDelta"></span><b id="curWeight" style="font-size:20px">—</b></span></div>
@@ -835,10 +900,6 @@ body{ background:var(--bg); }
         <div id="muscleOut" style="flex:1; font-size:13.5px; line-height:1.6"></div>
       </div>
       <button class="srow" id="muscleGoalBtn" style="margin-top:8px"><span>Muscle goal: <b id="muscleGoalLbl">0 lb</b></span><span class="chev2">›</span></button>
-    </div>
-    <div class="secttl">7-Day Calories</div>
-    <div class="card">
-      <div class="bars7" id="bars7"></div>
     </div>
   </section>
 
@@ -904,6 +965,7 @@ body{ background:var(--bg); }
     <button class="tab" data-v="foods">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       Foods</button>
+    <button class="tabfab" id="tabFab" aria-label="Log food"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
     <button class="tab" data-v="progress">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>
       Progress</button>
@@ -1220,7 +1282,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-bx";
+const APP_VERSION = "2026.09.19-by";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -3202,6 +3264,33 @@ function renderProgress(){
     bb.appendChild(c);
   });
   const w = S.weights.slice().sort((a,b)=>a.d<b.d?-1:1);
+  /* analytics header: 7-day total */
+  $("anaTotal").textContent = Math.round(days.reduce((a,x)=>a+x.cal,0)).toLocaleString();
+  /* goal days: checkmarks for days that hit the calorie goal */
+  const calGoal = (S.goals.maintenance>0?S.goals.maintenance:0)+(S.goals.surplus>0?S.goals.surplus:0);
+  const CHECK = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4 10-11"/></svg>';
+  const gd = $("goalDays"); gd.innerHTML = "";
+  days.forEach(x=>{
+    const hit = x.logged && calGoal>0 && x.cal >= calGoal*0.9;
+    const el = document.createElement("div");
+    el.className = "chal-day"+(hit?" hit":"")+(x.k===todayStr()?" today":"");
+    el.innerHTML = '<span class="chal-dot">'+(hit?CHECK:"")+'</span><span>'+x.label+'</span>';
+    gd.appendChild(el);
+  });
+  /* stacked macro chart from the week's diary data */
+  const ms = $("macroStack"), ml = $("macroStackLbls"); ms.innerHTML = ""; ml.innerHTML = "";
+  const maxG = Math.max(...days.map(x=>x.c+x.p+x.f), 1);
+  days.forEach(x=>{
+    const tot = x.c+x.p+x.f, col = document.createElement("div"); col.className = "mscol";
+    col.innerHTML = '<div class="msbar" style="height:'+Math.max(tot/maxG*100,3)+'%">'
+      +'<i style="height:'+(tot?x.f/tot*100:0)+'%;background:#34c77b"></i>'
+      +'<i style="height:'+(tot?x.p/tot*100:0)+'%;background:#f5a623"></i>'
+      +'<i style="height:'+(tot?x.c/tot*100:0)+'%;background:#8b8bf5"></i></div>';
+    ms.appendChild(col);
+    const lb = document.createElement("span"); lb.textContent = x.label; ml.appendChild(lb);
+  });
+  const dw = S.days[todayStr()];
+  $("stWater").innerHTML = (dw&&dw.waterOz?Math.round(dw.waterOz*10)/10:0)+' <small>oz</small>';
   const wu = wUnit();
   document.getElementById("weightInput").placeholder = "Weight ("+wu+")";
   const wd = document.getElementById("weightDate");
@@ -4006,6 +4095,7 @@ function showView(v){
 }
 function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.v));
+document.getElementById("tabFab").onclick = ()=>openSheet(mealForNow());
 document.getElementById("dayPrev").onclick = ()=>{ dayOffset--; renderDiary(); };
 document.getElementById("todayPill").onclick = ()=>{ dayOffset = 0; weekOff = 0; renderDiary(); };
 document.getElementById("gearBtn").onclick = ()=>showView("settings");
