@@ -429,7 +429,7 @@ body{ background:var(--bg); }
 .mcard .mval small{ font-weight:600; color:var(--muted); font-size:11px; }
 .mcard .mbar{ height:7px; border-radius:99px; background:#f0f0f6; overflow:hidden; }
 .mcard .mbar i{ display:block; height:100%; border-radius:99px; width:0; transition:width .5s ease; }
-.fiberbar{ display:flex; align-items:center; gap:10px; margin-top:10px; background:#fff; border-radius:14px; padding:10px 12px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
+.fiberbar{ display:flex; align-items:center; gap:10px; margin:10px 0 16px; background:#fff; border-radius:14px; padding:10px 12px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
 .fiberbar .flabel{ font-size:12px; font-weight:700; color:var(--muted); flex:none; }
 .fiberbar .mbar{ flex:1; height:7px; border-radius:99px; background:#f0f0f6; overflow:hidden; }
 .fiberbar .mbar i{ display:block; height:100%; border-radius:99px; width:0; transition:width .5s ease; }
@@ -1284,7 +1284,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-cc";
+const APP_VERSION = "2026.09.19-cd";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
