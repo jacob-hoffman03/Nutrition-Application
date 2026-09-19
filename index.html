@@ -350,7 +350,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wgoalbar{height:8px; border-radius:5px; background:#ececf1; overflow:hidden; margin-top:6px;}
 .wgoalbar i{display:block; height:100%; background:linear-gradient(90deg,#5b5bf0,#8a8af5); border-radius:5px; transition:width .3s;}
 .bars7{display:flex; align-items:flex-end; gap:6px; height:110px; margin-top:8px;}
-.bars7 .bcol{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end;}
+.bars7 .bcol{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; cursor:pointer;}
 .bars7 .bar{width:100%; max-width:30px; background:linear-gradient(#8f8ff7,var(--acc)); border-radius:6px 6px 3px 3px; min-height:4px;}
 .bars7 .bl{font-size:10px; color:var(--muted);}
 .wrow{display:flex; align-items:center; justify-content:space-between; padding:9px 2px; border-top:1px solid var(--line); font-size:14px;}
@@ -534,7 +534,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <div class="card mealcard" id="meals"></div>
 
     <div class="card watercard">
-      <div class="whead"><b>Water</b><span class="wlbl" id="waterLabel"></span></div>
+      <div class="whead"><span style="display:flex;align-items:center;gap:8px"><b>Water</b><button class="ginfo" id="waterInfo" aria-label="About your water target">i</button></span><span class="wlbl" id="waterLabel"></span></div>
       <div class="sbtrack wtrack"><div class="sbfill wfill" id="waterFill"></div></div>
       <div class="bottlerow" id="bottleRow"></div>
       <div class="wfoot"><button class="wlink" id="bottleMgr">My bottles</button><button class="wlink" id="waterUndo" style="display:none">Undo</button></div>
@@ -544,7 +544,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <div class="card alccard">
       <div class="arow">
         <div class="winfo">
-          <b>Alcohol</b><span class="wlbl" id="alcLabel"></span>
+          <span style="display:flex;align-items:center;gap:8px"><b>Alcohol</b><button class="ginfo" id="alcInfo" aria-label="About alcohol tracking">i</button></span><span class="wlbl" id="alcLabel"></span>
           <div class="whint" id="alcNote" style="margin-top:6px"></div>
         </div>
         <div class="alcring" id="alcRing" title="Alcohol calories so far"></div>
@@ -556,7 +556,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
     <div class="card alccard">
       <div class="arow">
         <div class="winfo">
-          <b>Nicotine (vape)</b><span class="wlbl" id="vapeLabel"></span>
+          <span style="display:flex;align-items:center;gap:8px"><b>Nicotine (vape)</b><button class="ginfo" id="vapeInfo" aria-label="About nicotine tracking">i</button></span><span class="wlbl" id="vapeLabel"></span>
           <div class="whint" id="vapeNote" style="margin-top:6px"></div>
         </div>
       </div>
@@ -600,7 +600,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div class="macrow" style="padding:10px 0"><div class="mhead"><span>Fat</span><b><i id="avalFv">0</i> / <span id="avalFg">83</span>g</b></div><div class="mbar"><i id="abarF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></div></div>
       <div class="macrow" style="padding:10px 0"><div class="mhead"><span>Fiber</span><b><i id="avalFiv">0</i> / <span id="avalFig">0</span>g</b></div><div class="mbar"><i id="abarFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div></div>
     </div>
-    <div class="secttl">All Nutrients</div>
+    <div class="secttl"><span>All Nutrients</span><button class="ginfo" id="nutrInfo" aria-label="About nutrient targets">i</button></div>
     <div class="card" style="padding-top:2px; padding-bottom:10px">
       <div id="nutrTable"></div>
       <div class="rangenote" id="nutrNote" style="margin-top:8px"></div>
@@ -1087,7 +1087,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bu";
+const APP_VERSION = "2026.09.18-bv";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -1357,11 +1357,9 @@ function renderDiary(){
   un.style.display = hist.length ? "" : "none";
   un.onclick = ()=>{ const dd=day(), h=dd.waterHist||[]; if(h.length){ const last=h.pop(); dd.waterOz=Math.max(0,Math.round(((dd.waterOz||0)-last)*10)/10); save(); renderDiary(); } };
   $("bottleMgr").onclick = openBottleSheet;
-  $("waterNote").textContent = S.goals.water>0
-    ? "Manual target — change it in Goals › Water."
-    : (wtOz>0
-        ? "Auto target from your maintenance + activity (IOM 1.0–1.5 mL/kcal)" + (dayHasXW() ? " + 16 oz for a creatine-type supplement." : ". Tap a bottle to log it.")
-        : "No auto target yet — set your maintenance in Goals › Profile, or pick a manual target in Goals › Water.");
+  const wn = $("waterNote");
+  const wt = (!(S.goals.water>0) && !(wtOz>0)) ? "No auto target yet — set your maintenance in Goals › Profile, or pick a manual target in Goals › Water." : "";
+  wn.textContent = wt; wn.style.display = wt ? "" : "none"; /* explainer lives in the ⓘ sheet */
   renderAlc();
   renderWeek();
 }
@@ -1420,10 +1418,12 @@ function renderAlc(){
   const parts = Object.keys(ALC_INFO).filter(t=>a[t]>0).map(t=>a[t]+" "+ALC_INFO[t].label.toLowerCase());
   $("alcLabel").textContent = parts.length ? parts.join(", ") : "";
   const bac = bacPct(std);
-  $("alcNote").textContent = std>0
+  const an2 = $("alcNote");
+  const at = std>0
     ? `≈ ${std.toFixed(1)} standard drinks · ${Math.round(kcal).toLocaleString()} kcal from alcohol, roughly — not counted in your ring`+
       (bac>=0.02 ? ` · ≈${bac.toFixed(2)}% BAC at your weight` : "")
-    : "1.5 oz 80-proof shot = 1 standard drink ≈ 97 kcal. Shots spike BAC faster than beer.";
+    : "";
+  an2.textContent = at; an2.style.display = at ? "" : "none"; /* explainer lives in the ⓘ sheet */
   paintAlcRing(kcal);
   const warn = $("alcWarn");
   let msg = "";
@@ -1482,9 +1482,9 @@ function renderVape(){
   });
   const info = VAPE_LEVELS[lv];
   $("vapeLabel").textContent = lv==="none" ? "" : info.label+" · "+info.mg+" mg nicotine today";
-  $("vapeNote").textContent = lv==="none"
-    ? "One tap — how much did you vape today? Nicotine per puff ≈0.07 mg, estimated (Goniewicz 2019; PR-ENDS 2023)."
-    : `≈ ${info.puffs} puffs · like ~${info.cigs} cigarettes' worth of nicotine.`;
+  const vn = $("vapeNote");
+  const vt = lv==="none" ? "" : `≈ ${info.puffs} puffs · like ~${info.cigs} cigarettes' worth of nicotine.`;
+  vn.textContent = vt; vn.style.display = vt ? "" : "none"; /* explainer lives in the ⓘ sheet */
   const warn = $("vapeWarn");
   if(lv!=="none"){
     const goal = Math.round(goalTotal()||3000).toLocaleString();
@@ -1948,9 +1948,7 @@ function paintNutrients(k){
     }).join("");
     box.querySelectorAll(".nrow").forEach(el=>el.onclick=()=>openNSheet(el.dataset.n));
   }
-  document.getElementById("nutrNote").textContent = rows.length
-    ? "Combined from everything logged today. Tap a nutrient to set your own daily target — all targets start at zero, except fiber (auto: 14 g per 1,000 kcal of your goal) and potassium (auto: NASEM 2019 adequate intake, 3,400 mg)."
-    : "";
+  const nn = document.getElementById("nutrNote"); nn.textContent = ""; nn.style.display = "none"; /* explainer lives in the ⓘ sheet */
 }
 
 /* ============ NUTRIENT TARGET SHEET ============ */
@@ -2823,7 +2821,8 @@ function renderProgress(){
   days.forEach(x=>{
     const c = document.createElement("div"); c.className="bcol";
     c.innerHTML = `<div class="bar" style="height:${Math.max(x.cal/max*100,2)}%;${x.k===todayStr()?"background:linear-gradient(#2fbf71,#7ce3a8);":""}"></div><div class="bl">${x.label}</div>`;
-    c.title = Math.round(x.cal)+" cal";
+    const bl = c.querySelector(".bl"), kcal = Math.round(x.cal).toLocaleString();
+    c.onclick = ()=>{ const show = bl.dataset.k!=="1"; bl.dataset.k = show?"1":""; bl.textContent = show?kcal:x.label; };
     bb.appendChild(c);
   });
   const w = S.weights.slice().sort((a,b)=>a.d<b.d?-1:1);
@@ -2860,6 +2859,10 @@ const wDisp = lb => wIsMet() ? Math.round(lb/2.20462*10)/10 : Math.round(lb*10)/
 const wToLb = v => wIsMet() ? v*2.20462 : v;
 document.getElementById("wtGoalRow").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); document.getElementById("wtGoalRow").click(); } });
 document.getElementById("wtGoalInfo").onclick = (e)=>{ e.stopPropagation(); openInfo("wtgoal"); };
+document.getElementById("waterInfo").onclick = ()=>openInfo("waterinfo");
+document.getElementById("alcInfo").onclick = ()=>openInfo("alcinfo");
+document.getElementById("vapeInfo").onclick = ()=>openInfo("vapeinfo");
+document.getElementById("nutrInfo").onclick = ()=>openInfo("nutrients");
 document.getElementById("bmiInfo").onclick = ()=>openInfo("bmi");
 document.getElementById("calCheckInfo").onclick = ()=>openInfo("calcheck");
 document.getElementById("weightAdd").onclick = ()=>{
@@ -3120,6 +3123,18 @@ function infoContent(k){
   if(k==="calcheck") return {t:"How this checks your target", b:
     `<div class="irow">Needs <b>4+ weigh-ins spanning 2+ weeks</b>. It splits the span into halves by date and compares the average weight of each half — that gives your real %/week against the target band (0.25–0.5%/week for lean gains).</div>
      <div class="irow">If you're clearly off-target and it's been 3+ weeks since the last tune, Fuel can nudge maintenance ±150 kcal — at most once every 2 weeks, and only with your tap.</div>`};
+  if(k==="waterinfo") return {t:"Water target", b:
+    `<div class="irow"><b>Auto</b> builds your target from maintenance + activity (<b>IOM 1.0–1.5 mL/kcal</b>) — that's the glasses count next to the title. Tap a bottle to log it.</div>
+     <div class="irow">A creatine-type supplement adds 16 oz. Set a manual target any time in Goals › Water.</div>`};
+  if(k==="alcinfo") return {t:"Alcohol", b:
+    `<div class="irow"><b>1.5 oz 80-proof shot = 1 standard drink ≈ 97 kcal.</b> Shots spike BAC faster than beer.</div>
+     <div class="irow">Alcohol calories are <b>not</b> counted in your ring — they're tracked separately here so they don't silently eat your food budget.</div>`};
+  if(k==="vapeinfo") return {t:"Nicotine (vape)", b:
+    `<div class="irow">One tap logs how much you vaped today. Nicotine per puff ≈<b>0.07 mg</b>, estimated (Goniewicz 2019; PR-ENDS 2023).</div>
+     <div class="irow">Tracked for awareness — it doesn't change your calorie math.</div>`};
+  if(k==="nutrients") return {t:"Nutrient targets", b:
+    `<div class="irow">Combined from everything logged today. Tap a nutrient to set your own daily target.</div>
+     <div class="irow">All targets start at zero, except <b>fiber</b> (auto: 14 g per 1,000 kcal of your goal) and <b>potassium</b> (auto: NASEM 2019 adequate intake, 3,400 mg).</div>`};
 }
 function openInfo(k){
   const c = infoContent(k); if(!c) return;
