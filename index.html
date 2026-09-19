@@ -384,6 +384,58 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .tab{flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--muted); font-size:11px; font-weight:600;}
 .tab svg{width:24px; height:24px;}
 .tab.active{color:var(--acc);}
+/* ---- UI refresh: reference-style theme (2026-09-19) ---- */
+:root{ --bg:#f1f1f8; --radius:20px; }
+body{ background:var(--bg); }
+.card{ border:none; border-radius:var(--radius); box-shadow:0 10px 28px rgba(84,84,180,.08); }
+.secttl{ font-size:15px; }
+/* purple progress hero */
+.progcard{ background:linear-gradient(135deg,#6f63f6 0%,#4b3ff2 55%,#3d31e8 100%); color:#fff; padding:18px 16px 14px; overflow:hidden; position:relative; }
+.progcard::after{ content:""; position:absolute; width:230px; height:230px; border-radius:50%; background:rgba(255,255,255,.07); top:-80px; right:-60px; pointer-events:none; }
+.prog-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; position:relative; z-index:1; }
+.prog-label{ font-size:14px; font-weight:700; opacity:.95; }
+.prog-date{ font-size:12px; opacity:.75; font-weight:600; }
+.prog-main{ display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; z-index:1; }
+.prog-pct b{ font-size:46px; font-weight:800; letter-spacing:-1px; line-height:1; font-variant-numeric:tabular-nums; }
+.prog-pct span{ display:block; font-size:12.5px; opacity:.8; font-weight:600; margin-top:6px; }
+.progcard .ring .center .ctitle{ color:rgba(255,255,255,.78); }
+.progcard .ring .center b{ color:#fff; }
+.progcard .flagkc{ color:#ffd9a8 !important; }
+.progcard .flagsur{ color:rgba(255,255,255,.72) !important; }
+.progcard .flagsur.on{ color:#ffd9a8 !important; }
+.progcard .statusbar{ margin-top:12px; position:relative; z-index:1; }
+.progcard .sbtrack{ background:rgba(255,255,255,.22); }
+.progcard .sbinfo{ background:rgba(255,255,255,.18); color:#fff; }
+/* macro cards */
+.macro3{ display:flex; gap:10px; margin-top:12px; }
+.mcard{ flex:1; min-width:0; background:#fff; border-radius:18px; padding:12px 10px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
+.mcard .mlabel{ font-size:12px; color:var(--muted); font-weight:700; white-space:nowrap; }
+.mcard .mval{ font-size:14px; font-weight:800; margin:5px 0 8px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.mcard .mval i{ font-style:normal; }
+.mcard .mval small{ font-weight:600; color:var(--muted); font-size:11px; }
+.mcard .mbar{ height:7px; border-radius:99px; background:#f0f0f6; overflow:hidden; }
+.mcard .mbar i{ display:block; height:100%; border-radius:99px; width:0; transition:width .5s ease; }
+.fiberbar{ display:flex; align-items:center; gap:10px; margin-top:10px; background:#fff; border-radius:14px; padding:10px 12px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
+.fiberbar .flabel{ font-size:12px; font-weight:700; color:var(--muted); flex:none; }
+.fiberbar .mbar{ flex:1; height:7px; border-radius:99px; background:#f0f0f6; overflow:hidden; }
+.fiberbar .mbar i{ display:block; height:100%; border-radius:99px; width:0; transition:width .5s ease; }
+.fiberbar .fval{ font-size:12px; font-weight:800; font-variant-numeric:tabular-nums; flex:none; }
+.fiberbar .fval i{ font-style:normal; }
+.fiberbar .fval small{ color:var(--muted); font-weight:600; }
+/* week strip card */
+.weekcard{ margin-top:12px; padding:10px 8px; }
+.weekcard .wknavrow{ margin:0; }
+/* progress: mini stat cards */
+.stat{ border:none; border-radius:18px; box-shadow:0 10px 28px rgba(84,84,180,.08); padding:14px 8px; }
+.stat b{ font-size:21px; font-variant-numeric:tabular-nums; }
+.statgrid .tile{ background:#fff; border:none; border-radius:18px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
+/* progress: segmented range, reference style */
+.wrange{ background:#e9e9f2; border-radius:99px; padding:4px; margin-top:10px; gap:2px; }
+.wrange button{ flex:1; border:none; background:none; border-radius:99px; padding:8px 0; font-size:13px; font-weight:700; color:var(--muted); font-family:inherit; }
+.wrange button.on{ background:var(--acc); color:#fff; box-shadow:0 4px 12px rgba(91,91,240,.35); }
+/* 7-day bars: reference style — light bars, purple today */
+.bars7 .bar{ background:#e3e3f1; border-radius:8px; }
+.tabbar{ border-top:none; box-shadow:0 -8px 24px rgba(84,84,180,.08); }
 /* sheets */
 .sheet{position:fixed; inset:0; z-index:50; display:none;}
 .sheet.open{display:block;}
@@ -489,15 +541,26 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
       <div class="pmeta"><div class="pname" id="pName">You</div><div class="psub">Today's medals</div></div>
       <div class="medals" id="pMedals"></div>
     </div>
-    <div class="card herocard">
-      <div class="wkrow">
-        <span style="font-size:13px;color:var(--muted);font-weight:600" id="daySub"></span>
-        <button id="todayPill" class="todaypill" style="visibility:hidden">↩ Today</button>
-      </div>
-      <div class="wknavrow">
-        <button class="wknav" id="wkPrev" aria-label="Previous week">‹</button>
-        <div class="weekstrip" id="weekStrip"></div>
-        <button class="wknav" id="wkNext" aria-label="Next week">›</button>
+    <div class="card progcard">
+      <div class="prog-top"><span class="prog-label">Today's Intake</span><span class="prog-date" id="daySub"></span></div>
+      <div class="prog-main">
+        <div class="prog-pct"><b id="progPct">0%</b><span id="progSub">of daily goal</span></div>
+        <div class="ring" style="width:150px;height:150px">
+          <svg width="150" height="150" viewBox="0 0 128 128">
+            <circle cx="64" cy="64" r="56" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="11"/>
+            <circle id="ringMaint" cx="64" cy="64" r="56" fill="none" stroke="#ffd9a8" stroke-width="11"
+              stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
+            <circle id="ringSurpTrack" cx="64" cy="64" r="40" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="10"/>
+            <circle id="ringSurp" cx="64" cy="64" r="40" fill="none" stroke="#ff9d5c" stroke-width="10"
+              stroke-linecap="round" stroke-dasharray="251.33" stroke-dashoffset="251.33"/>
+          </svg>
+          <div class="center">
+            <span class="ctitle">Eaten</span>
+            <b id="calEaten">0</b>
+            <span class="flagkc" id="flagKcal"></span>
+            <span class="flagsur" id="flagSur"></span>
+          </div>
+        </div>
       </div>
 
       <div class="statusbar" id="statusPill" role="button" tabindex="0" aria-label="Intake details">
@@ -505,32 +568,22 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
         <span class="sbinfo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.6" r="1.4" fill="currentColor" stroke="none"/></svg></span>
       </div>
 
-      <div class="sumrow">
-        <div class="ring" style="width:184px;height:184px">
-          <svg width="184" height="184" viewBox="0 0 128 128">
-            <circle cx="64" cy="64" r="56" fill="none" stroke="#ececf1" stroke-width="11"/>
-            <circle id="ringMaint" cx="64" cy="64" r="56" fill="none" stroke="#ffb066" stroke-width="11"
-              stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
-            <circle id="ringSurpTrack" cx="64" cy="64" r="40" fill="none" stroke="#ececf1" stroke-width="10"/>
-            <circle id="ringSurp" cx="64" cy="64" r="40" fill="none" stroke="#f27a1a" stroke-width="10"
-              stroke-linecap="round" stroke-dasharray="251.33" stroke-dashoffset="251.33"/>
-          </svg>
-          <div class="center">
-            <span class="ctitle">Calorie Intake</span>
-            <b id="calEaten">0</b>
-            <span class="flagkc" id="flagKcal"></span>
-            <span class="flagsur" id="flagSur"></span>
-          </div>
-        </div>
-        <div class="macros">
-          <div class="macrow"><div class="mhead"><span>Carbs</span><b><i id="valCv">0</i> / <span id="valCg">375</span>g</b></div><div class="mbar"><i id="barC" style="background:linear-gradient(90deg,#7e7ef2,#a8a8ff)"></i></div></div>
-          <div class="macrow"><div class="mhead"><span>Protein</span><b><i id="valPv">0</i> / <span id="valPg">150</span>g</b></div><div class="mbar"><i id="barP" style="background:linear-gradient(90deg,#12cfae,#54e6c4)"></i></div></div>
-          <div class="macrow"><div class="mhead"><span>Fat</span><b><i id="valFv">0</i> / <span id="valFg">83</span>g</b></div><div class="mbar"><i id="barF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></div></div>
-          <div class="macrow"><div class="mhead"><span>Fiber</span><b><i id="valFiv">0</i> / <span id="valFig">0</span>g</b></div><div class="mbar"><i id="barFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div></div>
-        </div>
-      </div>
-      <button class="analysislink" id="analysisLink">Nutrition Analysis <span>›</span></button>
     </div>
+    <div class="macro3">
+      <div class="mcard"><div class="mlabel">Carbs</div><div class="mval"><i id="valCv">0</i><small> / <span id="valCg">0</span>g</small></div><div class="mbar"><i id="barC" style="background:linear-gradient(90deg,#7e7ef2,#a8a8ff)"></i></div></div>
+      <div class="mcard"><div class="mlabel">Protein</div><div class="mval"><i id="valPv">0</i><small> / <span id="valPg">0</span>g</small></div><div class="mbar"><i id="barP" style="background:linear-gradient(90deg,#12cfae,#54e6c4)"></i></div></div>
+      <div class="mcard"><div class="mlabel">Fat</div><div class="mval"><i id="valFv">0</i><small> / <span id="valFg">0</span>g</small></div><div class="mbar"><i id="barF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></div></div>
+    </div>
+    <div class="fiberbar"><span class="flabel">Fiber</span><div class="mbar"><i id="barFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div><span class="fval"><i id="valFiv">0</i><small> / <span id="valFig">0</span>g</small></span></div>
+    <div class="card weekcard">
+      <div class="wknavrow">
+        <button class="wknav" id="wkPrev" aria-label="Previous week">‹</button>
+        <div class="weekstrip" id="weekStrip"></div>
+        <button class="wknav" id="wkNext" aria-label="Next week">›</button>
+      </div>
+      <div style="display:flex;justify-content:center;margin-top:4px"><button id="todayPill" class="todaypill" style="visibility:hidden">↩ Today</button></div>
+    </div>
+    <button class="analysislink" id="analysisLink">Nutrition Analysis <span>›</span></button>
 
     <div class="searchrow">
       <button class="searchbtn" id="diarySearch">
@@ -1167,7 +1220,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.18-bw";
+const APP_VERSION = "2026.09.19-bx";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -1376,6 +1429,7 @@ function renderDiary(){
   const mCal = g.maintenance>0 ? g.maintenance : 0;
   const tCal = mCal + (g.surplus>0 ? g.surplus : 0);
   const left = tCal - t.cal, eCal = t.cal;
+  $("progPct").textContent = (tCal>0 ? Math.round(t.cal/tCal*100) : 0)+"%";
   ringPaint(eCal,mCal,tCal);
   $("flagKcal").textContent = left >= 0 ? Math.round(left).toLocaleString()+" kcal" : Math.round(-left).toLocaleString()+" over";
   const fsur = $("flagSur");
@@ -3142,7 +3196,7 @@ function renderProgress(){
   const max = Math.max(...days.map(x=>x.cal), (S.goals.maintenance>0?S.goals.maintenance:0)+(S.goals.surplus>0?S.goals.surplus:0), 1);
   days.forEach(x=>{
     const c = document.createElement("div"); c.className="bcol";
-    c.innerHTML = `<div class="bar" style="height:${Math.max(x.cal/max*100,2)}%;${x.k===todayStr()?"background:linear-gradient(#2fbf71,#7ce3a8);":""}"></div><div class="bl">${x.label}</div>`;
+    c.innerHTML = `<div class="bar" style="height:${Math.max(x.cal/max*100,2)}%;${x.k===todayStr()?"background:linear-gradient(#7e7ef2,#5b5bf0);":""}"></div><div class="bl">${x.label}</div>`;
     const bl = c.querySelector(".bl"), kcal = Math.round(x.cal).toLocaleString();
     c.onclick = ()=>{ const show = bl.dataset.k!=="1"; bl.dataset.k = show?"1":""; bl.textContent = show?kcal:x.label; };
     bb.appendChild(c);
