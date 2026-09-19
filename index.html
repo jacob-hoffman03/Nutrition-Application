@@ -617,10 +617,10 @@ body{ background:var(--bg); }
         <div class="ring" style="width:196px;height:196px">
           <svg width="196" height="196" viewBox="0 0 128 128">
             <circle cx="64" cy="64" r="56" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="11"/>
-            <circle id="ringMaint" cx="64" cy="64" r="56" fill="none" stroke="#ffd9a8" stroke-width="11"
+            <circle id="ringMaint" cx="64" cy="64" r="56" fill="none" stroke="#ffffff" stroke-width="11"
               stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
             <circle id="ringSurpTrack" cx="64" cy="64" r="40" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="10"/>
-            <circle id="ringSurp" cx="64" cy="64" r="40" fill="none" stroke="#ff9d5c" stroke-width="10"
+            <circle id="ringSurp" cx="64" cy="64" r="40" fill="none" stroke="#d5d5e0" stroke-width="10"
               stroke-linecap="round" stroke-dasharray="251.33" stroke-dashoffset="251.33"/>
           </svg>
           <div class="center">
@@ -1284,7 +1284,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-cg";
+const APP_VERSION = "2026.09.19-ch";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -1479,7 +1479,7 @@ function ringPaint(eCal, mCal, tCal){
     const sFrac = Math.min(Math.max(eCal-mCal,0)/sGoal, 1);
     surp.style.strokeDasharray = C2;
     surp.style.strokeDashoffset = C2*(1-sFrac);
-    surp.style.stroke = eCal > tCal ? "#ff5c5c" : "#f27a1a";
+    surp.style.stroke = eCal > tCal ? "#ff5c5c" : "#d5d5e0";
   } else { track.style.display = "none"; surp.style.display = "none"; }
 }
 function renderDiary(){
