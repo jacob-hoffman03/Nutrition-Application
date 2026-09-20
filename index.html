@@ -1241,7 +1241,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.20-ci";
+const APP_VERSION = "2026.09.20-cj";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -1826,7 +1826,9 @@ function adherenceStats(){
     n++;
     if(goal>0 && pt>0 && t.cal>=goal*0.9 && t.cal<=goal*1.1 && t.p>=pt*0.9) hit++;
   }
-  return {n, hit, pct: n>0 ? Math.round(hit/n*100) : null};
+  /* no goals set yet -> no basis for a percentage; the wheel shows "\u2013" */
+  const noGoal = !(goal>0 && pt>0);
+  return {n, hit, pct: (n>0 && !noGoal) ? Math.round(hit/n*100) : null};
 }
 /* ============ FOOD FATIGUE + BLOAT — "how will I feel" predictions ============
    Both are predictions from what was LOGGED today (meals, water, alcohol) — the
