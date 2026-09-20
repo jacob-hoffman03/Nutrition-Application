@@ -7,10 +7,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Fuel">
-<link rel="apple-touch-icon" href="fuel-heart-icon.png?v=2">
+<link rel="apple-touch-icon" href="fuel-heart-icon.png?v=3">
 <meta name="theme-color" content="#5b5bf0">
 <title>Fuel — Nutrition Tracker</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%235b5bf0'/%3E%3Cpath d='M20 44c0-8 4-14 12-18-1 8-4 14-12 18z' fill='white'/%3E%3Cpath d='M32 14c6 8 8 16 8 26' stroke='white' stroke-width='4' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2714%27%20fill%3D%27white%27%2F%3E%3Ctext%20x%3D%2732%27%20y%3D%2745%27%20font-family%3D%27Arial%2Csans-serif%27%20font-weight%3D%27900%27%20font-size%3D%2742%27%20text-anchor%3D%27middle%27%20fill%3D%27black%27%3EH%3C%2Ftext%3E%3C%2Fsvg%3E">
 <style>
 :root{
   --acc:#5b5bf0; --acc-deep:#4a4ad6; --acc-soft:#eceeff;
@@ -1241,7 +1241,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.19-ct";
+const APP_VERSION = "2026.09.20-ch";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
