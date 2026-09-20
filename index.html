@@ -973,7 +973,6 @@ body{ background:var(--bg); }
       <button class="srow" id="exportBtn"><span>Export my data (JSON)</span><span class="chev2">›</span></button>
       <button class="srow" id="importBtn"><span>Restore from backup (JSON)</span><span class="chev2">›</span></button>
       <input type="file" id="importFile" accept="application/json,.json" style="display:none">
-      <button class="srow" id="testFoodsRow"><span id="testFoodsLabel">Add 20 test foods</span><span class="chev2">›</span></button>
       <button class="srow danger" id="wipeBtn"><span>Erase all data</span><span class="chev2">›</span></button>
     </div>
     <div class="card">
@@ -1248,38 +1247,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.20-cp";
-
-/* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
-const TEST_FOODS = [
- {n:"Scrambled Eggs (test)", s:"3 large eggs · 150 g", cal:270, p:18, c:2, f:21, nutrs:[{n:"Cholesterol",amt:555,u:"mg"},{n:"Sodium",amt:380,u:"mg"},{n:"Saturated Fat",amt:6,u:"g"}]},
- {n:"Oatmeal + Banana (test)", s:"1 bowl · 350 g", cal:320, p:8, c:62, f:5, nutrs:[{n:"Dietary Fiber",amt:7,u:"g"},{n:"Total Sugars",amt:14,u:"g"},{n:"Potassium",amt:550,u:"mg"}]},
- {n:"Greek Yogurt + Granola (test)", s:"1 cup + 1/2 cup · 240 g", cal:350, p:22, c:48, f:9, nutrs:[{n:"Dietary Fiber",amt:3,u:"g"},{n:"Total Sugars",amt:24,u:"g"},{n:"Calcium",amt:250,u:"mg"}]},
- {n:"PB Toast (test)", s:"2 slices + peanut butter · 90 g", cal:380, p:14, c:34, f:24, nutrs:[{n:"Dietary Fiber",amt:5,u:"g"},{n:"Total Sugars",amt:8,u:"g"},{n:"Sodium",amt:380,u:"mg"}]},
- {n:"Grilled Chicken Breast (test)", s:"6 oz · 170 g", cal:280, p:52, c:0, f:6, nutrs:[{n:"Sodium",amt:140,u:"mg"},{n:"Potassium",amt:450,u:"mg"}]},
- {n:"White Rice (test)", s:"1.5 cups cooked · 280 g", cal:310, p:6, c:68, f:1, nutrs:[{n:"Dietary Fiber",amt:1,u:"g"},{n:"Sodium",amt:5,u:"mg"}]},
- {n:"Turkey Sandwich (test)", s:"1 sandwich · 250 g", cal:480, p:35, c:45, f:16, nutrs:[{n:"Dietary Fiber",amt:4,u:"g"},{n:"Total Sugars",amt:6,u:"g"},{n:"Sodium",amt:950,u:"mg"}]},
- {n:"Chicken Burrito Bowl (test)", s:"1 bowl · 450 g", cal:720, p:45, c:72, f:24, nutrs:[{n:"Dietary Fiber",amt:10,u:"g"},{n:"Sodium",amt:1200,u:"mg"},{n:"Potassium",amt:600,u:"mg"}]},
- {n:"Salmon Fillet (test)", s:"6 oz · 170 g", cal:350, p:34, c:0, f:23, nutrs:[{n:"Cholesterol",amt:120,u:"mg"},{n:"Sodium",amt:400,u:"mg"},{n:"Potassium",amt:700,u:"mg"}]},
- {n:"Sweet Potato (test)", s:"1 large · 200 g", cal:180, p:4, c:41, f:0, nutrs:[{n:"Dietary Fiber",amt:7,u:"g"},{n:"Total Sugars",amt:13,u:"g"},{n:"Potassium",amt:950,u:"mg"}]},
- {n:"Pasta Marinara (test)", s:"2 cups · 400 g", cal:520, p:16, c:92, f:10, nutrs:[{n:"Dietary Fiber",amt:6,u:"g"},{n:"Total Sugars",amt:12,u:"g"},{n:"Sodium",amt:600,u:"mg"}]},
- {n:"Ground Beef 90/10 (test)", s:"6 oz · 170 g", cal:340, p:42, c:0, f:17, nutrs:[{n:"Saturated Fat",amt:7,u:"g"},{n:"Cholesterol",amt:130,u:"mg"},{n:"Iron",amt:4,u:"mg"}]},
- {n:"Steamed Broccoli (test)", s:"1 cup · 150 g", cal:55, p:4, c:11, f:0.5, nutrs:[{n:"Dietary Fiber",amt:5,u:"g"},{n:"Total Sugars",amt:3,u:"g"},{n:"Potassium",amt:450,u:"mg"}]},
- {n:"Avocado (test)", s:"1 whole · 150 g", cal:240, p:3, c:12, f:22, nutrs:[{n:"Dietary Fiber",amt:10,u:"g"},{n:"Potassium",amt:700,u:"mg"}]},
- {n:"Protein Shake (test)", s:"1 scoop + milk · 350 mL", cal:280, p:32, c:20, f:4, nutrs:[{n:"Total Sugars",amt:15,u:"g"},{n:"Calcium",amt:400,u:"mg"},{n:"Sodium",amt:250,u:"mg"}]},
- {n:"Banana (test)", s:"1 medium · 120 g", cal:105, p:1, c:27, f:0, nutrs:[{n:"Dietary Fiber",amt:3,u:"g"},{n:"Total Sugars",amt:14,u:"g"},{n:"Potassium",amt:420,u:"mg"}]},
- {n:"Mixed Nuts (test)", s:"1 oz · 28 g", cal:170, p:5, c:6, f:15, nutrs:[{n:"Dietary Fiber",amt:2,u:"g"},{n:"Total Sugars",amt:1,u:"g"}]},
- {n:"Cottage Cheese (test)", s:"1 cup · 225 g", cal:200, p:28, c:8, f:9, nutrs:[{n:"Total Sugars",amt:6,u:"g"},{n:"Sodium",amt:700,u:"mg"},{n:"Calcium",amt:200,u:"mg"}]},
- {n:"Apple (test)", s:"1 medium · 180 g", cal:95, p:0.5, c:25, f:0.3, nutrs:[{n:"Dietary Fiber",amt:4,u:"g"},{n:"Total Sugars",amt:19,u:"g"},{n:"Potassium",amt:190,u:"mg"}]},
- {n:"Chocolate Milk (test)", s:"16 fl oz · 480 mL", cal:400, p:16, c:52, f:12, nutrs:[{n:"Total Sugars",amt:48,u:"g"},{n:"Added Sugars",amt:24,u:"g"},{n:"Calcium",amt:550,u:"mg"},{n:"Sodium",amt:300,u:"mg"}]}
-];
-function testFoodCount(){ return S.customFoods.filter(f=>f.test===1).length; }
-document.getElementById("testFoodsRow").onclick = ()=>{
-  if(testFoodCount()>0){ S.customFoods = S.customFoods.filter(f=>f.test!==1); }
-  else TEST_FOODS.forEach(t=>S.customFoods.push({n:t.n, s:t.s, cal:t.cal, p:t.p, c:t.c, f:t.f,
-    kind:"food", nutrs:(t.nutrs||[]).map(x=>({n:x.n, amt:x.amt, u:x.u})), test:1}));
-  save(); renderSettings(); renderFoods();
-};
+const APP_VERSION = "2026.09.20-cq";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1304,6 +1272,7 @@ if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"lig
   if(!s.waterV2){ for(const k in (s.days||{})){ const dd=s.days[k]; if(dd.waterOz===undefined) dd.waterOz=Math.round(((dd.water||0)*8)*10)/10; delete dd.water; } s.waterV2=1; }
   if(!Array.isArray(s.bottles) || !s.bottles.length) s.bottles=[{id:"b0",name:"Glass",oz:8}];
   if(!Array.isArray(s.recipes)) s.recipes=[]; /* recipes added 2026-09-18 */
+  if(!flagGet().testPurge){ s.customFoods=(s.customFoods||[]).filter(f=>f.test!==1); flagSet("testPurge",1); } /* test-foods debug feature removed 2026.09.20-cq */
   return s; } } catch(e){}
   flagSet("zeroReset",1); /* fresh boot / unreadable state: nothing to reset, mark it done */
   return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:"", img:"", theme:"#5b5bf0"}, bottles:[{id:"b0",name:"Glass",oz:8}], waterV2:1, recipes:[]};
@@ -3913,8 +3882,6 @@ function renderSettings(){
   const g = S.goals;
   renderProfileCard();
   document.getElementById("goalRowVal").textContent = Math.round(goalTotal()).toLocaleString()+" kcal";
-  const tN = testFoodCount();
-  document.getElementById("testFoodsLabel").textContent = tN>0 ? "Remove 20 test foods ("+tN+" on phone)" : "Add 20 test foods";
   document.getElementById("waterRowVal").textContent = g.water>0 ? (g.water*8)+" oz" : (waterTarget()>0 ? "Auto ("+(waterTarget()*8)+" oz)" : "Auto (set maintenance first)");
   document.getElementById("dDays").textContent = Object.keys(S.days).length;
   document.getElementById("appVer").textContent = "Fuel " + APP_VERSION;
