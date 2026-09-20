@@ -7,10 +7,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Fuel">
-<link rel="apple-touch-icon" href="fuel-heart-icon.png?v=5">
+<link rel="apple-touch-icon" href="fuel-heart-icon.png?v=6">
 <meta name="theme-color" content="#5b5bf0">
 <title>Fuel — Nutrition Tracker</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Cdefs%3E%3ClinearGradient%20id%3D%27g%27%20x1%3D%270%27%20y1%3D%270%27%20x2%3D%270%27%20y2%3D%271%27%3E%3Cstop%20offset%3D%270%27%20stop-color%3D%27%23FF6482%27%2F%3E%3Cstop%20offset%3D%271%27%20stop-color%3D%27%23EE2347%27%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2714%27%20fill%3D%27white%27%2F%3E%3Ctext%20x%3D%2732%27%20y%3D%2738%27%20font-family%3D%27Arial%2Csans-serif%27%20font-weight%3D%27900%27%20font-size%3D%2732%27%20text-anchor%3D%27middle%27%20fill%3D%27url%28%23g%29%27%3EH%3C%2Ftext%3E%3Ctext%20x%3D%2732%27%20y%3D%2751%27%20font-family%3D%27Arial%2Csans-serif%27%20font-weight%3D%27900%27%20font-size%3D%279%27%20text-anchor%3D%27middle%27%20fill%3D%27url%28%23g%29%27%20textLength%3D%2723%27%20lengthAdjust%3D%27spacingAndGlyphs%27%3EHEALTH%3C%2Ftext%3E%3C%2Fsvg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2714%27%20fill%3D%27white%27%2F%3E%3Ctext%20x%3D%2732%27%20y%3D%2738%27%20font-family%3D%27Arial%2Csans-serif%27%20font-weight%3D%27900%27%20font-size%3D%2732%27%20text-anchor%3D%27middle%27%20fill%3D%27black%27%3EH%3C%2Ftext%3E%3Ctext%20x%3D%2732%27%20y%3D%2751%27%20font-family%3D%27Arial%2Csans-serif%27%20font-weight%3D%27900%27%20font-size%3D%279%27%20text-anchor%3D%27middle%27%20fill%3D%27black%27%20textLength%3D%2723%27%20lengthAdjust%3D%27spacingAndGlyphs%27%3EHEALTH%3C%2Ftext%3E%3C%2Fsvg%3E">
 <style>
 :root{
   --acc:#5b5bf0; --acc-deep:#4a4ad6; --acc-soft:#eceeff;
@@ -1248,7 +1248,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.20-co";
+const APP_VERSION = "2026.09.20-cp";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
