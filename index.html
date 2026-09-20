@@ -1241,7 +1241,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.20-ch";
+const APP_VERSION = "2026.09.20-ci";
 
 /* ---- 20 temporary test foods (flagged test:1 so they remove cleanly) ---- */
 const TEST_FOODS = [
@@ -2829,7 +2829,7 @@ function paintCalCheck(){
   const bd = targetRateBand();
   const wu = wUnit();
   const f2 = v => (v>=0?"+":"")+v.toFixed(2);
-  const f2w = v => (v>=0?"+":"")+wDisp(Math.abs(v)).toFixed(2); /* weight rate in display units */
+  const f2w = v => (v>=0?"+":"−")+wDisp(Math.abs(v)).toFixed(2); /* weight rate in display units */
   let msg = "Actual: "+f2w(rate)+" "+wu+"/wk ("+f2(pct)+"%/wk). Target: "+bd[0].toFixed(2)+" to "+bd[1].toFixed(2)+"%/wk. ";
   let suggest = 0;
   if(pct < bd[0]-0.05) suggest = 150;
@@ -3134,7 +3134,7 @@ function goalTotal(){ return (S.goals.maintenance>0?S.goals.maintenance:0) + (S.
 /* ================= ANALYTICS ENGINE — MACROS =================
    Research sources (2026 refresh): protein 1.6-2.2 g/kg/d for muscle gain
    (Morton 2018 meta-analysis: breakpoint 1.62; ISSN 2017: 1.4-2.0) — auto default
-   2.0 g/kg. No per-meal "30 g max" (Trommelen 2023: no upper limit in 12 h);
+   2.2 g/kg. No per-meal "30 g max" (Trommelen 2023: no upper limit in 12 h);
    practical guidance is 0.3-0.4 g/kg across 3-5 meals. Fat 20-35% of energy (AMDR,
    still current); carbs fill the rest (~3-6 g/kg for lifters). Typing any macro
    switches to manual. */
@@ -3142,7 +3142,7 @@ function deriveMacros(){
   const tot = goalTotal();
   if(!(tot>0)){ S.goals.protein=0; S.goals.carbs=0; S.goals.fat=0; return; }
   const wKg = (S.goals.profile.weightLb>0 ? S.goals.profile.weightLb : 150)/2.20462;
-  S.goals.protein = Math.round(wKg*2.0);
+  S.goals.protein = Math.round(wKg*2.2);
   S.goals.fat = Math.max(0, Math.round(tot*0.25/9));
   S.goals.carbs = Math.max(0, Math.round((tot - S.goals.protein*4 - S.goals.fat*9)/4));
 }
@@ -3327,7 +3327,7 @@ function infoContent(k){
      <div class="irow">Adjusting the slider changes your surplus on top of maintenance. Surplus presets are % of maintenance — research supports <b>5–20%</b> for lean gains.</div>`};
   if(k==="macros") return {t:"Macros", b:
     `<div class="irow"><b>Protein:</b> muscle gains top out near <b>1.6 g/kg/day</b> (Morton 2018 meta-analysis); up to <b>2.2 g/kg</b> (1 g/lb) is the supported ceiling. No per-meal maximum — large protein meals are still used (Trommelen 2023); spread 0.3–0.4 g/kg across 3–5 meals.</div>
-     <div class="irow"><b>Auto:</b> protein 2.0 g/kg of body weight, fat 25% of your calorie goal, carbs fill the rest — re-derived every time your goal changes. Typing a number switches to manual; tap Auto to re-sync.</div>`};
+     <div class="irow"><b>Auto:</b> protein 2.2 g/kg of body weight, fat 25% of your calorie goal, carbs fill the rest — re-derived every time your goal changes. Typing a number switches to manual; tap Auto to re-sync.</div>`};
   if(k==="water"){
     const w = waterCalc();
     if(w.unset) return {t:"Water target", b:
@@ -3340,7 +3340,7 @@ function infoContent(k){
      <div class="irow"><b>Creatine:</b> no extra water needed — controlled trials show creatine does <b>not</b> cause dehydration (ISSN, Kreider 2017). The "needs extra water" toggle is for other supplements (e.g. fiber).</div>`};
   }
   if(k==="advanced") return {t:"Advanced", b:
-    `<div class="irow"><b>Auto-adjust as I gain weight:</b> when you log a new weight in Progress, Fuel recalculates maintenance and re-derives your macros (protein 2.0 g/kg, fat 25%, carbs fill the rest) — unless you've switched macros to manual. Turn it off to control everything manually.</div>
+    `<div class="irow"><b>Auto-adjust as I gain weight:</b> when you log a new weight in Progress, Fuel recalculates maintenance and re-derives your macros (protein 2.2 g/kg, fat 25%, carbs fill the rest) — unless you've switched macros to manual. Turn it off to control everything manually.</div>
      <div class="irow"><b>Auto-tune maintenance:</b> when 2+ weeks of weigh-ins show your real gain rate missing the target band, Fuel nudges maintenance ±150 kcal — max once per 2 weeks.</div>
      <div class="irow">The formulas are only ±10% accurate — your weigh-in trend is the calibration instrument.</div>`};
   if(k==="scores") return {t:"Energy & bloat", b: scoreInfoHTML()};
