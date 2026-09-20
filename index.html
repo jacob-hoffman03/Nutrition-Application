@@ -1247,7 +1247,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.20-cr";
+const APP_VERSION = "2026.09.20-cs";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1273,6 +1273,12 @@ if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"lig
   if(!Array.isArray(s.bottles) || !s.bottles.length) s.bottles=[{id:"b0",name:"Glass",oz:8}];
   if(!Array.isArray(s.recipes)) s.recipes=[]; /* recipes added 2026-09-18 */
   if(!flagGet().testPurge){ s.customFoods=(s.customFoods||[]).filter(f=>f.test!==1); flagSet("testPurge",1); } /* test-foods debug feature removed 2026.09.20-cq */
+  if(!flagGet().ggAbbr){ const pre="Good & Gather ", rep="G&G ", have=new Set((s.customFoods||[]).map(f=>f.n));
+    (s.customFoods||[]).forEach(f=>{ if(f.n.indexOf(pre)===0){ const nn=rep+f.n.slice(pre.length); if(!have.has(nn)){ have.delete(f.n); have.add(nn);
+      const on=f.n; f.n=nn;
+      (s.favorites||[]).forEach((x,i)=>{ if(x===on) s.favorites[i]=nn; });
+      Object.values(s.days||{}).forEach(d=>MEALS.forEach(m=>((d.meals||{})[m]||[]).forEach(e=>{ if(e.n===on) e.n=nn; }))); } } });
+    flagSet("ggAbbr",1); } /* Good & Gather -> G&G label abbreviation 2026.09.20-cs */
   return s; } } catch(e){}
   flagSet("zeroReset",1); /* fresh boot / unreadable state: nothing to reset, mark it done */
   return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:"", img:"", theme:"#5b5bf0"}, bottles:[{id:"b0",name:"Glass",oz:8}], waterV2:1, recipes:[]};
@@ -2554,17 +2560,17 @@ document.getElementById("cSave").onclick = ()=>{
    2026-09-20. One tap imports them as regular custom foods — fully editable,
    and the pencil button on each row sets its photo. */
 const TARGET_PACK = [
- {n:"Good & Gather Organic 85/15 Grass-Fed Ground Beef",s:"4 oz (112g)",cal:250,p:19,c:0,f:19,nutrs:[{n:"Saturated Fat",amt:9,u:"g"},{n:"Trans Fat",amt:1,u:"g"},{n:"Cholesterol",amt:75,u:"mg"},{n:"Sodium",amt:70,u:"mg"},{n:"Dietary Fiber",amt:0,u:"g"},{n:"Total Sugars",amt:0,u:"g"},{n:"Added Sugars",amt:0,u:"g"},{n:"Iron",amt:1.7,u:"mg"}]},
- {n:"Good & Gather 80/20 Ground Beef",s:"4 oz (112g)",cal:280,p:19,c:0,f:22,nutrs:[{n:"Saturated Fat",amt:9,u:"g"},{n:"Cholesterol",amt:80,u:"mg"},{n:"Sodium",amt:75,u:"mg"},{n:"Calcium",amt:20,u:"mg"},{n:"Iron",amt:2,u:"mg"}]},
- {n:"Good & Gather 90-Second Jasmine Rice",s:"1 pouch (240g)",cal:230,p:4,c:45,f:3,nutrs:[{n:"Sodium",amt:105,u:"mg"},{n:"Dietary Fiber",amt:1,u:"g"},{n:"Total Sugars",amt:0,u:"g"},{n:"Added Sugars",amt:0,u:"g"},{n:"Iron",amt:0.4,u:"mg"},{n:"Potassium",amt:60,u:"mg"}]},
- {n:"Good & Gather Boneless Skinless Chicken Breast",s:"4 oz (112g)",cal:140,p:25,c:0,f:4,nutrs:[{n:"Saturated Fat",amt:1.5,u:"g"},{n:"Cholesterol",amt:80,u:"mg"},{n:"Sodium",amt:50,u:"mg"},{n:"Potassium",amt:390,u:"mg"}]},
- {n:"Good & Gather Old Fashioned Oats",s:"1/2 cup (40g)",cal:150,p:5,c:27,f:2.5,nutrs:[{n:"Saturated Fat",amt:0.5,u:"g"},{n:"Sodium",amt:0,u:"mg"},{n:"Dietary Fiber",amt:4,u:"g"},{n:"Total Sugars",amt:0,u:"g"},{n:"Iron",amt:1.6,u:"mg"},{n:"Potassium",amt:150,u:"mg"}]},
- {n:"Good & Gather Creamy Almond Butter",s:"2 tbsp (32g)",cal:190,p:7,c:7,f:17,nutrs:[{n:"Saturated Fat",amt:1.5,u:"g"},{n:"Sodium",amt:0,u:"mg"},{n:"Dietary Fiber",amt:4,u:"g"},{n:"Total Sugars",amt:1,u:"g"},{n:"Calcium",amt:80,u:"mg"},{n:"Iron",amt:1.2,u:"mg"},{n:"Potassium",amt:230,u:"mg"}]},
- {n:"Good & Gather Unsalted Butter",s:"1 tbsp (14g)",cal:100,p:0,c:0,f:11,nutrs:[{n:"Saturated Fat",amt:7,u:"g"},{n:"Cholesterol",amt:30,u:"mg"},{n:"Sodium",amt:0,u:"mg"}]},
- {n:"Good & Gather Extra Virgin Olive Oil",s:"1 tbsp (15mL)",cal:120,p:0,c:0,f:14,nutrs:[{n:"Saturated Fat",amt:2,u:"g"}]},
- {n:"Good & Gather Clover Honey",s:"1 tbsp (21g)",cal:60,p:0,c:17,f:0,nutrs:[{n:"Sodium",amt:0,u:"mg"},{n:"Total Sugars",amt:17,u:"g"},{n:"Added Sugars",amt:0,u:"g"}]},
- {n:"Good & Gather Natural Creamy Peanut Butter",s:"2 tbsp (32g)",cal:180,p:7,c:8,f:15,nutrs:[{n:"Saturated Fat",amt:3,u:"g"},{n:"Sodium",amt:100,u:"mg"},{n:"Dietary Fiber",amt:2,u:"g"},{n:"Total Sugars",amt:4,u:"g"},{n:"Calcium",amt:20,u:"mg"},{n:"Iron",amt:0.5,u:"mg"},{n:"Potassium",amt:180,u:"mg"}]},
- {n:"Good & Gather Whole Milk (Vitamin D)",s:"1 cup (240mL)",cal:150,p:8,c:12,f:8,nutrs:[{n:"Saturated Fat",amt:5,u:"g"},{n:"Cholesterol",amt:35,u:"mg"},{n:"Sodium",amt:120,u:"mg"},{n:"Total Sugars",amt:11,u:"g"},{n:"Added Sugars",amt:0,u:"g"},{n:"Vitamin D",amt:4.5,u:"mcg"},{n:"Calcium",amt:200,u:"mg"},{n:"Potassium",amt:410,u:"mg"}]},
+ {n:"G&G Organic 85/15 Grass-Fed Ground Beef",s:"4 oz (112g)",cal:250,p:19,c:0,f:19,nutrs:[{n:"Saturated Fat",amt:9,u:"g"},{n:"Trans Fat",amt:1,u:"g"},{n:"Cholesterol",amt:75,u:"mg"},{n:"Sodium",amt:70,u:"mg"},{n:"Dietary Fiber",amt:0,u:"g"},{n:"Total Sugars",amt:0,u:"g"},{n:"Added Sugars",amt:0,u:"g"},{n:"Iron",amt:1.7,u:"mg"}]},
+ {n:"G&G 80/20 Ground Beef",s:"4 oz (112g)",cal:280,p:19,c:0,f:22,nutrs:[{n:"Saturated Fat",amt:9,u:"g"},{n:"Cholesterol",amt:80,u:"mg"},{n:"Sodium",amt:75,u:"mg"},{n:"Calcium",amt:20,u:"mg"},{n:"Iron",amt:2,u:"mg"}]},
+ {n:"G&G 90-Second Jasmine Rice",s:"1 pouch (240g)",cal:230,p:4,c:45,f:3,nutrs:[{n:"Sodium",amt:105,u:"mg"},{n:"Dietary Fiber",amt:1,u:"g"},{n:"Total Sugars",amt:0,u:"g"},{n:"Added Sugars",amt:0,u:"g"},{n:"Iron",amt:0.4,u:"mg"},{n:"Potassium",amt:60,u:"mg"}]},
+ {n:"G&G Boneless Skinless Chicken Breast",s:"4 oz (112g)",cal:140,p:25,c:0,f:4,nutrs:[{n:"Saturated Fat",amt:1.5,u:"g"},{n:"Cholesterol",amt:80,u:"mg"},{n:"Sodium",amt:50,u:"mg"},{n:"Potassium",amt:390,u:"mg"}]},
+ {n:"G&G Old Fashioned Oats",s:"1/2 cup (40g)",cal:150,p:5,c:27,f:2.5,nutrs:[{n:"Saturated Fat",amt:0.5,u:"g"},{n:"Sodium",amt:0,u:"mg"},{n:"Dietary Fiber",amt:4,u:"g"},{n:"Total Sugars",amt:0,u:"g"},{n:"Iron",amt:1.6,u:"mg"},{n:"Potassium",amt:150,u:"mg"}]},
+ {n:"G&G Creamy Almond Butter",s:"2 tbsp (32g)",cal:190,p:7,c:7,f:17,nutrs:[{n:"Saturated Fat",amt:1.5,u:"g"},{n:"Sodium",amt:0,u:"mg"},{n:"Dietary Fiber",amt:4,u:"g"},{n:"Total Sugars",amt:1,u:"g"},{n:"Calcium",amt:80,u:"mg"},{n:"Iron",amt:1.2,u:"mg"},{n:"Potassium",amt:230,u:"mg"}]},
+ {n:"G&G Unsalted Butter",s:"1 tbsp (14g)",cal:100,p:0,c:0,f:11,nutrs:[{n:"Saturated Fat",amt:7,u:"g"},{n:"Cholesterol",amt:30,u:"mg"},{n:"Sodium",amt:0,u:"mg"}]},
+ {n:"G&G Extra Virgin Olive Oil",s:"1 tbsp (15mL)",cal:120,p:0,c:0,f:14,nutrs:[{n:"Saturated Fat",amt:2,u:"g"}]},
+ {n:"G&G Clover Honey",s:"1 tbsp (21g)",cal:60,p:0,c:17,f:0,nutrs:[{n:"Sodium",amt:0,u:"mg"},{n:"Total Sugars",amt:17,u:"g"},{n:"Added Sugars",amt:0,u:"g"}]},
+ {n:"G&G Natural Creamy Peanut Butter",s:"2 tbsp (32g)",cal:180,p:7,c:8,f:15,nutrs:[{n:"Saturated Fat",amt:3,u:"g"},{n:"Sodium",amt:100,u:"mg"},{n:"Dietary Fiber",amt:2,u:"g"},{n:"Total Sugars",amt:4,u:"g"},{n:"Calcium",amt:20,u:"mg"},{n:"Iron",amt:0.5,u:"mg"},{n:"Potassium",amt:180,u:"mg"}]},
+ {n:"G&G Whole Milk (Vitamin D)",s:"1 cup (240mL)",cal:150,p:8,c:12,f:8,nutrs:[{n:"Saturated Fat",amt:5,u:"g"},{n:"Cholesterol",amt:35,u:"mg"},{n:"Sodium",amt:120,u:"mg"},{n:"Total Sugars",amt:11,u:"g"},{n:"Added Sugars",amt:0,u:"g"},{n:"Vitamin D",amt:4.5,u:"mcg"},{n:"Calcium",amt:200,u:"mg"},{n:"Potassium",amt:410,u:"mg"}]},
  {n:"Thomas' Plain Bagels",s:"1 bagel (95g)",cal:270,p:10,c:53,f:1.5,nutrs:[{n:"Saturated Fat",amt:0.5,u:"g"},{n:"Sodium",amt:450,u:"mg"},{n:"Dietary Fiber",amt:2,u:"g"},{n:"Total Sugars",amt:6,u:"g"},{n:"Added Sugars",amt:5,u:"g"},{n:"Calcium",amt:100,u:"mg"},{n:"Iron",amt:2.9,u:"mg"},{n:"Potassium",amt:90,u:"mg"}]},
  {n:"FAGE BestSelf Lactose Free Plain Greek Yogurt",s:"3/4 cup (170g)",cal:120,p:17,c:6,f:3.5,nutrs:[{n:"Saturated Fat",amt:2.5,u:"g"},{n:"Cholesterol",amt:20,u:"mg"},{n:"Sodium",amt:55,u:"mg"},{n:"Total Sugars",amt:6,u:"g"},{n:"Added Sugars",amt:0,u:"g"},{n:"Calcium",amt:200,u:"mg"},{n:"Potassium",amt:260,u:"mg"}]},
  {n:"Del Monte Cut Green Beans",s:"1/2 cup",cal:20,p:1,c:3,f:0,nutrs:[{n:"Sodium",amt:380,u:"mg"},{n:"Dietary Fiber",amt:1,u:"g"},{n:"Total Sugars",amt:1,u:"g"},{n:"Added Sugars",amt:0,u:"g"},{n:"Calcium",amt:30,u:"mg"},{n:"Iron",amt:0.5,u:"mg"},{n:"Potassium",amt:100,u:"mg"}]},
