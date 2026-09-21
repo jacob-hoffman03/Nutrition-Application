@@ -472,7 +472,7 @@ body{ background:var(--bg); }
 .ana-range{ font-size:12px; color:var(--muted); font-weight:600; }
 /* week backtrack navigator */
 .wk-nav{ display:flex; align-items:center; gap:4px; }
-.wk-nav button{ width:28px; height:28px; border-radius:50%; border:0; background:#f1f1f6; color:var(--ink); font-size:17px; font-weight:700; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0 0 2px; }
+.wk-nav button{ width:38px; height:38px; border-radius:50%; border:0; background:#f1f1f6; color:var(--ink); font-size:20px; font-weight:700; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0 0 2px; }
 .wk-nav button:disabled{ opacity:.28; cursor:default; }
 /* goal days (challenge row) */
 .chal{ margin-top:14px; }
@@ -1245,7 +1245,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.21-c";
+const APP_VERSION = "2026.09.21-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1464,7 +1464,7 @@ function ringPaint(eCal, mCal, tCal){
     const sFrac = Math.min(Math.max(eCal-mCal,0)/sGoal, 1);
     surp.style.strokeDasharray = C2;
     surp.style.strokeDashoffset = C2*(1-sFrac);
-    surp.style.stroke = eCal > tCal ? "#ff5c5c" : "#d5d5e0";
+    surp.style.stroke = eCal >= tCal ? "#2fbf71" : "#d5d5e0"; /* --green: surplus hit = green, never red */
   } else { track.style.display = "none"; surp.style.display = "none"; }
 }
 function renderDiary(){
@@ -3579,16 +3579,18 @@ function openMuscleInfo(){
   document.getElementById("infoSheet").classList.add("open");
 }
 const MEDAL_DEFS = [
-  {id:"silver", name:"Silver", color:"#a9b0c2", desc:"Log any food today — showing up counts."},
-  {id:"gold", name:"Gold", color:"#f2b705", desc:"Hit at least 90% of your protein goal."},
-  {id:"diamond", name:"Diamond", color:"#5ec8f2", desc:"Gold, plus your water target. No workout needed."}
+  {id:"silver", name:"Silver", color:"#a9b0c2", desc:"Hit your maintenance calories for the day."},
+  {id:"gold", name:"Gold", color:"#f2b705", desc:"Log all three meals: breakfast, lunch, and dinner."},
+  {id:"diamond", name:"Diamond", color:"#5ec8f2", desc:"Hit your full daily target — maintenance plus surplus."}
 ];
 function medalsFor(ds){
   const t = totals(ds), g = S.goals;
-  const silver = t.cal > 0;
-  const gold = silver && g.protein>0 && t.p >= g.protein*0.9;
+  const mCal = g.maintenance>0 ? g.maintenance : 0;
+  const tCal = mCal + (g.surplus>0 ? g.surplus : 0);
+  const silver = mCal>0 && t.cal >= mCal;
   const d = S.days[ds];
-  const diamond = gold && d && waterTarget()>0 && (d.waterOz||0)>=waterTarget()*8;
+  const gold = !!(d && ["breakfast","lunch","dinner"].every(m=>((d.meals||{})[m]||[]).length>0));
+  const diamond = tCal>0 && t.cal >= tCal;
   return {silver:!!silver, gold:!!gold, diamond:!!diamond};
 }
 function medalSVG(color, earned){
@@ -3634,7 +3636,7 @@ function renderProfileCard(){
   const m = medalsFor(todayStr());
   const n = (m.silver?1:0)+(m.gold?1:0)+(m.diamond?1:0);
   document.getElementById("medalHint").textContent = n===3 ? "All three earned today. Huge day." :
-    n===0 ? "Log your first meal to earn Silver." :
+    n===0 ? "Hit your maintenance calories to earn Silver." :
     "Tap a medal to see what each one takes.";
   paintScoreWheel();
   renderThemePicker();
