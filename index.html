@@ -1254,7 +1254,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.21-i";
+const APP_VERSION = "2026.09.21-k";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2260,6 +2260,7 @@ function renderSheetResults(q){
   box.innerHTML = list.slice(0, 40).map(sheetRowHtml).join("") ||
     '<div class="empty">No matches. Tap + Create new food to add it.</div>';
   box.querySelectorAll(".aplus").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const f=findFood(b.dataset.n); if(f) addToTray(f, 1); });
+  box.querySelectorAll(".arow2").forEach(r=>r.onclick=()=>{ const f=findFood(r.dataset.n); if(f) openDetail(f); }); /* row tap opens detail (2026.09.21-k) */
 }
 /* ============ ADD FOOD SHEET ============ */
 function addToTray(f, qty, meal){
@@ -2360,6 +2361,7 @@ document.getElementById("dQty").addEventListener("input", e=>{
 document.getElementById("sheetSearch").addEventListener("input", e=>renderSheetResults(e.target.value));
 document.getElementById("backToSearch").onclick = showSearch;
 document.getElementById("confirmAdd").onclick = ()=>{
+  if(!sheetFood) return; /* guard: detail opened without a food (2026.09.21-k) */
   addToTray(sheetFood, round2(dServings()), dMeal);
   showSearch();
 };
@@ -3930,7 +3932,7 @@ function showView(v){
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active", x.id==="view-"+v));
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",
     t.dataset.v===v || (v==="analysis"&&t.dataset.v==="diary") || (v==="goals"&&t.dataset.v==="settings")));
-  if(v==="progress") renderProgress();
+  if(v==="progress"){ weekOffset = 0; renderProgress(); } /* always open on the current 7 days 2026.09.21-j */
   if(v==="settings") renderSettings();
   if(v==="foods") renderFoods();
   if(v==="analysis") renderAnalysis();
