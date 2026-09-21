@@ -1250,7 +1250,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.21-e";
+const APP_VERSION = "2026.09.21-f";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2248,7 +2248,7 @@ function renderSheetResults(q){
   const box = document.getElementById("sheetResults"); box.innerHTML = "";
   let list = sheetTab==="recent" ? recentFoods()
     : sheetTab==="favorites" ? allFoods().filter(f=>isFav(f.n))
-    : S.customFoods.slice().reverse();
+    : (function(){ const seen = new Set(S.customFoods.map(f=>f.n)); return S.customFoods.slice().reverse().concat(FOODS.filter(f=>!seen.has(f.n))); })(); /* All: his foods first, then default foods not already his */
   if(q) list = list.filter(f => f.n.toLowerCase().includes(q));
   if(!q && sheetTab==="recent" && !list.length) list = allFoods();
   if(sheetSort==="name") list = list.slice().sort((a,b)=>a.n.localeCompare(b.n));
