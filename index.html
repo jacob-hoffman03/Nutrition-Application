@@ -1254,7 +1254,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.21-k";
+const APP_VERSION = "2026.09.21-l";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2259,7 +2259,7 @@ function renderSheetResults(q){
   if(sheetSort==="name") list = list.slice().sort((a,b)=>a.n.localeCompare(b.n));
   box.innerHTML = list.slice(0, 40).map(sheetRowHtml).join("") ||
     '<div class="empty">No matches. Tap + Create new food to add it.</div>';
-  box.querySelectorAll(".aplus").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const f=findFood(b.dataset.n); if(f) addToTray(f, 1); });
+  box.querySelectorAll(".aplus").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const f=findFood(b.dataset.n); if(f) openDetail(f); }); /* + opens the serving-size panel (2026.09.21-l) */
   box.querySelectorAll(".arow2").forEach(r=>r.onclick=()=>{ const f=findFood(r.dataset.n); if(f) openDetail(f); }); /* row tap opens detail (2026.09.21-k) */
 }
 /* ============ ADD FOOD SHEET ============ */
