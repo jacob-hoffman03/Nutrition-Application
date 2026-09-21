@@ -470,6 +470,10 @@ body{ background:var(--bg); }
 .ana-top b{ font-size:30px; font-weight:800; letter-spacing:-.5px; font-variant-numeric:tabular-nums; }
 .ana-unit{ font-size:14px; color:var(--muted); font-weight:600; margin-left:4px; }
 .ana-range{ font-size:12px; color:var(--muted); font-weight:600; }
+/* week backtrack navigator */
+.wk-nav{ display:flex; align-items:center; gap:4px; }
+.wk-nav button{ width:28px; height:28px; border-radius:50%; border:0; background:#f1f1f6; color:var(--ink); font-size:17px; font-weight:700; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0 0 2px; }
+.wk-nav button:disabled{ opacity:.28; cursor:default; }
 /* goal days (challenge row) */
 .chal{ margin-top:14px; }
 .chal-head{ display:flex; align-items:center; gap:8px; font-size:15px; font-weight:800; margin-bottom:10px; }
@@ -871,7 +875,7 @@ body{ background:var(--bg); }
     </div>
     <div id="progOverview">
     <div class="card anacard">
-      <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span></div><span class="ana-range">Last 7 days</span></div>
+      <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span></div><span class="wk-nav"><button id="wkPrev" aria-label="Previous week">‹</button><span class="ana-range" id="anaRange">Last 7 days</span><button id="wkNext" aria-label="Next week">›</button></span></div>
       <div class="bars7" id="bars7"></div>
       <div class="chal">
         <div class="chal-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Goal days</div>
@@ -879,7 +883,7 @@ body{ background:var(--bg); }
       </div>
     </div>
     <div class="card macrocard">
-      <div class="mc-head"><b>Macros</b><span class="mc-legend"><i style="background:#8b8bf5"></i>Carbs<i style="background:#f5a623"></i>Protein<i style="background:#34c77b"></i>Fat</span><span class="mc-week">Weekly</span></div>
+      <div class="mc-head"><b>Macros</b><span class="mc-legend"><i style="background:#8b8bf5"></i>Carbs<i style="background:#f5a623"></i>Protein<i style="background:#34c77b"></i>Fat</span><span class="mc-week" id="mcWeek">Weekly</span></div>
       <div class="mstack" id="macroStack"></div>
       <div class="mstack-lbls" id="macroStackLbls"></div>
     </div>
@@ -1247,7 +1251,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.21-a";
+const APP_VERSION = "2026.09.21-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2686,11 +2690,20 @@ function servingGrams(sTxt){
 document.getElementById("cNutrAdd").onclick = addNutrRow;
 
 /* ============ PROGRESS TAB ============ */
-function last7(){
+/* week backtrack: off=0 is the current 7 days, off=1 the 7 before that, ... (up to a year) */
+let weekOffset = 0;
+const MAX_WEEKS_BACK = 52;
+function weekDays(off){
+  off = off||0;
   const out = [];
-  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); const k=dstr(d);
+  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i-off*7); const k=dstr(d);
     out.push({k, label:d.toLocaleDateString(undefined,{weekday:"narrow"}), ...totals(k), logged:!!S.days[k]}); }
   return out;
+}
+function weekLabel(days){
+  const o = {month:"short", day:"numeric"};
+  const f = new Date(days[0].k+"T12:00:00"), t = new Date(days[6].k+"T12:00:00");
+  return f.toLocaleDateString(undefined,o)+" – "+t.toLocaleDateString(undefined,o);
 }
 function streak(){
   let s=0; const d=new Date();
@@ -3109,7 +3122,7 @@ function paintWeightChart(w){
   }
 }
 function renderProgress(){
-  const days = last7();
+  const days = weekDays(weekOffset);
   const logged = days.filter(x=>x.logged);
   document.getElementById("stStreak").textContent = streak();
   document.getElementById("stAvgCal").textContent = logged.length ? Math.round(logged.reduce((a,x)=>a+x.cal,0)/logged.length).toLocaleString() : 0;
@@ -3126,6 +3139,12 @@ function renderProgress(){
   const w = S.weights.slice().sort((a,b)=>a.d<b.d?-1:1);
   /* analytics header: 7-day total */
   $("anaTotal").textContent = Math.round(days.reduce((a,x)=>a+x.cal,0)).toLocaleString();
+  /* week backtrack labels + nav state */
+  const wkLbl = weekOffset===0 ? "Last 7 days" : weekLabel(days);
+  $("anaRange").textContent = wkLbl;
+  $("mcWeek").textContent = weekOffset===0 ? "Weekly" : weekLabel(days);
+  $("wkPrev").disabled = weekOffset>=MAX_WEEKS_BACK;
+  $("wkNext").disabled = weekOffset===0;
   /* goal days: checkmarks for days that hit the calorie goal */
   const calGoal = (S.goals.maintenance>0?S.goals.maintenance:0)+(S.goals.surplus>0?S.goals.surplus:0);
   const CHECK = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4 10-11"/></svg>';
@@ -3211,6 +3230,9 @@ document.querySelectorAll("#wRange button").forEach(b=>{
     document.querySelectorAll("#wRange button").forEach(x=>x.classList.toggle("on", x===b));
     renderProgress(); };
 });
+/* week backtrack navigator */
+document.getElementById("wkPrev").onclick = ()=>{ if(weekOffset<MAX_WEEKS_BACK){ weekOffset++; renderProgress(); } };
+document.getElementById("wkNext").onclick = ()=>{ if(weekOffset>0){ weekOffset--; renderProgress(); } };
 document.getElementById("wtGoalRow").onclick = (e)=>{
   if(e.target.closest(".ginfo")) return;
   const wu = wUnit(), lo = wIsMet()?23:50, hi = wIsMet()?275:600;
