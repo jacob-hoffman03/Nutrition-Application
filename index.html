@@ -1419,7 +1419,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.22-o";
+const APP_VERSION = "2026.09.22-p";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1729,8 +1729,7 @@ function renderDiary(){
   MEALS.forEach((m,mi) => {
     const items = d.meals[m]||[];
     const mc = items.reduce((a,e)=>a+e.cal,0);
-    const mcost = mealCost(items);
-    let html = `<div class="mrow${mi===MEALS.length-1 && !items.length ? "" : " noborder"}"><span class="mico" style="background:${MEAL_TINT[m]}">${MEAL_ICON[m]}</span><span class="mname">${MEAL_LABEL[m]}</span><span class="mkcal">${Math.round(mc)} kcal${mcost>0.004?` · ${fmtCost(mcost)}`:""}</span><button class="mcopy" data-copy="${m}" aria-label="Copy ${MEAL_LABEL[m]} from another day">⧉</button><button class="madd" data-add="${m}" aria-label="Add to ${MEAL_LABEL[m]}">+</button></div>`;
+    let html = `<div class="mrow${mi===MEALS.length-1 && !items.length ? "" : " noborder"}"><span class="mico" style="background:${MEAL_TINT[m]}">${MEAL_ICON[m]}</span><span class="mname">${MEAL_LABEL[m]}</span><span class="mkcal">${Math.round(mc)} kcal</span><button class="mcopy" data-copy="${m}" aria-label="Copy ${MEAL_LABEL[m]} from another day">⧉</button><button class="madd" data-add="${m}" aria-label="Add to ${MEAL_LABEL[m]}">+</button></div>`;
     html += items.length ? items.map(e=>{ const im = entryImg(e);
       const sub = (e.nutrs && e.nutrs.length)
         ? `${esc(e.s)}${e.qty>1?` × ${e.qty}`:""} · ${e.nutrs.map(x=>`${r1(x.amt)} ${esc(x.u)}`).join(" + ")}`
