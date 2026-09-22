@@ -665,21 +665,18 @@ body{ background:var(--bg); }
 /* info button inside rows (never nested-button) */
 .srow .ginfo{margin:0;}
 
-/* 2026.09.22-i: rearrangeable Progress panels */
+/* 2026.09.22-k: Apple-Photos-style reorder — compact row list, handles, checkmark save */
 .punit{margin:0;padding:0;min-width:0}
-#progEditBtn{font-size:15px;font-weight:700;color:var(--acc);width:44px;height:36px;background:none;border:none}
-.pgrip{display:none;position:absolute;top:10px;right:10px;width:32px;height:32px;border:none;border-radius:10px;background:rgba(91,91,240,.14);align-items:center;justify-content:center;touch-action:none;cursor:grab;z-index:6;padding:0}
-.pgrip svg{width:16px;height:16px;stroke:var(--acc);fill:none;stroke-width:2;stroke-linecap:round}
-body.rearranging .punit{position:relative}
-/* 2026.09.22-j: in edit mode, clear space at the right so the grip never covers content */
-body.rearranging #progOverview .punit>.card{padding-right:54px}
-body.rearranging #progOverview .punit>.ministats{padding-right:50px;box-sizing:border-box}
-body.rearranging #progOverview .punit>.secttl{padding-right:50px;box-sizing:border-box}
-body.rearranging .pgrip{display:flex}
-body.rearranging .punit::after{content:"";position:absolute;inset:0;border:2px dashed rgba(91,91,240,.4);border-radius:var(--radius);pointer-events:none;z-index:5}
-.punit.dragging{opacity:.97;z-index:60;box-shadow:0 16px 34px rgba(60,60,120,.28);border-radius:var(--radius);transform-origin:center}
-.punit.dragging::after{display:none}
-.punit.dragging .pgrip{cursor:grabbing}
+#progEditBtn{font-size:15px;font-weight:700;color:var(--acc);width:44px;height:36px;background:none;border:none;display:flex;align-items:center;justify-content:center}
+#progEditBtn.psave{background:var(--acc);border-radius:50%;width:38px;height:38px;padding:0}
+#progEditBtn.psave svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+body.reordering #progOverview{display:none}
+#progReorder{padding:6px 0 28px}
+.pr-row{display:flex;align-items:center;justify-content:space-between;height:58px;background:var(--card);border-radius:var(--radius);margin-bottom:10px;padding-left:18px;box-shadow:0 1px 4px rgba(60,60,120,.10)}
+.pr-title{font-size:17px;font-weight:700}
+.pr-handle{width:56px;height:58px;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab;flex:none}
+.pr-handle svg{width:24px;height:24px;stroke:var(--muted);fill:none;stroke-width:2.4;stroke-linecap:round}
+.pr-row.dragging{box-shadow:0 16px 34px rgba(60,60,120,.28);opacity:.97;position:relative;z-index:60}
 </style>
 </head>
 <body>
@@ -939,6 +936,7 @@ body.rearranging .punit::after{content:"";position:absolute;inset:0;border:2px d
       <h1>Progress</h1>
       <button class="tbtn tedit" id="progEditBtn" aria-label="Rearrange panels">Edit</button>
     </div>
+    <div id="progReorder" hidden></div>
     <div id="progOverview">
     <div class="punit" data-pid="wt">
 <div class="card wtcard">
@@ -1410,7 +1408,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.22-j";
+const APP_VERSION = "2026.09.22-k";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4546,67 +4544,81 @@ function showView(v){
   if(v==="goals") renderGoals();
   window.scrollTo(0,0);
 }
-/* 2026.09.22-i: rearrangeable Progress panels — touch drag, order persisted in S.progLayout */
+/* 2026.09.22-k: Apple-Photos-style reorder — compact row list with drag handles, checkmark saves */
 const PROG_UNITS = ["wt","insights","analytics","traj","macros","stats","bmi","calcheck","muscle"];
+const PROG_TITLES = {wt:"Weight",insights:"This week",analytics:"Analytics",traj:"Trajectory",macros:"Macros",stats:"Stats",bmi:"Weight analysis",calcheck:"Calorie Check",muscle:"Muscle Gain"};
+const LINES_SVG = '<svg viewBox="0 0 24 24"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
+const CHECK_SVG = '<svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
 function progUnits(){ return Array.prototype.slice.call(document.querySelectorAll("#progOverview .punit")); }
+function progOrder(){
+  const saved = (typeof S!=="undefined" && S && Array.isArray(S.progLayout)) ? S.progLayout.filter(function(p){ return PROG_UNITS.indexOf(p)>=0; }) : [];
+  return saved.concat(PROG_UNITS.filter(function(p){ return saved.indexOf(p)<0; }));
+}
 function applyProgLayout(){
   const box = document.getElementById("progOverview"); if(!box) return;
-  const saved = (typeof S!=="undefined" && S && Array.isArray(S.progLayout)) ? S.progLayout.filter(function(p){ return PROG_UNITS.indexOf(p)>=0; }) : [];
-  const order = saved.concat(PROG_UNITS.filter(function(p){ return saved.indexOf(p)<0; }));
   const map = {}; progUnits().forEach(function(u){ map[u.getAttribute("data-pid")] = u; });
-  order.forEach(function(pid){ if(map[pid]) box.appendChild(map[pid]); });
+  progOrder().forEach(function(pid){ if(map[pid]) box.appendChild(map[pid]); });
 }
-const GRIP_SVG = '<svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>';
 function setProgEdit(on){
-  document.body.classList.toggle("rearranging", on);
-  const btn = document.getElementById("progEditBtn"); if(btn) btn.textContent = on ? "Done" : "Edit";
-  progUnits().forEach(function(u){
-    let g = u.querySelector(":scope > .pgrip");
-    if(on && !g){
-      g = document.createElement("button");
-      g.className = "pgrip"; g.type = "button"; g.setAttribute("aria-label","Drag to reorder panel");
-      g.innerHTML = GRIP_SVG;
-      g.addEventListener("pointerdown", progGripDown);
-      u.appendChild(g);
-    } else if(!on && g){ g.remove(); }
-  });
+  const btn = document.getElementById("progEditBtn"), box = document.getElementById("progOverview"), list = document.getElementById("progReorder");
+  if(!btn || !box || !list) return;
+  document.body.classList.toggle("reordering", on);
+  if(on){
+    list.innerHTML = "";
+    progOrder().forEach(function(pid){
+      const row = document.createElement("div");
+      row.className = "pr-row"; row.setAttribute("data-pid", pid);
+      const t = document.createElement("span"); t.className = "pr-title"; t.textContent = PROG_TITLES[pid] || pid;
+      const h = document.createElement("span"); h.className = "pr-handle"; h.setAttribute("aria-label","Drag to reorder"); h.innerHTML = LINES_SVG;
+      h.addEventListener("pointerdown", prHandleDown);
+      row.appendChild(t); row.appendChild(h); list.appendChild(row);
+    });
+    box.style.display = "none"; list.hidden = false;
+    btn.classList.add("psave"); btn.innerHTML = CHECK_SVG; btn.setAttribute("aria-label","Save order");
+  } else {
+    box.style.display = ""; list.hidden = true; list.innerHTML = "";
+    btn.classList.remove("psave"); btn.textContent = "Edit"; btn.setAttribute("aria-label","Rearrange panels");
+    applyProgLayout();
+  }
 }
-let progDragU = null;
-function progGripDown(e){
+function prHandleDown(e){
   e.preventDefault();
-  const grip = e.currentTarget;
-  progDragU = grip.closest(".punit"); if(!progDragU) return;
-  const y0 = e.clientY; let active = false;
-  try{ grip.setPointerCapture(e.pointerId); }catch(_){}
+  const handle = e.currentTarget, row = handle.closest(".pr-row"), list = document.getElementById("progReorder");
+  if(!row || !list) return;
+  const H = row.offsetHeight + 10; /* row + margin-bottom */
+  const startIdx = Array.prototype.indexOf.call(list.children, row);
+  let idx = startIdx; const y0 = e.clientY;
+  row.classList.add("dragging");
+  try{ handle.setPointerCapture(e.pointerId); }catch(_){}
   const move = function(ev){
-    if(!progDragU) return;
     const dy = ev.clientY - y0;
-    if(!active && Math.abs(dy) > 8){ active = true; progDragU.classList.add("dragging"); }
-    if(active){
-      progDragU.style.transform = "translateY(" + dy + "px) scale(1.02)";
-      const box = document.getElementById("progOverview");
-      const others = progUnits().filter(function(u){ return u !== progDragU; });
-      let before = null;
-      for(let i=0;i<others.length;i++){ const r = others[i].getBoundingClientRect(); if(ev.clientY < r.top + r.height/2){ before = others[i]; break; } }
-      if(before) box.insertBefore(progDragU, before); else box.appendChild(progDragU);
+    row.style.transform = "translateY(" + dy + "px)";
+    let nidx = startIdx + Math.round(dy / H);
+    nidx = Math.max(0, Math.min(list.children.length - 1, nidx));
+    if(nidx !== idx){
+      idx = nidx;
+      const ref = Array.prototype.filter.call(list.children, function(x){ return x !== row; })[nidx];
+      if(ref) list.insertBefore(row, ref); else list.appendChild(row);
     }
   };
   const up = function(){
-    grip.removeEventListener("pointermove", move);
-    grip.removeEventListener("pointerup", up);
-    grip.removeEventListener("pointercancel", up);
-    if(progDragU){
-      progDragU.classList.remove("dragging");
-      progDragU.style.transform = "";
-      if(active){ S.progLayout = progUnits().map(function(u){ return u.getAttribute("data-pid"); }); save(); }
-      progDragU = null;
-    }
+    handle.removeEventListener("pointermove", move);
+    handle.removeEventListener("pointerup", up);
+    handle.removeEventListener("pointercancel", up);
+    row.classList.remove("dragging"); row.style.transform = "";
   };
-  grip.addEventListener("pointermove", move);
-  grip.addEventListener("pointerup", up);
-  grip.addEventListener("pointercancel", up);
+  handle.addEventListener("pointermove", move);
+  handle.addEventListener("pointerup", up);
+  handle.addEventListener("pointercancel", up);
+}
+document.getElementById("progEditBtn").onclick = function(){
+  if(document.body.classList.contains("reordering")){
+    const list = document.getElementById("progReorder");
+    if(list) S.progLayout = Array.prototype.map.call(list.children, function(r){ return r.getAttribute("data-pid"); });
+    save();
+    setProgEdit(false);
+  } else setProgEdit(true);
 };
-document.getElementById("progEditBtn").onclick = function(){ setProgEdit(!document.body.classList.contains("rearranging")); };
 function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); applyProgLayout(); }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.v));
 /* Progress sub-tabs were removed in 2026.09.22-a: Progress is a single view whose
