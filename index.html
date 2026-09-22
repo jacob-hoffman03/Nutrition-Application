@@ -1322,7 +1322,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.22-a";
+const APP_VERSION = "2026.09.22-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1361,6 +1361,19 @@ else { if(!/^#[0-9a-fA-F]{6}$/.test(s.profile.theme)) s.profile.theme = DEFAULT_
   return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:DEFAULT_PROFILE.name, img:DEFAULT_PROFILE.img, theme:DEFAULT_PROFILE.theme, photos:DEFAULT_PHOTOS.map(p=>({d:p.d,img:p.img}))}, bottles:DEFAULT_BOTTLES.map(b=>({id:b.id, name:b.name, oz:b.oz, img:b.img})), waterV2:1, recipes:[]};
 }
 let S = load();
+/* 2026.09.22-b: backfill weigh-ins from Jay's other app — recovered from his Apple Health
+   sync and matching the screenshots he sent (incl. the 134.0 lb all-time high on 2026-03-26).
+   One-time and additive only: dates he already logged keep his existing entries, and the
+   flag lives in FLAG_KEY so it can never re-run. */
+if(!flagGet().oldAppWeights){
+  if(!Array.isArray(S.weights)) S.weights = [];
+  var haveW = {}, wAdded = 0, wi, pw;
+  var OLD_W = [["2026-02-02",120.0],["2026-02-15",125.0],["2026-03-26",134.0],["2026-03-27",131.4],["2026-03-28",130.4],["2026-03-29",131.6]];
+  for(wi=0;wi<S.weights.length;wi++) haveW[S.weights[wi].d] = 1;
+  for(wi=0;wi<OLD_W.length;wi++){ pw = OLD_W[wi]; if(!haveW[pw[0]]){ S.weights.push({d:pw[0], w:pw[1]}); haveW[pw[0]] = 1; wAdded++; } }
+  if(wAdded){ S.weights.sort(function(a,b){ return a.d<b.d?-1:1; }); save(); }
+  flagSet("oldAppWeights",1);
+}
 /* ============ APP THEME ============ */
 /* User-pickable accent color (Settings › Profile › App theme). CSS surfaces read
    var(--acc)/var(--acc-deep)/var(--acc-soft); JS-baked SVG strings use THEME.acc. */
