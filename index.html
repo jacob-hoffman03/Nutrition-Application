@@ -905,6 +905,14 @@ body{ background:var(--bg); }
       <div style="width:44px"></div>
     </div>
     <div id="progOverview">
+    <div class="card wtcard">
+      <button class="wtcircle" id="wtCircle" aria-label="Open weight details">
+        <span class="wtc-num" id="wtCircleNum">—</span>
+        <span class="wtc-unit" id="wtCircleUnit">lb</span>
+        <span class="wtc-date" id="wtCircleDate"></span>
+        <span class="wtc-hint">TAP FOR DETAILS</span>
+      </button>
+    </div>
     <div class="card anacard">
       <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span></div><span class="wk-nav"><button id="wkPrev" aria-label="Previous week">‹</button><span class="ana-range" id="anaRange">Last 7 days</span><button id="wkNext" aria-label="Next week">›</button></span></div>
       <div class="bars7" id="bars7"></div>
@@ -923,14 +931,6 @@ body{ background:var(--bg); }
       <div class="ministat"><span class="ms-label">Avg kcal / 7d</span><b id="stAvgCal">0</b></div>
       <div class="ministat"><span class="ms-label">Avg protein / 7d</span><b id="stAvgP">0g</b></div>
       <div class="ministat"><span class="ms-label">Water today</span><b id="stWater">0 <small>oz</small></b></div>
-    </div>
-    <div class="card wtcard">
-      <button class="wtcircle" id="wtCircle" aria-label="Open weight details">
-        <span class="wtc-num" id="wtCircleNum">—</span>
-        <span class="wtc-unit" id="wtCircleUnit">lb</span>
-        <span class="wtc-date" id="wtCircleDate"></span>
-        <span class="wtc-hint">TAP FOR DETAILS</span>
-      </button>
     </div>
     <div class="secttl">Weight analysis</div>
     <div class="card">
@@ -1331,7 +1331,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.22-d";
+const APP_VERSION = "2026.09.22-e";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
