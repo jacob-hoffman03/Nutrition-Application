@@ -668,12 +668,16 @@ body{ background:var(--bg); }
 /* 2026.09.22-i: rearrangeable Progress panels */
 .punit{margin:0;padding:0;min-width:0}
 #progEditBtn{font-size:15px;font-weight:700;color:var(--acc);width:44px;height:36px;background:none;border:none}
-.pgrip{display:none;position:absolute;top:8px;right:8px;width:36px;height:36px;border:none;border-radius:11px;background:rgba(91,91,240,.14);align-items:center;justify-content:center;touch-action:none;cursor:grab;z-index:6;padding:0}
-.pgrip svg{width:18px;height:18px;stroke:var(--acc);fill:none;stroke-width:2;stroke-linecap:round}
+.pgrip{display:none;position:absolute;top:10px;right:10px;width:32px;height:32px;border:none;border-radius:10px;background:rgba(91,91,240,.14);align-items:center;justify-content:center;touch-action:none;cursor:grab;z-index:6;padding:0}
+.pgrip svg{width:16px;height:16px;stroke:var(--acc);fill:none;stroke-width:2;stroke-linecap:round}
 body.rearranging .punit{position:relative}
+/* 2026.09.22-j: in edit mode, clear space at the right so the grip never covers content */
+body.rearranging #progOverview .punit>.card{padding-right:54px}
+body.rearranging #progOverview .punit>.ministats{padding-right:50px;box-sizing:border-box}
+body.rearranging #progOverview .punit>.secttl{padding-right:50px;box-sizing:border-box}
 body.rearranging .pgrip{display:flex}
 body.rearranging .punit::after{content:"";position:absolute;inset:0;border:2px dashed rgba(91,91,240,.4);border-radius:var(--radius);pointer-events:none;z-index:5}
-.punit.dragging{opacity:.96;z-index:60;box-shadow:0 16px 34px rgba(60,60,120,.28);border-radius:var(--radius)}
+.punit.dragging{opacity:.97;z-index:60;box-shadow:0 16px 34px rgba(60,60,120,.28);border-radius:var(--radius);transform-origin:center}
 .punit.dragging::after{display:none}
 .punit.dragging .pgrip{cursor:grabbing}
 </style>
@@ -1406,7 +1410,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.22-i";
+const APP_VERSION = "2026.09.22-j";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4579,7 +4583,7 @@ function progGripDown(e){
     const dy = ev.clientY - y0;
     if(!active && Math.abs(dy) > 8){ active = true; progDragU.classList.add("dragging"); }
     if(active){
-      progDragU.style.transform = "translateY(" + dy + "px)";
+      progDragU.style.transform = "translateY(" + dy + "px) scale(1.02)";
       const box = document.getElementById("progOverview");
       const others = progUnits().filter(function(u){ return u !== progDragU; });
       let before = null;
