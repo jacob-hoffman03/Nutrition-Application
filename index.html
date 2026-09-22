@@ -180,6 +180,12 @@ button{font-family:inherit;}
 .infbody{padding:2px 18px 24px; font-size:14.5px; line-height:1.65; color:#3a3a42;}
 .infbody b{color:var(--ink);}
 .infbody .irow{margin-bottom:10px;}
+/* progress insights: tappable rows, theme-matched (no new colors) */
+.insrow{display:block; width:100%; text-align:left; background:none; border:0; border-top:1px solid #f0f0f6; padding:10px 2px; cursor:pointer;}
+.insrow:first-child{border-top:0;}
+.insrow b{display:block; font-size:14.5px; color:var(--ink);}
+.insrow span{display:block; font-size:12.5px; color:var(--muted); margin-top:3px; line-height:1.5;}
+.insrow .insconf{display:inline-block; font-size:10px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--acc-deep); margin-left:6px; vertical-align:1px;}
 /* profile strip + medals */
 .pstrip{display:flex; align-items:center; gap:12px; padding:2px 2px 12px;}
 .pavatar{width:46px; height:46px; border-radius:50%; object-fit:cover; flex:none; background:var(--acc-soft); color:var(--acc);
@@ -687,9 +693,9 @@ body{ background:var(--bg); }
       <div class="ptodayrow" style="display:none"><button id="todayPill" class="todaypill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg><span>Today</span></button></div>
       <div class="prog-main">
         <div class="hside">
-        <button class="scorewheel hwheel" id="fatWheelH" aria-label="Food fatigue details">
-          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="fatArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
-          <span class="swnum"><b id="fatNumH">–</b><i>fatigue</i></span>
+        <button class="scorewheel hwheel" id="tiredWheelH" aria-label="Tired level details">
+          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="tiredArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+          <span class="swnum"><b id="tiredNumH">–</b><i>tired</i></span>
         </button>
         <button class="scorewheel hwheel hwheel-sm" id="bloatWheelH" aria-label="Bloat details">
           <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="bloatArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
@@ -926,13 +932,26 @@ body{ background:var(--bg); }
         <span class="wtc-hint">TAP FOR DETAILS</span>
       </button>
     </div>
+    <div class="card" id="insCard">
+      <div style="display:flex; justify-content:space-between; align-items:center;"><b style="font-size:16px">This week</b><span class="pill" id="insPill" style="display:none"></span></div>
+      <div id="insRows" style="margin-top:2px"></div>
+      <div class="rangenote" id="insNote" style="margin-top:8px">Estimates from your log, not medical advice — sleep, stress, and illness matter too, and the app can't see those.</div>
+    </div>
     <div class="card anacard">
-      <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span></div><span class="wk-nav"><button id="wkPrev" aria-label="Previous week">‹</button><span class="ana-range" id="anaRange">Last 7 days</span><button id="wkNext" aria-label="Next week">›</button></span></div>
+      <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span></div><span class="wk-nav"><button id="pgWkPrev" aria-label="Previous week">‹</button><span class="ana-range" id="anaRange">Last 7 days</span><button id="pgWkNext" aria-label="Next week">›</button></span></div>
       <div class="bars7" id="bars7"></div>
+      <div class="rangenote" id="trendChip" style="margin-top:8px"></div>
       <div class="chal">
         <div class="chal-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Goal days</div>
         <div class="chal-row" id="goalDays"></div>
       </div>
+    </div>
+    <div class="secttl">Weight goal</div>
+    <div class="card" id="trajCard">
+      <div style="display:flex; justify-content:space-between; align-items:baseline;"><b style="font-size:16px">Trajectory</b><span id="trajPct" style="font-size:13px; color:var(--muted)"></span></div>
+      <div style="font-size:27px; font-weight:800; margin-top:4px" id="trajHead">—</div>
+      <div class="rangenote" id="trajSub" style="margin-top:4px"></div>
+      <div class="wgoalbar" id="trajBarWrap" style="margin-top:10px"><i id="trajBarFill" style="width:0%"></i></div>
     </div>
     <div class="card macrocard">
       <div class="mc-head"><b>Macros</b><span class="mc-legend"><i style="background:#8b8bf5"></i>Carbs<i style="background:#f5a623"></i>Protein<i style="background:#34c77b"></i>Fat</span><span class="mc-week" id="mcWeek">Weekly</span></div>
@@ -1357,13 +1376,17 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.22-f";
+const APP_VERSION = "2026.09.22-h";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
    new app — Jay fills them in himself. (2026.09.18-ak) */
 const defProfile = () => ({units:"imp", sex:"", age:0, heightIn:0, weightLb:0, bodyFat:0, waistIn:0, activityKey:"", auto:false});
 const defGoals = () => ({maintenance:0, surplus:0, protein:0, carbs:0, fat:0, water:0, waterV:1, weight:0, weightStart:0, mode:"custom", nutrTargets:{}, profile:defProfile(), muscleGoal:0, macroAuto:true});
+/* 2026.09.22-g: freshBoot is true when the app starts with no saved state (fresh
+   install / cleared storage) — the boot code then restores seed-data.json (Jay's
+   exported backup) so his logs, goals, foods and weights are never lost. */
+let freshBoot = false;
 function load(){
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) {
 /* 2026.09.18-ak blank-slate reset: Jay asked for every goal, nutrient target, and profile/setting
@@ -1393,6 +1416,7 @@ else { if(!/^#[0-9a-fA-F]{6}$/.test(s.profile.theme)) s.profile.theme = DEFAULT_
     flagSet("ggAbbr",1); } /* Good & Gather -> G&G label abbreviation 2026.09.20-cs */
   return s; } } catch(e){}
   flagSet("zeroReset",1); /* fresh boot / unreadable state: nothing to reset, mark it done */
+  freshBoot = true; /* boot code below will try restoring seed-data.json */
   return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:DEFAULT_PROFILE.name, img:DEFAULT_PROFILE.img, theme:DEFAULT_PROFILE.theme, photos:DEFAULT_PHOTOS.map(p=>({d:p.d,img:p.img}))}, bottles:DEFAULT_BOTTLES.map(b=>({id:b.id, name:b.name, oz:b.oz, img:b.img})), waterV2:1, recipes:[]};
 }
 let S = load();
@@ -1469,6 +1493,18 @@ const todayStr = () => dstr(new Date());
 let dayOffset = 0;
 const viewDate = () => { const d = new Date(); d.setDate(d.getDate()+dayOffset); return dstr(d); };
 function day(){ const k = viewDate(); if(!S.days[k]) S.days[k] = {meals:{breakfast:[],lunch:[],dinner:[],snacks:[],supplements:[]}, waterOz:0}; return S.days[k]; }
+/* 2026.09.22-h: day() auto-creates an empty record for any viewed date, so "has data"
+   must be explicit — an untouched auto-created day is not a logged day. */
+function dayHasData(d){
+  if(!d) return false;
+  const ms = d.meals||{};
+  if(MEALS.some(m=>(ms[m]||[]).length)) return true;
+  if((d.waterOz||0)>0) return true;
+  const a = d.alc||{};
+  if((a.shot||0)+(a.beer||0)+(a.cocktail||0)>0) return true;
+  if(d.vape && d.vape!=="none") return true;
+  return false;
+}
 function allFoods(){ const seen = new Set(FOODS.map(f=>f.n)); return FOODS.concat((S.customFoods||[]).filter(f=>!seen.has(f.n))); }
 function findFood(name){ return allFoods().find(f=>f.n===name); }
 function isFav(name){ return S.favorites.includes(name); }
@@ -1520,7 +1556,10 @@ function statusInfo(){
   const defc = Math.round(mCal-eCal), dpct = mCal>0?Math.round(defc/mCal*100):0;
   const pAte = Math.round(t.p||0), pGoal = g.protein||0, lowP = pGoal>0 && pAte < pGoal*0.8;
   let cls,title,det,grad;
-  if(eCal < mCal){
+  if(mCal<=0){ /* blank slate: no maintenance yet — never claim "on track" on an empty diary */
+    cls="unset"; title="Set your goals"; grad="linear-gradient(90deg,#8a8aa3,#b9b9d6)";
+    det = "Add your profile in Goals to get a maintenance target — then this bar tracks your zone.";
+  }else if(eCal < mCal){
     cls="deficit"; title="Calorie deficit"; grad="linear-gradient(90deg,#ff3b30,#ff8a5c)";
     const tier = defc>=500 ? "deep enough to stall muscle gain" : defc>=250 ? "big enough to slow gains if it keeps up" : "small gap — closable with a snack";
     det = defc.toLocaleString()+" cal under maintenance ("+dpct+"%) — "+tier;
@@ -1709,8 +1748,8 @@ function paintAlcRing(kcal){
   el.innerHTML = `<svg viewBox="0 0 52 52" width="52" height="52" role="img" aria-label="${Math.round(kcal)} alcohol calories">`+
     `<circle cx="26" cy="26" r="20" fill="none" stroke="#eeeef4" stroke-width="6"/>`+
     `<circle cx="26" cy="26" r="20" fill="none" stroke="#f27a1a" stroke-width="6" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-frac)).toFixed(1)}" transform="rotate(-90 26 26)"/>`+
-    `<text x="26" y="25" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)">${Math.round(kcal)}</text>`+
-    `<text x="26" y="36" text-anchor="middle" font-size="8" fill="var(--muted)">kcal</text></svg>`;
+    `<text x="26" y="25" text-anchor="middle" font-size="11" font-weight="700" style="fill:var(--ink)">${Math.round(kcal)}</text>`+
+    `<text x="26" y="36" text-anchor="middle" font-size="8" style="fill:var(--muted)">kcal</text></svg>`;
 }
 function renderAlc(){
   const k = viewDate(), d = day();
@@ -1926,16 +1965,12 @@ document.getElementById("bottleScrim").onclick = closeBottleSheet;
    outcomes — stronger than the specific diet (Burke et al., J Am Diet Assoc 2011). */
 function adherenceStats(){
   const goal = goalTotal(), pt = S.goals.protein;
-  let n = 0, hit = 0;
-  for(let i=0;i<14;i++){
-    const t = totals(addDays(todayStr(), -i));
-    if(!(t.cal>0)) continue;
-    n++;
-    if(goal>0 && pt>0 && t.cal>=goal*0.9 && t.cal<=goal*1.1 && t.p>=pt*0.9) hit++;
-  }
+  /* thin reducer over the analytics-engine series — same two hit tests as always */
+  const food = adherenceSeries(14).filter(x=>x.foodLogged);
+  const hit = food.filter(x=>x.hit).length;
   /* no goals set yet -> no basis for a percentage; the wheel shows "\u2013" */
   const noGoal = !(goal>0 && pt>0);
-  return {n, hit, pct: (n>0 && !noGoal) ? Math.round(hit/n*100) : null};
+  return {n: food.length, hit, pct: (food.length>0 && !noGoal) ? Math.round(hit/food.length*100) : null};
 }
 /* ============ FOOD FATIGUE + BLOAT — "how will I feel" predictions ============
    Both are predictions from what was LOGGED today (meals, water, alcohol) — the
@@ -1977,53 +2012,68 @@ function mealMacros(ds){
   });
   return out;
 }
-function foodFatigue(ds){
+/* ============ TIRED LEVEL — "how tired do you feel" estimate ============
+   Rebuilt 2026.09.22-g (research pass): the old "fatigue %" scored everything you
+   ate and kept saying Jay was tired when he wasn't. New model, per the evidence:
+   - Base 30 (neutral), clamped 0-100, mapped to 5 levels:
+     1 Wired / 2 Up / 3 Even / 4 Drowsy / 5 Drained. No % number on the chip.
+   - MISSING DATA DEFAULTS TO FINE, never to tired. Sleep debt is the dominant
+     tiredness input in the literature (Van Dongen et al. 2003, 14-day dose
+     response) but the app has no sleep logging yet, so it contributes 0 until
+     sleep data exists. A missing log is not evidence of no sleep.
+   - Inputs that move it: circadian dip (~13-15h, Monk et al. constant-routine work
+     — normal, not a problem), water clearly under target late in the day (~1.5%
+     dehydration brings fatigue, Ganio et al. 2011), the most recent meal within a
+     ~2h window if carb-dominant (glucose silences orexin wakefulness neurons,
+     Burdakov et al. 2005/2006), yesterday's drinks, lightly (Ebrahim et al. 2013;
+     Penning et al. 2012), and a workout today reduces it (Loy et al. 2013).
+   - What does NOT move it: total calories, total carbs, nicotine, bloat. */
+function tiredLevel(ds){
   ds = ds || todayStr();
-  const mm = mealMacros(ds), d = S.days[ds] || {waterOz:0};
-  const t = {cal:0,p:0,c:0}; let logged = false;
-  MEALS.forEach(m=>{ t.cal+=mm[m].cal; t.p+=mm[m].p; t.c+=mm[m].c; if(mm[m].cal>0) logged=true; });
-  if(!logged) return {score:null, why:[], label:"–"};
-  let pts = 0; const why = [];
-  const mname = m => m.charAt(0).toUpperCase()+m.slice(1);
-  let worst = null;
-  MEALS.forEach(m=>{
-    const x = mm[m]; if(x.cal<=0) return;
-    const netC = Math.max(0, x.c - x.fiber);
-    const risk = (netC>=60 && x.p<20) ? 2 : (netC>=40 && x.p<15) ? 1 : 0;
-    if(!worst || risk>worst.risk) worst = {m, risk, netC, p:x.p};
+  const d = S.days[ds] || {};
+  const cap1 = s => s.charAt(0).toUpperCase()+s.slice(1);
+  let pts = 30; const why = [];
+  const now = new Date(), hr = now.getHours();
+  /* circadian: the afternoon trough is expected, not pathological */
+  if(hr>=13 && hr<15){ pts+=8; why.push("Mid-afternoon dip (1-3pm) — alertness naturally troughs then, whatever you ate."); }
+  else if(hr>=22 || hr<1){ pts+=4; why.push("Late-night hours — your body clock is winding down."); }
+  else if(hr>=4 && hr<7){ pts+=4; why.push("Early-morning hours — the low point of the alertness cycle."); }
+  /* hydration: only a genuine deficit, late in the day */
+  const w = waterCalc();
+  if(w.target>0 && !w.unset){
+    const woz = w.target*8, wr = (d.waterOz||0)/woz;
+    if(hr>=14){
+      if(wr<0.5){ pts+=8; why.push("Water is under half your target and it's past 2pm — even ~1.5% dehydration brings on fatigue (Ganio et al. 2011)."); }
+      else if(wr<0.8){ pts+=4; why.push("Water is at "+Math.round(wr*100)+"% of target this afternoon — mild dehydration drags energy down."); }
+    }
+  }
+  /* most recent meal: transient, carb-dominant only. Meals carry no timestamps,
+     so each section is estimated at a typical time. */
+  const MEAL_AT = {breakfast:8, lunch:12.5, dinner:18.5};
+  const mm = mealMacros(ds);
+  let lastM = null, lastAt = -1;
+  ["dinner","lunch","breakfast"].forEach(m=>{
+    if(mm[m].cal>=200 && MEAL_AT[m]<=hr && MEAL_AT[m]>lastAt){ lastAt = MEAL_AT[m]; lastM = m; }
   });
-  if(worst && worst.risk===2){ pts+=28; why.push(mname(worst.m)+" was carb-heavy ("+Math.round(worst.netC)+"g net carbs, "+Math.round(worst.p)+"g protein) — a glucose spike quiets the brain's orexin wakefulness neurons: the classic food coma (Burdakov et al. 2005, 2006)."); }
-  else if(worst && worst.risk===1){ pts+=14; why.push(mname(worst.m)+" leaned carb-heavy ("+Math.round(worst.netC)+"g net carbs, "+Math.round(worst.p)+"g protein) — expect a dip an hour or two later."); }
-  let sugars = 0; MEALS.forEach(m=>sugars+=mm[m].sugars);
-  if(sugars>=75){ pts+=12; why.push(Math.round(sugars)+"g sugar so far — every spike sets up another crash."); }
-  else if(sugars>=50){ pts+=6; why.push(Math.round(sugars)+"g sugar — enough for a mid-afternoon dip."); }
-  if(t.cal>0 && (t.c*4)/t.cal>0.6 && (t.p*4)/t.cal<0.12){ pts+=8; why.push("Very carb-heavy and protein-light overall — that mix tilts brain chemistry toward serotonin and drowsiness (Wurtman, MIT)."); }
-  let big = 0; MEALS.forEach(m=>{ big=Math.max(big, mm[m].cal); });
-  if(big>=1000){ pts+=16; why.push("Biggest meal was "+Math.round(big).toLocaleString()+" kcal — big meals trigger heavy rest-and-digest sleepiness."); }
-  else if(big>=700){ pts+=8; why.push("Biggest meal was "+Math.round(big).toLocaleString()+" kcal — on the sleepy side of filling."); }
-  const w = waterCalc(), woz = w.target*8, wr = w.target>0 ? (d.waterOz||0)/woz : 1;
-  if(w.target>0 && wr<0.5){ pts+=18; why.push("Only "+Math.round(d.waterOz||0)+" of "+woz+" oz of water — even ~1.5% dehydration brings on fatigue (Ganio 2011; Armstrong 2012)."); }
-  else if(w.target>0 && wr<0.75){ pts+=10; why.push("Water is at "+Math.round(wr*100)+"% of target — mild dehydration drags energy down."); }
-  else if(w.target>0 && wr<0.9){ pts+=5; why.push("A little behind on water ("+Math.round(wr*100)+"% of target)."); }
-  const goal = goalTotal();
-  if(goal>0 && t.cal<goal*0.85){ pts+=12; why.push("Only "+Math.round(t.cal).toLocaleString()+" of "+Math.round(goal).toLocaleString()+" kcal so far — running a deficit drains energy (low energy availability, RED-S research)."); }
-  else if(goal>0 && t.cal<goal*0.95){ pts+=5; why.push("Slightly under your calorie goal — a small energy dip is likely."); }
-  /* Alcohol — dose tiers from sleep research (Ebrahim et al. 2013; Finnish n=4,098
-     HRV study; Penning et al. 2012). 1–2 drinks: next-day fatigue unproven, so only
-     the sleep-recovery hit is scored; 5+: next-day fatigue is proven. */
-  const alc = alcData(d).std;
-  if(alc>=5){ pts+=20; why.push("5+ drinks — next-day fatigue is the #1 hangover symptom and overnight recovery drops ~39% on heavy nights (Penning et al. 2012)."); }
-  else if(alc>=3){ pts+=12; why.push("3–4 drinks cut REM sleep and dropped overnight recovery ~24% — expect a groggy morning (Ebrahim et al. 2013)."); }
-  else if(alc>0){ pts+=6; why.push("Even 1–2 drinks delay REM and fragment the second half of sleep — the recovery half (Ebrahim et al. 2013)."); }
-  /* Nicotine — chronic sleep-quality drag by daily level (Jaehne et al.; Zhang 2006;
-     Tab-OSA 2026). No vaping-specific sleep studies exist; smoker/patch data is the
-     proxy. Reversible: former smokers sleep like never-smokers. */
-  const vl = vapeLevel(d);
-  if(vl==="nonstop"){ pts+=8; why.push("Nonstop vaping — nicotine users lose ~14 min of sleep and ~20–30 min of deep sleep a night, and take longer to fall asleep (Jaehne et al.; Tab-OSA 2026)."); }
-  else if(vl==="heavy"){ pts+=5; why.push("Heavy vaping — nicotine shortens deep sleep and delays falling asleep (Jaehne et al.)."); }
-  else if(vl==="moderate"||vl==="light"){ pts+=2; why.push("Some vaping today — nicotine is a stimulant that trims sleep quality."); }
-  const score = Math.min(100, Math.round(pts));
-  return {score, why, label: score<=25?"Energized":score<=45?"Steady":score<=65?"Heavy":"Drained"};
+  if(lastM && (hr-lastAt)<2){
+    const x = mm[lastM];
+    const carbFrac = x.cal>0 ? (x.c*4)/x.cal : 0;
+    const netC = Math.max(0, x.c-x.fiber);
+    if(carbFrac>=0.6 && netC>=40){
+      const blunted = x.p>=20 || x.fiber>=8;
+      pts += blunted ? 4 : 8;
+      why.push(cap1(lastM)+" was carb-dominant ("+Math.round(netC)+"g net carbs)"+(blunted?" but the protein/fiber blunts the dip":"")+" — glucose quiets the brain's orexin wakefulness neurons for an hour or two (Burdakov et al. 2005, 2006).");
+    }
+  }
+  /* workout today: reliable small lift in perceived energy */
+  if(trainDay(ds).done){ pts-=6; why.push("Workout logged today — acute exercise reliably lifts perceived energy (Loy et al. 2013)."); }
+  /* yesterday's alcohol: light, capped */
+  const yd = addDays(ds,-1);
+  const yalc = alcData(S.days[yd]||{}).std;
+  if(yalc>0){ const p = Math.min(9, Math.round(yalc*3)); pts+=p; why.push(Math.round(yalc)+" drink"+(yalc>1?"s":"")+" yesterday — alcohol fragments the second half of sleep, the recovery half (Ebrahim et al. 2013)."); }
+  const score = Math.max(0, Math.min(100, Math.round(pts)));
+  const level = score<=19?1:score<=39?2:score<=59?3:score<=79?4:5;
+  return {score, level, label:["","Wired","Up","Even","Drowsy","Drained"][level], why};
 }
 function bloatScore(ds){
   ds = ds || todayStr();
@@ -2061,19 +2111,19 @@ function bloatScore(ds){
   return {score, why, label: score<=25?"Comfortable":score<=50?"Full":score<=75?"Bloated":"Very bloated"};
 }
 function scoreInfoHTML(){
-  const a = adherenceStats(), f = foodFatigue(), b = bloatScore();
+  const a = adherenceStats(), t = tiredLevel(), b = bloatScore();
   const aRow = a.pct===null
     ? `<div class="irow"><b>Adherence:</b> no logged days in the last 2 weeks yet — log meals and this fills in.</div>`
     : `<div class="irow"><b>Adherence: ${a.pct}%</b> — ${a.hit} of ${a.n} logged days (last 14) hit calories within ±10% of goal and protein ≥90%. Research finds sticking to the plan predicts results better than the plan itself (Burke et al. 2011).</div>`;
-  const fHead = `<div class="irow"><b>Food fatigue: ${f.score===null?"–":f.score+"% — "+f.label}.</b> A prediction of your energy from what you've logged today — not your training. Carb-heavy meals spike glucose, which silences the brain's orexin wakefulness neurons (Burdakov et al. 2005, 2006); protein and fiber blunt the crash. Even ~1.5% dehydration brings fatigue (Ganio et al. 2011; Armstrong et al. 2012). Alcohol is scored by dose — even 1–2 drinks fragment the second half of sleep (Ebrahim et al. 2013) — and nicotine by daily level, since users lose ~20–30 min of deep sleep a night (Tab-OSA 2026).</div>`;
-  const fRows = f.why.length
-    ? f.why.map(w=>`<div class="irow">• ${esc(w)}</div>`).join("")
-    : `<div class="irow">${f.score===null?"Log food today and this predicts your energy.":"Nothing dragging your energy down today."}</div>`;
+  const tHead = `<div class="irow"><b>Tired level: ${t.level}/5 — ${t.label}.</b> An estimate of how tired you feel right now, rebuilt from research: it starts neutral and only moves on real signals — the 1–3pm alertness dip (normal, not a problem), water well under target late in the afternoon (Ganio et al. 2011), a carb-dominant meal eaten in the last ~2 hours (glucose quiets the orexin wakefulness neurons — Burdakov et al. 2005, 2006), yesterday's drinks (Ebrahim et al. 2013), minus a workout logged today (Loy et al. 2013). Missing data never makes it worse: there's no sleep logging yet, so sleep debt isn't counted and defaults to fine.</div>`;
+  const tRows = t.why.length
+    ? t.why.map(w=>`<div class="irow">• ${esc(w)}</div>`).join("")
+    : `<div class="irow">Nothing moving the needle right now.</div>`;
   const bHead = `<div class="irow"><b>Bloat: ${b.score===null?"–":b.score+"/100 — "+b.label}.</b> Predicted from today's sodium, fiber, sugar, meal size, water, and alcohol. In a randomized trial, high-sodium diets raised bloating risk 27% and high-fiber diets 41% (Peng et al., Am J Gastroenterol 2019).</div>`;
   const bRows = b.why.length
     ? b.why.map(w=>`<div class="irow">• ${esc(w)}</div>`).join("")
     : `<div class="irow">${b.score===null?"Log food today and this predicts bloating.":"Nothing bloating you today."}</div>`;
-  return aRow+fHead+fRows+bHead+bRows+
+  return aRow+tHead+tRows+bHead+bRows+
     `<div class="irow" style="color:var(--muted)">Rough predictions from your log, not medical verdicts — sleep, stress, and illness matter too, and the app can't see those.</div>`;
 }
 
@@ -2087,22 +2137,22 @@ function paintWheel(arcId, numId, frac, color, label){
   document.getElementById(numId).textContent = label;
 }
 function paintScoreWheel(){
-  const a = adherenceStats(), f = foodFatigue(), b = bloatScore();
+  const a = adherenceStats(), t = tiredLevel(), b = bloatScore();
   const aFrac = a.pct===null ? null : Math.min(a.pct,100)/100;
   const aTxt = a.pct===null ? "–" : a.pct+"%";
   const aColH = a.pct===null ? "rgba(255,255,255,.4)" : a.pct>=80 ? "#2fe3b6" : a.pct>=50 ? "#ffffff" : "#ff8a9d";
   paintWheel("adhArcH","adhNumH",aFrac,aColH,aTxt);
-  const fFrac = f.score===null ? null : f.score/100;
-  const fTxt = f.score===null ? "–" : f.score+"%";
-  const fColH = f.score===null ? "rgba(255,255,255,.4)" : f.score<=25?"#2fe3b6":f.score<=45?"#ffffff":f.score<=65?"#ffd23d":"#ff8a9d";
-  paintWheel("fatArcH","fatNumH",fFrac,fColH,fTxt);
+  const tFrac = t.level/5;
+  const tTxt = t.level;
+  const tColH = t.level<=2?"#2fe3b6":t.level===3?"#ffffff":t.level===4?"#ffd23d":"#ff8a9d";
+  paintWheel("tiredArcH","tiredNumH",tFrac,tColH,tTxt);
   const bFracH = b.score===null ? null : b.score/100;
   const bTxtH = b.score===null ? "–" : b.score+"%";
   const bColH = b.score===null ? "rgba(255,255,255,.4)" : b.score<=25?"#2fe3b6":b.score<=50?"#ffffff":b.score<=75?"#ffd23d":"#ff8a9d";
   paintWheel("bloatArcH","bloatNumH",bFracH,bColH,bTxtH);
 }
 document.getElementById("adhWheelH").onclick = ()=>openInfo("scores");
-document.getElementById("fatWheelH").onclick = ()=>openInfo("scores");
+document.getElementById("tiredWheelH").onclick = ()=>openInfo("scores");
 document.getElementById("bloatWheelH").onclick = ()=>openInfo("scores");
 
 /* ============ PROGRESS PHOTOS ============ */
@@ -2774,7 +2824,7 @@ function weekDays(off){
   off = off||0;
   const out = [];
   for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i-off*7); const k=dstr(d);
-    out.push({k, label:d.toLocaleDateString(undefined,{weekday:"narrow"}), ...totals(k), logged:!!S.days[k]}); }
+    out.push({k, label:d.toLocaleDateString(undefined,{weekday:"narrow"}), ...totals(k), logged:dayHasData(S.days[k])}); }
   return out;
 }
 function weekLabel(days){
@@ -2786,7 +2836,7 @@ function streak(){
   let s=0; const d=new Date();
   for(let i=0;i<365;i++){ const k=dstr(d);
     const dd=S.days[k];
-    const has = dd && (MEALS.some(m=>(dd.meals[m]||[]).length) || (dd.waterOz||0)>0);
+    const has = dayHasData(dd);
     if(has) s++; else if(i>0 || k!==todayStr()) break;
     d.setDate(d.getDate()-1);
   }
@@ -2828,7 +2878,211 @@ function weightTrend(){
   const vals = ws.map(p=>p.w);
   return {rateWk, daily: rateWk==null?null:rateWk/7, change: ws[ws.length-1].w-ws[0].w, spanD,
           hi: Math.max(...vals), lo: Math.min(...vals), n: ws.length,
-          cur: ws[ws.length-1].w, first: ws[0].w};
+          disp: {hi: wDisp(Math.max(...vals)), lo: wDisp(Math.min(...vals)), change: wDisp(ws[ws.length-1].w-ws[0].w)}};
+}
+/* ============ ANALYTICS ENGINE — one data layer for compound metrics ============
+   Pure functions over S (no DOM): diary days, weights, water, training, and tired
+   level flow into one place so every surface reads the same numbers.
+   Honest-data rules: missing data returns null/"sparse" flags, never implies a
+   bad state; correlation is stated as correlation, never as causation. */
+/* One day's combined diary record. foodLogged = has calories (what adherence counts);
+   logged = food or water (what the day streak counts). waterRatio is null when there
+   is no water target (blank slate) — no invented ratio. */
+function dayTotals(ds){
+  const d = S.days[ds] || {};
+  const t = totals(ds);
+  const mm = mealMacros(ds);
+  const n = {fiber:0, sugars:0, sodium:0, pot:0};
+  MEALS.forEach(m=>{ n.fiber+=mm[m].fiber; n.sugars+=mm[m].sugars; n.sodium+=mm[m].sodium; n.pot+=mm[m].pot; });
+  const w = waterCalc();
+  const waterOz = Math.round((d.waterOz||0)*10)/10;
+  const foodLogged = t.cal>0;
+  return {ds, logged: foodLogged || waterOz>0, foodLogged, cal:t.cal, p:t.p, c:t.c, f:t.f,
+    fiber:n.fiber, sugars:n.sugars, sodium:n.sodium, pot:n.pot, waterOz,
+    waterRatio: (w.target>0 && !w.unset) ? waterOz/(w.target*8) : null,
+    alcStd: alcData(d).std, trained: !!trainDay(ds).done};
+}
+/* Hit test: within ±10% of the calorie goal AND protein ≥90% — the same two tests
+   adherenceStats() has always used. No goal or no food logged -> not a hit. */
+function dayHit(ds){
+  const t = dayTotals(ds);
+  const goal = goalTotal(), pt = S.goals.protein;
+  if(!t.foodLogged || !(goal>0 && pt>0)) return false;
+  return t.cal>=goal*0.9 && t.cal<=goal*1.1 && t.p>=pt*0.9;
+}
+/* Last n days, newest last: [{ds, ...dayTotals fields, hit}]. */
+function adherenceSeries(n){
+  const out = [], m = n||14;
+  for(let i=m-1;i>=0;i--){ const ds = addDays(todayStr(),-i); const t = dayTotals(ds); t.hit = dayHit(ds); out.push(t); }
+  return out;
+}
+/* Rolling average over the last `days` calendar days. Honest rule: the denominator
+   is logged days only — missing days are never padded with zeros. Returns null with
+   no logged days. */
+function rollingAvg(nutrient, days){
+  const vals = [];
+  for(let i=days-1;i>=0;i--){ const t = dayTotals(addDays(todayStr(),-i)); if(t.foodLogged) vals.push(t[nutrient]||0); }
+  if(!vals.length) return null;
+  return {avg: vals.reduce((a,v)=>a+v,0)/vals.length, n: vals.length, span: days};
+}
+/* Share of logged days (last n) hitting protein ≥90%. pct null when no goal/data. */
+function proteinConsistency(n){
+  n = n||14;
+  const pt = S.goals.protein;
+  if(!(pt>0)) return {pct:null, hit:0, n, nLogged:0};
+  const s = adherenceSeries(n);
+  const food = s.filter(x=>x.foodLogged);
+  const hit = food.filter(x=>x.p>=pt*0.9).length;
+  return {pct: food.length ? Math.round(hit/food.length*100) : null, hit, n, nLogged: food.length};
+}
+/* Last n days of water: [{ds, oz, ratio|null}]. */
+function waterSeries(n){
+  const out = [];
+  for(let i=(n||7)-1;i>=0;i--){ const ds = addDays(todayStr(),-i); const t = dayTotals(ds); out.push({ds, oz:t.waterOz, ratio:t.waterRatio}); }
+  return out;
+}
+/* Weight trend state: direction, vs the weight goal, and confidence. Rates come from
+   the same trend-MA weightTrend() every surface uses. "sparse" below the Calorie
+   Check gates (4+ weigh-ins, 14+ day span); flat inside a ±0.1 lb/wk noise floor. */
+function trendState(){
+  const wt = weightTrend();
+  if(!wt || wt.rateWk==null) return {dir:"none", vsGoal:"none", conf:"sparse", rateWk:null, spanD:0, n:0};
+  const rateWk = wt.rateWk;
+  const dir = Math.abs(rateWk)<0.1 ? "flat" : (rateWk>0 ? "up" : "down");
+  const gw = S.goals.weight>0 ? S.goals.weight : 0;
+  const cur = curBodyWeight();
+  let vsGoal = "none";
+  if(gw>0 && cur>0){
+    if(Math.abs(gw-cur)<=1) vsGoal = "at";
+    else if(Math.sign(gw-cur)===Math.sign(rateWk) && Math.abs(rateWk)>=0.05) vsGoal = "toward";
+    else vsGoal = "away";
+  }
+  const conf = (wt.n>=4 && wt.spanD>=14) ? "solid" : "sparse";
+  return {dir, vsGoal, conf, rateWk, spanD: wt.spanD, n: wt.n};
+}
+/* Projected arrival at the weight goal at the current trend pace. Returns {ok:true,
+   etaDate, etaDs, etaWeeks, rateWk, toGo} or {ok:false, why} — never a fake date.
+   It is a projection of the scale, not of muscle (the UI says so). */
+function goalProjection(){
+  const gw = S.goals.weight>0 ? S.goals.weight : 0;
+  if(!(gw>0)) return {ok:false, why:"Set a weight goal and this estimates your arrival date."};
+  const cur = curBodyWeight();
+  if(!(cur>0)) return {ok:false, why:"Log your weight and this estimates your arrival date."};
+  const toGo = gw-cur;
+  if(Math.abs(toGo)<=1) return {ok:false, why:"At goal — set a new one to keep going.", atGoal:true};
+  const st = trendState();
+  if(st.conf==="sparse") return {ok:false, why:"Log your weight for 2+ weeks (at least 4 weigh-ins) and this estimates your arrival date."};
+  if(Math.abs(st.rateWk)<0.05) return {ok:false, why:"Your trend is flat right now — there is no pace to project. Give it 2-3 weeks."};
+  if(st.vsGoal==="away") return {ok:false, why:"You are trending away from your goal — this only projects forward motion."};
+  const etaWeeks = Math.ceil(Math.abs(toGo)/Math.abs(st.rateWk));
+  const etaDs = addDays(todayStr(), etaWeeks*7);
+  const etaDate = new Date(etaDs+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  return {ok:true, etaWeeks, etaDs, etaDate, rateWk:st.rateWk, toGo};
+}
+/* Rate in display units with the sign trap avoided: explicit "−" for negatives. */
+const fmtRate = v => (v>=0?"+":"−")+wDisp(Math.abs(v)).toFixed(1);
+/* ======== compound insights: each returns {key, conf, title, copy, ev} ======== */
+function insightAdherenceVsTrend(){
+  const key = "adh";
+  const a = adherenceStats();
+  const st = trendState();
+  const wu = wUnit();
+  if(st.conf==="sparse")
+    return {key, conf:"partial", title:"The trend needs a few more weigh-ins",
+      copy:"Daily weight swings 1-2%, so 2-3 weeks of weigh-ins reveals the real trend. Log a few more and this fills in.",
+      ev:"The weight-trend math needs 4+ weigh-ins over 14+ days (same gates as the Calorie Check). Right now: "+st.n+" weigh-ins."};
+  if(a.n<7)
+    return {key, conf:"partial", title:"Not enough logged days to read the trend",
+      copy:a.n+" of the last 14 days have food logged. The weight trend is solid, but there is not enough eating data to compare it against.",
+      ev:"Adherence-trend comparisons need at least 7 logged food days out of 14. This is a logging gap, not a failure."};
+  const lead = "Last 14 days: "+fmtRate(st.rateWk)+" "+wu+"/wk at "+a.pct+"% adherence";
+  const detail = a.hit+" of "+a.n+" logged days hit calories within ±10% of goal and protein ≥90%";
+  if(st.vsGoal==="toward" && a.pct>=70)
+    return {key, conf:"solid", title:lead,
+      copy:detail+". The scale is moving with your consistency — hold the target and re-check in 2-3 weeks.",
+      ev:"Consistency lines up with the trend. Self-monitoring adherence is the strongest predictor of nutrition outcomes (Burke et al., J Am Diet Assoc 2011)."};
+  if(a.pct>=70)
+    return {key, conf:"solid", title:lead,
+      copy:detail+", but the scale is not following. Worth a look at your target — the Calorie Check below has the math.",
+      ev:"High adherence with a flat/away trend points at the target, not the effort: weigh-ins calibrate the formula, which is the roughest part of the math (±10-15%)."};
+  return {key, conf:"partial", title:lead,
+    copy:detail+". Too few consistent days to read the trend against your eating — this is a logging gap, not a failure.",
+    ev:"With adherence under 70% the trend can't be attributed to the target or the effort. Tighter logging for 2 weeks would settle it."};
+}
+function insightProteinVsTrend(){
+  const key = "pro";
+  const pc = proteinConsistency(14);
+  const st = trendState();
+  const avg = rollingAvg("p",14);
+  if(pc.pct===null || pc.nLogged<7 || !avg)
+    return {key, conf:"partial", title:"Protein trend needs logged days",
+      copy:"Log food for a week and this compares your protein consistency against the scale.",
+      ev:"Protein-vs-trend needs a protein goal and 7+ logged food days in the last 14."};
+  const avgPStr = Math.round(avg.avg)+"g/day avg";
+  const maint = S.goals.maintenance>0 ? S.goals.maintenance : 0;
+  const surplus = goalTotal()-maint;
+  if(surplus>0 && st.conf==="solid"){
+    if(pc.pct>=70 && st.dir==="up")
+      return {key, conf:"solid", title:"Protein "+avgPStr+" — gains leaning quality",
+        copy:"High protein and the scale is climbing: more of this gain is likely muscle, not just scale weight.",
+        ev:"Muscle gains top out near 1.6 g/kg/day (Morton et al. 2018); pairing a surplus with high protein and training leans gains toward muscle (see the Muscle Gain estimate)."};
+    if(pc.pct<50)
+      return {key, conf:"solid", title:"Protein "+avgPStr+" — under target",
+        copy:"Gaining on low protein leans the extra weight toward fat. Aim for 90% of your protein goal most days.",
+        ev:"Protein under half your logged days while gaining: the surplus builds tissue, and without enough protein more of it is fat."};
+  }
+  if(surplus<=0 && st.dir==="down" && pc.pct<50)
+    return {key, conf:"solid", title:"Protein low while losing",
+      copy:"Low protein makes a deficit cost more muscle. Keep protein at 90% of goal while the scale drops.",
+      ev:"Cutting without enough protein raises the muscle cost of each pound lost (Ruiz-Castellano et al., Nutrients 2021)."};
+  return {key, conf:"partial", title:"Protein "+avgPStr+" · "+pc.pct+"% of goal days",
+    copy:"Protein is steady; nothing about it argues with the scale right now.",
+    ev:pc.hit+" of "+pc.nLogged+" logged days hit ≥90% of your "+S.goals.protein+"g protein goal."};
+}
+/* Today only — tiredLevel() is anchored to the current clock, so a historical
+   tiredness series would not be valid. Pairs today's water fact with today's
+   tired estimate, without claiming one caused the other. */
+function insightWaterVsTired(){
+  const t = dayTotals(todayStr());
+  const lv = tiredLevel();
+  const waterBit = t.waterRatio!==null ? "Water "+Math.round(t.waterRatio*100)+"% of target · " : "";
+  return {key:"tired", conf:"solid",
+    title: waterBit+"tired "+lv.level+"/5 ("+lv.label+")",
+    copy: lv.why.length ? lv.why[0] : "Nothing moving the needle right now.",
+    ev: (lv.why.length? lv.why.map(w=>"• "+w).join("<br>") : "• Nothing moving the needle right now.")+"<br><br>Rough estimates from your log, not medical verdicts — sleep, stress, and illness matter too, and the app can't see those."};
+}
+function insightTrainingWeek(){
+  let sessions = 0;
+  for(let i=0;i<7;i++) if(trainDay(addDays(todayStr(),-i)).done) sessions++;
+  const todayDone = trainDay(todayStr()).done;
+  return {key:"train", conf:"solid",
+    title: sessions+" session"+(sessions===1?"":"s")+" in the last 7 days",
+    copy: todayDone ? "Workout logged today — acute exercise reliably lifts perceived energy (Loy et al. 2013)." :
+      (sessions===0 ? "Training log is empty — log a session and it shows up here." : "Sessions logged. Keep the streak going."),
+    ev:"Training days come from your training log (done sessions in the last 7 days). A workout today also lowers today's tired-level estimate."};
+}
+function insightSodiumVsBloat(){
+  const avg = rollingAvg("sodium",7);
+  const b = bloatScore();
+  if(!avg || b.score===null) return null; /* row hidden: the diary hero already covers today's bloat */
+  return {key:"bloat", conf:"solid",
+    title:"Sodium averaging "+Math.round(avg.avg).toLocaleString()+"mg/day · bloat: "+b.label,
+    copy: b.why.length ? b.why[0] : "Nothing bloating you today.",
+    ev:"Today's bloat score: "+b.score+"/100 ("+b.label+"), predicted from sodium, fiber, sugar, meal size, water, and alcohol. In a randomized trial, high-sodium diets raised bloating risk 27% and high-fiber diets 41% (Peng et al., Am J Gastroenterol 2019)."};
+}
+/* ======== streaks: logging streak exists as streak(); goal + weigh-in streaks added ======== */
+function goalStreak(){
+  let s=0;
+  for(let i=0;i<365;i++){ const ds = addDays(todayStr(),-i);
+    if(dayHit(ds)) s++; else if(i>0 || ds!==todayStr()) break; }
+  return s;
+}
+function weighStreak(){
+  const have = {}; sortedWeights().forEach(p=>{ have[p.d]=1; });
+  let s=0;
+  for(let i=0;i<365;i++){ const ds = addDays(todayStr(),-i);
+    if(have[ds]) s++; else if(i>0 || ds!==todayStr()) break; }
+  return s;
 }
 /* ============ 1-MONTH MILESTONE (research 2026-09-18) ============
    Suggests a weight goal one month out, anchored to the profile update date
@@ -3306,8 +3560,8 @@ function renderProgress(){
   const wkLbl = weekOffset===0 ? "Last 7 days" : weekLabel(days);
   $("anaRange").textContent = wkLbl;
   $("mcWeek").textContent = weekOffset===0 ? "Weekly" : weekLabel(days);
-  $("wkPrev").disabled = weekOffset>=MAX_WEEKS_BACK;
-  $("wkNext").disabled = weekOffset===0;
+  $("pgWkPrev").disabled = weekOffset>=MAX_WEEKS_BACK;
+  $("pgWkNext").disabled = weekOffset===0;
   /* goal days: checkmarks for days that hit the calorie goal */
   const calGoal = (S.goals.maintenance>0?S.goals.maintenance:0)+(S.goals.surplus>0?S.goals.surplus:0);
   const CHECK = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4 10-11"/></svg>';
@@ -3370,6 +3624,7 @@ function renderProgress(){
   paintWtGoal(); paintWtAnalysis();
   paintCalCheck();
   paintMuscle();
+  paintTrendChip(); paintInsights(); paintTrajectory();
 }
 /* display helpers: weigh-ins are stored in lb; the UI follows the profile units toggle */
 const wIsMet = () => (S.goals.profile||{}).units==="met";
@@ -3404,6 +3659,56 @@ document.querySelectorAll("#wRange button").forEach(b=>{
     document.querySelectorAll("#wRange button").forEach(x=>x.classList.toggle("on", x===b));
     renderProgress(); };
 });
+/* ============ PROGRESS INSIGHTS + TRAJECTORY (analytics engine views) ============
+   Compound views over dayTotals/adherenceSeries/trendState/goalProjection:
+   what the last 14 days mean, not just what they were. */
+function paintTrendChip(){
+  const st = trendState(), el = $("trendChip"), wu = wUnit();
+  let txt;
+  if(st.conf==="sparse") txt = st.n<=1 ? "Log your weight and the trend line starts forming." : "Only "+st.n+" weigh-ins so far — the trend needs a few more dots.";
+  else if(st.vsGoal==="at") txt = "At your goal — holding within a pound.";
+  else if(st.dir==="flat") txt = "Trend is flat (±0.1 "+wu+"/wk) — holding steady.";
+  else{
+    const g = S.goals.weight>0 ? S.goals.weight : 0;
+    const vs = st.vsGoal==="toward" ? " — toward your "+wDisp(g).toFixed(0)+" "+wu+" goal"
+             : st.vsGoal==="away" ? " — away from your "+wDisp(g).toFixed(0)+" "+wu+" goal" : "";
+    txt = "Trending "+(st.dir==="up"?"up":"down")+" "+fmtRate(st.rateWk)+" "+wu+"/wk"+vs+".";
+  }
+  el.textContent = txt;
+}
+function paintInsights(){
+  const rows = [insightAdherenceVsTrend(), insightProteinVsTrend(), insightWaterVsTired(),
+                insightTrainingWeek(), insightSodiumVsBloat()].filter(Boolean);
+  rows.sort((a,b)=> (a.conf==="solid"?0:1)-(b.conf==="solid"?0:1));
+  const shown = rows.slice(0,4);
+  const el = $("insRows"); el.innerHTML = "";
+  shown.forEach(r=>{
+    const b = document.createElement("button");
+    b.className = "insrow";
+    b.innerHTML = "<b>"+esc(r.title)+(r.conf==="solid" ? "" : "<span class=\"insconf\">developing</span>")+"</b><span>"+esc(r.copy)+"</span>";
+    b.onclick = ()=>openInfo("insight:"+r.key);
+    el.appendChild(b);
+  });
+  document.getElementById("insCard").style.display = shown.length ? "" : "none";
+}
+function paintTrajectory(){
+  const p = goalProjection();
+  const head = $("trajHead"), sub = $("trajSub"), pctEl = $("trajPct"), fill = $("trajBarFill"), wrap = $("trajBarWrap");
+  const g = S.goals.weight, wu = wUnit(), cur = curBodyWeight();
+  if(!p.ok){
+    head.textContent = p.atGoal ? "At goal" : "Paused";
+    sub.textContent = p.why;
+    pctEl.textContent = ""; fill.style.width = "0%"; wrap.style.display = p.atGoal ? "" : "none";
+    return;
+  }
+  const toGo = Math.abs(p.toGo);
+  head.textContent = "≈"+p.etaDate;
+  sub.textContent = wDisp(toGo).toFixed(1)+" "+wu+" "+(p.toGo>0?"to go":"to lose")+" · at "+fmtRate(p.rateWk)+" "+wu+"/wk from your weigh-ins. A projection of the scale, not of muscle.";
+  const ws = sortedWeights(), start = (S.goals.weightStart>0) ? S.goals.weightStart : (ws.length ? ws[0].w : cur);
+  const pct = g===start ? 100 : Math.min(100, Math.max(0,(cur-start)/(g-start)*100));
+  pctEl.textContent = pct.toFixed(0)+"%";
+  fill.style.width = pct.toFixed(1)+"%"; wrap.style.display = "";
+}
 /* Weight detail: Trend / Stats / History segmented views */
 document.querySelectorAll("#wtSeg button").forEach(b=>{
   b.onclick = ()=>{
@@ -3416,8 +3721,8 @@ document.querySelectorAll("#wtSeg button").forEach(b=>{
   };
 });
 /* week backtrack navigator */
-document.getElementById("wkPrev").onclick = ()=>{ if(weekOffset<MAX_WEEKS_BACK){ weekOffset++; renderProgress(); } };
-document.getElementById("wkNext").onclick = ()=>{ if(weekOffset>0){ weekOffset--; renderProgress(); } };
+document.getElementById("pgWkPrev").onclick = ()=>{ if(weekOffset<MAX_WEEKS_BACK){ weekOffset++; renderProgress(); } };
+document.getElementById("pgWkNext").onclick = ()=>{ if(weekOffset>0){ weekOffset--; renderProgress(); } };
 /* Weight detail: full-screen sheet opened by tapping the Progress weight circle. */
 function openWtDetail(){
   document.getElementById("wtDetail").classList.add("open");
@@ -3651,6 +3956,14 @@ function syncWeightFromLog(newLb, dateStr){
 /* ============ GOALS: collapsible sections + info buttons ============ */
 /* Goals section explainers shown behind the ⓘ buttons */
 function infoContent(k){
+  /* 2026.09.22-h: Progress insight rows open their evidence here */
+  if(k.indexOf("insight:")===0){
+    const ik = k.slice(8);
+    const map = {adh:insightAdherenceVsTrend, pro:insightProteinVsTrend, tired:insightWaterVsTired, train:insightTrainingWeek, bloat:insightSodiumVsBloat};
+    const fn = map[ik]; if(!fn) return null;
+    const r = fn(); if(!r) return null;
+    return {t: r.title, b: `<div class="irow">${esc(r.copy)}</div><div class="irow">${r.ev}</div>`};
+  }
   if(k==="activity") return {t:"Activity & maintenance", b:
     `<div class="irow">Activity factors use the <b>FAO/WHO/UNU (2004)</b> bands, calibrated with doubly-labelled water: <b>Sedentary 1.45 · Light 1.60 · Moderate 1.75 · Active 1.90 · Very active 2.10</b>.</div>
      <div class="irow">On your feet all day ≈ 1.9. This factor is the roughest part of the math (±10–15%) — your weigh-ins calibrate it.</div>`};
@@ -3692,7 +4005,7 @@ function infoContent(k){
      <div class="irow">If you're clearly off-target and it's been 3+ weeks since the last tune, Fuel can nudge maintenance ±150 kcal — at most once every 2 weeks, and only with your tap.</div>`};
   if(k==="waterinfo") return {t:"Water target", b:
     `<div class="irow"><b>Auto</b> builds your target from maintenance + activity (<b>IOM 1.0–1.5 mL/kcal</b>) — that's the glasses count next to the title. Tap a bottle to log it.</div>
-     <div class="irow">A creatine-type supplement adds 16 oz. Set a manual target any time in Goals › Water.</div>`};
+     <div class="irow">A supplement you flag <b>"needs extra water"</b> adds 16 oz — creatine needs no extra water (ISSN 2017). Set a manual target any time in Goals › Water.</div>`};
   if(k==="alcinfo") return {t:"Alcohol", b:
     `<div class="irow"><b>1.5 oz 80-proof shot = 1 standard drink ≈ 97 kcal.</b> Shots spike BAC faster than beer.</div>
      <div class="irow">Alcohol calories are <b>not</b> counted in your ring — they're tracked separately here so they don't silently eat your food budget.</div>`};
@@ -3845,7 +4158,7 @@ function openMuscleInfo(){
   document.getElementById("infoBody").innerHTML =
     `<div class="irow"><b>An honest estimate, not a measurement.</b><br><span style="color:var(--muted)">Only DEXA or similar truly measures muscle. This takes your scale trend and multiplies it by an estimated lean share.</span></div>`+
     `<div class="irow"><b>Lean share starts at 45%.</b><br><span style="color:var(--muted)">It rises when your logged surplus stays at or under 20% over maintenance, protein hits 1.6 g/kg/day (Morton et al. 2018), and you train 3+×/week — the behaviors research ties to leaner gains.</span></div>`+
-    `<div class="irow"><b>Realistic pace: 0.5–1.5 lb/month</b><br><span style="color:var(--muted)">for a beginner (Aragon/Helms models). The ring goal defaults to 4 lb — about 3–4 months of solid beginner gains. Weigh-ins are the real answer.</span></div>`;
+    `<div class="irow"><b>Realistic pace: 0.5–1.5 lb/month</b><br><span style="color:var(--muted)">for a beginner (Aragon/Helms models). No hidden default — set your own goal with the button above (4 lb is about 3–4 months of solid beginner gains). Weigh-ins are the real answer.</span></div>`;
   document.getElementById("infoSheet").classList.add("open");
 }
 const MEDAL_DEFS = [
@@ -4131,7 +4444,7 @@ function renderSettings(){
   renderProfileCard();
   document.getElementById("goalRowVal").textContent = Math.round(goalTotal()).toLocaleString()+" kcal";
   document.getElementById("waterRowVal").textContent = g.water>0 ? (g.water*8)+" oz" : (waterTarget()>0 ? "Auto ("+(waterTarget()*8)+" oz)" : "Auto (set maintenance first)");
-  document.getElementById("dDays").textContent = Object.keys(S.days).length;
+  document.getElementById("dDays").textContent = Object.keys(S.days).filter(k=>dayHasData(S.days[k])).length;
   document.getElementById("appVer").textContent = "Fuel " + APP_VERSION;
   document.getElementById("dFoods").textContent = Object.values(S.days).reduce((a,d)=>a+MEALS.reduce((x,m)=>x+(d.meals[m]||[]).length,0),0);
 }
@@ -4176,7 +4489,10 @@ document.getElementById("importFile").onchange = e=>{
   rd.readAsText(file);
 };
 document.getElementById("wipeBtn").onclick = ()=>{
-  if(confirm("Erase ALL logged data? This cannot be undone.")){ localStorage.removeItem(KEY); S=load(); dayOffset=0; renderAll(); showView("diary"); }
+  /* 2026.09.22-h: explicit erase marks this session so a reload does NOT resurrect
+     seed-data.json — erase means erase. A true fresh install (new session) still
+     restores the seed backup. */
+  if(confirm("Erase ALL logged data? This cannot be undone.")){ localStorage.removeItem(KEY); try{ sessionStorage.setItem("fuel.erased","1"); }catch(e){} S=load(); dayOffset=0; renderAll(); showView("diary"); }
 };
 
 /* ============ NAV ============ */
@@ -4209,7 +4525,19 @@ document.getElementById("analysisBack").onclick = ()=>showView("diary");
 function mealForNow(){ const h = new Date().getHours(); return h<11?"breakfast":h<15?"lunch":h<21?"dinner":"snacks"; }
 document.getElementById("trayIco").insertAdjacentHTML("afterbegin", FOOD_ICON);
 applyTheme(themeColor());
-renderAll();
+/* 2026.09.22-g backup seed: on a fresh boot (no saved state), restore Jay's
+   exported backup (seed-data.json) before the first render so his data is the
+   default — his logs, goals, foods, and weights survive a reinstall or wipe.
+   This never touches a phone that already has saved state. */
+/* 2026.09.22-h: explicit-erase marker (same session only) — an erase followed by a
+   reload stays blank; a true fresh install still restores the seed backup. */
+let eraseBlocked = false;
+try{ eraseBlocked = sessionStorage.getItem("fuel.erased")==="1"; }catch(e){}
+if(freshBoot && !eraseBlocked){
+  fetch("seed-data.json",{cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(seed){
+    if(seed && seed.goals){ S = seed; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+  }).catch(function(){}).then(function(){ renderAll(); });
+}else renderAll();
 </script>
 <script>
 /* ============ PULL TO REFRESH ============ */
