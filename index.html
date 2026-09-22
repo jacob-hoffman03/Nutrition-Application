@@ -664,6 +664,18 @@ body{ background:var(--bg); }
 .wdelta{font-size:12.5px; color:var(--muted); font-weight:700; white-space:nowrap;}
 /* info button inside rows (never nested-button) */
 .srow .ginfo{margin:0;}
+
+/* 2026.09.22-i: rearrangeable Progress panels */
+.punit{margin:0;padding:0;min-width:0}
+#progEditBtn{font-size:15px;font-weight:700;color:var(--acc);width:44px;height:36px;background:none;border:none}
+.pgrip{display:none;position:absolute;top:8px;right:8px;width:36px;height:36px;border:none;border-radius:11px;background:rgba(91,91,240,.14);align-items:center;justify-content:center;touch-action:none;cursor:grab;z-index:6;padding:0}
+.pgrip svg{width:18px;height:18px;stroke:var(--acc);fill:none;stroke-width:2;stroke-linecap:round}
+body.rearranging .punit{position:relative}
+body.rearranging .pgrip{display:flex}
+body.rearranging .punit::after{content:"";position:absolute;inset:0;border:2px dashed rgba(91,91,240,.4);border-radius:var(--radius);pointer-events:none;z-index:5}
+.punit.dragging{opacity:.96;z-index:60;box-shadow:0 16px 34px rgba(60,60,120,.28);border-radius:var(--radius)}
+.punit.dragging::after{display:none}
+.punit.dragging .pgrip{cursor:grabbing}
 </style>
 </head>
 <body>
@@ -921,10 +933,11 @@ body{ background:var(--bg); }
     <div class="topbar">
       <div style="width:44px"></div>
       <h1>Progress</h1>
-      <div style="width:44px"></div>
+      <button class="tbtn tedit" id="progEditBtn" aria-label="Rearrange panels">Edit</button>
     </div>
     <div id="progOverview">
-    <div class="card wtcard">
+    <div class="punit" data-pid="wt">
+<div class="card wtcard">
       <button class="wtcircle" id="wtCircle" aria-label="Open weight details">
         <span class="wtc-num" id="wtCircleNum">—</span>
         <span class="wtc-unit" id="wtCircleUnit">lb</span>
@@ -932,12 +945,16 @@ body{ background:var(--bg); }
         <span class="wtc-hint">TAP FOR DETAILS</span>
       </button>
     </div>
-    <div class="card" id="insCard">
+    </div>
+<div class="punit" data-pid="insights">
+<div class="card" id="insCard">
       <div style="display:flex; justify-content:space-between; align-items:center;"><b style="font-size:16px">This week</b><span class="pill" id="insPill" style="display:none"></span></div>
       <div id="insRows" style="margin-top:2px"></div>
       <div class="rangenote" id="insNote" style="margin-top:8px">Estimates from your log, not medical advice — sleep, stress, and illness matter too, and the app can't see those.</div>
     </div>
-    <div class="card anacard">
+    </div>
+<div class="punit" data-pid="analytics">
+<div class="card anacard">
       <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span></div><span class="wk-nav"><button id="pgWkPrev" aria-label="Previous week">‹</button><span class="ana-range" id="anaRange">Last 7 days</span><button id="pgWkNext" aria-label="Next week">›</button></span></div>
       <div class="bars7" id="bars7"></div>
       <div class="rangenote" id="trendChip" style="margin-top:8px"></div>
@@ -946,25 +963,33 @@ body{ background:var(--bg); }
         <div class="chal-row" id="goalDays"></div>
       </div>
     </div>
-    <div class="secttl">Weight goal</div>
+    </div>
+<div class="punit" data-pid="traj">
+<div class="secttl">Weight goal</div>
     <div class="card" id="trajCard">
       <div style="display:flex; justify-content:space-between; align-items:baseline;"><b style="font-size:16px">Trajectory</b><span id="trajPct" style="font-size:13px; color:var(--muted)"></span></div>
       <div style="font-size:27px; font-weight:800; margin-top:4px" id="trajHead">—</div>
       <div class="rangenote" id="trajSub" style="margin-top:4px"></div>
       <div class="wgoalbar" id="trajBarWrap" style="margin-top:10px"><i id="trajBarFill" style="width:0%"></i></div>
     </div>
-    <div class="card macrocard">
+    </div>
+<div class="punit" data-pid="macros">
+<div class="card macrocard">
       <div class="mc-head"><b>Macros</b><span class="mc-legend"><i style="background:#8b8bf5"></i>Carbs<i style="background:#f5a623"></i>Protein<i style="background:#34c77b"></i>Fat</span><span class="mc-week" id="mcWeek">Weekly</span></div>
       <div class="mstack" id="macroStack"></div>
       <div class="mstack-lbls" id="macroStackLbls"></div>
     </div>
-    <div class="ministats">
+    </div>
+<div class="punit" data-pid="stats">
+<div class="ministats">
       <div class="ministat"><span class="ms-label">Day streak</span><b id="stStreak">0</b></div>
       <div class="ministat"><span class="ms-label">Avg kcal / 7d</span><b id="stAvgCal">0</b></div>
       <div class="ministat"><span class="ms-label">Avg protein / 7d</span><b id="stAvgP">0g</b></div>
       <div class="ministat"><span class="ms-label">Water today</span><b id="stWater">0 <small>oz</small></b></div>
     </div>
-    <div class="secttl">Weight analysis</div>
+    </div>
+<div class="punit" data-pid="bmi">
+<div class="secttl">Weight analysis</div>
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center; gap:8px;"><b style="font-size:16px">BMI</b><button class="ginfo" id="bmiInfo" aria-label="About BMI">i</button></span><span><b id="bmiVal" style="font-size:20px">—</b><span class="pill" id="bmiPill" style="display:none"></span></span></div>
       <div class="bmibar"><i id="bmiMark" style="display:none"></i></div>
@@ -974,13 +999,17 @@ body{ background:var(--bg); }
       <div class="statgrid" id="wtStats" style="margin-top:10px"></div>
       <div class="rangenote" id="wtContext" style="margin-top:10px"></div>
     </div>
-    <div class="secttl">Calorie Check</div>
+    </div>
+<div class="punit" data-pid="calcheck">
+<div class="secttl">Calorie Check</div>
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center; gap:8px;"><b style="font-size:16px">Is your target working?</b><button class="ginfo" id="calCheckInfo" aria-label="How this checks your target">i</button></span></div>
       <div class="rangenote" id="calCheckOut" style="margin-top:6px">Log your weight for 2+ weeks and this compares your real rate of gain against your target.</div>
       <div id="calCheckApply" style="margin-top:10px; display:none"><button class="bigbtn" id="calApplyBtn"></button></div>
     </div>
-    <div class="secttl">Muscle Gain</div>
+    </div>
+<div class="punit" data-pid="muscle">
+<div class="secttl">Muscle Gain</div>
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center;"><b style="font-size:16px">Estimated muscle gained</b><button class="ginfo" id="muscleInfo" aria-label="How this is estimated">i</button></div>
       <div style="display:flex; gap:16px; align-items:center; margin-top:10px">
@@ -994,7 +1023,8 @@ body{ background:var(--bg); }
       </div>
       <button class="srow" id="muscleGoalBtn" style="margin-top:8px"><span>Muscle goal: <b id="muscleGoalLbl">0 lb</b></span><span class="chev2">›</span></button>
     </div>
-    </div><!-- /progOverview -->
+    </div>
+</div><!-- /progOverview -->
   </section>
 
   <!-- SETTINGS -->
@@ -1376,7 +1406,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.22-h";
+const APP_VERSION = "2026.09.22-i";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4512,7 +4542,68 @@ function showView(v){
   if(v==="goals") renderGoals();
   window.scrollTo(0,0);
 }
-function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); }
+/* 2026.09.22-i: rearrangeable Progress panels — touch drag, order persisted in S.progLayout */
+const PROG_UNITS = ["wt","insights","analytics","traj","macros","stats","bmi","calcheck","muscle"];
+function progUnits(){ return Array.prototype.slice.call(document.querySelectorAll("#progOverview .punit")); }
+function applyProgLayout(){
+  const box = document.getElementById("progOverview"); if(!box) return;
+  const saved = (typeof S!=="undefined" && S && Array.isArray(S.progLayout)) ? S.progLayout.filter(function(p){ return PROG_UNITS.indexOf(p)>=0; }) : [];
+  const order = saved.concat(PROG_UNITS.filter(function(p){ return saved.indexOf(p)<0; }));
+  const map = {}; progUnits().forEach(function(u){ map[u.getAttribute("data-pid")] = u; });
+  order.forEach(function(pid){ if(map[pid]) box.appendChild(map[pid]); });
+}
+const GRIP_SVG = '<svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>';
+function setProgEdit(on){
+  document.body.classList.toggle("rearranging", on);
+  const btn = document.getElementById("progEditBtn"); if(btn) btn.textContent = on ? "Done" : "Edit";
+  progUnits().forEach(function(u){
+    let g = u.querySelector(":scope > .pgrip");
+    if(on && !g){
+      g = document.createElement("button");
+      g.className = "pgrip"; g.type = "button"; g.setAttribute("aria-label","Drag to reorder panel");
+      g.innerHTML = GRIP_SVG;
+      g.addEventListener("pointerdown", progGripDown);
+      u.appendChild(g);
+    } else if(!on && g){ g.remove(); }
+  });
+}
+let progDragU = null;
+function progGripDown(e){
+  e.preventDefault();
+  const grip = e.currentTarget;
+  progDragU = grip.closest(".punit"); if(!progDragU) return;
+  const y0 = e.clientY; let active = false;
+  try{ grip.setPointerCapture(e.pointerId); }catch(_){}
+  const move = function(ev){
+    if(!progDragU) return;
+    const dy = ev.clientY - y0;
+    if(!active && Math.abs(dy) > 8){ active = true; progDragU.classList.add("dragging"); }
+    if(active){
+      progDragU.style.transform = "translateY(" + dy + "px)";
+      const box = document.getElementById("progOverview");
+      const others = progUnits().filter(function(u){ return u !== progDragU; });
+      let before = null;
+      for(let i=0;i<others.length;i++){ const r = others[i].getBoundingClientRect(); if(ev.clientY < r.top + r.height/2){ before = others[i]; break; } }
+      if(before) box.insertBefore(progDragU, before); else box.appendChild(progDragU);
+    }
+  };
+  const up = function(){
+    grip.removeEventListener("pointermove", move);
+    grip.removeEventListener("pointerup", up);
+    grip.removeEventListener("pointercancel", up);
+    if(progDragU){
+      progDragU.classList.remove("dragging");
+      progDragU.style.transform = "";
+      if(active){ S.progLayout = progUnits().map(function(u){ return u.getAttribute("data-pid"); }); save(); }
+      progDragU = null;
+    }
+  };
+  grip.addEventListener("pointermove", move);
+  grip.addEventListener("pointerup", up);
+  grip.addEventListener("pointercancel", up);
+};
+document.getElementById("progEditBtn").onclick = function(){ setProgEdit(!document.body.classList.contains("rearranging")); };
+function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); applyProgLayout(); }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.v));
 /* Progress sub-tabs were removed in 2026.09.22-a: Progress is a single view whose
    weight circle opens the full-screen #wtDetail sheet. */
