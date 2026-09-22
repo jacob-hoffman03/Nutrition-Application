@@ -665,14 +665,15 @@ body{ background:var(--bg); }
 /* info button inside rows (never nested-button) */
 .srow .ginfo{margin:0;}
 
-/* 2026.09.22-k: Apple-Photos-style reorder — compact row list, handles, checkmark save */
+/* 2026.09.22-l: Apple-Photos-style reorder — compact row list, handles, checkmark save */
 .punit{margin:0;padding:0;min-width:0}
 #progEditBtn{font-size:15px;font-weight:700;color:var(--acc);width:44px;height:36px;background:none;border:none;display:flex;align-items:center;justify-content:center}
 #progEditBtn.psave{background:var(--acc);border-radius:50%;width:38px;height:38px;padding:0}
 #progEditBtn.psave svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 body.reordering #progOverview{display:none}
-#progReorder{padding:6px 0 28px}
-.pr-row{display:flex;align-items:center;justify-content:space-between;height:58px;background:var(--card);border-radius:var(--radius);margin-bottom:10px;padding-left:18px;box-shadow:0 1px 4px rgba(60,60,120,.10)}
+#progReorder{padding:6px 0 28px;touch-action:pan-y}
+.pr-row{display:flex;align-items:center;justify-content:space-between;height:58px;background:var(--card);border-radius:var(--radius);margin-bottom:10px;padding-left:18px;box-shadow:0 1px 4px rgba(60,60,120,.10);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#progReorder.pr-dragging .pr-row:not(.dragging){transition:transform .18s ease}
 .pr-title{font-size:17px;font-weight:700}
 .pr-handle{width:56px;height:58px;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab;flex:none}
 .pr-handle svg{width:24px;height:24px;stroke:var(--muted);fill:none;stroke-width:2.4;stroke-linecap:round}
@@ -1408,7 +1409,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.22-k";
+const APP_VERSION = "2026.09.22-l";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4583,33 +4584,55 @@ function setProgEdit(on){
 }
 function prHandleDown(e){
   e.preventDefault();
-  const handle = e.currentTarget, row = handle.closest(".pr-row"), list = document.getElementById("progReorder");
+  const handle = e.currentTarget, list = document.getElementById("progReorder");
+  const row = handle ? handle.closest(".pr-row") : null;
   if(!row || !list) return;
-  const H = row.offsetHeight + 10; /* row + margin-bottom */
-  const startIdx = Array.prototype.indexOf.call(list.children, row);
-  let idx = startIdx; const y0 = e.clientY;
+  const rows = Array.prototype.slice.call(list.children);
+  const H = row.offsetHeight + (parseFloat(getComputedStyle(row).marginBottom) || 0);
+  const startIdx = rows.indexOf(row);
+  const others = rows.filter(function(x){ return x !== row; });
+  let target = startIdx, finished = false;
+  const y0 = e.clientY;
   row.classList.add("dragging");
+  list.classList.add("pr-dragging");
   try{ handle.setPointerCapture(e.pointerId); }catch(_){}
   const move = function(ev){
+    if(finished) return;
     const dy = ev.clientY - y0;
     row.style.transform = "translateY(" + dy + "px)";
-    let nidx = startIdx + Math.round(dy / H);
-    nidx = Math.max(0, Math.min(list.children.length - 1, nidx));
-    if(nidx !== idx){
-      idx = nidx;
-      const ref = Array.prototype.filter.call(list.children, function(x){ return x !== row; })[nidx];
-      if(ref) list.insertBefore(row, ref); else list.appendChild(row);
+    const n = Math.max(0, Math.min(rows.length - 1, startIdx + Math.round(dy / H)));
+    if(n !== target){
+      target = n;
+      others.forEach(function(r){
+        const i = rows.indexOf(r);
+        let off = 0;
+        if(target > startIdx && i > startIdx && i <= target) off = -H;
+        else if(target < startIdx && i >= target && i < startIdx) off = H;
+        r.style.transform = off ? "translateY(" + off + "px)" : "";
+      });
     }
   };
-  const up = function(){
+  const end = function(){
+    if(finished) return; finished = true;
     handle.removeEventListener("pointermove", move);
-    handle.removeEventListener("pointerup", up);
-    handle.removeEventListener("pointercancel", up);
-    row.classList.remove("dragging"); row.style.transform = "";
+    handle.removeEventListener("pointerup", end);
+    handle.removeEventListener("pointercancel", end);
+    handle.removeEventListener("lostpointercapture", end);
+    others.forEach(function(r){ r.style.transform = ""; });
+    row.style.transform = "";
+    row.classList.remove("dragging");
+    list.classList.remove("pr-dragging");
+    if(target !== startIdx){
+      list.removeChild(row);
+      const kids = list.children;
+      if(target >= kids.length) list.appendChild(row);
+      else list.insertBefore(row, kids[target]);
+    }
   };
   handle.addEventListener("pointermove", move);
-  handle.addEventListener("pointerup", up);
-  handle.addEventListener("pointercancel", up);
+  handle.addEventListener("pointerup", end);
+  handle.addEventListener("pointercancel", end);
+  handle.addEventListener("lostpointercapture", end);
 }
 document.getElementById("progEditBtn").onclick = function(){
   if(document.body.classList.contains("reordering")){
