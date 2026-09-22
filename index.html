@@ -1409,7 +1409,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.22-m";
+const APP_VERSION = "2026.09.22-n";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -3439,57 +3439,29 @@ function paintWeightChart(w){
     else kept.push({l:x.l, xa});
   });
   kept.forEach(k=>{ s += `<text x="${k.xa.toFixed(1)}" y="${H-6}" text-anchor="middle" fill="#9a9aa5" font-size="10">${k.l}</text>`; });
-  /* visible-range extremes double as milestones */
-  let iMn=0, iMx=0;
-  pts.forEach((p,i)=>{ if(p.w<pts[iMn].w) iMn=i; if(p.w>pts[iMx].w) iMx=i; });
-  /* goal: a quiet band (±1 lb "at goal" zone) + a muted dashed line —
-     never styled like the data series */
+  /* goal: one quiet dashed reference line — the trend is the headline */
   if(flag){
-    const gTop = Y(flag.v+1), gBot = Y(flag.v-1);
-    s += `<rect x="${PL}" y="${gTop.toFixed(1)}" width="${(W-PR+6-PL).toFixed(1)}" height="${(gBot-gTop).toFixed(1)}" fill="#22a35c" opacity="0.07"/>`;
     const gy = Y(flag.v);
-    s += `<line x1="${PL}" y1="${gy.toFixed(1)}" x2="${W-PR+6}" y2="${gy.toFixed(1)}" stroke="${THEME.acc}" stroke-width="1.5" stroke-dasharray="6,5" opacity="0.6"/>`+
-      `<text x="${PL+18}" y="${(gy-3).toFixed(1)}" fill="${THEME.acc}" font-size="11" font-weight="700" opacity="0.9">${flag.auto?"auto ":""}goal ${f1(flag.v)}${wu}</text>`;
+    s += `<line x1="${PL}" y1="${gy.toFixed(1)}" x2="${W-PR+6}" y2="${gy.toFixed(1)}" stroke="#c9c9d4" stroke-width="1.5" stroke-dasharray="6,5"/>`+
+      `<text x="${PL+6}" y="${(gy-5).toFixed(1)}" fill="#9a9aa5" font-size="10" font-weight="700">goal ${f1(flag.v)}${wu}</text>`;
   }
-  /* milestone lines: faint dotted horizontals at the visible range's all-time
-     high/low, so past achievements still read while scrolling through history */
-  if(pts.length>=2 && iMn!==iMx){
-    [["high",pts[iMx].w,"#b98d1c"],["low",pts[iMn].w,"#8a8f9e"]].forEach(([lbl, v, col])=>{
-      if(flag && Math.abs(v-flag.v)<0.5) return; /* the goal line already marks it */
-      const my = Y(v);
-      s += `<line x1="${PL}" y1="${my.toFixed(1)}" x2="${W-PR+6}" y2="${my.toFixed(1)}" stroke="${col}" stroke-width="1" stroke-dasharray="2,4" opacity="0.55"/>`+
-           `<text x="${PL+3}" y="${(my-4).toFixed(1)}" fill="${col}" font-size="9.5" font-weight="700" opacity="0.85">${lbl} ${f1(v)}${wu}</text>`;
-    });
-  }
-  const xy = pts.map(p=>[X(T(p)), Y(p.w)]);
-  /* raw weigh-ins as faint dots; the primary line is the 7-day smoothed trend
-     (Happy Scale/MacroFactor convention) — daily noise reads as decoration,
-     not the headline. */
-  s += xy.map(q=>`<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="2.6" fill="#c6c6d2" opacity="0.8"/>`).join("");
   const ma = trendMA(pts);
   const mxy = ma.map((m,i)=>[X(T(pts[i])), Y(m.w)]);
-  /* goal-proximity trend colors (Jay's request, 2026.09.22): dark red -> red -> yellow -> green.
+  /* one clean trend line in the app theme with a soft fill beneath it.
      Straight segments — the old Catmull-Rom spline looped over itself on dense
-     weigh-ins (e.g. 2026-03-26..29), which read as a broken line. */
-  const gVal = (flag && flag.v>0) ? flag.v : 0;
-  const gcDist = d => d<=1 ? "#22a35c" : d<=3 ? "#cf9f16" : d<=6 ? "#e5484d" : "#8f1d1d";
+     weigh-ins (e.g. 2026-03-26..29), which read as a broken line.
+     (2026.09.22: simplified per Jay — raw dots, milestone lines and the
+     goal-proximity segment colors were too much; the goal panel below the
+     chart carries the "to go" status now.) */
   if(mxy.length>=2){
     const straight = "M"+mxy.map(q=>q[0].toFixed(1)+","+q[1].toFixed(1)).join("L");
-    s += `<path d="${straight}L${mxy[mxy.length-1][0].toFixed(1)},${H-PB}L${mxy[0][0].toFixed(1)},${H-PB}Z" fill="rgba(91,91,240,0.08)"/>`;
-    for(let gi=0; gi<mxy.length-1; gi++){
-      const segC = gVal>0 ? gcDist(Math.max(Math.abs(ma[gi].w-gVal), Math.abs(ma[gi+1].w-gVal))) : THEME.acc;
-      s += `<line x1="${mxy[gi][0].toFixed(1)}" y1="${mxy[gi][1].toFixed(1)}" x2="${mxy[gi+1][0].toFixed(1)}" y2="${mxy[gi+1][1].toFixed(1)}" stroke="${segC}" stroke-width="3" stroke-linecap="round"/>`;
-    }
+    s += `<path d="${straight}L${mxy[mxy.length-1][0].toFixed(1)},${H-PB}L${mxy[0][0].toFixed(1)},${H-PB}Z" fill="${THEME.acc}" opacity="0.08"/>`;
+    s += `<path d="${straight}" fill="none" stroke="${THEME.acc}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
     const ept = mxy[mxy.length-1];
-    s += `<circle cx="${ept[0].toFixed(1)}" cy="${ept[1].toFixed(1)}" r="4.5" fill="${gVal>0?gcDist(Math.abs(ma[ma.length-1].w-gVal)):THEME.acc}" stroke="#fff" stroke-width="1.5"/>`;
+    s += `<circle cx="${ept[0].toFixed(1)}" cy="${ept[1].toFixed(1)}" r="4.5" fill="${THEME.acc}" stroke="#fff" stroke-width="1.5"/>`;
   } else if(mxy.length===1){
     s += `<circle cx="${mxy[0][0].toFixed(1)}" cy="${mxy[0][1].toFixed(1)}" r="4.5" fill="${THEME.acc}" stroke="#fff" stroke-width="1.5"/>`+
       `<text x="${mxy[0][0].toFixed(1)}" y="${(mxy[0][1]-12).toFixed(1)}" text-anchor="middle" fill="${THEME.acc}" font-size="11" font-weight="700">${f1(pts[0].w)}${wu}</text>`;
-  }
-  /* milestone rings: gold for the all-time high, slate for the all-time low */
-  if(pts.length>=2 && iMn!==iMx){
-    s += `<circle cx="${xy[iMx][0].toFixed(1)}" cy="${xy[iMx][1].toFixed(1)}" r="7.5" fill="none" stroke="#d4af37" stroke-width="1.6" opacity="0.9"/>`+
-         `<circle cx="${xy[iMn][0].toFixed(1)}" cy="${xy[iMn][1].toFixed(1)}" r="7.5" fill="none" stroke="#9aa0ae" stroke-width="1.6" opacity="0.9"/>`;
   }
   svg.innerHTML = s;
   svg.setAttribute("role","img");
@@ -3499,12 +3471,7 @@ function paintWeightChart(w){
   const wsc = document.getElementById("wChartScroll");
   if(wsc && allMode && wScrollEnd){ wsc.scrollLeft = wsc.scrollWidth; wScrollEnd = false; }
   const wlg = document.getElementById("wGoalLegend");
-  if(wlg){
-    if(gVal>0 && pts.length>=2){
-      wlg.style.display = "";
-      wlg.innerHTML = `<span><i style="background:#22a35c"></i>at goal</span><span><i style="background:#cf9f16"></i>close</span><span><i style="background:#e5484d"></i>off track</span><span><i style="background:#8f1d1d"></i>far</span>`;
-    } else wlg.style.display = "none";
-  }
+  if(wlg) wlg.style.display = "none"; /* legend retired with the segment colors */
   svg.setAttribute("aria-label",`Weight chart: ${pts.length} weigh-ins, ${dFmtS(tStart)} to ${dFmtS(tEnd)}`+(flag?`, ${flag.auto?"auto milestone":"goal"} ${f1(flag.v)} ${wu}`:""));
   /* pace line under the chart: range rate + change. Records (high/low/avg)
      live in the Stats view — the chart stays a clean daily glance. The goal
@@ -3514,13 +3481,7 @@ function paintWeightChart(w){
     if(pts.length>=2){
       const st = wRangeStats(pts);
       const sgn = v => (v>0?"+":v<0?"\u2212":"")+f1(Math.abs(v));
-      let phtml = `Pace: <b>${st.rateWk==null?"\u2014":sgn(st.rateWk)+" "+wu+"/wk"}</b> · ${sgn(st.change)} ${wu} in view`;
-      const g = S.goals.weight;
-      if(g>0 && st.rateWk!=null && Math.abs(st.rateWk)>=0.05){
-        const toGo = g - ma[ma.length-1].w;
-        const toward = (toGo>0 && st.rateWk>0) || (toGo<0 && st.rateWk<0);
-        if(toward) phtml += ` · ≈${Math.ceil(Math.abs(toGo)/Math.abs(st.rateWk))} wk to goal`;
-      }
+      let phtml = `Pace: <b>${st.rateWk==null?"\u2014":sgn(st.rateWk)+" "+wu+"/wk"}</b>`;
       wtp.innerHTML = phtml; wtp.style.display = "";
     } else { wtp.style.display = "none"; }
   }
