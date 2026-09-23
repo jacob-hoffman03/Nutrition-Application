@@ -842,6 +842,7 @@ body.reordering #progOverview{display:none}
     </div>
     <div class="secttl"><span>All Nutrients</span><button class="ginfo" id="nutrInfo" aria-label="About nutrient targets">i</button></div>
     <div class="card" style="padding-top:2px; padding-bottom:10px">
+      <div style="display:flex;justify-content:flex-end;margin:2px 0 4px"><button class="chip" id="nutrResetAll" style="font-size:11px">Reset to FDA defaults</button></div>
       <div id="nutrTable"></div>
       <div class="rangenote" id="nutrNote" style="margin-top:8px"></div>
     </div>
@@ -1480,7 +1481,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.23-m";
+const APP_VERSION = "2026.09.23-n";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2558,7 +2559,9 @@ document.getElementById("progPhotoFile").onchange = e=>{
 };
 
 /* ============ MICRONUTRIENT TRACKING ============ */
-/* FDA Daily Values (adults) — reference only; All Nutrients targets start at 0 until he sets his own */
+/* FDA Daily Values (adults) — the default goal for every nutrient; where the NIH/NASEM
+   recommendation depends on sex/age, profileNutrTarget() switches it to his own RDA/AI
+   once his profile has sex/age. Custom per-nutrient targets always win. */
 const NUTR_DV = {
   "Vitamin A":{dv:900,unit:"mcg"}, "Vitamin C":{dv:90,unit:"mg"}, "Vitamin D":{dv:20,unit:"mcg",iu:40},
   "Vitamin E":{dv:15,unit:"mg"}, "Vitamin K":{dv:120,unit:"mcg"},
@@ -2643,6 +2646,52 @@ function fiberTarget(){ const ct = (S.goals.nutrTargets||{})["Fiber"]; if(ct && 
    Potassium: NASEM 2019 adequate intake 3,400 mg/d men / 2,600 mg/d women —
    the label DV is still 4,700 mg (set from the older AI), shown for reference. */
 function potassiumTarget(){ const ct = (S.goals.nutrTargets||{})["Potassium"]; if(ct && ct.val>0) return ct.val; return S.goals.profile.sex==="f" ? 2600 : 3400; }
+/* Profile-based nutrient targets (2026.09.23-n): where the NIH/NASEM recommendation
+   depends on sex/age, the goal switches from the flat FDA Daily Value ("everyone")
+   to his own RDA/AI once his profile has sex/age — it runs in the background, so the
+   moment he adds his profile the goals re-preset themselves. Until then, everyone
+   gets the standard Daily Value. Returns {val, label} or null. */
+function profileNutrTarget(disp){
+  const p = (S.goals||{}).profile || {}, sex = p.sex, age = +p.age || 0;
+  const M = sex==="m", F = sex==="f";
+  switch(disp){
+    case "Iron":
+      if(M) return {val:8, label:"RDA · male"};
+      if(F) return age>=51 ? {val:8, label:"RDA · female 51+"} : {val:18, label:"RDA · female 19–50"};
+      return null;
+    case "Zinc":
+      if(M) return {val:11, label:"RDA · male"};
+      if(F) return {val:8, label:"RDA · female"};
+      return null;
+    case "Calcium":
+      if(M) return age>=71 ? {val:1200, label:"RDA · male 71+"} : {val:1000, label:"RDA · male 19–70"};
+      if(F) return age>=51 ? {val:1200, label:"RDA · female 51+"} : {val:1000, label:"RDA · female 19–50"};
+      return null;
+    case "Magnesium":
+      if(M) return age>=31 ? {val:420, label:"RDA · male 31+"} : {val:400, label:"RDA · male 19–30"};
+      if(F) return age>=31 ? {val:320, label:"RDA · female 31+"} : {val:310, label:"RDA · female 19–30"};
+      return null;
+    case "Vitamin A":
+      if(M) return {val:900, label:"RDA · male"};
+      if(F) return {val:700, label:"RDA · female"};
+      return null;
+    case "Vitamin K":
+      if(M) return {val:120, label:"AI · male"};
+      if(F) return {val:90, label:"AI · female"};
+      return null;
+    case "Vitamin C":
+      if(M) return {val:90, label:"RDA · male"};
+      if(F) return {val:75, label:"RDA · female"};
+      return null;
+    case "Vitamin D":
+      if(age>0) return age>=71 ? {val:20, label:"RDA · age 71+"} : {val:15, label:"RDA · age 19–70"};
+      return null;
+    case "Phosphorus":
+      if(age>=19) return {val:700, label:"RDA · adult"};
+      return null;
+    default: return null;
+  }
+}
 function fiberTotal(k){
   const d = S.days[k]; let f = 0;
   if(d) MEALS.forEach(m=>(d.meals[m]||[]).forEach(e=>(e.nutrs||[]).forEach(x=>{
@@ -2665,7 +2714,7 @@ function dayNutrients(k){
   const out = [];
   map.forEach(v=>{
     const dv = NUTR_DV[v.disp], ct = (S.goals.nutrTargets||{})[v.disp];
-    let val, unit, pct = null, target = null, custom = false;
+    let val, unit, pct = null, target = null, custom = false, src = null, srcLabel = "";
     if(ct && v.cls==="wt"){
       let cu = ct.unit, cvv = ct.val;
       if(String(cu).toLowerCase()==="iu" && dv && dv.iu){ cu = dv.unit; cvv = cvv/dv.iu; } /* custom target stored in IU → weight unit */
@@ -2674,15 +2723,22 @@ function dayNutrients(k){
       unit = "IU"; val = v.base; target = ct.val; pct = val/ct.val*100; custom = true;
     } else if(v.cls==="wt" && dv){
       unit = dv.unit; val = v.base/(WT2MG[unit]||1);
-      if(v.disp==="Fiber"){ target = fiberTarget(); pct = target>0 ? val/target*100 : 0; } /* research auto-target, not zero */
-      else if(v.disp==="Potassium"){ target = potassiumTarget(); pct = target>0 ? val/target*100 : 0; } /* NASEM 2019 AI goal; label DV 4,700 mg shown for reference */
-      else { target = 0; pct = 0; } /* blank slate: goal is zero until he sets his own */
+      if(v.disp==="Fiber"){ target = fiberTarget(); pct = target>0 ? val/target*100 : 0; src = "auto"; srcLabel = "14 g per 1,000 kcal of goal"; } /* research auto-target, not zero */
+      else if(v.disp==="Potassium"){ target = potassiumTarget(); pct = target>0 ? val/target*100 : 0; src = "ai"; srcLabel = "NASEM 2019 adequate intake"; } /* NASEM 2019 AI goal; label DV 4,700 mg shown for reference */
+      else {
+        /* default goal: FDA Daily Value for everyone, or his own RDA/AI once his
+           profile has the sex/age it depends on — custom targets always win */
+        const prof = profileNutrTarget(v.disp);
+        if(prof){ target = prof.val; src = "profile"; srcLabel = prof.label; }
+        else { target = dv.dv; src = "fda"; srcLabel = "FDA Daily Value"; }
+        pct = target>0 ? val/target*100 : 0;
+      }
     } else if(v.cls==="iu" && dv && dv.iu){
       unit = "IU"; val = v.base; target = 0; pct = 0;
     } else if(v.cls==="wt"){
       val = v.base; unit = val>=1000 ? "g" : "mg"; if(unit==="g") val = val/1000;
     } else { val = v.base; unit = v.cls==="iu" ? "IU" : "mL"; }
-    out.push({disp:v.disp, val, unit, target, pct, custom, limit:!custom&&!!(dv&&dv.limit), dvRef:dv||null});
+    out.push({disp:v.disp, val, unit, target, pct, custom, src, srcLabel, limit:!custom&&!!(dv&&dv.limit), dvRef:dv||null});
   });
   out.sort((a,b)=>((b.pct===null?-1:b.pct)-(a.pct===null?-1:a.pct)) || a.disp.localeCompare(b.disp));
   return out;
@@ -2721,8 +2777,8 @@ function openNSheet(disp){
   document.getElementById("nDV").textContent = r.custom ? r1(r.target)+" "+r.unit+" (yours)"
     : (nKey==="Fiber" ? "Auto: "+r1(fiberTarget())+" "+r.unit+" · 14 g per 1,000 kcal of your "+goalTotal().toLocaleString()+" kcal goal"
       : (nKey==="Potassium" ? "Goal: "+r1(potassiumTarget())+" "+r.unit+" · NASEM 2019 adequate intake (label DV 4,700 mg for reference)"
-      : "0 "+r.unit+(r.dvRef ? " · FDA Daily Value "+r1(r.dvRef.dv)+" "+r.dvRef.unit+" for reference" : "")));
-  document.getElementById("nClear").textContent = nKey==="Fiber" ? "Back to auto target" : (nKey==="Potassium" ? "Back to AI goal" : "Use FDA default instead");
+      : (r.target!=null ? "Goal: "+r1(r.target)+" "+r.unit+(r.src==="profile" ? " · personalized for you ("+r.srcLabel+")" : " · FDA Daily Value") : "No daily goal")));
+  document.getElementById("nClear").textContent = nKey==="Fiber" ? "Back to auto target" : (nKey==="Potassium" ? "Back to AI goal" : "Back to default goal");
   const ct = (S.goals.nutrTargets||{})[disp];
   const nt = document.getElementById("nTarget");
   nt.value = ct ? ct.val : "";
@@ -2742,6 +2798,13 @@ document.getElementById("nSave").onclick = ()=>{
 document.getElementById("nClear").onclick = ()=>{
   if(S.goals.nutrTargets) delete S.goals.nutrTargets[nKey];
   save(); nsheet.classList.remove("open"); renderAnalysis();
+};
+/* Reset all: clear every custom nutrient target → goals fall back to the defaults
+   (FDA Daily Values, personalized by his profile where the recommendation differs) */
+document.getElementById("nutrResetAll").onclick = ()=>{
+  if(!confirm("Clear all your custom nutrient targets and go back to the default goals?\n\nDefaults are the FDA Daily Values — automatically personalized by your age/sex from your profile where the recommendation differs (like iron).")) return;
+  S.goals.nutrTargets = {};
+  save(); renderAnalysis();
 };
 
 /* ============ ANALYSIS ============ */
@@ -4484,7 +4547,8 @@ function infoContent(k){
      <div class="irow">Tracked for awareness — it doesn't change your calorie math.</div>`};
   if(k==="nutrients") return {t:"Nutrient targets", b:
     `<div class="irow">Combined from everything logged today. Tap a nutrient to set your own daily target.</div>
-     <div class="irow">All targets start at zero, except <b>fiber</b> (auto: 14 g per 1,000 kcal of your goal) and <b>potassium</b> (auto: NASEM 2019 adequate intake, 3,400 mg).</div>`};
+     <div class="irow">Every target defaults to the <b>FDA Daily Value</b>. Where the recommendation depends on you — iron, zinc, calcium, magnesium, vitamins A/C/D/K, phosphorus — it <b>automatically switches to your age/sex-based RDA or AI</b> once your profile (Settings) has your sex and age. Until then, everyone gets the standard Daily Value.</div>
+     <div class="irow"><b>Fiber</b> stays auto (14 g per 1,000 kcal of your goal) and <b>potassium</b> stays on the NASEM adequate intake. "Reset to FDA defaults" clears all your custom targets at once.</div>`};
 }
 function openInfo(k){
   const c = infoContent(k); if(!c) return;
