@@ -640,10 +640,10 @@ body{ background:var(--bg); }
 .nhead{display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:15px; font-weight:700;}
 .nhead b{font-weight:700; color:var(--muted); white-space:nowrap;}
 .nhead b i{font-style:normal;}
-.nhead b i.met{color:var(--acc);}
+.nhead b i.met{color:#35a45f;}
 .nhead b i.lim{color:var(--red);}
 .nbar{height:6px; background:#f0f0f5; border-radius:4px; margin-top:8px; overflow:hidden;}
-.nbar i{display:block; height:100%; background:linear-gradient(90deg,var(--acc-deep),var(--acc)); border-radius:4px;}
+.nbar i{display:block; height:100%; background:#9aa1ab; border-radius:4px;}
 .ncat{display:flex; align-items:center; gap:10px; padding:13px 2px 7px; cursor:pointer; user-select:none; -webkit-user-select:none;}
 .ncat .ncat-t{flex:1; font-size:12.5px; font-weight:800; letter-spacing:.9px; text-transform:uppercase; color:var(--muted);}
 .ncat .ncat-sub{font-size:12px; font-weight:700; color:var(--muted);}
@@ -1423,7 +1423,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.23-b";
+const APP_VERSION = "2026.09.23-c";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2338,13 +2338,22 @@ function nutrCat(disp){ return NUTR_CAT[disp] || "Other"; }
 let ncatCollapsed = {};
 try{ ncatCollapsed = JSON.parse(localStorage.getItem("fuel_ncat_collapsed")||"{}")||{}; }catch(e){ ncatCollapsed = {}; }
 function saveNcatCollapsed(){ try{ localStorage.setItem("fuel_ncat_collapsed", JSON.stringify(ncatCollapsed)); }catch(e){} }
+/* Nutrient bar color: gray when just starting → dark blue midway → pastel green at target */
+function nbarColor(p){
+  p = Math.max(0, Math.min(100, p==null?0:p))/100;
+  const GRAY=[154,161,171], BLUE=[29,78,216], GREEN=[126,212,150];
+  let a,b,t;
+  if(p<=0.5){ a=GRAY; b=BLUE; t=p/0.5; } else { a=BLUE; b=GREEN; t=(p-0.5)/0.5; }
+  const c = a.map((v,i)=>Math.round(v+(b[i]-v)*t));
+  return "rgb("+c[0]+","+c[1]+","+c[2]+")";
+}
 function nutrRowHtml(r){
   const vs = r1(r.val);
   const overLim = r.limit && r.pct!=null && r.pct>=100;
   const right = r.target!=null
     ? `<b><i class="${r.pct>=100&&!r.limit?"met":""}${overLim?" lim":""}">${vs}</i> / ${r1(r.target)}</b>`
     : `<b>${vs}</b>`;
-  const bar = r.pct!=null ? `<div class="nbar"><i style="width:${Math.min(r.pct,100)}%${overLim?";background:#ff5c5c":""}"></i></div>` : "";
+  const bar = r.pct!=null ? `<div class="nbar"><i style="width:${Math.min(r.pct,100)}%;background:${overLim?"#ff5c5c":nbarColor(r.pct)}"></i></div>` : "";
   return `<div class="nrow" data-n="${esc(r.disp)}"><div class="nhead"><span>${esc(r.disp)} (${r.unit})${r.custom?' <span class="diy">MY TARGET</span>':""}</span>${right}</div>${bar}</div>`;
 }
 function nutrMet(r){ return r.pct!=null && (r.limit ? r.pct<100 : r.pct>=100); }
@@ -2376,9 +2385,11 @@ function dayNutrients(k){
   const d = S.days[k], map = new Map();
   if(d) MEALS.forEach(m=>(d.meals[m]||[]).forEach(e=>(e.nutrs||[]).forEach(x=>{
     const disp = canonNutr(x.n), u = String(x.u||"").toLowerCase();
-    const cls = u==="iu" ? "iu" : u==="ml" ? "ml" : "wt";
+    let cls = u==="iu" ? "iu" : u==="ml" ? "ml" : "wt", base;
+    const cv = NUTR_DV[disp];
+    if(cls==="iu" && cv && cv.iu){ cls = "wt"; base = x.amt/cv.iu*(WT2MG[cv.unit]||1); } /* IU folds into the weight row (vitamin D: 40 IU = 1 mcg) */
+    else base = cls==="wt" ? x.amt*(WT2MG[u]||1) : x.amt;
     const key = disp+"\x00"+cls;
-    const base = cls==="wt" ? x.amt*(WT2MG[u]||1) : x.amt;
     if(!map.has(key)) map.set(key, {disp, cls, base:0});
     map.get(key).base += base;
   })));
@@ -2386,8 +2397,10 @@ function dayNutrients(k){
   map.forEach(v=>{
     const dv = NUTR_DV[v.disp], ct = (S.goals.nutrTargets||{})[v.disp];
     let val, unit, pct = null, target = null, custom = false;
-    if(ct && v.cls==="wt" && WT2MG[ct.unit]){
-      unit = ct.unit; val = v.base/WT2MG[ct.unit]; target = ct.val; pct = val/ct.val*100; custom = true;
+    if(ct && v.cls==="wt"){
+      let cu = ct.unit, cvv = ct.val;
+      if(String(cu).toLowerCase()==="iu" && dv && dv.iu){ cu = dv.unit; cvv = cvv/dv.iu; } /* custom target stored in IU → weight unit */
+      if(WT2MG[cu]){ unit = cu; val = v.base/WT2MG[cu]; target = cvv; pct = val/cvv*100; custom = true; }
     } else if(ct && v.cls==="iu" && ct.unit==="IU"){
       unit = "IU"; val = v.base; target = ct.val; pct = val/ct.val*100; custom = true;
     } else if(v.cls==="wt" && dv){
