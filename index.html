@@ -191,8 +191,8 @@ button{font-family:inherit;}
 .pstrip{display:flex; align-items:center; gap:12px; padding:2px 2px 12px;}
 /* DAY CYCLE — 2026.09.23-e: day/night panel. Theme-filled like the diary hero;
    the arc itself carries the day gradient (orange→yellow→blue→dark blue).
-   Scrolls with the diary like every other card — nothing sticky, nothing
-   slides behind anything. */
+   Plain card in normal flow — scrolls with everything else, nothing sticky,
+   nothing slides behind anything. Lives on the Progress page (2026.09.23-g). */
 .daycycle{margin:0 0 12px; padding:14px 18px 12px;
   background:linear-gradient(135deg,var(--acc) 0%,var(--acc-deep) 100%); color:#fff;
   border-radius:22px; box-shadow:0 8px 24px rgba(0,0,0,.12);}
@@ -712,27 +712,6 @@ body.reordering #progOverview{display:none}
       <div class="pmeta"><div class="pname" id="pName">You</div><div class="psub">Today's medals</div></div>
       <div class="medals" id="pMedals"></div>
     </div>
-    <!-- DAY CYCLE — 2026.09.23-e: sticky day/night arc. Half-circle loop from
-         morning to night (orange→yellow→blue→dark blue), live day clock in the
-         middle, white dots at YOUR learned meal times. Stuck under the topbar
-         while the diary scrolls. -->
-    <div class="daycycle" id="dayCycle" aria-label="Day cycle">
-      <svg viewBox="0 0 300 172" aria-hidden="true">
-        <defs>
-          <linearGradient id="dcGrad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#ff9f43"/><stop offset=".38" stop-color="#ffd23f"/>
-            <stop offset=".68" stop-color="#4aa8ff"/><stop offset="1" stop-color="#27408b"/>
-          </linearGradient>
-        </defs>
-        <path d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="14" stroke-linecap="round"/>
-        <path id="dcProg" d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="url(#dcGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377"/>
-        <g id="dcMeals"></g>
-        <circle id="dcSun" r="8" cx="30" cy="150" fill="#ffffff" style="filter:drop-shadow(0 0 6px rgba(255,255,255,.9))"/>
-        <text id="dcClock" x="150" y="106" text-anchor="middle" fill="#ffffff" font-size="32" font-weight="800" style="font-variant-numeric:tabular-nums">--</text>
-        <text id="dcSub" x="150" y="128" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="12.5" font-weight="600"></text>
-      </svg>
-      <div class="dc-insight" id="dcInsight"></div>
-    </div>
     <div class="card progcard">
       <div class="prog-top"><span class="prog-label">Today's Intake</span><span class="prog-date" id="daySub"></span></div>
       <div class="wknavrow pweek">
@@ -994,6 +973,28 @@ body.reordering #progOverview{display:none}
     </div>
     <div id="progReorder" hidden></div>
     <div id="progOverview">
+    <!-- DAY CYCLE — 2026.09.23-g: moved to Progress per Jay. Day/night arc,
+         half-circle loop from morning to night (orange→yellow→blue→dark blue),
+         live day clock in the middle, white dots at YOUR learned meal times.
+         Plain card in normal flow — scrolls with everything else. Pinned above
+         the reorderable panels (not a .punit, so Edit/reorder leaves it alone). -->
+    <div class="daycycle" id="dayCycle" aria-label="Day cycle">
+      <svg viewBox="0 0 300 172" aria-hidden="true">
+        <defs>
+          <linearGradient id="dcGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#ff9f43"/><stop offset=".38" stop-color="#ffd23f"/>
+            <stop offset=".68" stop-color="#4aa8ff"/><stop offset="1" stop-color="#27408b"/>
+          </linearGradient>
+        </defs>
+        <path d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="14" stroke-linecap="round"/>
+        <path id="dcProg" d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="url(#dcGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377"/>
+        <g id="dcMeals"></g>
+        <circle id="dcSun" r="8" cx="30" cy="150" fill="#ffffff" style="filter:drop-shadow(0 0 6px rgba(255,255,255,.9))"/>
+        <text id="dcClock" x="150" y="106" text-anchor="middle" fill="#ffffff" font-size="32" font-weight="800" style="font-variant-numeric:tabular-nums">--</text>
+        <text id="dcSub" x="150" y="128" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="12.5" font-weight="600"></text>
+      </svg>
+      <div class="dc-insight" id="dcInsight"></div>
+    </div>
     <div class="punit" data-pid="wt">
 <div class="card wtcard">
       <button class="wtcircle" id="wtCircle" aria-label="Open weight details">
@@ -1471,7 +1472,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.23-f";
+const APP_VERSION = "2026.09.23-g";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1818,13 +1819,12 @@ function paintDayCycle(){
   $("dcInsight").textContent = ins;
   /* midnight rollover while the app sits open */
   const ds = todayStr();
-  if(dcLastDay && dcLastDay!==ds){ dcLastDay = ds; renderDiary(); return; }
+  if(dcLastDay && dcLastDay!==ds){ dcLastDay = ds; renderAll(); return; }
   dcLastDay = ds;
 }
-/* live clock: repaint every minute while the diary is showing */
-setInterval(()=>{ const v=$("view-diary"); if(v && v.classList.contains("active")) paintDayCycle(); }, 60000);
+/* live clock: repaint every minute while Progress is showing */
+setInterval(()=>{ const v=$("view-progress"); if(v && v.classList.contains("active")) paintDayCycle(); }, 60000);
 function renderDiary(){
-  paintDayCycle();
   const k = viewDate(), d = day(), g = S.goals, t = totals(k);
   renderProfileStrip();
   const dt = new Date(k+"T12:00:00");
@@ -3790,6 +3790,7 @@ function wtStatusText(){
   return "Trending "+sgn(rate)+" "+wu+"/wk.";
 }
 function renderProgress(){
+  paintDayCycle(); /* day-cycle panel lives on Progress now (2026.09.23-g) */
   const days = weekDays(weekOffset);
   const logged = days.filter(x=>x.logged);
   document.getElementById("stStreak").textContent = streak();
