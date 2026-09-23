@@ -644,6 +644,10 @@ body{ background:var(--bg); }
 .nhead b i.lim{color:var(--red);}
 .nbar{height:6px; background:#f0f0f5; border-radius:4px; margin-top:8px; overflow:hidden;}
 .nbar i{display:block; height:100%; background:linear-gradient(90deg,var(--acc-deep),var(--acc)); border-radius:4px;}
+.ncat{display:flex; align-items:center; gap:10px; padding:13px 2px 7px; cursor:pointer; user-select:none; -webkit-user-select:none;}
+.ncat .ncat-t{flex:1; font-size:12.5px; font-weight:800; letter-spacing:.9px; text-transform:uppercase; color:var(--muted);}
+.ncat .ncat-sub{font-size:12px; font-weight:700; color:var(--muted);}
+.ncat .ncat-chev{font-size:15px; font-weight:800; color:var(--muted); width:14px; text-align:center;}
 .cphotodel{border:none; background:none; color:var(--red); font-weight:700; font-size:14px; font-family:inherit; padding:8px 4px;}
 .favstar{border:none; background:none; padding:4px; display:flex; align-items:center;}
 .empty{color:var(--muted); font-size:13px; padding:8px 2px;}
@@ -1419,7 +1423,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.23-a";
+const APP_VERSION = "2026.09.23-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2314,6 +2318,36 @@ const NUTR_ALIASES = [
   [/fiber|fibre/i,"Fiber"], [/added\s*sugars?/i,"Added Sugars"], [/sugar/i,"Sugars"],
   [/saturated\s*fat/i,"Saturated Fat"], [/cholesterol/i,"Cholesterol"], [/creatine/i,"Creatine"]
 ];
+/* Nutrient categories — grouped the way nutrition science groups them (Cronometer-style):
+   Vitamins (fat-soluble A/D/E/K + water-soluble C and the B-complex),
+   Minerals (major/electrolyte + trace), Fats (lipids + cholesterol),
+   Carbs & Fiber, and Other (creatine and anything unmatched). */
+const NUTR_CAT_ORDER = ["Vitamins","Minerals","Fats","Carbs & Fiber","Other"];
+const NUTR_CAT = {
+  "Vitamin A":"Vitamins","Vitamin C":"Vitamins","Vitamin D":"Vitamins","Vitamin E":"Vitamins","Vitamin K":"Vitamins",
+  "Thiamin":"Vitamins","Riboflavin":"Vitamins","Niacin":"Vitamins","Vitamin B6":"Vitamins","Folate":"Vitamins",
+  "Vitamin B12":"Vitamins","Biotin":"Vitamins","Pantothenic acid":"Vitamins",
+  "Calcium":"Minerals","Iron":"Minerals","Phosphorus":"Minerals","Iodine":"Minerals","Magnesium":"Minerals",
+  "Zinc":"Minerals","Selenium":"Minerals","Copper":"Minerals","Manganese":"Minerals","Chromium":"Minerals",
+  "Molybdenum":"Minerals","Chloride":"Minerals","Potassium":"Minerals","Sodium":"Minerals","Fluoride":"Minerals",
+  "Saturated Fat":"Fats","Trans Fat":"Fats","Monounsaturated Fat":"Fats","Polyunsaturated Fat":"Fats",
+  "Cholesterol":"Fats","Omega-3":"Fats","Omega-6":"Fats",
+  "Fiber":"Carbs & Fiber","Sugars":"Carbs & Fiber","Added Sugars":"Carbs & Fiber","Sugar Alcohol":"Carbs & Fiber"
+};
+function nutrCat(disp){ return NUTR_CAT[disp] || "Other"; }
+let ncatCollapsed = {};
+try{ ncatCollapsed = JSON.parse(localStorage.getItem("fuel_ncat_collapsed")||"{}")||{}; }catch(e){ ncatCollapsed = {}; }
+function saveNcatCollapsed(){ try{ localStorage.setItem("fuel_ncat_collapsed", JSON.stringify(ncatCollapsed)); }catch(e){} }
+function nutrRowHtml(r){
+  const vs = r1(r.val);
+  const overLim = r.limit && r.pct!=null && r.pct>=100;
+  const right = r.target!=null
+    ? `<b><i class="${r.pct>=100&&!r.limit?"met":""}${overLim?" lim":""}">${vs}</i> / ${r1(r.target)}</b>`
+    : `<b>${vs}</b>`;
+  const bar = r.pct!=null ? `<div class="nbar"><i style="width:${Math.min(r.pct,100)}%${overLim?";background:#ff5c5c":""}"></i></div>` : "";
+  return `<div class="nrow" data-n="${esc(r.disp)}"><div class="nhead"><span>${esc(r.disp)} (${r.unit})${r.custom?' <span class="diy">MY TARGET</span>':""}</span>${right}</div>${bar}</div>`;
+}
+function nutrMet(r){ return r.pct!=null && (r.limit ? r.pct<100 : r.pct>=100); }
 function canonNutr(name){
   const t = String(name||"").trim();
   for(const [re,d] of NUTR_ALIASES) if(re.test(t)) return d;
@@ -2376,15 +2410,19 @@ function paintNutrients(k){
   if(!rows.length){
     box.innerHTML = `<div class="empty">No nutrient data yet.<br>Add vitamins &amp; minerals when creating custom foods.</div>`;
   } else {
-    box.innerHTML = rows.map(r=>{
-      const vs = r1(r.val);
-      const overLim = r.limit && r.pct!=null && r.pct>=100;
-      const right = r.target!=null
-        ? `<b><i class="${r.pct>=100&&!r.limit?"met":""}${overLim?" lim":""}">${vs}</i> / ${r1(r.target)}</b>`
-        : `<b>${vs}</b>`;
-      const bar = r.pct!=null ? `<div class="nbar"><i style="width:${Math.min(r.pct,100)}%${overLim?";background:#ff5c5c":""}"></i></div>` : "";
-      return `<div class="nrow" data-n="${esc(r.disp)}"><div class="nhead"><span>${esc(r.disp)} (${r.unit})${r.custom?' <span class="diy">MY TARGET</span>':""}</span>${right}</div>${bar}</div>`;
+    const groups = {};
+    rows.forEach(r=>{ const c = nutrCat(r.disp); (groups[c] = groups[c]||[]).push(r); });
+    box.innerHTML = NUTR_CAT_ORDER.filter(c=>groups[c]&&groups[c].length).map(c=>{
+      const rs = groups[c], collapsed = !!ncatCollapsed[c];
+      const tracked = rs.filter(r=>r.pct!=null), met = tracked.filter(nutrMet).length;
+      return `<div class="ncat" data-c="${esc(c)}"><span class="ncat-t">${esc(c)}</span>`
+        + `<span class="ncat-sub">${met}/${tracked.length}</span>`
+        + `<span class="ncat-chev">${collapsed?"›":"⌄"}</span></div>`
+        + (collapsed ? "" : `<div class="ncat-body">${rs.map(nutrRowHtml).join("")}</div>`);
     }).join("");
+    box.querySelectorAll(".ncat").forEach(el=>el.onclick=()=>{
+      const c = el.dataset.c; ncatCollapsed[c] = !ncatCollapsed[c]; saveNcatCollapsed(); paintNutrients(viewDate());
+    });
     box.querySelectorAll(".nrow").forEach(el=>el.onclick=()=>openNSheet(el.dataset.n));
   }
   const nn = document.getElementById("nutrNote"); nn.textContent = ""; nn.style.display = "none"; /* explainer lives in the ⓘ sheet */
