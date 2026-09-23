@@ -189,12 +189,13 @@ button{font-family:inherit;}
 .insrow .insconf{display:inline-block; font-size:10px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--acc-deep); margin-left:6px; vertical-align:1px;}
 /* profile strip + medals */
 .pstrip{display:flex; align-items:center; gap:12px; padding:2px 2px 12px;}
-/* DAY CYCLE — 2026.09.23-e: sticky day/night panel. Theme-filled like the diary
-   hero; the arc itself carries the day gradient (orange→yellow→blue→dark blue).
-   Sticks just under the sticky topbar while the diary scrolls (JS sets top). */
-.daycycle{position:sticky; top:0; z-index:19; margin:0 -14px 12px; padding:14px 18px 12px;
+/* DAY CYCLE — 2026.09.23-e: day/night panel. Theme-filled like the diary hero;
+   the arc itself carries the day gradient (orange→yellow→blue→dark blue).
+   Scrolls with the diary like every other card — nothing sticky, nothing
+   slides behind anything. */
+.daycycle{margin:0 0 12px; padding:14px 18px 12px;
   background:linear-gradient(135deg,var(--acc) 0%,var(--acc-deep) 100%); color:#fff;
-  border-radius:0 0 22px 22px; box-shadow:0 8px 24px rgba(0,0,0,.12);}
+  border-radius:22px; box-shadow:0 8px 24px rgba(0,0,0,.12);}
 .daycycle svg{display:block; width:100%; max-width:340px; margin:0 auto;}
 .dc-insight{text-align:center; font-size:12.5px; font-weight:600; opacity:.92; margin-top:8px; line-height:1.45; padding:0 8px;}
 .pavatar{width:46px; height:46px; border-radius:50%; object-fit:cover; flex:none; background:var(--acc-soft); color:var(--acc);
@@ -1470,7 +1471,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.23-e";
+const APP_VERSION = "2026.09.23-f";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1822,12 +1823,6 @@ function paintDayCycle(){
 }
 /* live clock: repaint every minute while the diary is showing */
 setInterval(()=>{ const v=$("view-diary"); if(v && v.classList.contains("active")) paintDayCycle(); }, 60000);
-/* stick the panel just under the sticky topbar (measured, never guessed) */
-function dcStick(){
-  const tb = document.querySelector("#view-diary .topbar"), p = $("dayCycle");
-  if(tb && p) p.style.top = tb.offsetHeight+"px";
-}
-window.addEventListener("resize", dcStick);
 function renderDiary(){
   paintDayCycle();
   const k = viewDate(), d = day(), g = S.goals, t = totals(k);
@@ -4987,7 +4982,7 @@ document.getElementById("progEditBtn").onclick = function(){
     setProgEdit(false);
   } else setProgEdit(true);
 };
-function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); applyProgLayout(); dcStick(); }
+function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); applyProgLayout(); }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.v));
 /* Progress sub-tabs were removed in 2026.09.22-a: Progress is a single view whose
    weight circle opens the full-screen #wtDetail sheet. */
