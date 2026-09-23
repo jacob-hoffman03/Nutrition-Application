@@ -191,6 +191,8 @@ button{font-family:inherit;}
 .pstrip{display:flex; align-items:center; gap:12px; padding:2px 2px 12px;}
 /* DAY CYCLE — 2026.09.23-e: day/night panel. Theme-filled like the diary hero;
    the arc itself carries the day gradient (orange→yellow→blue→dark blue).
+   2026.09.23-i: sunrise/sunset slits on the arc, segmented meal-color
+   now-marker, and an attached thin eat-window bar with tiny meal icons.
    Plain card in normal flow — scrolls with everything else, nothing sticky,
    nothing slides behind anything. Lives on the Progress page (2026.09.23-g). */
 .daycycle{margin:0 0 12px; padding:14px 18px 12px;
@@ -973,13 +975,15 @@ body.reordering #progOverview{display:none}
     </div>
     <div id="progReorder" hidden></div>
     <div id="progOverview">
-    <!-- DAY CYCLE — 2026.09.23-g: moved to Progress per Jay. Day/night arc,
-         half-circle loop from morning to night (orange→yellow→blue→dark blue),
-         live day clock in the middle, white dots at YOUR learned meal times.
-         Plain card in normal flow — scrolls with everything else. Pinned above
-         the reorderable panels (not a .punit, so Edit/reorder leaves it alone). -->
+    <!-- DAY CYCLE — 2026.09.23-i: full rebuild per Jay. Main arc (day progress)
+         with sunrise/sunset slits (computed daily for Dana Point, they drift
+         through the year). The now-marker is a ring parted into the four meal
+         colors — a part lights up when that meal is logged today. Attached
+         below: a thinner eat-window bar, parted into per-meal segments in the
+         designated meal colors, with the app's tiny meal icons + times.
+         Everything is data-driven and adjusts over time as he logs. -->
     <div class="daycycle" id="dayCycle" aria-label="Day cycle">
-      <svg viewBox="0 0 300 172" aria-hidden="true">
+      <svg viewBox="0 0 300 240" aria-hidden="true">
         <defs>
           <linearGradient id="dcGrad" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stop-color="#ff9f43"/><stop offset=".38" stop-color="#ffd23f"/>
@@ -988,10 +992,14 @@ body.reordering #progOverview{display:none}
         </defs>
         <path d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="14" stroke-linecap="round"/>
         <path id="dcProg" d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="url(#dcGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377"/>
-        <g id="dcMeals"></g>
-        <circle id="dcSun" r="8" cx="30" cy="150" fill="#ffffff" style="filter:drop-shadow(0 0 6px rgba(255,255,255,.9))"/>
+        <g id="dcSunSlits"></g>
+        <g id="dcNowMark"></g>
         <text id="dcClock" x="150" y="106" text-anchor="middle" fill="#ffffff" font-size="32" font-weight="800" style="font-variant-numeric:tabular-nums">--</text>
         <text id="dcSub" x="150" y="128" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="12.5" font-weight="600"></text>
+        <rect x="30" y="188" width="240" height="8" rx="4" fill="rgba(255,255,255,.20)"/>
+        <g id="dcEatSegs"></g>
+        <line id="dcEatNow" y1="184" y2="200" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
+        <g id="dcEatLabels" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle"></g>
       </svg>
       <div class="dc-insight" id="dcInsight"></div>
     </div>
@@ -1472,7 +1480,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.23-h";
+const APP_VERSION = "2026.09.23-i";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1778,37 +1786,118 @@ function dcXY(frac){ /* point on the arc: frac 0 = 5am (left) → 1 = 11pm (righ
   const th = Math.PI*(1-frac);
   return [150+120*Math.cos(th), 150-120*Math.sin(th)];
 }
+function fmtClockS(mins){
+  mins = ((Math.round(mins)%1440)+1440)%1440;
+  let h = Math.floor(mins/60); const ap = h>=12?"p":"a"; h = h%12; if(h===0) h=12;
+  return h+":"+String(mins%60).padStart(2,"0")+ap;
+}
+/* sunrise/sunset for Dana Point (home), NOAA math — recomputed daily so the
+   slits drift through the year. Returns minutes-since-midnight local. */
+const DC_LAT = 33.4672, DC_LON = -117.6981;
+function dcSunTimes(date){
+  const rad = Math.PI/180;
+  const N = Math.floor((date-new Date(date.getFullYear(),0,0))/864e5);
+  const lngH = DC_LON/15;
+  function calc(rise){
+    const t = N+((rise?6:18)-lngH)/24, M = (0.9856*t)-3.289;
+    let L = M+1.916*Math.sin(M*rad)+0.020*Math.sin(2*M*rad)+282.634; L = ((L%360)+360)%360;
+    let RA = Math.atan(0.91764*Math.tan(L*rad))/rad; RA = ((RA%360)+360)%360;
+    RA += Math.floor(L/90)*90-Math.floor(RA/90)*90; RA /= 15;
+    const sinDec = 0.39782*Math.sin(L*rad), cosDec = Math.cos(Math.asin(sinDec));
+    const cosH = (Math.cos(90.833*rad)-sinDec*Math.sin(DC_LAT*rad))/(cosDec*Math.cos(DC_LAT*rad));
+    if(cosH>1 || cosH<-1) return null;
+    const H = (rise ? 360-Math.acos(cosH)/rad : Math.acos(cosH)/rad)/15;
+    const T = H+RA-(0.06571*t)-6.622;
+    let UT = T-lngH; UT = ((UT%24)+24)%24;
+    return (UT*60 - date.getTimezoneOffset() + 1440)%1440;
+  }
+  return {rise:calc(true), set:calc(false)};
+}
+function dcDonut(cx,cy,r0,r1,a0,a1){
+  const p = (r,a)=>[cx+r*Math.cos(a), cy+r*Math.sin(a)];
+  const q0=p(r1,a0), q1=p(r1,a1), q2=p(r0,a1), q3=p(r0,a0);
+  const lg = (a1-a0)>Math.PI?1:0, f=n=>n.toFixed(1);
+  return "M"+f(q0[0])+" "+f(q0[1])+" A"+r1+" "+r1+" 0 "+lg+" 1 "+f(q1[0])+" "+f(q1[1])+
+    " L"+f(q2[0])+" "+f(q2[1])+" A"+r0+" "+r0+" 0 "+lg+" 0 "+f(q3[0])+" "+f(q3[1])+" Z";
+}
+const DC_MEALS3 = ["breakfast","lunch","dinner"];
+const DC_DEFAULT = {breakfast:480, lunch:750, dinner:1110};
+function dcMealWindows(){
+  /* learned window per meal (avg ±25 min); faded defaults until 3+ logs */
+  const out = {};
+  DC_MEALS3.forEach(m=>{
+    const s = mealTimeStats(m);
+    out[m] = s.n>=3 ? {avg:s.avg, n:s.n, learned:true} : {avg:DC_DEFAULT[m], n:0, learned:false};
+  });
+  return out;
+}
 let dcLastDay = "";
 function paintDayCycle(){
   if(!$("dayCycle")) return;
   const now = new Date(), nowMin = now.getHours()*60+now.getMinutes();
   const frac = Math.max(0, Math.min(1,(nowMin-DC_T0)/(DC_T1-DC_T0)));
+  const X = t => 30+240*Math.max(0, Math.min(1,(t-DC_T0)/(DC_T1-DC_T0)));
   $("dcProg").style.strokeDashoffset = 377*(1-frac);
-  const night = nowMin<DC_T0 || nowMin>DC_T1;
-  const pt = dcXY(frac), sun = $("dcSun");
-  sun.setAttribute("cx", pt[0].toFixed(1)); sun.setAttribute("cy", pt[1].toFixed(1));
-  sun.setAttribute("fill", night ? "#dbe4ff" : "#ffffff");
+  /* sunrise / sunset slits on the arc, like the gray slit on the deficit bar */
+  const st = dcSunTimes(now);
+  let slits = "";
+  [["rise",st.rise],["set",st.set]].forEach(kv=>{
+    const t = kv[1]; if(t==null) return;
+    const f = Math.max(0, Math.min(1,(t-DC_T0)/(DC_T1-DC_T0)));
+    const th = Math.PI*(1-f), c = Math.cos(th), s2 = Math.sin(th);
+    slits += '<line x1="'+(150+108*c).toFixed(1)+'" y1="'+(150-108*s2).toFixed(1)+
+      '" x2="'+(150+132*c).toFixed(1)+'" y2="'+(150-132*s2).toFixed(1)+
+      '" stroke="rgba(255,255,255,.85)" stroke-width="3" stroke-linecap="round"/>';
+    slits += '<text x="'+(150+147*c).toFixed(1)+'" y="'+(150-147*s2+3).toFixed(1)+
+      '" text-anchor="middle" font-size="9" font-weight="700" fill="rgba(255,255,255,.85)">'+fmtClockS(t)+'</text>';
+  });
+  $("dcSunSlits").innerHTML = slits;
+  /* now-marker: ring parted into the four meal colors — a part lights up when
+     that meal is logged today */
+  const mm0 = mealMacros(todayStr());
+  const pt = dcXY(frac);
+  const order = ["breakfast","lunch","dinner","snacks"];
+  let mark = "";
+  order.forEach((m,i)=>{
+    const a0 = -Math.PI/2 + i*Math.PI/2;
+    const lit = (mm0[m]||{cal:0}).cal>=200;
+    mark += '<path d="'+dcDonut(pt[0],pt[1],6,10.5,a0+0.07,a0+Math.PI/2-0.07)+
+      '" fill="'+MEAL_SEG[m]+'" opacity="'+(lit?1:.28)+'"/>';
+  });
+  mark += '<circle cx="'+pt[0].toFixed(1)+'" cy="'+pt[1].toFixed(1)+'" r="3.6" fill="#ffffff" style="filter:drop-shadow(0 0 5px rgba(255,255,255,.9))"/>';
+  $("dcNowMark").innerHTML = mark;
+  /* clock + day progress */
   let hh = now.getHours(); const ap = hh>=12?"PM":"AM"; hh = hh%12; if(hh===0) hh=12;
   $("dcClock").textContent = hh+":"+String(now.getMinutes()).padStart(2,"0")+" "+ap;
+  const night = nowMin<DC_T0 || nowMin>DC_T1;
   $("dcSub").textContent = night ? "Night" : Math.round(frac*100)+"% of day";
-  let dots = "";
-  ["breakfast","lunch","dinner"].forEach(m=>{
-    const s = mealTimeStats(m);
-    if(s.n>=3){
-      const f = Math.max(0, Math.min(1,(s.avg-DC_T0)/(DC_T1-DC_T0)));
-      const p = dcXY(f);
-      dots += '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="4" fill="#fff" opacity=".95"/>';
-    }
+  /* eat-window bar: parted into per-meal segments in the designated colors */
+  const wins = dcMealWindows();
+  let sg = "";
+  DC_MEALS3.forEach(m=>{
+    const w = wins[m];
+    sg += '<rect x="'+X(w.avg-25).toFixed(1)+'" y="188" width="'+Math.max(8,X(w.avg+25)-X(w.avg-25)).toFixed(1)+
+      '" height="8" rx="4" fill="'+MEAL_SEG[m]+'" opacity="'+(w.learned?.95:.30)+'"/>';
   });
-  $("dcMeals").innerHTML = dots;
-  const learned = ["breakfast","lunch","dinner"].map(m=>({m, s:mealTimeStats(m)}))
+  $("dcEatSegs").innerHTML = sg;
+  const en = $("dcEatNow"), nx = X(nowMin);
+  en.setAttribute("x1", nx.toFixed(1)); en.setAttribute("x2", nx.toFixed(1));
+  /* tiny meal icons + times under the bar */
+  let lb = "";
+  DC_MEALS3.forEach(m=>{
+    const w = wins[m], cx = X(w.avg);
+    const inner = MEAL_ICON[m].replace(/<\/?svg[^>]*>/g,"");
+    lb += '<svg x="'+(cx-7).toFixed(1)+'" y="205" width="14" height="14" viewBox="0 0 24 24">'+inner+'</svg>';
+    lb += '<text x="'+cx.toFixed(1)+'" y="232" opacity="'+(w.learned?1:.55)+'">'+fmtClockS(w.avg)+'</text>';
+  });
+  $("dcEatLabels").innerHTML = lb;
+  /* insight: next window, still driven by his learned data */
+  const learned = DC_MEALS3.map(m=>({m, s:mealTimeStats(m)}))
     .filter(o=>o.s.n>=5).sort((a,b)=>a.s.avg-b.s.avg);
   let ins;
   if(!learned.length){
     ins = "Log meals for a few days and I'll learn your best eating windows.";
   }else{
-    /* prefer a meal whose window is open right now and still unlogged today */
-    const mm0 = mealMacros(todayStr());
     const openNow = learned.find(o=>(mm0[o.m]||{cal:0}).cal<200 && nowMin>=o.s.avg-30 && nowMin<=o.s.avg+120);
     const upcoming = learned.find(o=>o.s.avg>nowMin+15);
     const next = openNow || upcoming || learned[0];
