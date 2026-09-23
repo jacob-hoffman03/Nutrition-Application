@@ -885,6 +885,24 @@ body.reordering #progOverview{display:none}
     </div>
     <button class="bigbtn" id="pfCalc" style="margin-top:4px">Calculate maintenance</button>
     <div class="rangenote" id="pfNote"></div>
+    <div class="secttl">Adaptive TDEE</div>
+    <div class="card goalbig" style="margin-top:14px">
+      <div class="glabel">Learned from your log</div>
+      <div class="gnum"><span id="adVal">–</span> <small>kcal</small></div>
+      <div class="gsub" id="adSub"></div>
+      <svg id="adChart" viewBox="0 0 300 84" style="width:100%;height:84px;margin-top:8px;display:none" role="img" aria-label="Adaptive TDEE history"></svg>
+    </div>
+    <div class="card">
+      <div class="cfrow"><span>Formula estimate</span><b id="adFormula">–</b></div>
+      <div class="cfrow" style="margin-top:6px"><span>Learned adjustment</span><b id="adAdj">–</b></div>
+      <div class="cfrow" style="margin-top:6px"><span>Confidence</span><b id="adConf">–</b></div>
+    </div>
+    <div class="rangenote" id="adNote"></div>
+    <div class="card">
+      <div class="cfrow"><span><b style="font-size:14px">Use adaptive target</b></span><button class="chip" id="adToggle">Off</button></div>
+      <div class="cfrow" style="margin-top:8px"><span class="ph">Learns from your last 3 weeks</span><button class="chip" id="adRecalc">Recalculate</button></div>
+    </div>
+    <div class="rangenote" id="adTuneNote"></div>
     <div class="secttl">Calorie goal</div>
     <div class="card goalbig" style="margin-top:14px">
       <div class="glabel">Your Daily Calorie Goal</div>
@@ -1423,13 +1441,13 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.23-c";
+const APP_VERSION = "2026.09.23-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
    new app — Jay fills them in himself. (2026.09.18-ak) */
 const defProfile = () => ({units:"imp", sex:"", age:0, heightIn:0, weightLb:0, bodyFat:0, waistIn:0, activityKey:"", auto:false});
-const defGoals = () => ({maintenance:0, surplus:0, protein:0, carbs:0, fat:0, water:0, waterV:1, weight:0, weightStart:0, mode:"custom", nutrTargets:{}, profile:defProfile(), muscleGoal:0, macroAuto:true});
+const defGoals = () => ({maintenance:0, surplus:0, protein:0, carbs:0, fat:0, water:0, waterV:1, weight:0, weightStart:0, mode:"custom", nutrTargets:{}, profile:defProfile(), muscleGoal:0, macroAuto:true, adaptive:null, adaptiveHist:[], useAdaptive:false, adTuneNote:""});
 /* 2026.09.22-g: freshBoot is true when the app starts with no saved state (fresh
    install / cleared storage) — the boot code then restores seed-data.json (Jay's
    exported backup) so his logs, goals, foods and weights are never lost. */
@@ -4018,6 +4036,7 @@ function renderProfile(){
    The ±150 kcal cap keeps one noisy fortnight from swinging the target. */
 function maybeAutoTune(suggest){
   if(!S.goals.autoTune || !suggest) return false;
+  if(S.goals.useAdaptive) return false; /* adaptive engine owns maintenance — never double-tune */
   const last = S.goals.lastAutoTune;
   const since = last ? Math.round((new Date(todayStr()+"T12:00:00")-new Date(last+"T12:00:00"))/86400000) : 999;
   if(since < 14) return false;
@@ -4027,6 +4046,100 @@ function maybeAutoTune(suggest){
   S.goals.lastAutoTune = todayStr();
   S.goals.tuneNote = "Auto-tune "+todayStr()+": maintenance "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal from your weight trend.";
   return true;
+}
+/* ============ ADAPTIVE TDEE ============
+   Learns maintenance from the energy-balance equation instead of guessing it
+   from an activity multiplier: TDEE = avg daily intake + (weight slope × 3500).
+   The slope runs on 7-day trend weights (MacroFactor convention) so daily scale
+   noise can't swing it; missing days are never padded with zeros. The result
+   blends toward the formula estimate while data is thin, and weekly moves are
+   capped so one noisy week can't yank the target. */
+function adaptiveCalc(){
+  const WIN=21, MIN_DAYS=7, MIN_SPAN=7;
+  if(!(S.goals.profile.weightLb>0)) return {ok:false, reason:"profile"};
+  const cals=[];
+  for(let i=WIN-1;i>=0;i--){ const t=dayTotals(addDays(todayStr(),-i)); if(t.foodLogged) cals.push(t.cal); }
+  const ws=sortedWeights(), T=p=>new Date(p.d+"T12:00:00").getTime();
+  const cutoff=new Date(todayStr()+"T12:00:00").getTime()-WIN*86400000;
+  const wpts=trendMA(ws).filter(p=>T(p)>=cutoff&&p.n>=2);
+  const spanD=wpts.length>=2?(T(wpts[wpts.length-1])-T(wpts[0]))/86400000:0;
+  if(cals.length<MIN_DAYS||wpts.length<2||spanD<MIN_SPAN)
+    return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD)};
+  const rateWk=halvesRate(wpts);
+  if(rateWk==null) return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD)};
+  const formula=calcMaintenance().maint;
+  if(!(formula>0)) return {ok:false, reason:"profile"};
+  const avg=cals.reduce((a,v)=>a+v,0)/cals.length;
+  const learned=avg+rateWk/7*3500;
+  const conf=Math.min(1,cals.length/WIN);
+  let v=formula+(learned-formula)*conf;
+  v=formula+Math.max(-400,Math.min(400,v-formula)); /* sanity: never trust the math more than ±400 from the formula */
+  return {ok:true, days:cals.length, span:Math.round(spanD), avg:Math.round(avg),
+          rateWk:Math.round(rateWk*100)/100, learned:Math.round(learned),
+          formula, conf, value:Math.round(v)};
+}
+function applyAdaptive(){
+  const g=S.goals, r=adaptiveCalc();
+  if(!r.ok){
+    /* keep the last good value and flag it stale — thin data must never nuke a learned target */
+    if(g.adaptive&&g.adaptive.ok) g.adaptive.stale=true;
+    else g.adaptive={ok:false, reason:r.reason, days:r.days||0, span:r.span||0, updated:todayStr()};
+    save(); paintAdaptive(); renderGoals(); renderDiary(); return;
+  }
+  let v=r.value;
+  const prev=g.adaptive&&g.adaptive.value>0?g.adaptive.value:null;
+  if(prev!=null) v=prev+Math.max(-150,Math.min(150,v-prev)); /* weekly moves capped, same spirit as auto-tune */
+  v=Math.round(v);
+  g.adaptive={ok:true, stale:false, value:v, formula:r.formula, learned:r.learned, avg:r.avg,
+    rateWk:r.rateWk, adj:v-r.formula, conf:r.conf, days:r.days, span:r.span, updated:todayStr()};
+  g.adaptiveHist=g.adaptiveHist||[];
+  const last=g.adaptiveHist[g.adaptiveHist.length-1];
+  if(!last||last.d!==todayStr()) g.adaptiveHist.push({d:todayStr(), v});
+  if(g.adaptiveHist.length>26) g.adaptiveHist=g.adaptiveHist.slice(-26);
+  if(g.useAdaptive){
+    g.maintenance=v; applyModePct(); autoDeriveMacros();
+    g.adTuneNote="Adaptive TDEE "+todayStr()+": maintenance set to "+v.toLocaleString()+" kcal from your trend.";
+  }
+  save(); paintAdaptive(); renderGoals(); renderDiary();
+}
+function paintAdaptive(){
+  const g=S.goals, a=g.adaptive, $=id=>document.getElementById(id);
+  const tg=$("adToggle"); tg.textContent=g.useAdaptive?"On":"Off"; tg.classList.toggle("sel",!!g.useAdaptive);
+  const explainer="Compares what you ate against your weight trend over the last 3 weeks: TDEE = avg intake + (weight change × 3,500 kcal/lb). Needs 7+ logged days and weigh-ins spread across a week.";
+  const chart=$("adChart");
+  if(!a){
+    $("adVal").textContent="–"; $("adSub").textContent="Tap Recalculate to learn your TDEE from your log.";
+    $("adFormula").textContent="–"; $("adAdj").textContent="–"; $("adConf").textContent="–";
+    chart.style.display="none"; $("adNote").textContent=explainer; $("adTuneNote").textContent=g.adTuneNote||""; return;
+  }
+  if(!a.ok){
+    $("adVal").textContent="–";
+    $("adSub").textContent=a.reason==="profile"
+      ? "Add your profile above first — the formula estimate anchors the math."
+      : "Not enough data yet — "+a.days+" of 7 logged days"+(a.span<7?"; weigh-ins span "+a.span+" of 7 days":"")+".";
+    $("adFormula").textContent="–"; $("adAdj").textContent="–"; $("adConf").textContent="–";
+    chart.style.display="none"; $("adNote").textContent=explainer; $("adTuneNote").textContent=g.adTuneNote||""; return;
+  }
+  $("adVal").textContent=a.value.toLocaleString();
+  $("adSub").textContent="updated "+a.updated+" · "+a.days+" logged days"+(a.stale?" · stale — log more days":"");
+  $("adFormula").textContent=a.formula.toLocaleString()+" kcal";
+  const adj=$("adAdj");
+  adj.textContent=(a.adj>=0?"+":"−")+Math.abs(a.adj).toLocaleString()+" kcal"; /* explicit − branch: never drop the sign */
+  $("adConf").textContent=(a.conf>=0.85?"High":a.conf>=0.5?"Medium":"Building")+" · "+a.days+" days";
+  const hist=(g.adaptiveHist||[]).slice(-8);
+  if(hist.length>=2){
+    const W=300,H=84,P=10, vs=hist.map(h=>h.v), mn=Math.min.apply(null,vs), mx=Math.max.apply(null,vs), rg=Math.max(1,mx-mn);
+    const X=i=>P+i*(W-2*P)/Math.max(1,hist.length-1), Y=v=>H-P-(v-mn)/rg*(H-2*P);
+    let s='<polyline fill="none" stroke="var(--acc,#5b5bf0)" stroke-width="2.5" stroke-linecap="round" points="'+
+      hist.map((h,i)=>X(i).toFixed(1)+","+Y(h.v).toFixed(1)).join(" ")+'"/>';
+    s+='<circle cx="'+X(hist.length-1).toFixed(1)+'" cy="'+Y(vs[vs.length-1]).toFixed(1)+'" r="4.5" fill="var(--acc,#5b5bf0)"/>';
+    s+='<text x="'+P+'" y="'+(P+4)+'" font-size="10" fill="#999">'+mx.toLocaleString()+'</text>';
+    s+='<text x="'+P+'" y="'+(H-2)+'" font-size="10" fill="#999">'+mn.toLocaleString()+'</text>';
+    chart.innerHTML=s; chart.style.display="";
+  } else chart.style.display="none";
+  $("adNote").textContent="Learned "+a.learned.toLocaleString()+" kcal from "+a.avg.toLocaleString()+" kcal/day avg intake and a "+
+    (a.rateWk>=0?"+":"−")+Math.abs(a.rateWk).toFixed(2)+" lb/wk trend — blended toward the formula at "+Math.round(a.conf*100)+"% confidence.";
+  $("adTuneNote").textContent=g.adTuneNote||"";
 }
 /* The scale is the single source of truth for body weight: every weigh-in updates the
    profile weight, so Calculate maintenance, BMI, calorie check, and the diary all
@@ -4040,7 +4153,7 @@ function syncWeightFromLog(newLb, dateStr){
   const changed = Math.abs(effW - (p.weightLb||0)) >= 0.05;
   p.weightLb = effW;
   let tuned = false;
-  if(p.auto && changed && effW>0){
+  if(p.auto && changed && effW>0 && !S.goals.useAdaptive){
     S.goals.maintenance = calcMaintenance().maint;
     applyModePct();
     autoDeriveMacros(); /* auto macros follow the new goal; manual macros stay untouched */
@@ -4387,6 +4500,7 @@ function renderGoals(){
   document.getElementById("gmFi").value = fct ? fct.val : "";
   document.getElementById("gmFi").placeholder = "auto";
   renderProfile();
+  paintAdaptive();
   document.querySelectorAll("#goalMode .chip").forEach(c=>c.classList.toggle("sel", c.dataset.m===g.mode));
   document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", g.maintenance>0 && +c.dataset.p === Math.round(g.surplus/g.maintenance*100)));
   paintGainProj();
@@ -4488,8 +4602,24 @@ document.getElementById("pfAuto").onclick = ()=>{
 document.getElementById("pfTune").onclick = ()=>{
   commitGoalsInputs();
   S.goals.autoTune = !S.goals.autoTune;
+  if(S.goals.autoTune && S.goals.useAdaptive){ S.goals.useAdaptive=false; S.goals.adTuneNote=""; } /* the two tuners never fight */
   save(); renderProfile();
 };
+document.getElementById("adToggle").onclick = ()=>{
+  commitGoalsInputs();
+  const g=S.goals;
+  g.useAdaptive = !g.useAdaptive;
+  if(g.useAdaptive){
+    if(!(g.adaptive&&g.adaptive.ok)){ alert("Calculate your adaptive TDEE first."); g.useAdaptive=false; }
+    else{
+      g.autoTune=false; /* the two tuners never fight */
+      g.maintenance=g.adaptive.value; applyModePct(); autoDeriveMacros();
+      g.adTuneNote="Adaptive TDEE "+todayStr()+": maintenance set to "+g.adaptive.value.toLocaleString()+" kcal.";
+    }
+  } else g.adTuneNote="";
+  save(); renderGoals(); renderDiary();
+};
+document.getElementById("adRecalc").onclick = ()=>{ commitGoalsInputs(); applyAdaptive(); };
 document.querySelectorAll("#goalMode .chip").forEach(c=>c.onclick=()=>{
   commitGoalsInputs();
   if(!(S.goals.maintenance>0)){ alert("Calculate your maintenance first."); return; }
@@ -4509,6 +4639,7 @@ document.querySelectorAll("#surpChips .chip").forEach(c=>c.onclick=()=>{
 document.getElementById("pfCalc").onclick = ()=>{
   commitGoalsInputs();
   recalcMaint();
+  if(S.goals.useAdaptive){ S.goals.useAdaptive=false; S.goals.adTuneNote=""; } /* explicit formula choice wins over the adaptive engine */
   autoDeriveMacros(); /* macros follow the fresh calculation — nothing to type */
   save(); renderGoals(); renderDiary();
   /* never silently "not work": if there's still nothing to calculate from, put the cursor on the missing weight field */
@@ -4526,7 +4657,10 @@ document.getElementById("macroAutoBtn").onclick = ()=>{
 };
 document.getElementById("goalsDone").onclick = ()=>{
   commitGoalsInputs();
-  if(profHash()!==S.goals.profHash){ recalcMaint(); autoDeriveMacros(); } /* profile changed → goal can never go stale */
+  if(profHash()!==S.goals.profHash){
+    if(S.goals.useAdaptive) applyAdaptive(); /* adaptive owns maintenance now — re-learn with the new profile */
+    else { recalcMaint(); autoDeriveMacros(); }
+  } /* profile changed → goal can never go stale */
   save(); showView("settings"); renderDiary();
 };
 /* Typed values commit on every field change (blur/return), so nothing the user
