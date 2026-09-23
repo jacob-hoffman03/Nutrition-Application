@@ -1480,7 +1480,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.23-i";
+const APP_VERSION = "2026.09.23-j";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1848,7 +1848,7 @@ function paintDayCycle(){
     slits += '<line x1="'+(150+108*c).toFixed(1)+'" y1="'+(150-108*s2).toFixed(1)+
       '" x2="'+(150+132*c).toFixed(1)+'" y2="'+(150-132*s2).toFixed(1)+
       '" stroke="rgba(255,255,255,.85)" stroke-width="3" stroke-linecap="round"/>';
-    slits += '<text x="'+(150+147*c).toFixed(1)+'" y="'+(150-147*s2+3).toFixed(1)+
+    slits += '<text x="'+Math.max(30,Math.min(270,150+147*c)).toFixed(1)+'" y="'+(150-147*s2+3).toFixed(1)+
       '" text-anchor="middle" font-size="9" font-weight="700" fill="rgba(255,255,255,.85)">'+fmtClockS(t)+'</text>';
   });
   $("dcSunSlits").innerHTML = slits;
@@ -2815,13 +2815,15 @@ function paintTray(){
 }
 document.getElementById("trayAdd").onclick = ()=>{
   const d = day();
+  const seenMeals = {};
   tray.forEach(t=>{
     const f = findFood(t.n); if(!f) return;
     d.meals[t.meal].push({id:uid(), n:f.n, s:f.s, qty:t.qty, img:f.img||null,
       cal:f.cal*t.qty, p:f.p*t.qty, c:f.c*t.qty, f:f.f*t.qty,
       kind:f.kind||"food", nutrs:(f.nutrs||[]).map(x=>({n:x.n, amt:x.amt*t.qty, u:x.u})), xw:!!f.xw});
-    recordMealTime(t.meal);
+    seenMeals[t.meal] = 1; /* one timing observation per meal per logging action (2026.09.23-j) */
   });
+  Object.keys(seenMeals).forEach(m=>recordMealTime(m));
   save(); closeSheet(); renderDiary();
 };
 document.querySelectorAll("#sheetTabs .segtab").forEach(t=>t.onclick=()=>{ sheetTab=t.dataset.t;
