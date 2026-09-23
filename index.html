@@ -1419,7 +1419,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.22-p";
+const APP_VERSION = "2026.09.23-a";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2072,20 +2072,27 @@ function mealMacros(ds){
   return out;
 }
 /* ============ TIRED LEVEL — "how tired do you feel" estimate ============
-   Rebuilt 2026.09.22-g (research pass): the old "fatigue %" scored everything you
-   ate and kept saying Jay was tired when he wasn't. New model, per the evidence:
+   Rebuilt 2026.09.23-a (research pass): the workout input is gone. This app has
+   no training logging, so a dead input was pretending to move the number. The
+   model is now food data + time of day only, per the evidence:
    - Base 30 (neutral), clamped 0-100, mapped to 5 levels:
      1 Wired / 2 Up / 3 Even / 4 Drowsy / 5 Drained. No % number on the chip.
    - MISSING DATA DEFAULTS TO FINE, never to tired. Sleep debt is the dominant
      tiredness input in the literature (Van Dongen et al. 2003, 14-day dose
      response) but the app has no sleep logging yet, so it contributes 0 until
      sleep data exists. A missing log is not evidence of no sleep.
-   - Inputs that move it: circadian dip (~13-15h, Monk et al. constant-routine work
-     — normal, not a problem), water clearly under target late in the day (~1.5%
-     dehydration brings fatigue, Ganio et al. 2011), the most recent meal within a
-     ~2h window if carb-dominant (glucose silences orexin wakefulness neurons,
-     Burdakov et al. 2005/2006), yesterday's drinks, lightly (Ebrahim et al. 2013;
-     Penning et al. 2012), and a workout today reduces it (Loy et al. 2013).
+   - Time of day: the ~1-3pm alertness trough is endogenous — it shows up even
+     if you skip lunch entirely (Monk et al. constant-routine work), so it is
+     normal, not a problem. Tails into 3-4pm. Late-night (22-1h) and
+     early-morning (4-7h) hours are the other low points of the alertness cycle.
+   - Food: the most recent meal within a ~2h window moves it two ways. A
+     carb-dominant meal quiets the orexin wakefulness neurons (Burdakov et al.
+     2005/2006); protein/fiber blunts it, partly via the tryptophan-serotonin
+     route (Wurtman). Separately, a big recent meal adds drowsiness on its own:
+     larger solid meals shorten sleep-onset latency vs. smaller ones or water
+     (Wells et al. 1997). Water clearly under target late in the day counts too
+     (~1.5% dehydration brings fatigue, Ganio et al. 2011). Yesterday's drinks,
+     lightly (Ebrahim et al. 2013; Penning et al. 2012).
    - What does NOT move it: total calories, total carbs, nicotine, bloat. */
 function tiredLevel(ds){
   ds = ds || todayStr();
@@ -2093,8 +2100,10 @@ function tiredLevel(ds){
   const cap1 = s => s.charAt(0).toUpperCase()+s.slice(1);
   let pts = 30; const why = [];
   const now = new Date(), hr = now.getHours();
-  /* circadian: the afternoon trough is expected, not pathological */
+  /* circadian: the afternoon trough is expected, not pathological — it shows up
+     even on days you skip lunch (Monk et al.), so a meal only amplifies it */
   if(hr>=13 && hr<15){ pts+=8; why.push("Mid-afternoon dip (1-3pm) — alertness naturally troughs then, whatever you ate."); }
+  else if(hr>=15 && hr<16){ pts+=4; why.push("Tail of the afternoon dip — the trough fades over 3-4pm."); }
   else if(hr>=22 || hr<1){ pts+=4; why.push("Late-night hours — your body clock is winding down."); }
   else if(hr>=4 && hr<7){ pts+=4; why.push("Early-morning hours — the low point of the alertness cycle."); }
   /* hydration: only a genuine deficit, late in the day */
@@ -2106,8 +2115,10 @@ function tiredLevel(ds){
       else if(wr<0.8){ pts+=4; why.push("Water is at "+Math.round(wr*100)+"% of target this afternoon — mild dehydration drags energy down."); }
     }
   }
-  /* most recent meal: transient, carb-dominant only. Meals carry no timestamps,
-     so each section is estimated at a typical time. */
+  /* most recent meal: transient, two separate food mechanisms. Meals carry no
+     timestamps, so each section is estimated at a typical time.
+     (1) carb-dominant: glucose silences the orexin wakefulness neurons.
+     (2) size: bigger solid meals shorten sleep-onset latency on their own. */
   const MEAL_AT = {breakfast:8, lunch:12.5, dinner:18.5};
   const mm = mealMacros(ds);
   let lastM = null, lastAt = -1;
@@ -2123,9 +2134,15 @@ function tiredLevel(ds){
       pts += blunted ? 4 : 8;
       why.push(cap1(lastM)+" was carb-dominant ("+Math.round(netC)+"g net carbs)"+(blunted?" but the protein/fiber blunts the dip":"")+" — glucose quiets the brain's orexin wakefulness neurons for an hour or two (Burdakov et al. 2005, 2006).");
     }
+    if(x.cal>=900 || x.f>=40){
+      pts+=6;
+      why.push(cap1(lastM)+" was a big meal ("+Math.round(x.cal).toLocaleString()+" kcal) — larger solid meals pull sleepiness up with them, whatever the macros (Wells et al. 1997).");
+    }
+    else if(x.cal>=650){
+      pts+=3;
+      why.push(cap1(lastM)+" was a hearty one ("+Math.round(x.cal).toLocaleString()+" kcal) — even a moderately big meal deepens the post-meal dip.");
+    }
   }
-  /* workout today: reliable small lift in perceived energy */
-  if(trainDay(ds).done){ pts-=6; why.push("Workout logged today — acute exercise reliably lifts perceived energy (Loy et al. 2013)."); }
   /* yesterday's alcohol: light, capped */
   const yd = addDays(ds,-1);
   const yalc = alcData(S.days[yd]||{}).std;
@@ -2174,7 +2191,7 @@ function scoreInfoHTML(){
   const aRow = a.pct===null
     ? `<div class="irow"><b>Adherence:</b> no logged days in the last 2 weeks yet — log meals and this fills in.</div>`
     : `<div class="irow"><b>Adherence: ${a.pct}%</b> — ${a.hit} of ${a.n} logged days (last 14) hit calories within ±10% of goal and protein ≥90%. Research finds sticking to the plan predicts results better than the plan itself (Burke et al. 2011).</div>`;
-  const tHead = `<div class="irow"><b>Tired level: ${t.level}/5 — ${t.label}.</b> An estimate of how tired you feel right now, rebuilt from research: it starts neutral and only moves on real signals — the 1–3pm alertness dip (normal, not a problem), water well under target late in the afternoon (Ganio et al. 2011), a carb-dominant meal eaten in the last ~2 hours (glucose quiets the orexin wakefulness neurons — Burdakov et al. 2005, 2006), yesterday's drinks (Ebrahim et al. 2013), minus a workout logged today (Loy et al. 2013). Missing data never makes it worse: there's no sleep logging yet, so sleep debt isn't counted and defaults to fine.</div>`;
+  const tHead = `<div class="irow"><b>Tired level: ${t.level}/5 — ${t.label}.</b> An estimate of how tired you feel right now, rebuilt from research: it starts neutral and only moves on real signals — the 1–3pm alertness dip (it happens even on days you skip lunch — normal, not a problem), a carb-dominant meal eaten in the last ~2 hours (glucose quiets the orexin wakefulness neurons — Burdakov et al. 2005, 2006), a big recent meal (post-meal sleepiness scales with meal size — Wells et al. 1997), water well under target late in the afternoon (Ganio et al. 2011), yesterday's drinks (Ebrahim et al. 2013). Missing data never makes it worse: there's no sleep logging yet, so sleep debt isn't counted and defaults to fine.</div>`;
   const tRows = t.why.length
     ? t.why.map(w=>`<div class="irow">• ${esc(w)}</div>`).join("")
     : `<div class="irow">Nothing moving the needle right now.</div>`;
@@ -3127,7 +3144,7 @@ function insightTrainingWeek(){
     title: sessions+" session"+(sessions===1?"":"s")+" in the last 7 days",
     copy: todayDone ? "Workout logged today — acute exercise reliably lifts perceived energy (Loy et al. 2013)." :
       (sessions===0 ? "Training log is empty — log a session and it shows up here." : "Sessions logged. Keep the streak going."),
-    ev:"Training days come from your training log (done sessions in the last 7 days). A workout today also lowers today's tired-level estimate."};
+    ev:"Training days come from your training log (done sessions in the last 7 days)."};
 }
 function insightSodiumVsBloat(){
   const avg = rollingAvg("sodium",7);
