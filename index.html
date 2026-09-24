@@ -832,6 +832,12 @@ body.reordering #progOverview{display:none}
       <div class="pmeta"><div class="pname" id="pName">You</div><div class="psub">Today's medals</div></div>
       <div class="medals" id="pMedals"></div>
     </div>
+    <div class="card dcard" id="energyCard">
+      <div class="whead dhead" data-d="energy" role="button" tabindex="0" aria-label="Energy details"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2.5 5.5 13.5h4.8L10 21.5l7.5-11h-4.8L13 2.5z"/></svg></span><b>Energy today</b><button class="ginfo" id="energyInfo" aria-label="About energy check-ins">i</button></span><span style="display:flex;align-items:center;gap:8px"><span class="wlbl" id="energyLabel"></span><span class="chev2 dchev">›</span></span></div>
+      <div class="ddetail" id="ddetail-energy"><div class="pad">
+      <div class="energydots" id="energyDots"></div>
+      </div></div>
+    </div>
     <div class="card progcard">
       <div class="prog-top"><span class="prog-label">Today's Intake</span><span class="prog-date" id="daySub"></span></div>
       <div class="wknavrow pweek">
@@ -929,12 +935,7 @@ body.reordering #progOverview{display:none}
       </div></div>
     </div>
 
-    <div class="card dcard" id="energyCard">
-      <div class="whead dhead" data-d="energy" role="button" tabindex="0" aria-label="Energy details"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2.5 5.5 13.5h4.8L10 21.5l7.5-11h-4.8L13 2.5z"/></svg></span><b>Energy today</b><button class="ginfo" id="energyInfo" aria-label="About energy check-ins">i</button></span><span style="display:flex;align-items:center;gap:8px"><span class="wlbl" id="energyLabel"></span><span class="chev2 dchev">›</span></span></div>
-      <div class="ddetail" id="ddetail-energy"><div class="pad">
-      <div class="energydots" id="energyDots"></div>
-      </div></div>
-    </div>
+    
   </section>
 
   <!-- ANALYSIS -->
@@ -1912,7 +1913,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-r";
+const APP_VERSION = "2026.09.24-s";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
