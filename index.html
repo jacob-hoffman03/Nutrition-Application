@@ -235,6 +235,13 @@ button{font-family:inherit;}
   animation:chromaSpin 2.4s linear infinite;}
 @keyframes chromaSpin{to{transform:rotate(360deg);}}
 .totemmedal.chroma svg{width:min(46vw,232px);}
+/* single chromatic award in the medal row (2026.09.23-q): replaces the three
+   medals once the triple-crown merge has played. Shine-sweep glint. */
+.medal.chroma{width:40px; height:48px; position:relative; overflow:hidden; border-radius:10px;}
+.medal.chroma::after{content:""; position:absolute; top:-15%; bottom:-15%; left:-70%; width:45%;
+  background:linear-gradient(100deg, rgba(255,255,255,0), rgba(255,255,255,.85), rgba(255,255,255,0));
+  transform:skewX(-18deg); animation:glintSweep 2.6s ease-in-out infinite; pointer-events:none;}
+@keyframes glintSweep{0%{left:-70%;}55%{left:135%;}100%{left:135%;}}
 @keyframes totemLife{0%{opacity:0;}10%{opacity:1;}70%{opacity:1;}100%{opacity:0;}}
 .prow{display:flex; align-items:center; gap:14px;}
 .prow .pmeta{flex:1;}
@@ -1496,7 +1503,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.23-p";
+const APP_VERSION = "2026.09.23-q";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4606,6 +4613,11 @@ function chromaMerge(){
     wrap.classList.remove("chroma","show");
     void wrap.offsetWidth;
     wrap.classList.add("chroma","show");
+    /* the three header medals stay replaced by the single chromatic award */
+    ["pMedals","sMedals"].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el){ el.innerHTML = medalRowHTML(todayStr()); wireMedals(el); }
+    });
     setTimeout(()=>{ medalEl.classList.remove("chroma"); wrap.classList.remove("chroma"); }, 1900);
   };
   const btns = document.querySelectorAll("#pMedals .medal");
@@ -4801,6 +4813,10 @@ function medalSVG(color, earned){
 }
 function medalRowHTML(ds){
   const m = medalsFor(ds);
+  /* triple crown: once the merge has celebrated today, the three medals stay
+     replaced by the single chromatic award */
+  const crowned = MEDAL_DEFS.every(md=>m[md.id]) && S.medalPop && S.medalPop[ds] && S.medalPop[ds].indexOf("chroma")>=0;
+  if(crowned) return `<button class="medal chroma" aria-label="Triple crown award">${chromaSVG()}</button>`;
   return MEDAL_DEFS.map(md=>`<button class="medal" data-m="${md.id}" aria-label="${md.name} medal${m[md.id]?" earned":""}">${medalSVG(md.color, m[md.id])}</button>`).join("");
 }
 function wireMedals(el){ el.querySelectorAll(".medal").forEach(b=>b.onclick=()=>openMedalInfo()); }
