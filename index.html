@@ -338,9 +338,14 @@ button{font-family:inherit;}
 .dtop b{display:block; font-size:19px; letter-spacing:-.3px;}
 .dtop span{font-size:14px; color:var(--muted);}
 .dlabel{font-size:16px; font-weight:800; margin-bottom:10px;}
-.dbig{display:flex; align-items:baseline; justify-content:center; gap:10px; margin:6px 0 2px;}
-.dbig input{width:150px; text-align:center; font-size:44px; font-weight:800; border:none; border-bottom:2px solid var(--acc); background:none; color:var(--ink); padding:2px 0;}
+.dbig{display:flex; align-items:center; justify-content:center; gap:10px; margin:6px 0 2px;}
+.dbig input{width:120px; text-align:center; font-size:44px; font-weight:800; border:none; border-bottom:2px solid var(--acc); background:none; color:var(--ink); padding:2px 0;}
 .dbig input:focus{outline:none;}
+.dstep{width:46px; height:46px; border-radius:23px; border:none; background:var(--card2); color:var(--acc); font-size:26px; font-weight:700; line-height:1; flex:none; display:flex; align-items:center; justify-content:center;}
+.dstep:active{transform:scale(.92);}
+.dmacros{text-align:center; font-size:13px; color:var(--muted); font-weight:700; margin:-4px 0 10px;}
+#toast{position:fixed; left:16px; right:16px; bottom:calc(20px + env(safe-area-inset-bottom)); z-index:200; background:#1c1c1e; color:#fff; border-radius:14px; padding:13px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:14px; font-weight:600; box-shadow:0 8px 30px rgba(0,0,0,.3);}
+#toast button{background:none; border:none; color:#b79cff; font-weight:800; font-size:14px; padding:4px 2px;}
 .dbig .du{font-size:17px; color:var(--acc); font-weight:700;}
 .dkcal{text-align:center; font-size:14px; color:var(--muted); margin-bottom:10px;}
 .dcost{text-align:center; font-size:13px; color:var(--muted); font-weight:600; margin:-6px 0 10px;}
@@ -1496,9 +1501,11 @@ body.reordering #progOverview{display:none}
         </div>
         <div class="card">
           <div class="dlabel">Serving Size</div>
-          <div class="dbig"><input id="dQty" type="number" inputmode="decimal" value="1"><span class="du" id="dUnit"></span></div>
+          <div class="dbig"><button class="dstep" id="dMinus">&#8722;</button><input id="dQty" type="number" inputmode="decimal" value="1"><button class="dstep" id="dPlus">+</button><span class="du" id="dUnit"></span></div>
           <div class="dkcal" id="dKcal"></div>
+          <div class="dmacros" id="dMacros" style="display:none"></div>
           <div class="dcost" id="dCost" style="display:none"></div>
+          <div class="chips" id="dPresets" style="display:none;margin-bottom:10px"></div>
           <div class="chips" id="dUnits"></div>
         </div>
         <div class="card">
@@ -1517,6 +1524,7 @@ body.reordering #progOverview{display:none}
     </div>
   </div>
 </div>
+<div id="toast" style="display:none"><span id="toastMsg"></span><button id="toastBtn"></button></div>
 
 <!-- NUTRIENT TARGET SHEET -->
 <div class="sheet" id="nsheet">
@@ -1876,7 +1884,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-l";
+const APP_VERSION = "2026.09.24-q";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -3338,12 +3346,19 @@ function sheetRowHtml(f){
   const thumb = foodThumb(f);
   const diy = isCustom(f.n) ? '<span class="diy">DIY</span>' : "";
   const ver = isVerifiedFood(f.n) ? '<span class="verfd">Verified</span>' : "";
+  /* remembered serving: "last: 2 scoops · 240 kcal" beats the generic per-serving line */
+  const ls = S.lastServ && S.lastServ[f.n];
+  let sub = Math.round(f.cal)+'kcal / '+esc(f.s);
+  if(ls && ls.q>0){
+    const serv = lastServServings(f, ls);
+    sub = 'last: '+trimNum(ls.q)+' '+esc(ls.u==="serv"?servUnitLabel(f):ls.u)+' · '+Math.round(f.cal*serv)+' kcal';
+  }
   return '<div class="arow2" data-n="'+esc(f.n)+'"><span class="athumb">'+thumb+'</span>'+
-    '<div class="anm"><b>'+diy+ver+esc(f.n)+'</b><span>'+Math.round(f.cal)+'kcal / '+esc(f.s)+'</span></div>'+
+    '<div class="anm"><b>'+diy+ver+esc(f.n)+'</b><span>'+sub+'</span></div>'+
     '<button class="aplus" data-n="'+esc(f.n)+'">+</button></div>';
 }
-function renderSheetResults(q){
-  q = q.trim().toLowerCase();
+function renderSheetResults(q0){
+  const rawQ = String(q0||"").trim(), q = rawQ.toLowerCase();
   const box = document.getElementById("sheetResults"); box.innerHTML = "";
   let list = sheetTab==="recent" ? recentFoods()
     : sheetTab==="favorites" ? S.favorites.map(n=>findFood(n)).filter(Boolean) /* by name: resolves custom + verified */
@@ -3362,11 +3377,36 @@ function renderSheetResults(q){
       (list.length ? '<div class="flabel" style="margin:10px 0 6px">Your foods</div>' : "");
   }
   box.innerHTML = verHtml + list.slice(0, 40).map(sheetRowHtml).join("") ||
-    '<div class="empty">No matches. Tap + Create new food to add it.</div>';
-  box.querySelectorAll(".aplus").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const f=findFood(b.dataset.n); if(f) openDetail(f); }); /* + opens the serving-size panel (2026.09.21-l) */
+    '<div class="empty">No matches for &ldquo;'+esc(rawQ)+'&rdquo;.<br><button class="ghostbtn" id="emptyCreate" style="margin-top:10px">Create &ldquo;'+esc(rawQ)+'&rdquo; as new food</button></div>';
+  const ec = document.getElementById("emptyCreate");
+  if(ec) ec.onclick = ()=>openCustomFromSheet(rawQ);
+  box.querySelectorAll(".aplus").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const f=findFood(b.dataset.n); if(!f) return; if(sheetTab==="favorites") quickLog(f); else openDetail(f); }); /* favorites + = one-tap re-log with Undo; elsewhere + opens the serving-size panel */
   box.querySelectorAll(".arow2").forEach(r=>r.onclick=()=>{ const f=findFood(r.dataset.n); if(f) openDetail(f); }); /* row tap opens detail (2026.09.21-k) */
 }
 /* ============ ADD FOOD SHEET ============ */
+/* one logged entry from a food + serving count; photo resolves by name at display time */
+function buildEntry(f, qty){
+  const e = {id:uid(), n:f.n, s:f.s, qty, img:null, /* photo lives on the library food; entryImg() resolves it by name */
+    cal:f.cal*qty, p:f.p*qty, c:f.c*qty, f:f.f*qty,
+    kind:f.kind||"food", nutrs:(f.nutrs||[]).map(x=>({n:x.n, amt:x.amt*qty, u:x.u})), xw:!!f.xw};
+  if(dayOffset===0) e.t = Date.now(); /* log-time stamp drives tired-model recency; backfills stay untimed */
+  return e;
+}
+/* favorites one-tap re-log: remembered serving straight into the diary, Undo toast */
+function quickLog(f){
+  const meal = f.kind==="supp" ? "supplements" : sheetMeal;
+  const d = day();
+  const e = buildEntry(f, round2(lastServServings(f, S.lastServ && S.lastServ[f.n])));
+  if(!d.meals[meal]) d.meals[meal] = [];
+  d.meals[meal].push(e);
+  if(dayOffset===0) recordMealTime(meal); /* one timing observation per logging action */
+  save(); renderDiary(); haptic();
+  showToast("Logged "+f.n+" · "+Math.round(e.cal)+" kcal", "Undo", ()=>{
+    const dd = day(), arr = dd.meals[meal]||[];
+    const i = arr.findIndex(x=>x.id===e.id);
+    if(i>=0){ arr.splice(i,1); save(); renderDiary(); }
+  });
+}
 function addToTray(f, qty, meal){
   const m = meal || (f.kind==="supp" ? "supplements" : sheetMeal);
   const ex = tray.find(t=>t.n===f.n && t.meal===m);
@@ -3380,17 +3420,15 @@ function paintTray(){
   document.getElementById("trayCount").textContent = count;
   document.getElementById("trayKcal").textContent = kcal.toLocaleString()+" kcal";
   document.getElementById("trayAdd").disabled = !count;
-  bar.style.display = count ? "" : "none";
+  const inDetail = document.getElementById("sheetDetail").style.display!=="none";
+  bar.style.display = (count && !inDetail) ? "" : "none";
 }
 document.getElementById("trayAdd").onclick = ()=>{
   const d = day();
   const seenMeals = {};
   tray.forEach(t=>{
     const f = findFood(t.n); if(!f) return;
-    const e = {id:uid(), n:f.n, s:f.s, qty:t.qty, img:null, /* photo lives on the library food; entryImg() resolves it by name */
-      cal:f.cal*t.qty, p:f.p*t.qty, c:f.c*t.qty, f:f.f*t.qty,
-      kind:f.kind||"food", nutrs:(f.nutrs||[]).map(x=>({n:x.n, amt:x.amt*t.qty, u:x.u})), xw:!!f.xw};
-    if(dayOffset===0) e.t = Date.now(); /* log-time stamp drives tired-model recency; backfills stay untimed */
+    const e = buildEntry(f, t.qty);
     if(!d.meals[t.meal]) d.meals[t.meal] = [];
     d.meals[t.meal].push(e);
     seenMeals[t.meal] = 1; /* one timing observation per meal per logging action (2026.09.23-j) */
@@ -3404,7 +3442,12 @@ document.querySelectorAll("#sheetTabs .segtab").forEach(t=>t.onclick=()=>{ sheet
   renderSheetResults(document.getElementById("sheetSearch").value); });
 document.getElementById("sheetSort").addEventListener("change", e=>{ sheetSort=e.target.value; renderSheetResults(document.getElementById("sheetSearch").value); });
 let customFromSheet = false;
-document.getElementById("sheetCreate").onclick = ()=>{ closeSheet(); resetCustomForm(); customFromSheet = true; csheet.classList.add("open"); };
+function openCustomFromSheet(presetName){
+  closeSheet(); resetCustomForm(); customFromSheet = true;
+  if(presetName) document.getElementById("cName").value = presetName;
+  document.getElementById("csheet").classList.add("open");
+}
+document.getElementById("sheetCreate").onclick = ()=>openCustomFromSheet();
 function showSearch(){
   document.getElementById("sheetSearchWrap").style.display = "";
   document.getElementById("sheetDetail").style.display = "none";
@@ -3415,6 +3458,28 @@ function showSearch(){
 /* ---- detail: serving-size editor ---- */
 let dQty = 1, dUnit = "serv", dMeal = "breakfast", dGramPer = 0;
 const round2 = x => Math.round(x*100)/100;
+const trimNum = v => String(Math.round(v*100)/100); /* "2" not "2.00", "0.5" stays */
+function gramPerFood(f){ return parseFloat((String(f.s).match(/[\d.]+(?=\s*g\b)/i)||[])[0])||0; }
+/* servings represented by a remembered {q,u} (servings / grams / oz) */
+function lastServServings(f, ls){
+  if(!ls || !(ls.q>0)) return 1;
+  if(ls.u==="serv") return ls.q;
+  const gp = gramPerFood(f);
+  if(!gp) return 1;
+  return ls.u==="g" ? ls.q/gp : ls.q*gp/28.3495;
+}
+function haptic(){ try{ if(navigator.vibrate) navigator.vibrate(10); }catch(e){} }
+/* ---- toast with one action (Undo) ---- */
+let toastTimer = null;
+function showToast(msg, btn, fn){
+  const t = document.getElementById("toast");
+  document.getElementById("toastMsg").textContent = msg;
+  const b = document.getElementById("toastBtn");
+  b.textContent = btn; b.onclick = ()=>{ hideToast(); if(fn) fn(); };
+  t.style.display = "";
+  clearTimeout(toastTimer); toastTimer = setTimeout(hideToast, 5000);
+}
+function hideToast(){ document.getElementById("toast").style.display = "none"; clearTimeout(toastTimer); }
 function parseGrams(s){ const m = String(s||"").match(/(\d+(?:\.\d+)?)\s*g\b/i); return m ? parseFloat(m[1]) : 0; }
 function servUnitLabel(f){ return (f.kind==="supp" && (f.cUnit||f.unit)) ? (f.cUnit||f.unit) : "serving"; }
 function dServings(){
@@ -3445,7 +3510,7 @@ function openDetail(f){
     b.onclick = ()=>{ dMeal = m; dm.querySelectorAll(".micon").forEach(x=>x.classList.toggle("sel", x===b)); };
     dm.appendChild(b);
   });
-  paintDUnits(); updateDetail();
+  paintDUnits(); paintDPresets(); updateDetail();
 }
 function paintDUnits(){
   const f = sheetFood, box = document.getElementById("dUnits"); box.innerHTML = "";
@@ -3464,11 +3529,41 @@ function paintDUnits(){
     box.appendChild(b);
   });
 }
+/* ---- serving stepper: 1 tap for the common ±1 adjust (vs 4 taps to retype) ---- */
+function stepQty(dir){
+  const step = dUnit==="g" ? 10 : dUnit==="oz" ? 0.5 : 1;
+  let v = round2((dQty||0) + dir*step);
+  if(v < step) v = step;
+  if(v > 99999) v = 99999;
+  dQty = v; updateDetail();
+}
+document.getElementById("dMinus").onclick = ()=>stepQty(-1);
+document.getElementById("dPlus").onclick = ()=>stepQty(1);
+/* ---- serving presets: up to 3 recent (qty,unit) combos per food, one-tap ---- */
+function paintDPresets(){
+  const f = sheetFood, box = document.getElementById("dPresets");
+  const ps = (S.lastServ && S.lastServ[f.n] && S.lastServ[f.n].presets) || [];
+  box.innerHTML = "";
+  if(!ps.length){ box.style.display = "none"; return; }
+  box.style.display = "";
+  ps.forEach(p=>{
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.textContent = trimNum(p.q)+" "+(p.u==="serv" ? servUnitLabel(f) : p.u);
+    b.onclick = ()=>{ dQty = p.q; dUnit = p.u; paintDUnits(); updateDetail(); };
+    box.appendChild(b);
+  });
+}
 function updateDetail(){
   const f = sheetFood, serv = dServings(), qi = document.getElementById("dQty");
   if(document.activeElement!==qi) qi.value = dQty;
   document.getElementById("dUnit").textContent = dUnit==="serv" ? servUnitLabel(f) : dUnit;
   document.getElementById("dKcal").textContent = Math.round(f.cal*serv).toLocaleString()+" kcal";
+  const dmEl = document.getElementById("dMacros");
+  const mp = f.p*serv, mc = f.c*serv, mf = f.f*serv;
+  if(mp+mc+mf>0){ dmEl.style.display = ""; dmEl.textContent = "P "+r1(mp)+"g · C "+r1(mc)+"g · F "+r1(mf)+"g"; }
+  else dmEl.style.display = "none";
+  document.getElementById("confirmAdd").textContent = "Confirm · "+Math.round(f.cal*serv).toLocaleString()+" kcal";
   const uc = foodUnitCost(f), dcEl = document.getElementById("dCost");
   if(uc>0){ dcEl.style.display=""; dcEl.textContent = fmtCost(uc*serv)+" · "+fmtCost(uc)+" each"; }
   else dcEl.style.display = "none";
@@ -3481,7 +3576,14 @@ document.getElementById("sheetSearch").addEventListener("input", e=>renderSheetR
 document.getElementById("confirmAdd").onclick = ()=>{
   if(!sheetFood) return; /* guard: detail opened without a food (2026.09.21-k) */
   addToTray(sheetFood, round2(dServings()), dMeal);
-  (S.lastServ = S.lastServ||{})[sheetFood.n] = {q:dQty, u:dUnit}; save();
+  /* remember last serving + up to 3 recent (qty,unit) presets per food */
+  const ls = (S.lastServ = S.lastServ||{});
+  const rec = ls[sheetFood.n] || (ls[sheetFood.n] = {});
+  rec.q = dQty; rec.u = dUnit;
+  rec.presets = [{q:dQty, u:dUnit}]
+    .concat((rec.presets||[]).filter(p=>!(round2(p.q)===round2(dQty) && p.u===dUnit)))
+    .slice(0, 3);
+  save(); haptic();
   showSearch(); sheetBody().scrollTop = sheetReturnTop;
 };
 
