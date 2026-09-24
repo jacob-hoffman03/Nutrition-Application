@@ -462,6 +462,27 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wlogrow input{min-width:0;}
 .wlogrow input[type="date"]{flex:0 1 112px; font-size:13px; padding:11px 4px; color:var(--ink);}
 /* ============ WEIGHT HERO CIRCLE + FULL-SCREEN DETAIL (2026.09.22) ============ */
+/* 2026.09.24-l: progress restructure — card titles, segments, expandable rows */
+.cardttl{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.cardttl b{font-size:17px;letter-spacing:-.2px;}
+.cardttl .pill{margin-left:auto;}
+.subhead{font-size:12.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:14px 0 2px;}
+.bodyhero{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px;}
+.trajblock{width:100%;text-align:center;margin-top:12px;}
+.segctl{display:flex;background:#e9e9f0;border-radius:12px;padding:3px;margin:10px 0 2px;}
+.segbtn{flex:1;border:0;background:none;padding:8px 0;font-size:13.5px;font-weight:700;color:var(--muted);border-radius:9px;cursor:pointer;font-family:inherit;}
+.segbtn.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(20,20,60,.14);}
+.wseg{padding-top:8px;}
+.xrow{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;border-top:1px solid var(--line);padding:13px 2px;cursor:pointer;color:inherit;font:inherit;text-align:left;}
+.xrow-main{flex:1;min-width:0;}
+.xrow-main b{font-size:15px;}
+.xrow-val{display:flex;align-items:center;gap:6px;flex:none;}
+.xrow .chev2{transition:transform .18s ease;color:var(--muted);}
+.xrow.open .chev2{transform:rotate(90deg);}
+.xdetail{display:grid;grid-template-rows:0fr;transition:grid-template-rows .22s ease;}
+.xdetail.open{grid-template-rows:1fr;}
+.xdetail>div{overflow:hidden;min-height:0;}
+.xdetail .pad{padding:2px 2px 16px;}
 .wtcard{display:flex; justify-content:center; padding:30px 16px 26px;}
 .wtcircle{position:relative; width:212px; height:212px; border-radius:50%; border:none; cursor:pointer; font-family:inherit; color:var(--ink);
   background:radial-gradient(circle at 50% 40%, #ffffff 0%, var(--acc-soft) 62%, var(--acc-soft) 100%);
@@ -1097,101 +1118,110 @@ body.reordering #progOverview{display:none}
       </svg>
       <div class="dc-insight" id="dcInsight"></div>
     </div>
-    <div class="punit" data-pid="wt">
-<div class="card wtcard">
-      <button class="wtcircle" id="wtCircle" aria-label="Open weight details">
-        <span class="wtc-num" id="wtCircleNum">—</span>
-        <span class="wtc-unit" id="wtCircleUnit">lb</span>
-        <span class="wtc-date" id="wtCircleDate"></span>
-        <span class="wtc-hint">TAP FOR DETAILS</span>
+    <div class="punit" data-pid="body">
+<div class="card bodycard">
+      <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l2.2 13H3.8L6 7z"/><path d="M9 10.5V6a3 3 0 0 1 6 0v4.5"/></svg></span><b>Body</b></div>
+      <div class="bodyhero">
+        <button class="wtcircle" id="wtCircle" aria-label="Open weight details">
+          <span class="wtc-num" id="wtCircleNum">—</span>
+          <span class="wtc-unit" id="wtCircleUnit">lb</span>
+          <span class="wtc-date" id="wtCircleDate"></span>
+          <span class="wtc-hint">TAP FOR DETAILS</span>
+        </button>
+        <div class="trajblock">
+          <div id="trajHead" style="font-size:26px; font-weight:800; letter-spacing:-.5px">—</div>
+          <div class="rangenote" id="trajSub" style="margin-top:2px"></div>
+          <div class="wgoalbar" id="trajBarWrap" style="margin-top:10px"><i id="trajBarFill" style="width:0%"></i></div>
+          <div class="rangenote" id="trajPct" style="margin-top:6px"></div>
+        </div>
+      </div>
+      <button class="xrow" data-x="bmi" aria-label="BMI details">
+        <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg></span>
+        <span class="xrow-main"><b>BMI</b></span>
+        <span class="xrow-val"><b id="bmiVal" style="font-size:17px">—</b><span class="pill" id="bmiPill" style="display:none"></span></span>
+        <span class="chev2">›</span>
       </button>
+      <div class="xdetail" id="xdetail-bmi"><div class="pad">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="ginfo" id="bmiInfo" aria-label="About BMI">i</button><span class="rangenote">How BMI is calculated</span></div>
+        <div class="bmibar"><i id="bmiMark" style="display:none"></i></div>
+        <div class="bmilbls"><span>14</span><span>18.5</span><span>25</span><span>30</span><span>34</span></div>
+        <div class="rangenote" id="bmiNote" style="margin-top:8px"></div>
+        <div class="rangenote" id="whtrNote" style="margin-top:6px; display:none"></div>
+        <div class="statgrid" id="wtStats" style="margin-top:10px"></div>
+        <div class="rangenote" id="wtContext" style="margin-top:10px"></div>
+      </div></div>
+      <button class="xrow" data-x="calcheck" aria-label="Calorie target check details">
+        <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg></span>
+        <span class="xrow-main"><b>Target check</b><span class="rangenote" style="display:block; margin-top:1px">Is your calorie target working?</span></span>
+        <span class="xrow-val"><b id="calCheckVerdict" style="font-size:14px">—</b></span>
+        <span class="chev2">›</span>
+      </button>
+      <div class="xdetail" id="xdetail-calcheck"><div class="pad">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="ginfo" id="calCheckInfo" aria-label="How this checks your target">i</button><span class="rangenote">How the check works</span></div>
+        <div class="rangenote" id="calCheckOut" style="color:var(--ink)">Log weight for 2+ weeks to grade your target against your real rate of gain.</div>
+        <div id="calCheckApply" style="margin-top:10px; display:none"><button class="bigbtn" id="calApplyBtn"></button></div>
+      </div></div>
+      <button class="xrow" data-x="muscle" aria-label="Muscle estimate details">
+        <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 8v8M17 8v8M4 10v4M20 10v4M7 12h10"/></svg></span>
+        <span class="xrow-main"><b>Muscle</b><span class="rangenote" style="display:block; margin-top:1px" id="muscleRowGoal">Estimated gain</span></span>
+        <span class="xrow-val"><b id="muscleRowVal" style="font-size:17px">–</b></span>
+        <span class="chev2">›</span>
+      </button>
+      <div class="xdetail" id="xdetail-muscle"><div class="pad">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="ginfo" id="muscleInfo" aria-label="How this is estimated">i</button><span class="rangenote">How the estimate works</span></div>
+        <div style="display:flex; gap:16px; align-items:center;">
+          <svg id="muscleRing" width="104" height="104" viewBox="0 0 120 120" style="flex:none">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#ececf1" stroke-width="11"/>
+            <circle id="muscleArc" cx="60" cy="60" r="52" fill="none" style="stroke:var(--acc)" stroke-width="11" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="0 327"/>
+            <text id="muscleNum" x="60" y="58" text-anchor="middle" font-size="21" font-weight="800" fill="#1c1c1e">–</text>
+            <text x="60" y="79" text-anchor="middle" font-size="11" fill="#8a8a98">lb muscle</text>
+          </svg>
+          <div id="muscleOut" style="flex:1; font-size:13.5px; line-height:1.6"></div>
+        </div>
+        <button class="srow" id="muscleGoalBtn" style="margin-top:8px"><span>Muscle goal: <b id="muscleGoalLbl">0 lb</b></span><span class="chev2">›</span></button>
+      </div></div>
     </div>
     </div>
-<div class="punit" data-pid="insights">
-<div class="card" id="insCard">
-      <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l1.9 5.4L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.6L12 3z"/><path d="M18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z"/></svg></span><b style="font-size:16px">This week</b></span><span class="pill" id="insPill" style="display:none"></span></div>
-      <div id="insRows" style="margin-top:2px"></div>
-      <div class="rangenote" id="insNote" style="margin-top:8px">Estimates from your log — not medical advice.</div>
-    </div>
-    </div>
-<div class="punit" data-pid="wkrev">
-<div class="card" id="wkrevCard" style="display:none">
-      <span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="m10.5 14.5 2 2 3.5-4"/></svg></span><b style="font-size:16px">Weekly review</b></span>
-      <div class="rangenote" id="wkrevRange" style="margin:2px 0 6px"></div>
-      <div id="wkrevRows"></div>
-      <div id="wkrevTip" class="rangenote" style="margin-top:8px; color:var(--ink); font-weight:600"></div>
-    </div>
-    </div>
-<div class="punit" data-pid="analytics">
-<div class="card anacard">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="m8 14 3.5-3.5 2.5 2.5 4-5"/></svg></span><b style="font-size:16px">Analytics</b></div>
-      <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span></div><span class="wk-nav"><button id="pgWkPrev" aria-label="Previous week">‹</button><span class="ana-range" id="anaRange">Last 7 days</span><button id="pgWkNext" aria-label="Next week">›</button></span></div>
-      <div class="bars7" id="bars7"></div>
-      <div class="rangenote" id="trendChip" style="margin-top:8px"></div>
-      <div class="chal">
-        <div class="chal-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Goal days</div>
-        <div class="chal-row" id="goalDays"></div>
+    <div class="punit" data-pid="week">
+<div class="card weekcard">
+      <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="m10.5 14.5 2 2 3.5-4"/></svg></span><b>This week</b><span class="pill" id="insPill" style="display:none"></span></div>
+      <div class="segctl" id="weekSeg" role="tablist" aria-label="Week views">
+        <button class="segbtn on" data-seg="sum" role="tab">Summary</button>
+        <button class="segbtn" data-seg="cal" role="tab">Calories</button>
+        <button class="segbtn" data-seg="mac" role="tab">Macros</button>
       </div>
-    </div>
-    </div>
-<div class="punit" data-pid="traj">
-<div class="secttl">Weight goal</div>
-    <div class="card" id="trajCard">
-      <div style="display:flex; justify-content:space-between; align-items:baseline;"><b style="font-size:16px">Trajectory</b><span id="trajPct" style="font-size:13px; color:var(--muted)"></span></div>
-      <div style="font-size:27px; font-weight:800; margin-top:4px" id="trajHead">—</div>
-      <div class="rangenote" id="trajSub" style="margin-top:4px"></div>
-      <div class="wgoalbar" id="trajBarWrap" style="margin-top:10px"><i id="trajBarFill" style="width:0%"></i></div>
-    </div>
-    </div>
-<div class="punit" data-pid="macros">
-<div class="card macrocard">
-      <div class="mc-head"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 12V3.5"/><path d="M12 12l6 6"/></svg></span><b>Macros</b></span><span class="mc-legend"><i style="background:#8b8bf5"></i>Carbs<i style="background:#f5a623"></i>Protein<i style="background:#34c77b"></i>Fat</span><span class="mc-week" id="mcWeek">Weekly</span></div>
-      <div class="mstack" id="macroStack"></div>
-      <div class="mstack-lbls" id="macroStackLbls"></div>
-    </div>
-    </div>
-<div class="punit" data-pid="stats">
-<div class="ministats">
-      <div class="ministat"><span class="ms-label">Day streak</span><b id="stStreak">0</b></div>
-      <div class="ministat"><span class="ms-label">Avg kcal / 7d</span><b id="stAvgCal">0</b></div>
-      <div class="ministat"><span class="ms-label">Avg protein / 7d</span><b id="stAvgP">0g</b></div>
-      <div class="ministat"><span class="ms-label">Water today</span><b id="stWater">0 <small>oz</small></b></div>
-    </div>
-    </div>
-<div class="punit" data-pid="bmi">
-<div class="secttl">Weight analysis</div>
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center; gap:8px;"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg></span><b style="font-size:16px">BMI</b><button class="ginfo" id="bmiInfo" aria-label="About BMI">i</button></span><span><b id="bmiVal" style="font-size:20px">—</b><span class="pill" id="bmiPill" style="display:none"></span></span></div>
-      <div class="bmibar"><i id="bmiMark" style="display:none"></i></div>
-      <div class="bmilbls"><span>14</span><span>18.5</span><span>25</span><span>30</span><span>34</span></div>
-      <div class="rangenote" id="bmiNote" style="margin-top:8px"></div>
-      <div class="rangenote" id="whtrNote" style="margin-top:6px; display:none"></div>
-      <div class="statgrid" id="wtStats" style="margin-top:10px"></div>
-      <div class="rangenote" id="wtContext" style="margin-top:10px"></div>
-    </div>
-    </div>
-<div class="punit" data-pid="calcheck">
-<div class="secttl">Calorie Check</div>
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center; gap:8px;"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg></span><b style="font-size:16px">Is your target working?</b><button class="ginfo" id="calCheckInfo" aria-label="How this checks your target">i</button></span></div>
-      <div class="rangenote" id="calCheckOut" style="margin-top:6px">Log weight for 2+ weeks to grade your target against your real rate of gain.</div>
-      <div id="calCheckApply" style="margin-top:10px; display:none"><button class="bigbtn" id="calApplyBtn"></button></div>
-    </div>
-    </div>
-<div class="punit" data-pid="muscle">
-<div class="secttl">Muscle Gain</div>
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center; gap:8px;"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 8v8M17 8v8M4 10v4M20 10v4M7 12h10"/></svg></span><b style="font-size:16px">Estimated muscle gained</b></span><button class="ginfo" id="muscleInfo" aria-label="How this is estimated">i</button></div>
-      <div style="display:flex; gap:16px; align-items:center; margin-top:10px">
-        <svg id="muscleRing" width="118" height="118" viewBox="0 0 120 120" style="flex:none">
-          <circle cx="60" cy="60" r="52" fill="none" stroke="#ececf1" stroke-width="11"/>
-          <circle id="muscleArc" cx="60" cy="60" r="52" fill="none" style="stroke:var(--acc)" stroke-width="11" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="0 327"/>
-          <text id="muscleNum" x="60" y="58" text-anchor="middle" font-size="21" font-weight="800" fill="#1c1c1e">–</text>
-          <text x="60" y="79" text-anchor="middle" font-size="11" fill="#8a8a98">lb muscle</text>
-        </svg>
-        <div id="muscleOut" style="flex:1; font-size:13.5px; line-height:1.6"></div>
+      <div class="wseg" id="wseg-sum">
+        <div id="insCard">
+          <div id="insRows"></div>
+          <div class="rangenote" id="insNote" style="margin-top:8px">Estimates from your log — not medical advice.</div>
+        </div>
+        <div id="wkrevCard" style="display:none">
+          <div class="subhead">Weekly review</div>
+          <div class="rangenote" id="wkrevRange" style="margin:2px 0 6px"></div>
+          <div id="wkrevRows"></div>
+          <div id="wkrevTip" class="rangenote" style="margin-top:8px; color:var(--ink); font-weight:600"></div>
+        </div>
+        <div class="ministats" style="margin-top:14px">
+          <div class="ministat"><span class="ms-label">Day streak</span><b id="stStreak">0</b></div>
+          <div class="ministat"><span class="ms-label">Avg kcal / 7d</span><b id="stAvgCal">0</b></div>
+          <div class="ministat"><span class="ms-label">Avg protein / 7d</span><b id="stAvgP">0g</b></div>
+          <div class="ministat"><span class="ms-label">Water today</span><b id="stWater">0 <small>oz</small></b></div>
+        </div>
       </div>
-      <button class="srow" id="muscleGoalBtn" style="margin-top:8px"><span>Muscle goal: <b id="muscleGoalLbl">0 lb</b></span><span class="chev2">›</span></button>
+      <div class="wseg" id="wseg-cal" hidden>
+        <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span></div><span class="wk-nav"><button id="pgWkPrev" aria-label="Previous week">‹</button><span class="ana-range" id="anaRange">Last 7 days</span><button id="pgWkNext" aria-label="Next week">›</button></span></div>
+        <div class="bars7" id="bars7"></div>
+        <div class="rangenote" id="trendChip" style="margin-top:8px"></div>
+        <div class="chal">
+          <div class="chal-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Goal days</div>
+          <div class="chal-row" id="goalDays"></div>
+        </div>
+      </div>
+      <div class="wseg" id="wseg-mac" hidden>
+        <div class="mc-head"><span class="mc-legend"><i style="background:#8b8bf5"></i>Carbs<i style="background:#f5a623"></i>Protein<i style="background:#34c77b"></i>Fat</span><span class="mc-week" id="mcWeek">Weekly</span></div>
+        <div class="mstack" id="macroStack"></div>
+        <div class="mstack-lbls" id="macroStackLbls"></div>
+      </div>
     </div>
     </div>
 </div><!-- /progOverview -->
@@ -1823,7 +1853,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-k";
+const APP_VERSION = "2026.09.24-l";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4187,15 +4217,17 @@ function paintWtAnalysis(){
 function paintCalCheck(){
   const out = document.getElementById("calCheckOut"), wrap = document.getElementById("calCheckApply"), btn = document.getElementById("calApplyBtn");
   wrap.style.display = "none";
+  const vs = document.getElementById("calCheckVerdict");
+  const setV = t => { if(vs) vs.textContent = t; };
   const ws = (S.weights||[]).slice().sort((a,b)=>a.d<b.d?-1:1);
-  if(ws.length < 4){ out.textContent = "Log your weight for 2+ weeks (at least 4 weigh-ins) and this compares your real rate of gain against your target."; return; }
+  if(ws.length < 4){ out.textContent = "Log your weight for 2+ weeks (at least 4 weigh-ins) and this compares your real rate of gain against your target."; setV("Needs data"); return; }
   const T = p => new Date(p.d+"T12:00:00").getTime();
   const spanD = Math.round((T(ws[ws.length-1])-T(ws[0]))/86400000);
-  if(spanD < 14){ out.textContent = "Need weigh-ins spanning 2+ weeks ("+spanD+"d so far). Daily weight swings ±1–2%, so 2–3 weeks reveals the real trend."; return; }
+  if(spanD < 14){ out.textContent = "Need weigh-ins spanning 2+ weeks ("+spanD+"d so far). Daily weight swings ±1–2%, so 2–3 weeks reveals the real trend."; setV("Needs data"); return; }
   /* Split the span into halves by date (not by count) so the two windows never overlap. */
   const mid = (T(ws[0])+T(ws[ws.length-1]))/2;
   const early = ws.filter(p=>T(p)<=mid), recent = ws.filter(p=>T(p)>mid);
-  if(early.length<2 || recent.length<2){ out.textContent = "Log a couple more weigh-ins spread across the 2 weeks so both halves have data."; return; }
+  if(early.length<2 || recent.length<2){ out.textContent = "Log a couple more weigh-ins spread across the 2 weeks so both halves have data."; setV("Needs data"); return; }
   const avgW = a => a.reduce((x,p)=>x+p.w,0)/a.length;
   const avgT = a => a.reduce((x,p)=>x+T(p),0)/a.length;
   const wAvg = (avgW(early)+avgW(recent))/2;
@@ -4228,6 +4260,7 @@ function paintCalCheck(){
     msg += " Give any change 2–3 weeks before judging it.";
   }
   out.textContent = msg;
+  setV(!suggest ? "On target" : (suggest>0 ? "Below target" : "Above target"));
   if(suggest && sinceT >= 21 && !underAte){
     wrap.style.display = "";
     btn.textContent = "Apply "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal/day";
@@ -4443,6 +4476,10 @@ function wtStatusText(){
 }
 function renderProgress(){
   paintDayCycle(); /* day-cycle panel lives on Progress now (2026.09.23-g) */
+  (function(){ var s=S.weekSeg||"sum";
+    document.querySelectorAll("#weekSeg .segbtn").forEach(function(x){x.classList.toggle("on",x.dataset.seg===s);});
+    ["sum","cal","mac"].forEach(function(k){ var el=document.getElementById("wseg-"+k); if(el) el.hidden = k!==s; });
+  })();
   const days = weekDays(weekOffset);
   const logged = days.filter(x=>x.logged);
   document.getElementById("stStreak").textContent = streak();
@@ -5325,10 +5362,14 @@ function paintMuscle(){
   const wu = wUnit();
   const wd = v => wDisp(v).toFixed(1);
   document.getElementById("muscleGoalLbl").textContent = goal>0 ? wd(goal)+" "+wu : "Set goal";
+  const mrv = document.getElementById("muscleRowVal"), mrg = document.getElementById("muscleRowGoal");
+  if(mrv) mrv.textContent = "–";
+  if(mrg) mrg.textContent = goal>0 ? "Goal "+wd(goal)+" "+wu : "Estimated gain — set a goal";
   const C = 2*Math.PI*52, st = muscleStats();
   if(!st.ok){ ring.setAttribute("stroke-dasharray","0 "+C); num.textContent = "–"; out.textContent = st.why; return; }
   ring.setAttribute("stroke-dasharray", (goal>0?Math.min(1,st.muscle/goal)*C:0)+" "+C);
   num.textContent = wd(st.muscle);
+  if(mrv) mrv.textContent = wd(st.muscle)+" "+wu;
   const f1 = v => (v>=0?"+":"")+wd(v);
   let h = "Scale: <b>"+f1(st.dW)+" "+wu+"</b> over "+Math.max(2,Math.round(st.weeks))+" wks<br>";
   h += "Est. muscle: <b>"+f1(st.muscle)+" "+wu+"</b> · est. fat: "+wd(st.fat)+" "+wu+"<br>";
@@ -6141,8 +6182,8 @@ function showView(v){
   const av = activeViewEl(); if(av) av.scrollTop = 0;
 }
 /* 2026.09.22-k: Apple-Photos-style reorder — compact row list with drag handles, checkmark saves */
-const PROG_UNITS = ["wt","insights","wkrev","analytics","traj","macros","stats","bmi","calcheck","muscle"];
-const PROG_TITLES = {wt:"Weight",insights:"This week",wkrev:"Weekly review",analytics:"Analytics",traj:"Trajectory",macros:"Macros",stats:"Stats",bmi:"Weight analysis",calcheck:"Calorie Check",muscle:"Muscle Gain"};
+const PROG_UNITS = ["body","week"];
+const PROG_TITLES = {body:"Body",week:"This week"};
 const LINES_SVG = '<svg viewBox="0 0 24 24"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
 const CHECK_SVG = '<svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
 function progUnits(){ return Array.prototype.slice.call(document.querySelectorAll("#progOverview .punit")); }
@@ -6237,6 +6278,20 @@ document.getElementById("progEditBtn").onclick = function(){
     setProgEdit(false);
   } else setProgEdit(true);
 };
+/* 2026.09.24-l: week-card segments + body expandable rows */
+document.querySelectorAll("#weekSeg .segbtn").forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll("#weekSeg .segbtn").forEach(function(x){x.classList.toggle("on",x===b);});
+    ["sum","cal","mac"].forEach(function(s){ var el=document.getElementById("wseg-"+s); if(el) el.hidden = b.dataset.seg!==s; });
+    S.weekSeg=b.dataset.seg; save();
+  };
+});
+document.querySelectorAll(".xrow").forEach(function(r){
+  r.onclick=function(){
+    var d=document.getElementById("xdetail-"+r.dataset.x); if(!d) return;
+    var open=d.classList.toggle("open"); r.classList.toggle("open",open);
+  };
+});
 function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); applyProgLayout(); }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.v));
 /* Progress sub-tabs were removed in 2026.09.22-a: Progress is a single view whose
