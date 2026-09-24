@@ -462,7 +462,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wlogrow input{min-width:0;}
 .wlogrow input[type="date"]{flex:0 1 112px; font-size:13px; padding:11px 4px; color:var(--ink);}
 /* ============ WEIGHT HERO CIRCLE + FULL-SCREEN DETAIL (2026.09.22) ============ */
-/* 2026.09.24-l: progress restructure — card titles, segments, expandable rows */
+/* 2026.09.24-m: progress restructure — card titles, segments, expandable rows */
 .cardttl{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
 .cardttl b{font-size:17px;letter-spacing:-.2px;}
 .cardttl .pill{margin-left:auto;}
@@ -479,10 +479,17 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .xrow-val{display:flex;align-items:center;gap:6px;flex:none;}
 .xrow .chev2{transition:transform .18s ease;color:var(--muted);}
 .xrow.open .chev2{transform:rotate(90deg);}
-.xdetail{display:grid;grid-template-rows:0fr;transition:grid-template-rows .22s ease;}
-.xdetail.open{grid-template-rows:1fr;}
-.xdetail>div{overflow:hidden;min-height:0;}
+.xdetail{display:none;}
+.xdetail.open{display:block;animation:ddIn .18s ease;}
 .xdetail .pad{padding:2px 2px 16px;}
+/* diary dropdown panels: collapsed rows, tap to expand */
+.dhead{cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.dhead .dchev{transition:transform .18s ease;color:var(--muted);flex:none;}
+.dcard.open .dhead .dchev{transform:rotate(90deg);}
+.ddetail{display:none;}
+.dcard.open .ddetail{display:block;animation:ddIn .18s ease;}
+.ddetail .pad{padding-top:4px;}
+@keyframes ddIn{from{opacity:.35;transform:translateY(-4px);}to{opacity:1;transform:none;}}
 .wtcard{display:flex; justify-content:center; padding:30px 16px 26px;}
 .wtcircle{position:relative; width:212px; height:212px; border-radius:50%; border:none; cursor:pointer; font-family:inherit; color:var(--ink);
   background:radial-gradient(circle at 50% 40%, #ffffff 0%, var(--acc-soft) 62%, var(--acc-soft) 100%);
@@ -874,40 +881,49 @@ body.reordering #progOverview{display:none}
     <div class="fiberbar"><span class="flabel">Fiber</span><div class="mbar"><i id="barFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div><span class="fval"><i id="valFiv">0</i><small> / <span id="valFig">0</span>g</small></span></div>
     <div class="card mealcard" id="meals"></div>
 
-    <div class="card watercard">
-      <div class="whead"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3.5c3.2 4.3 5.8 7.7 5.8 10.7a5.8 5.8 0 1 1-11.6 0C6.2 11.2 8.8 7.8 12 3.5z"/></svg></span><b>Water</b><button class="ginfo" id="waterInfo" aria-label="About your water target">i</button></span><span class="wlbl" id="waterLabel"></span></div>
+    <div class="card watercard dcard" id="dcard-water">
+      <div class="whead dhead" data-d="water" role="button" tabindex="0" aria-label="Water details"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3.5c3.2 4.3 5.8 7.7 5.8 10.7a5.8 5.8 0 1 1-11.6 0C6.2 11.2 8.8 7.8 12 3.5z"/></svg></span><b>Water</b><button class="ginfo" id="waterInfo" aria-label="About your water target">i</button></span><span style="display:flex;align-items:center;gap:8px"><span class="wlbl" id="waterLabel"></span><span class="chev2 dchev">›</span></span></div>
+      <div class="ddetail" id="ddetail-water"><div class="pad">
       <div class="sbtrack wtrack"><div class="sbfill wfill" id="waterFill"></div></div>
       <div class="bottlerow" id="bottleRow"></div>
       <div class="wfoot"><button class="wlink" id="bottleMgr">My bottles</button><button class="wlink" id="waterUndo" style="display:none">Undo</button></div>
       <div class="whint" id="waterNote" style="margin-top:6px"></div>
+      </div></div>
     </div>
 
-    <div class="card alccard">
-      <div class="arow">
+    <div class="card alccard dcard" id="dcard-alcohol">
+      <div class="arow dhead" data-d="alcohol" role="button" tabindex="0" aria-label="Alcohol details">
         <div class="winfo">
           <span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4.5 4.5h15L12 12.5 4.5 4.5z"/><path d="M12 12.5V19" stroke-linecap="round"/><path d="M8.5 21h7" stroke-linecap="round"/></svg></span><b>Alcohol</b><button class="ginfo" id="alcInfo" aria-label="About alcohol tracking">i</button></span><span class="wlbl" id="alcLabel"></span>
           <div class="whint" id="alcNote" style="margin-top:6px"></div>
         </div>
-        <div class="alcring" id="alcRing" title="Alcohol calories so far"></div>
+        <div class="alcring" id="alcRing" title="Alcohol calories so far"></div><span class="chev2 dchev">›</span>
       </div>
+      <div class="ddetail" id="ddetail-alcohol"><div class="pad">
       <div id="alcRows"></div>
       <div class="alcwarn" id="alcWarn" style="display:none"></div>
+      </div></div>
     </div>
 
-    <div class="card alccard">
-      <div class="arow">
+    <div class="card alccard dcard" id="dcard-vape">
+      <div class="arow dhead" data-d="vape" role="button" tabindex="0" aria-label="Nicotine details">
         <div class="winfo">
           <span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M10.5 7v13a1.5 1.5 0 0 0 3 0V7"/></svg></span><b>Nicotine (vape)</b><button class="ginfo" id="vapeInfo" aria-label="About nicotine tracking">i</button></span><span class="wlbl" id="vapeLabel"></span>
           <div class="whint" id="vapeNote" style="margin-top:6px"></div>
         </div>
+        <span class="chev2 dchev">›</span>
       </div>
+      <div class="ddetail" id="ddetail-vape"><div class="pad">
       <div class="vapelevels" id="vapeLevels"></div>
       <div class="alcwarn" id="vapeWarn" style="display:none"></div>
+      </div></div>
     </div>
 
-    <div class="card" id="energyCard">
-      <div class="whead"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2.5 5.5 13.5h4.8L10 21.5l7.5-11h-4.8L13 2.5z"/></svg></span><b>Energy today</b><button class="ginfo" id="energyInfo" aria-label="About energy check-ins">i</button></span><span class="wlbl" id="energyLabel"></span></div>
+    <div class="card dcard" id="energyCard">
+      <div class="whead dhead" data-d="energy" role="button" tabindex="0" aria-label="Energy details"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2.5 5.5 13.5h4.8L10 21.5l7.5-11h-4.8L13 2.5z"/></svg></span><b>Energy today</b><button class="ginfo" id="energyInfo" aria-label="About energy check-ins">i</button></span><span style="display:flex;align-items:center;gap:8px"><span class="wlbl" id="energyLabel"></span><span class="chev2 dchev">›</span></span></div>
+      <div class="ddetail" id="ddetail-energy"><div class="pad">
       <div class="energydots" id="energyDots"></div>
+      </div></div>
     </div>
   </section>
 
@@ -6377,6 +6393,23 @@ if(freshBoot && !eraseBlocked && typeof fetch==="function"){
   }, {passive:true});
   document.addEventListener("touchcancel", ()=>{ pulling=false; snapBack(); }, {passive:true});
 })();
+/* 2026.09.24-m: diary dropdown panels — collapsed rows, tap to expand, state persisted */
+(function(){
+  var P = S.diaryPanels || (S.diaryPanels = {water:0, alcohol:0, vape:0, energy:0});
+  document.querySelectorAll(".dhead").forEach(function(hd){
+    var key = hd.dataset.d, card = hd.closest(".dcard"); if(!card) return;
+    if(P[key]) card.classList.add("open");
+    var toggle = function(){ var open = card.classList.toggle("open"); P[key] = open?1:0; save(); };
+    hd.addEventListener("click", toggle);
+    hd.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle(); } });
+  });
+  /* info buttons inside headers must not toggle the dropdown */
+  ["waterInfo","alcInfo","vapeInfo","energyInfo"].forEach(function(id){
+    var b = document.getElementById(id);
+    if(b) b.addEventListener("click", function(e){ e.stopPropagation(); });
+  });
+})();
+
 /* 2026.09.24-k: iOS-style edge swipe-back. Drag right from the left edge to
    go back to the previous view. Wraps showView with a small history stack;
    navigating back to the view you came from pops instead of pushing. */
