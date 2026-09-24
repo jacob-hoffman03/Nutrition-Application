@@ -422,6 +422,9 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .card.slim{padding-top:4px;padding-bottom:4px;}
 .privline{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;color:var(--muted);margin:12px 16px 0;font-weight:600;text-align:center;}
 .privline svg{width:14px;height:14px;flex:none;}
+/* diary panel refresh — icon tiles on tracker panel headers */
+.sicon.sm{width:30px;height:30px;border-radius:9px;}
+.sicon.sm svg{width:18px;height:18px;}
 .ver{text-align:center; font-size:11px; color:var(--muted); margin:14px 0 4px;}
 .kv{display:flex; justify-content:space-between; padding:10px 2px; border-bottom:1px solid var(--line); font-size:14px;}
 .kv:last-child{border-bottom:none;}
@@ -851,7 +854,7 @@ body.reordering #progOverview{display:none}
     <div class="card mealcard" id="meals"></div>
 
     <div class="card watercard">
-      <div class="whead"><span style="display:flex;align-items:center;gap:8px"><b>Water</b><button class="ginfo" id="waterInfo" aria-label="About your water target">i</button></span><span class="wlbl" id="waterLabel"></span></div>
+      <div class="whead"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3.5c3.2 4.3 5.8 7.7 5.8 10.7a5.8 5.8 0 1 1-11.6 0C6.2 11.2 8.8 7.8 12 3.5z"/></svg></span><b>Water</b><button class="ginfo" id="waterInfo" aria-label="About your water target">i</button></span><span class="wlbl" id="waterLabel"></span></div>
       <div class="sbtrack wtrack"><div class="sbfill wfill" id="waterFill"></div></div>
       <div class="bottlerow" id="bottleRow"></div>
       <div class="wfoot"><button class="wlink" id="bottleMgr">My bottles</button><button class="wlink" id="waterUndo" style="display:none">Undo</button></div>
@@ -861,7 +864,7 @@ body.reordering #progOverview{display:none}
     <div class="card alccard">
       <div class="arow">
         <div class="winfo">
-          <span style="display:flex;align-items:center;gap:8px"><b>Alcohol</b><button class="ginfo" id="alcInfo" aria-label="About alcohol tracking">i</button></span><span class="wlbl" id="alcLabel"></span>
+          <span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4.5 4.5h15L12 12.5 4.5 4.5z"/><path d="M12 12.5V19" stroke-linecap="round"/><path d="M8.5 21h7" stroke-linecap="round"/></svg></span><b>Alcohol</b><button class="ginfo" id="alcInfo" aria-label="About alcohol tracking">i</button></span><span class="wlbl" id="alcLabel"></span>
           <div class="whint" id="alcNote" style="margin-top:6px"></div>
         </div>
         <div class="alcring" id="alcRing" title="Alcohol calories so far"></div>
@@ -873,7 +876,7 @@ body.reordering #progOverview{display:none}
     <div class="card alccard">
       <div class="arow">
         <div class="winfo">
-          <span style="display:flex;align-items:center;gap:8px"><b>Nicotine (vape)</b><button class="ginfo" id="vapeInfo" aria-label="About nicotine tracking">i</button></span><span class="wlbl" id="vapeLabel"></span>
+          <span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M10.5 7v13a1.5 1.5 0 0 0 3 0V7"/></svg></span><b>Nicotine (vape)</b><button class="ginfo" id="vapeInfo" aria-label="About nicotine tracking">i</button></span><span class="wlbl" id="vapeLabel"></span>
           <div class="whint" id="vapeNote" style="margin-top:6px"></div>
         </div>
       </div>
@@ -882,9 +885,8 @@ body.reordering #progOverview{display:none}
     </div>
 
     <div class="card" id="energyCard">
-      <div class="whead"><span style="display:flex;align-items:center;gap:8px"><b>Energy today</b><button class="ginfo" id="energyInfo" aria-label="About energy check-ins">i</button></span><span class="wlbl" id="energyLabel"></span></div>
+      <div class="whead"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2.5 5.5 13.5h4.8L10 21.5l7.5-11h-4.8L13 2.5z"/></svg></span><b>Energy today</b><button class="ginfo" id="energyInfo" aria-label="About energy check-ins">i</button></span><span class="wlbl" id="energyLabel"></span></div>
       <div class="energydots" id="energyDots"></div>
-      <div class="whint" style="margin-top:6px">One tap a day builds your energy correlations.</div>
     </div>
   </section>
 
@@ -1820,7 +1822,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-i";
+const APP_VERSION = "2026.09.24-j";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2395,9 +2397,9 @@ function paintEnergy(){
    (≈6 shots at his weight) cut muscle protein synthesis 24–37%; 1–2 drinks unstudied.
    Shots spike BAC faster than sipped beer. */
 const ALC_INFO = {
-  shot:     {kcal:97,  std:1,   label:"Shots",     sub:"1.5 oz 80-proof · 1 std drink · ~97 kcal"},
-  beer:     {kcal:150, std:1,   label:"Beers",     sub:"12 oz 5% · 1 std drink · ~150 kcal"},
-  cocktail: {kcal:200, std:1.5, label:"Cocktails", sub:"mixed drink · ~1.5 std drinks · ~200 kcal"}
+  shot:     {kcal:97,  std:1,   label:"Shots",     sub:"1.5 oz · 80-proof · ≈97 kcal"},
+  beer:     {kcal:150, std:1,   label:"Beers",     sub:"12 oz · 5% · ≈150 kcal"},
+  cocktail: {kcal:200, std:1.5, label:"Cocktails", sub:"mixed · ≈1.5 drinks · ≈200 kcal"}
 };
 function alcData(d){
   let a = d.alc;
