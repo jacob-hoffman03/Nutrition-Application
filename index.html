@@ -1806,7 +1806,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-f";
+const APP_VERSION = "2026.09.24-g";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -5131,7 +5131,7 @@ function infoContent(k){
      <div class="irow">The activity factor is the roughest part of the math (±10–15%) — your weigh-ins and the Calorie Check calibrate it.</div>`};
   if(k==="calorie") return {t:"Calorie goal", b:
     `<div class="irow"><b>Lean Bulk (+10% over maintenance):</b> a 2023 trial (Helms) found bigger surpluses add fat, not extra muscle — target 0.25–0.5% body weight/week.</div>
-     <div class="irow"><b>Bulk (+20% over maintenance):</b> faster scale gains, but much of the extra is fat — target 0.35–0.7% body weight/week.</div>
+     <div class="irow"><b>Bulk (+15% over maintenance):</b> faster scale gains, but much of the extra is fat — target 0.35–0.7% body weight/week.</div>
      <div class="irow"><b>Maintain (+0%):</b> eat at maintenance to hold your weight steady.</div>
      <div class="irow">Adjusting the slider changes your surplus on top of maintenance. Surplus presets are % of maintenance — research supports <b>5–20%</b> for lean gains.</div>`};
   if(k==="macros") return {t:"Macros", b:
