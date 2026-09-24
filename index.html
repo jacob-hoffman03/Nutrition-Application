@@ -1806,7 +1806,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-g";
+const APP_VERSION = "2026.09.24-h";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1956,7 +1956,9 @@ function findFood(name){ return allFoods().find(f=>f.n===name) || VERIFIED_FOODS
 function isVerifiedFood(name){ return !isCustom(name) && VERIFIED_FOODS.some(f=>f.n===name); }
 /* Entry photos: logged meals don't carry a second copy of the library photo —
    the food library is the source of truth; display resolves it by entry name. */
-function entryImg(e){ return (e&&e.img) || ((S.customFoods||[]).find(f=>f.n===(e&&e.n))||{}).img || null; }
+function entryImg(e){ if(e&&e.img) return e.img; const n=e&&e.n; if(!n) return null;
+  const cf=(S.customFoods||[]).find(f=>f.n===n); if(cf&&cf.img) return cf.img;
+  const lf=findFood(n); return (lf&&lf.img)||null; }
 /* ============ FOOD COST (2026.09.22-o) ============
    Foods can carry a store price: pr = whole-package price in $, ps = servings
    per package. Cost per serving = pr/ps, so a $1 jar with 4 servings = $0.25
