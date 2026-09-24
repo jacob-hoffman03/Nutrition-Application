@@ -462,7 +462,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wlogrow input{min-width:0;}
 .wlogrow input[type="date"]{flex:0 1 112px; font-size:13px; padding:11px 4px; color:var(--ink);}
 /* ============ WEIGHT HERO CIRCLE + FULL-SCREEN DETAIL (2026.09.22) ============ */
-/* 2026.09.24-n: progress restructure — card titles, segments, expandable rows */
+/* 2026.09.24-o: progress restructure — card titles, segments, expandable rows */
 .cardttl{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
 .cardttl b{font-size:17px;letter-spacing:-.2px;}
 .cardttl .pill{margin-left:auto;}
@@ -709,6 +709,9 @@ body{ background:var(--bg); }
 .panel .grab{width:40px; height:5px; border-radius:99px; background:var(--line); margin:10px auto 4px;}
 .panel h2{margin:8px 18px 12px; font-size:20px; text-align:center;}
 .panel .body{overflow-y:auto; padding:0 18px 18px; min-height:0; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y;}
+.shead{position:sticky; top:0; z-index:3; background:#fff; padding:10px 2px 10px; margin:0 -2px;}
+.dact{position:sticky; bottom:0; z-index:3; background:#fff; padding:10px 2px calc(4px + env(safe-area-inset-bottom)); margin:10px -2px -6px; border-top:1px solid var(--line);}
+.dact .bigbtn{margin-top:0;}
 .xbtn{position:absolute; top:10px; right:12px; width:36px; height:36px; border:none; border-radius:12px; z-index:5;
   background:var(--acc-soft); color:var(--acc-deep); display:flex; align-items:center; justify-content:center;}
 .xbtn svg{width:15px; height:15px; display:block;}
@@ -1472,6 +1475,7 @@ body.reordering #progOverview{display:none}
     <h2 id="sheetTitle">Add food</h2>
     <div class="body">
       <div id="sheetSearchWrap">
+        <div class="shead">
         <input class="searchinput" id="sheetSearch" placeholder="Search your foods" autocomplete="off" style="margin-bottom:8px">
         <div class="segtabs" id="sheetTabs">
           <button class="segtab sel" data-t="recent">Recent</button>
@@ -1479,6 +1483,7 @@ body.reordering #progOverview{display:none}
           <button class="segtab" data-t="custom">All</button>
         </div>
         <button class="bigbtn" id="sheetCreate" style="margin:10px 0 4px">+ Create new food</button>
+        </div>
         <div class="fhead">
           <span class="flabel"><select id="sheetSort" style="border:none;background:none;font:inherit;color:inherit;font-weight:600"><option value="time">Sort by Time ⌄</option><option value="name">Sort by Name ⌄</option></select></span>
         </div>
@@ -1504,8 +1509,10 @@ body.reordering #progOverview{display:none}
           <div class="dlabel">Meal</div>
           <div class="micons" id="dMeals"></div>
         </div>
+        <div class="dact">
         <button class="bigbtn" id="confirmAdd">Confirm</button>
         <button class="ghostbtn" id="backToSearch">← Back to search</button>
+        </div>
       </div>
     </div>
   </div>
@@ -3311,7 +3318,10 @@ function openSheet(meal){
 }
 function closeSheet(){ sheet.classList.remove("open"); }
 document.getElementById("sheetScrim").onclick = closeSheet;
-document.getElementById("sheetX").onclick = closeSheet;
+document.getElementById("sheetX").onclick = ()=>{
+  if(document.getElementById("sheetDetail").style.display!=="none") showSearch();
+  else closeSheet();
+};
 document.getElementById("statusPill").onclick = ()=>{ renderZoneSheet(); document.getElementById("zoneSheet").classList.add("open"); };
 document.getElementById("statusPill").onkeydown = e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); document.getElementById("statusPill").click(); } };
 document.getElementById("zoneScrim").onclick = ()=>document.getElementById("zoneSheet").classList.remove("open");
@@ -3389,7 +3399,8 @@ document.querySelectorAll("#sheetTabs .segtab").forEach(t=>t.onclick=()=>{ sheet
   document.querySelectorAll("#sheetTabs .segtab").forEach(x=>x.classList.toggle("sel", x===t));
   renderSheetResults(document.getElementById("sheetSearch").value); });
 document.getElementById("sheetSort").addEventListener("change", e=>{ sheetSort=e.target.value; renderSheetResults(document.getElementById("sheetSearch").value); });
-document.getElementById("sheetCreate").onclick = ()=>{ closeSheet(); resetCustomForm(); csheet.classList.add("open"); };
+let customFromSheet = false;
+document.getElementById("sheetCreate").onclick = ()=>{ closeSheet(); resetCustomForm(); customFromSheet = true; csheet.classList.add("open"); };
 function showSearch(){
   document.getElementById("sheetSearchWrap").style.display = "";
   document.getElementById("sheetDetail").style.display = "none";
@@ -3411,6 +3422,8 @@ function openDetail(f){
   if(!f) return;
   sheetFood = f; dMeal = f.kind==="supp" ? "supplements" : sheetMeal;
   dGramPer = parseGrams(f.s); dUnit = "serv"; dQty = 1;
+  var ls = (S.lastServ||{})[f.n];
+  if(ls && ls.q>0 && ls.q<100000){ dQty = ls.q; if((ls.u==="g"||ls.u==="oz") && dGramPer>0) dUnit = ls.u; }
   document.getElementById("sheetSearch").blur();
   document.getElementById("sheetSearchWrap").style.display = "none";
   document.getElementById("sheetDetail").style.display = "";
@@ -3463,6 +3476,7 @@ document.getElementById("backToSearch").onclick = showSearch;
 document.getElementById("confirmAdd").onclick = ()=>{
   if(!sheetFood) return; /* guard: detail opened without a food (2026.09.21-k) */
   addToTray(sheetFood, round2(dServings()), dMeal);
+  (S.lastServ = S.lastServ||{})[sheetFood.n] = {q:dQty, u:dUnit}; save();
   showSearch();
 };
 
@@ -3569,7 +3583,7 @@ function editCustomFood(name){
   setCPhoto(f.img || "");
   document.querySelector("#csheet h2").textContent = "Edit Custom Food";
   document.getElementById("cSave").textContent = "Save changes";
-  csheet.classList.add("open");
+  customFromSheet = false; csheet.classList.add("open");
 }
 function resetCustomForm(){
   cEditing = null;
@@ -3592,9 +3606,10 @@ function resetCustomForm(){
   const sv = document.getElementById("cServ"); sv.dataset.dirty = "";
   document.getElementById("cCal").placeholder = "Required";
 }
-document.getElementById("newCustomBtn").onclick = ()=>{ resetCustomForm(); csheet.classList.add("open"); };
-document.getElementById("cScrim").onclick = ()=>csheet.classList.remove("open");
-document.getElementById("cX").onclick = ()=>csheet.classList.remove("open");
+document.getElementById("newCustomBtn").onclick = ()=>{ resetCustomForm(); customFromSheet = false; csheet.classList.add("open"); };
+document.getElementById("cScrim").onclick = closeCustom;
+function closeCustom(){ csheet.classList.remove("open"); if(customFromSheet){ customFromSheet = false; sheet.classList.add("open"); } }
+document.getElementById("cX").onclick = closeCustom;
 document.getElementById("cPhotoBtn").onclick = ()=>document.getElementById("cPhotoFile").click();
 document.getElementById("cPhotoDel").onclick = ()=>{ document.getElementById("cPhotoFile").value=""; setCPhoto(""); };
 document.getElementById("cPhotoFile").onchange = e=>{
@@ -3674,7 +3689,8 @@ document.getElementById("cSave").onclick = ()=>{
     S.customFoods.push(rec);
   }
   resetCustomForm();
-  save(); csheet.classList.remove("open"); renderFoods();
+  save(); renderFoods(); csheet.classList.remove("open");
+  if(customFromSheet){ customFromSheet = false; renderSheetResults(document.getElementById("sheetSearch").value); sheet.classList.add("open"); }
 };
 
 /* Food serving units: FDA household measures (21 CFR 101.9(b)(5)) + metric.
