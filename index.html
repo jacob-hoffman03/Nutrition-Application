@@ -173,6 +173,8 @@ button{font-family:inherit;}
 .ghead .gchev{margin-left:auto; color:var(--muted); font-size:22px; font-weight:400; transition:transform .18s;}
 .gsec.closed .gbody{display:none;}
 .gsec.closed .gchev{transform:rotate(90deg);}
+.ghead .gval{margin-left:auto; font-size:13px; color:var(--muted); font-weight:700;}
+.ghead .gchev{margin-left:10px;}
 .ginfo{flex:none; width:21px; height:21px; border-radius:50%; border:1.6px solid #b9b9c6; color:#8a8a98;
   font-size:12.5px; font-weight:800; font-style:italic; background:none; display:flex; align-items:center;
   justify-content:center; cursor:pointer; line-height:1; padding:0; font-family:Georgia, serif;}
@@ -1006,67 +1008,19 @@ body.reordering #progOverview{display:none}
       <h1>Nutrition Goals <button class="ginfo" id="goalsInfo" aria-label="Goals information">i</button></h1>
       <div style="width:44px"></div>
     </div>
-    <div class="secttl" style="margin-top:2px">Profile</div>
-    <div class="card">
-      <div class="cfrow"><span>Units</span><span class="chips" id="pfUnits" style="margin:0"><button class="chip" data-u="imp">Imperial</button><button class="chip" data-u="met">Metric</button></span></div>
-      <div class="cfrow"><span>Sex</span><span class="chips" id="pfSex" style="margin:0"><button class="chip" data-x="m">Male</button><button class="chip" data-x="f">Female</button></span></div>
-      <div class="cfrow"><span>Age</span><span><input id="pfAge" type="number" inputmode="numeric" style="width:90px"> <span class="ph">yrs</span></span></div>
-      <div class="cfrow" id="htImpRow"><span>Height</span><span><input id="pfHtFt" type="number" inputmode="numeric" style="width:52px"> <span class="ph">ft</span> <input id="pfHtIn" type="number" inputmode="numeric" style="width:52px"> <span class="ph">in</span></span></div>
-      <div class="cfrow" id="htMetRow" style="display:none"><span>Height</span><span><input id="pfHtCm" type="number" inputmode="decimal" style="width:90px"> <span class="ph">cm</span></span></div>
-      <div class="cfrow"><span>Weight</span><span><input id="pfWeight" type="number" inputmode="decimal" style="width:90px"> <span class="ph" id="pfWeightUnit">lb</span></span></div>
-      <div class="cfrow"><span>Body fat <span class="ph">(optional)</span></span><span><input id="pfFat" type="number" inputmode="decimal" style="width:90px"> <span class="ph">%</span></span></div>
-      <div class="cfrow"><span>Waist <span class="ph">(optional)</span></span><span><input id="pfWaist" type="number" inputmode="decimal" style="width:90px"> <span class="ph" id="pfWaistUnit">in</span></span></div>
-    </div>
-    <div class="secttl">Activity &amp; maintenance</div>
-    <div class="chips" id="pfAct">
-      <button class="chip" data-k="sedentary" title="Sedentary: little or no exercise">Sedentary</button>
-      <button class="chip" data-k="light" title="Light: exercise 1-3 times/week">Light</button>
-      <button class="chip" data-k="moderate" title="Moderate: exercise 4-5 times/week">Moderate</button>
-      <button class="chip" data-k="active" title="Active: daily exercise or intense exercise 3-4 times/week">Active</button>
-      <button class="chip" data-k="very" title="Very Active: intense exercise 6-7 times/week">Very active</button>
-      <button class="chip" data-k="extra" title="Extra Active: very intense exercise daily, or physical job">Extra active</button>
-    </div>
-    <button class="bigbtn" id="pfCalc" style="margin-top:4px">Calculate maintenance</button>
-    <div class="rangenote" id="pfNote"></div>
-    <div class="secttl">True metrics</div>
-    <div class="card" style="margin-top:14px">
-      <div class="cfrow"><span>Avg intake · logged days</span><b id="tmIntake">–</b></div>
-      <div class="cfrow" style="margin-top:6px"><span>Weight trend</span><b id="tmTrend">–</b></div>
-      <div class="cfrow" style="margin-top:6px"><span>True maintenance</span><b id="tmMaint">–</b></div>
-    </div>
-    <div class="rangenote" id="tmNote"></div>
-    <div class="secttl">Adaptive TDEE</div>
     <div class="card goalbig" style="margin-top:14px">
-      <div class="glabel">Learned from your log</div>
-      <div class="gnum"><span id="adVal">–</span> <small>kcal</small></div>
-      <div class="gsub" id="adSub"></div>
-      <svg id="adChart" viewBox="0 0 300 84" style="width:100%;height:84px;margin-top:8px;display:none" role="img" aria-label="Adaptive TDEE history"></svg>
-    </div>
-    <div class="card">
-      <div class="cfrow"><span>Formula estimate</span><b id="adFormula">–</b></div>
-      <div class="cfrow" style="margin-top:6px"><span>Learned adjustment</span><b id="adAdj">–</b></div>
-      <div class="cfrow" style="margin-top:6px"><span>Confidence</span><b id="adConf">–</b></div>
-    </div>
-    <div class="rangenote" id="adNote"></div>
-    <div class="card">
-      <div class="cfrow"><span><b style="font-size:14px">Use adaptive target</b></span><button class="chip" id="adToggle">Off</button></div>
-      <div class="cfrow" style="margin-top:8px"><span class="ph">Learns from your last 3 weeks</span><button class="chip" id="adRecalc">Recalculate</button></div>
-    </div>
-    <div class="rangenote" id="adTuneNote"></div>
-    <div class="secttl">Calorie goal</div>
-    <div class="card goalbig" style="margin-top:14px">
-      <div class="glabel">Your Daily Calorie Goal</div>
+      <div class="glabel">Daily calorie goal</div>
       <div class="gnum"><span id="goalTotal">3000</span> <small>kcal</small></div>
       <div class="gsub" id="goalSub"></div>
       <div class="gsub" id="gainProj" style="font-weight:700"></div>
     </div>
-    <div class="rangenote" style="margin:10px 2px 2px">Goal</div>
-    <div class="chips" id="goalMode">
-      <button class="chip" data-m="lean" data-pct="10">Lean Bulk</button>
-      <button class="chip" data-m="bulk" data-pct="15">Bulk</button>
-      <button class="chip" data-m="maintain" data-pct="0">Maintain</button>
-    </div>
     <div class="card">
+      <div class="fhead"><span class="flabel">Goal</span></div>
+      <div class="chips" id="goalMode">
+        <button class="chip" data-m="lean" data-pct="10">Lean Bulk</button>
+        <button class="chip" data-m="bulk" data-pct="15">Bulk</button>
+        <button class="chip" data-m="maintain" data-pct="0">Maintain</button>
+      </div>
       <input type="range" id="goalSlider" min="1500" max="6000" step="25" value="3000">
       <div class="rangelabels"><span id="goalMin">1500 kcal</span><span id="goalMax">6000 kcal</span></div>
       <div class="chips" id="surpChips" style="margin-top:10px">
@@ -1075,8 +1029,52 @@ body.reordering #progOverview{display:none}
         <button class="chip" data-p="15">+15%</button>
       </div>
     </div>
+    <div class="gsec" id="gsecMaint">
+      <div class="ghead"><span>Maintenance</span><b class="gval" id="maintHeadVal"></b><span class="gchev">›</span></div>
+      <div class="gbody">
+        <div class="chips" id="pfAct">
+          <button class="chip" data-k="sedentary" title="Sedentary: little or no exercise">Sedentary</button>
+          <button class="chip" data-k="light" title="Light: exercise 1-3 times/week">Light</button>
+          <button class="chip" data-k="moderate" title="Moderate: exercise 4-5 times/week">Moderate</button>
+          <button class="chip" data-k="active" title="Active: daily exercise or intense exercise 3-4 times/week">Active</button>
+          <button class="chip" data-k="very" title="Very Active: intense exercise 6-7 times/week">Very active</button>
+          <button class="chip" data-k="extra" title="Extra Active: very intense exercise daily, or physical job">Extra active</button>
+        </div>
+        <button class="bigbtn" id="pfCalc" style="margin-top:4px">Calculate maintenance</button>
+        <div class="rangenote" id="pfNote"></div>
+        <div class="secttl">Adaptive TDEE</div>
+        <div class="card goalbig">
+          <div class="glabel">Learned from your log</div>
+          <div class="gnum"><span id="adVal">–</span> <small>kcal</small></div>
+          <div class="gsub" id="adSub"></div>
+          <svg id="adChart" viewBox="0 0 300 84" style="width:100%;height:84px;margin-top:8px;display:none" role="img" aria-label="Adaptive TDEE history"></svg>
+        </div>
+        <div class="card">
+          <div class="cfrow"><span>Formula estimate</span><b id="adFormula">–</b></div>
+          <div class="cfrow" style="margin-top:6px"><span>Learned adjustment</span><b id="adAdj">–</b></div>
+          <div class="cfrow" style="margin-top:6px"><span>Confidence</span><b id="adConf">–</b></div>
+        </div>
+        <div class="rangenote" id="adSuggest" style="display:none;font-weight:700"></div>
+        <div class="rangenote" id="adNote"></div>
+        <div class="card">
+          <div class="cfrow"><span><b style="font-size:14px">Use as my maintenance</b></span><button class="chip" id="adToggle">Off</button></div>
+          <div class="cfrow" style="margin-top:8px"><span class="ph">Learns from your last 3 weeks</span><button class="chip" id="adRecalc">Recalculate</button></div>
+        </div>
+        <div class="rangenote" id="adTuneNote"></div>
+        <div class="secttl">True metrics</div>
+        <div class="card">
+          <div class="cfrow"><span>Avg intake · logged days</span><b id="tmIntake">–</b></div>
+          <div class="cfrow" style="margin-top:6px"><span>Weight trend</span><b id="tmTrend">–</b></div>
+          <div class="cfrow" style="margin-top:6px"><span>True maintenance</span><b id="tmMaint">–</b></div>
+        </div>
+        <div class="rangenote" id="tmNote"></div>
+      </div>
+    </div>
     <div class="secttl">Macros</div>
-    <div class="fhead"><span class="flabel">Macro split</span><button class="chip" id="macroAutoBtn">Auto</button></div>
+    <div class="segctl" id="macroModeSeg" role="tablist" aria-label="Macro mode">
+      <button class="segbtn" data-m="auto">Auto</button>
+      <button class="segbtn" data-m="manual">Manual</button>
+    </div>
     <div class="rangenote" id="macroAutoNote" style="margin:2px 0 10px"></div>
     <div class="macro3">
       <div class="m3 c"><div class="mn">Carbs</div><div class="mp" id="gmCp">–</div><div class="mg"><input id="gmC" type="number" inputmode="numeric"> g</div><div class="mkcal" id="gmCk"></div></div>
@@ -1089,23 +1087,53 @@ body.reordering #progOverview{display:none}
     </div>
     <div class="segbar" id="macroSeg"><i id="segC" style="background:#7e7ef2"></i><i id="segP" style="background:#12cfae"></i><i id="segF" style="background:#fb6f84"></i></div>
     <div class="rangenote" id="macroAnalysis"></div>
-    <div class="secttl">Water</div>
-    <div class="card">
-      <div class="fhead"><span class="flabel">Daily target</span><span class="chips" id="waterMode" style="margin:0"><button class="chip" data-w="auto">Auto</button><button class="chip" data-w="8">8</button><button class="chip" data-w="10">10</button><button class="chip" data-w="12">12</button><button class="chip" data-w="14">14</button></span></div>
-      <div class="cfrow"><span>Custom <span class="ph">(glasses, 0 = Auto)</span></span><input id="waterCustom" type="number" inputmode="numeric" style="width:84px"></div>
+    <div class="gsec" id="gsecWater">
+      <div class="ghead"><span>Water</span><b class="gval" id="waterHeadVal"></b><span class="gchev">›</span></div>
+      <div class="gbody">
+        <div class="card">
+          <div class="fhead"><span class="flabel">Daily target</span><span class="chips" id="waterMode" style="margin:0"><button class="chip" data-w="auto">Auto</button><button class="chip" data-w="8">8</button><button class="chip" data-w="10">10</button><button class="chip" data-w="12">12</button><button class="chip" data-w="14">14</button></span></div>
+          <div class="cfrow"><span>Custom <span class="ph">(glasses, 0 = Auto)</span></span><input id="waterCustom" type="number" inputmode="numeric" style="width:84px"></div>
+        </div>
+        <div class="rangenote" id="waterBreak"></div>
+      </div>
     </div>
-    <div class="rangenote" id="waterBreak"></div>
-    <div class="secttl">Advanced</div>
-    <div class="card">
-      <div class="cfrow"><span><b style="font-size:14px">Auto-adjust as I gain weight</b></span><button class="chip" id="pfAuto">Off</button></div>
-      <div class="cfrow" style="margin-top:8px"><span><b style="font-size:14px">Auto-tune maintenance</b></span><button class="chip" id="pfTune">Off</button></div>
+    <div class="secttl">Micronutrients</div>
+    <div class="card" style="padding:4px 14px">
+      <button class="srow" id="microRow">
+        <span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h10M18 8h2M4 16h4M12 16h8"/><circle cx="16" cy="8" r="2.2"/><circle cx="10" cy="16" r="2.2"/></svg></span><span><b style="font-size:16px">Micronutrient targets</b><br><span class="ph" id="microSub"></span></span></span>
+        <span class="sval"><span class="chev2">›</span></span>
+      </button>
     </div>
-    <div class="rangenote" id="pfAutoNote"></div>
-    <div class="rangenote" id="pfTuneNote"></div>
+    <div class="gsec closed" id="gsecBody">
+      <div class="ghead"><span>Body stats</span><b class="gval" id="bodyHeadVal"></b><span class="gchev">›</span></div>
+      <div class="gbody">
+        <div class="card">
+          <div class="cfrow"><span>Units</span><span class="chips" id="pfUnits" style="margin:0"><button class="chip" data-u="imp">Imperial</button><button class="chip" data-u="met">Metric</button></span></div>
+          <div class="cfrow"><span>Sex</span><span class="chips" id="pfSex" style="margin:0"><button class="chip" data-x="m">Male</button><button class="chip" data-x="f">Female</button></span></div>
+          <div class="cfrow"><span>Age</span><span><input id="pfAge" type="number" inputmode="numeric" style="width:90px"> <span class="ph">yrs</span></span></div>
+          <div class="cfrow" id="htImpRow"><span>Height</span><span><input id="pfHtFt" type="number" inputmode="numeric" style="width:52px"> <span class="ph">ft</span> <input id="pfHtIn" type="number" inputmode="numeric" style="width:52px"> <span class="ph">in</span></span></div>
+          <div class="cfrow" id="htMetRow" style="display:none"><span>Height</span><span><input id="pfHtCm" type="number" inputmode="decimal" style="width:90px"> <span class="ph">cm</span></span></div>
+          <div class="cfrow"><span>Weight</span><span><input id="pfWeight" type="number" inputmode="decimal" style="width:90px"> <span class="ph" id="pfWeightUnit">lb</span></span></div>
+          <div class="cfrow"><span>Body fat <span class="ph">(optional)</span></span><span><input id="pfFat" type="number" inputmode="decimal" style="width:90px"> <span class="ph">%</span></span></div>
+          <div class="cfrow"><span>Waist <span class="ph">(optional)</span></span><span><input id="pfWaist" type="number" inputmode="decimal" style="width:90px"> <span class="ph" id="pfWaistUnit">in</span></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="gsec closed" id="gsecAdv">
+      <div class="ghead"><span>Advanced</span><span class="gchev">›</span></div>
+      <div class="gbody">
+        <div class="card">
+          <div class="cfrow"><span><b style="font-size:14px">Auto-adjust as I gain weight</b></span><button class="chip" id="pfAuto">Off</button></div>
+          <div class="cfrow" style="margin-top:8px"><span><b style="font-size:14px">Auto-tune maintenance</b></span><button class="chip" id="pfTune">Off</button></div>
+        </div>
+        <div class="rangenote" id="pfAutoNote"></div>
+        <div class="rangenote" id="pfTuneNote"></div>
+      </div>
+    </div>
     <button class="bigbtn" id="goalsDone">Save changes</button>
   </section>
 
-  <!-- PROGRESS -->
+<!-- PROGRESS -->
   <section class="view" id="view-progress">
     <div class="topbar">
       <div style="width:44px"></div>
@@ -1884,7 +1912,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-q";
+const APP_VERSION = "2026.09.24-r";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -5133,6 +5161,10 @@ function renderProfile(){
   document.getElementById("pfWaist").value = p.waistIn>0 ? (met ? Math.round(p.waistIn*2.54*10)/10 : Math.round(p.waistIn*10)/10) : "";
   document.getElementById("pfWaistUnit").textContent = met?"cm":"in";
   document.querySelectorAll("#pfAct .chip").forEach(c=>c.classList.toggle("sel", c.dataset.k===p.activityKey));
+  const ft = Math.floor(p.heightIn/12), fi = Math.round(p.heightIn%12);
+  document.getElementById("bodyHeadVal").textContent =
+    (p.heightIn>0 ? ft+"′"+fi+"″" : "—") + " · " +
+    (p.weightLb>0 ? (met ? (p.weightLb/2.20462).toFixed(1)+" kg" : Math.round(p.weightLb*10)/10+" lb") : "—");
   const at = document.getElementById("pfAuto");
   at.textContent = p.auto?"On":"Off"; at.classList.toggle("sel", !!p.auto);
   document.getElementById("pfAutoNote").textContent = S.goals.autoNote || "";
@@ -5227,7 +5259,14 @@ function applyAdaptive(){
 }
 function paintAdaptive(){
   const g=S.goals, a=g.adaptive, $=id=>document.getElementById(id);
-  const tg=$("adToggle"); tg.textContent=g.useAdaptive?"On":"Off"; tg.classList.toggle("sel",!!g.useAdaptive);
+  const tg=$("adToggle");
+  tg.textContent = g.useAdaptive ? "On" : (a&&a.ok ? "Apply" : "Off");
+  tg.classList.toggle("sel",!!g.useAdaptive);
+  const sg=$("adSuggest");
+  if(a&&a.ok&&!g.useAdaptive){
+    sg.style.display="";
+    sg.textContent="Suggested maintenance "+a.value.toLocaleString()+" kcal ("+(a.adj>=0?"+":"−")+Math.abs(a.adj).toLocaleString()+" vs your formula estimate) — tap Apply to use it.";
+  } else sg.style.display="none";
   const explainer="Compares what you ate against your weight trend over the last 3 weeks: TDEE = avg intake − (weight change × 3,500 kcal/lb). Needs 7+ logged days and weigh-ins spread across a week.";
   const chart=$("adChart");
   if(!a){
@@ -5404,6 +5443,20 @@ function openGsec(name){
     if(t===name) s.classList.remove("closed");
   });
 }
+/* collapsible goal sections: tap the header to fold; open state persists */
+document.querySelectorAll("#view-goals .gsec").forEach(s=>{
+  s.querySelector(".ghead").onclick=()=>{
+    s.classList.toggle("closed");
+    try{
+      const open=[...document.querySelectorAll("#view-goals .gsec:not(.closed)")].map(x=>x.id);
+      localStorage.setItem("fuel_goals_secs", JSON.stringify(open));
+    }catch(e){}
+  };
+});
+try{
+  const gsOpen=JSON.parse(localStorage.getItem("fuel_goals_secs")||"null");
+  if(Array.isArray(gsOpen)) document.querySelectorAll("#view-goals .gsec").forEach(s=>s.classList.toggle("closed", !gsOpen.includes(s.id)));
+}catch(e){}
 /* ============ INFORMATION INDEX (2026.09.24-f) ============
    Every explainer lives in infoContent(); this index groups them so the app
    surface stays clean of paragraphs. ⓘ buttons next to main titles land here. */
@@ -6036,6 +6089,7 @@ function paintWater(){
   const wc = document.getElementById("waterCustom");
   if(document.activeElement!==wc) wc.value = g.water>0 ? g.water : "";
   document.getElementById("waterBreak").textContent = waterBreakdown();
+  document.getElementById("waterHeadVal").textContent = g.water>0 ? g.water+" glasses" : "Auto";
 }
 document.querySelectorAll("#waterMode .chip").forEach(c=>c.onclick=()=>{
   S.goals.water = c.dataset.w==="auto" ? 0 : +c.dataset.w;
@@ -6066,14 +6120,16 @@ function renderGoals(){
   document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", g.maintenance>0 && +c.dataset.p === Math.round(g.surplus/g.maintenance*100)));
   paintGainProj();
   updateMacroSplit(); paintWater();
+  document.getElementById("maintHeadVal").textContent = g.maintenance>0 ? Math.round(g.maintenance).toLocaleString()+" kcal" : "";
+  const nc = Object.keys(g.nutrTargets||{}).length;
+  document.getElementById("microSub").textContent = nc ? nc+" custom · rest FDA defaults" : "FDA defaults — tap to customize";
 }
 /* Macro split: pure analysis, no auto-magic. Percentages are % of the daily calorie goal,
    uncapped — if the numbers go past 100% that's the truth, not a bug. */
 function updateMacroSplit(){
   const g = S.goals, tot = goalTotal();
   const auto = g.macroAuto!==false;
-  const ab = document.getElementById("macroAutoBtn");
-  ab.classList.toggle("sel", auto);
+  document.querySelectorAll("#macroModeSeg .segbtn").forEach(b=>b.classList.toggle("on", (b.dataset.m==="auto")===auto));
   document.getElementById("macroAutoNote").textContent = auto
     ? (tot>0 ? "Auto · protein 2.2 g/kg, fat 25%, carbs fill the rest. Type a number to go manual."
              : "Auto is on — calculate your maintenance above and macros fill in themselves.")
@@ -6210,11 +6266,18 @@ document.getElementById("fiberAutoBtn").onclick = ()=>{
   if(S.goals.nutrTargets) delete S.goals.nutrTargets["Fiber"];
   save(); renderGoals();
 };
-document.getElementById("macroAutoBtn").onclick = ()=>{
+document.querySelectorAll("#macroModeSeg .segbtn").forEach(b=>b.onclick=()=>{
   commitGoalsInputs();
-  S.goals.macroAuto = true;
-  deriveMacros();
+  if(b.dataset.m==="auto"){ S.goals.macroAuto = true; deriveMacros(); }
+  else S.goals.macroAuto = false;
   save(); renderGoals();
+});
+document.getElementById("microRow").onclick = ()=>{
+  commitGoalsInputs(); save();
+  Object.keys(ncatCollapsed).forEach(k=>delete ncatCollapsed[k]); /* expand every nutrient category */
+  saveNcatCollapsed();
+  showView("analysis"); renderAnalysis();
+  setTimeout(()=>{ const el=document.getElementById("nutrTable"); if(el && el.scrollIntoView) el.scrollIntoView({block:"start"}); },80);
 };
 document.getElementById("goalsDone").onclick = ()=>{
   commitGoalsInputs();
