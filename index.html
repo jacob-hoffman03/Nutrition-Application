@@ -29,7 +29,7 @@ body{
 }
 #app{max-width:430px; margin:0 auto; height:100vh; height:100dvh; display:flex; flex-direction:column; overflow:hidden;}
 button{font-family:inherit;}
-.view{display:none; padding:0 14px 22px; animation:fade .18s ease;}
+.view{display:none; padding:0 14px 22px; animation:fade .18s ease; touch-action:pan-y;}
 .view.active{display:block; flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;}
 @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
 .card{background:var(--card); border-radius:var(--radius); padding:16px; margin-bottom:12px;}
@@ -1109,14 +1109,14 @@ body.reordering #progOverview{display:none}
     </div>
 <div class="punit" data-pid="insights">
 <div class="card" id="insCard">
-      <div style="display:flex; justify-content:space-between; align-items:center;"><b style="font-size:16px">This week</b><span class="pill" id="insPill" style="display:none"></span></div>
+      <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l1.9 5.4L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.6L12 3z"/><path d="M18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z"/></svg></span><b style="font-size:16px">This week</b></span><span class="pill" id="insPill" style="display:none"></span></div>
       <div id="insRows" style="margin-top:2px"></div>
-      <div class="rangenote" id="insNote" style="margin-top:8px">Estimates from your log, not medical advice — sleep, stress, and illness matter too, and the app can't see those.</div>
+      <div class="rangenote" id="insNote" style="margin-top:8px">Estimates from your log — not medical advice.</div>
     </div>
     </div>
 <div class="punit" data-pid="wkrev">
 <div class="card" id="wkrevCard" style="display:none">
-      <b style="font-size:16px">Weekly review</b>
+      <span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="m10.5 14.5 2 2 3.5-4"/></svg></span><b style="font-size:16px">Weekly review</b></span>
       <div class="rangenote" id="wkrevRange" style="margin:2px 0 6px"></div>
       <div id="wkrevRows"></div>
       <div id="wkrevTip" class="rangenote" style="margin-top:8px; color:var(--ink); font-weight:600"></div>
@@ -1124,6 +1124,7 @@ body.reordering #progOverview{display:none}
     </div>
 <div class="punit" data-pid="analytics">
 <div class="card anacard">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="m8 14 3.5-3.5 2.5 2.5 4-5"/></svg></span><b style="font-size:16px">Analytics</b></div>
       <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span></div><span class="wk-nav"><button id="pgWkPrev" aria-label="Previous week">‹</button><span class="ana-range" id="anaRange">Last 7 days</span><button id="pgWkNext" aria-label="Next week">›</button></span></div>
       <div class="bars7" id="bars7"></div>
       <div class="rangenote" id="trendChip" style="margin-top:8px"></div>
@@ -1144,7 +1145,7 @@ body.reordering #progOverview{display:none}
     </div>
 <div class="punit" data-pid="macros">
 <div class="card macrocard">
-      <div class="mc-head"><b>Macros</b><span class="mc-legend"><i style="background:#8b8bf5"></i>Carbs<i style="background:#f5a623"></i>Protein<i style="background:#34c77b"></i>Fat</span><span class="mc-week" id="mcWeek">Weekly</span></div>
+      <div class="mc-head"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 12V3.5"/><path d="M12 12l6 6"/></svg></span><b>Macros</b></span><span class="mc-legend"><i style="background:#8b8bf5"></i>Carbs<i style="background:#f5a623"></i>Protein<i style="background:#34c77b"></i>Fat</span><span class="mc-week" id="mcWeek">Weekly</span></div>
       <div class="mstack" id="macroStack"></div>
       <div class="mstack-lbls" id="macroStackLbls"></div>
     </div>
@@ -1160,7 +1161,7 @@ body.reordering #progOverview{display:none}
 <div class="punit" data-pid="bmi">
 <div class="secttl">Weight analysis</div>
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center; gap:8px;"><b style="font-size:16px">BMI</b><button class="ginfo" id="bmiInfo" aria-label="About BMI">i</button></span><span><b id="bmiVal" style="font-size:20px">—</b><span class="pill" id="bmiPill" style="display:none"></span></span></div>
+      <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center; gap:8px;"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg></span><b style="font-size:16px">BMI</b><button class="ginfo" id="bmiInfo" aria-label="About BMI">i</button></span><span><b id="bmiVal" style="font-size:20px">—</b><span class="pill" id="bmiPill" style="display:none"></span></span></div>
       <div class="bmibar"><i id="bmiMark" style="display:none"></i></div>
       <div class="bmilbls"><span>14</span><span>18.5</span><span>25</span><span>30</span><span>34</span></div>
       <div class="rangenote" id="bmiNote" style="margin-top:8px"></div>
@@ -1172,15 +1173,15 @@ body.reordering #progOverview{display:none}
 <div class="punit" data-pid="calcheck">
 <div class="secttl">Calorie Check</div>
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center; gap:8px;"><b style="font-size:16px">Is your target working?</b><button class="ginfo" id="calCheckInfo" aria-label="How this checks your target">i</button></span></div>
-      <div class="rangenote" id="calCheckOut" style="margin-top:6px">Log your weight for 2+ weeks and this compares your real rate of gain against your target.</div>
+      <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center; gap:8px;"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg></span><b style="font-size:16px">Is your target working?</b><button class="ginfo" id="calCheckInfo" aria-label="How this checks your target">i</button></span></div>
+      <div class="rangenote" id="calCheckOut" style="margin-top:6px">Log weight for 2+ weeks to grade your target against your real rate of gain.</div>
       <div id="calCheckApply" style="margin-top:10px; display:none"><button class="bigbtn" id="calApplyBtn"></button></div>
     </div>
     </div>
 <div class="punit" data-pid="muscle">
 <div class="secttl">Muscle Gain</div>
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center;"><b style="font-size:16px">Estimated muscle gained</b><button class="ginfo" id="muscleInfo" aria-label="How this is estimated">i</button></div>
+      <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center; gap:8px;"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 8v8M17 8v8M4 10v4M20 10v4M7 12h10"/></svg></span><b style="font-size:16px">Estimated muscle gained</b></span><button class="ginfo" id="muscleInfo" aria-label="How this is estimated">i</button></div>
       <div style="display:flex; gap:16px; align-items:center; margin-top:10px">
         <svg id="muscleRing" width="118" height="118" viewBox="0 0 120 120" style="flex:none">
           <circle cx="60" cy="60" r="52" fill="none" stroke="#ececf1" stroke-width="11"/>
@@ -1822,7 +1823,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-j";
+const APP_VERSION = "2026.09.24-k";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6320,6 +6321,62 @@ if(freshBoot && !eraseBlocked && typeof fetch==="function"){
     }else snapBack();
   }, {passive:true});
   document.addEventListener("touchcancel", ()=>{ pulling=false; snapBack(); }, {passive:true});
+})();
+/* 2026.09.24-k: iOS-style edge swipe-back. Drag right from the left edge to
+   go back to the previous view. Wraps showView with a small history stack;
+   navigating back to the view you came from pops instead of pushing. */
+(function(){
+  const EDGE=28, ACT=12, COMMIT=90;
+  let navHist=[];
+  const _showView=showView;
+  showView=function(v, isBack){
+    if(v!==curView){
+      if(isBack){ /* goBack already popped — never push on the way back */ }
+      else if(navHist[navHist.length-1]===v) navHist.pop();
+      else{ navHist.push(curView); if(navHist.length>20) navHist.shift(); }
+    }
+    _showView(v);
+  };
+  function goBack(){
+    const prev=navHist.pop();
+    if(prev===undefined) return false;
+    showView(prev, true);
+    return true;
+  }
+  window.__goBack=goBack; window.__navHist=navHist;
+  let sx=0, sy=0, pid=null, active=false, locked=false;
+  const busy=()=>!!document.querySelector(".sheet.open")||!!document.querySelector(".lightbox.open");
+  document.addEventListener("touchstart", e=>{
+    active=false; locked=false;
+    if(busy()||e.touches.length!==1) return;
+    if(e.target.closest("input,textarea,select")) return;
+    const t=e.touches[0];
+    if(t.clientX<=EDGE){ sx=t.clientX; sy=t.clientY; pid=t.identifier; active=true; }
+  }, {passive:true});
+  document.addEventListener("touchmove", e=>{
+    if(!active) return;
+    const t=Array.prototype.find.call(e.touches, x=>x.identifier===pid);
+    if(!t) return;
+    const dx=t.clientX-sx, dy=t.clientY-sy;
+    if(!locked){
+      if(Math.abs(dy)>ACT&&Math.abs(dy)>Math.abs(dx)*1.4){ active=false; return; }
+      if(dx>ACT&&dx>Math.abs(dy)*1.4) locked=true; else return;
+    }
+    e.preventDefault();
+    const av=activeViewEl();
+    if(av){ av.style.transition="none"; av.style.transform="translateX("+Math.max(0,Math.min(dx,innerWidth))+"px)"; }
+  }, {passive:false});
+  document.addEventListener("touchend", e=>{
+    if(!active) return; active=false;
+    const av=activeViewEl();
+    const t=Array.prototype.find.call(e.changedTouches, x=>x.identifier===pid);
+    const dx=t?t.clientX-sx:0;
+    const commit=locked&&dx>COMMIT&&navHist.length>0;
+    if(av){ av.style.transition="transform .2s ease"; av.style.transform=commit?"translateX("+innerWidth+"px)":""; }
+    if(commit){ setTimeout(()=>{ goBack(); if(av){ av.style.transition=""; av.style.transform=""; } },190); }
+    else setTimeout(()=>{ if(av) av.style.transition=""; },230);
+  }, {passive:true});
+  document.addEventListener("touchcancel", ()=>{ if(active){ active=false; const av=activeViewEl(); if(av){ av.style.transition=""; av.style.transform=""; } } }, {passive:true});
 })();
 </script>
 </body>
