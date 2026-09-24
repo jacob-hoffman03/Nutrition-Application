@@ -1966,7 +1966,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-w";
+const APP_VERSION = "2026.09.24-x";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2692,7 +2692,9 @@ function openCopySheet(meal){
     const src = (S.days[b.dataset.k].meals||{})[meal]||[];
     const dd = day();
     if(!dd.meals[meal]) dd.meals[meal] = [];
-    src.forEach(e=>dd.meals[meal].push({...e, id:"e"+Date.now()+Math.random().toString(36).slice(2,8)}));
+    src.forEach(e=>{ const ne={...e, id:"e"+Date.now()+Math.random().toString(36).slice(2,8)};
+      if(dayOffset===0) ne.t = Date.now(); else delete ne.t; /* fresh stamp when copying into today; backdated copies stay untimed so the tired model and go-tos don't read stale hours (2026.09.24-x) */
+      dd.meals[meal].push(ne); });
     /* no recordMealTime here (2026.09.23-k): backfilling old days must not stamp "now" as his usual eat time */
     save(); renderDiary(); closeCopySheet();
   });
@@ -2731,7 +2733,7 @@ function openCloseSheet(){
   let proj = "";
   if(mCal>0){
     const sur = Math.round(t.cal - mCal), lb5 = sur*35/3500;
-    const sgn = sur>=0 ? "+" : "-";
+    const sgn = sur>=0 ? "+" : "−";
     proj = '<div class="closerow"><span>5-week pace at today\'s intake</span><b>'+sgn+Math.abs(r1(lb5))+' lb</b></div>'+
       '<div class="rangenote">If every day looked like today ('+sgn+Math.abs(sur).toLocaleString()+' vs maintenance), that\'s about '+sgn+Math.abs(r1(lb5))+' lb in 5 weeks.</div>';
   }
@@ -3866,6 +3868,10 @@ function recentFoods(){
   days.forEach(k => MEALS.forEach(m => (S.days[k].meals[m]||[]).forEach(e => {
     if(!seen.has(e.n)){ const f = findFood(e.n); if(f) seen.set(e.n, f); }
   })));
+  /* freshly created foods appear in Recent immediately, newest first (2026.09.24-x) */
+  (S.customFoods||[]).filter(f=>f.createdAt && !seen.has(f.n))
+    .sort((a,b)=>b.createdAt-a.createdAt)
+    .forEach(f=>seen.set(f.n, f));
   return [...seen.values()];
 }
 function delCustomFood(name){
@@ -4055,11 +4061,12 @@ document.getElementById("cSave").onclick = ()=>{
   if(cPr>0 && !(cPs>0)) cPs = 1; /* price without servings = the food as defined is the whole package */
   const rec = {n, s:sTxt,
     cal, p, c, f, img:cPhotoData, pr:cPr, ps:cPs,
-    kind:isSupp?"supp":"food", unit:isSupp?cUnit:null, nutrs, xw:isSupp && document.getElementById("cXW").checked};
+    kind:isSupp?"supp":"food", unit:isSupp?cUnit:null, nutrs, xw:isSupp && document.getElementById("cXW").checked,
+    createdAt: Date.now()}; /* Recent tab shows fresh creations immediately (2026.09.24-x) */
   if(cEditing){
     if(rec.n!==cEditing && S.customFoods.some(x=>x.n===rec.n)){ alert("You already have a food called \""+rec.n+"\"."); return; }
     const ix = S.customFoods.findIndex(x=>x.n===cEditing);
-    if(ix>=0) S.customFoods[ix] = rec;
+    if(ix>=0){ rec.createdAt = S.customFoods[ix].createdAt || rec.createdAt; S.customFoods[ix] = rec; }
     if(rec.n!==cEditing){
       Object.values(S.days||{}).forEach(d=>MEALS.forEach(m=>((d.meals||{})[m]||[]).forEach(e=>{ if(e.n===cEditing) e.n = rec.n; })));
       const fi = S.favorites.indexOf(cEditing); if(fi>=0) S.favorites[fi] = rec.n;
@@ -4971,6 +4978,7 @@ function renderProgress(){
     S.weights = S.weights.filter(p=>p.d!==b.dataset.d);
     const rest = S.weights.slice().sort((a,c)=>a.d<c.d?-1:1);
     if(rest.length) syncWeightFromLog(rest[rest.length-1].w, rest[rest.length-1].d);
+    else { S.goals.profile.weightLb = 0; S.goals.profHash = profHash(); } /* no weigh-ins left: blank-slate the synced weight so maintenance/BMI math can't use a ghost number (2026.09.24-x) */
     save(); renderProgress();
   });
   paintWtGoal(); paintWtAnalysis();
@@ -6545,7 +6553,7 @@ function renderSettings(){
   document.getElementById("waterRowVal").textContent = g.water>0 ? (g.water*8)+" oz" : (waterTarget()>0 ? "Auto ("+(waterTarget()*8)+" oz)" : "Auto (set maintenance first)");
   document.getElementById("dDays").textContent = Object.keys(S.days).filter(k=>dayHasData(S.days[k])).length;
   document.getElementById("appVer").textContent = "Fuel " + APP_VERSION;
-  document.getElementById("dFoods").textContent = Object.values(S.days).reduce((a,d)=>a+MEALS.reduce((x,m)=>x+(d.meals[m]||[]).length,0),0);
+  document.getElementById("dFoods").textContent = Object.values(S.days).reduce((a,d)=>a+MEALS.filter(m=>m!=="supplements").reduce((x,m)=>x+(d.meals[m]||[]).length,0),0); /* supplements aren't food (2026.09.24-x) */
   document.getElementById("dWeigh").textContent = (S.weights||[]).length;
   const mrv=document.getElementById("medalCaseRowVal"); if(mrv) mrv.textContent=Object.keys(medalCase()).length+"/"+MDEF.length;
   const srv=document.getElementById("snapRowVal"); if(srv) srv.textContent=listSnapshots().length+" saved";
@@ -6869,7 +6877,9 @@ if(freshBoot && !eraseBlocked && typeof fetch==="function"){
     if(busy()||e.touches.length!==1) return;
     if(e.target.closest("input,textarea,select")) return;
     const t=e.touches[0];
-    if(t.clientX<=EDGE){ sx=t.clientX; sy=t.clientY; pid=t.identifier; active=true; }
+    /* 2026.09.24-x: no history = nowhere to go back to, so don't engage at all —
+       the view stays put (bounces back) instead of sliding into a black void */
+    if(t.clientX<=EDGE && navHist.length>0){ sx=t.clientX; sy=t.clientY; pid=t.identifier; active=true; }
   }, {passive:true});
   document.addEventListener("touchmove", e=>{
     if(!active) return;
@@ -6890,9 +6900,16 @@ if(freshBoot && !eraseBlocked && typeof fetch==="function"){
     const t=Array.prototype.find.call(e.changedTouches, x=>x.identifier===pid);
     const dx=t?t.clientX-sx:0;
     const commit=locked&&dx>COMMIT&&navHist.length>0;
-    if(av){ av.style.transition="transform .2s ease"; av.style.transform=commit?"translateX("+innerWidth+"px)":""; }
-    if(commit){ setTimeout(()=>{ goBack(); if(av){ av.style.transition=""; av.style.transform=""; } },190); }
-    else setTimeout(()=>{ if(av) av.style.transition=""; },230);
+    /* 2026.09.24-x: on commit, reset the drag and swap immediately — the incoming
+       view's own fade covers the transition, so there's never a black gap */
+    if(commit){
+      if(av){ av.style.transition=""; av.style.transform=""; }
+      goBack();
+    } else if(av && locked){ /* partial drag springs back */
+      av.style.transition="transform .18s ease";
+      av.style.transform="";
+      setTimeout(()=>{ av.style.transition=""; },200);
+    }
   }, {passive:true});
   document.addEventListener("touchcancel", ()=>{ if(active){ active=false; const av=activeViewEl(); if(av){ av.style.transition=""; av.style.transform=""; } } }, {passive:true});
 })();
