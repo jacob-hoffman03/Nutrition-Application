@@ -325,7 +325,7 @@ button{font-family:inherit;}
 .aplus{width:44px; height:44px; border-radius:14px; border:none; background:var(--card2); color:var(--acc); font-size:26px; line-height:1; font-weight:600; flex:none; display:flex; align-items:center; justify-content:center;}
 .aplus:active{transform:scale(.93);}
 /* tray bar */
-#trayBar{position:sticky; bottom:0; display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; padding:12px 4px calc(10px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); margin:12px -2px -4px;}
+#trayBar{flex:none; display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; padding:12px 18px calc(10px + env(safe-area-inset-bottom)); border-top:1px solid var(--line);}
 .trayinfo{display:flex; align-items:center; gap:10px; font-size:17px;}
 .trayico{position:relative; font-size:26px;}
 .trayico b{position:absolute; top:-8px; right:-10px; background:#e5484d; color:#fff; font-size:11px; min-width:20px; height:20px; border-radius:10px; display:flex; align-items:center; justify-content:center; padding:0 5px;}
@@ -462,7 +462,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wlogrow input{min-width:0;}
 .wlogrow input[type="date"]{flex:0 1 112px; font-size:13px; padding:11px 4px; color:var(--ink);}
 /* ============ WEIGHT HERO CIRCLE + FULL-SCREEN DETAIL (2026.09.22) ============ */
-/* 2026.09.24-o: progress restructure — card titles, segments, expandable rows */
+/* 2026.09.24-p: progress restructure — card titles, segments, expandable rows */
 .cardttl{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
 .cardttl b{font-size:17px;letter-spacing:-.2px;}
 .cardttl .pill{margin-left:auto;}
@@ -1488,10 +1488,6 @@ body.reordering #progOverview{display:none}
           <span class="flabel"><select id="sheetSort" style="border:none;background:none;font:inherit;color:inherit;font-weight:600"><option value="time">Sort by Time ⌄</option><option value="name">Sort by Name ⌄</option></select></span>
         </div>
         <div id="sheetResults"></div>
-        <div id="trayBar" style="display:none">
-          <span class="trayinfo"><span class="trayico" id="trayIco"><b id="trayCount">0</b></span><b id="trayKcal">0 kcal</b></span>
-          <button class="trayadd" id="trayAdd" disabled>+ Add</button>
-        </div>
       </div>
       <div id="sheetDetail" style="display:none">
         <div class="dtop">
@@ -1514,6 +1510,10 @@ body.reordering #progOverview{display:none}
         <button class="ghostbtn" id="backToSearch">← Back to search</button>
         </div>
       </div>
+    </div>
+    <div id="trayBar" style="display:none">
+      <span class="trayinfo"><span class="trayico" id="trayIco"><b id="trayCount">0</b></span><b id="trayKcal">0 kcal</b></span>
+      <button class="trayadd" id="trayAdd" disabled>+ Add</button>
     </div>
   </div>
 </div>
@@ -3307,6 +3307,8 @@ function renderAnalysis(){
 /* ============ ADD-FOOD SHEET ============ */
 let sheetMeal = "breakfast", sheetFood = null, sheetTab = "recent", sheetSort = "time", tray = [];
 const sheet = document.getElementById("sheet");
+let sheetReturnTop = 0;
+const sheetBody = ()=>document.querySelector("#sheet .body");
 function openSheet(meal){
   sheetMeal = meal || "breakfast"; sheetFood = null; tray = [];
   document.getElementById("sheetSearch").value = "";
@@ -3314,14 +3316,16 @@ function openSheet(meal){
   document.querySelectorAll("#sheetTabs .segtab").forEach(t=>t.classList.toggle("sel", t.dataset.t==="recent"));
   document.getElementById("sheetSort").value = "time";
   showSearch(); renderSheetResults("");
+  sheetBody().scrollTop = 0;
   sheet.classList.add("open");
 }
 function closeSheet(){ sheet.classList.remove("open"); }
 document.getElementById("sheetScrim").onclick = closeSheet;
 document.getElementById("sheetX").onclick = ()=>{
-  if(document.getElementById("sheetDetail").style.display!=="none") showSearch();
+  if(document.getElementById("sheetDetail").style.display!=="none"){ showSearch(); sheetBody().scrollTop = sheetReturnTop; }
   else closeSheet();
 };
+document.getElementById("backToSearch").onclick = ()=>{ showSearch(); sheetBody().scrollTop = sheetReturnTop; };
 document.getElementById("statusPill").onclick = ()=>{ renderZoneSheet(); document.getElementById("zoneSheet").classList.add("open"); };
 document.getElementById("statusPill").onkeydown = e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); document.getElementById("statusPill").click(); } };
 document.getElementById("zoneScrim").onclick = ()=>document.getElementById("zoneSheet").classList.remove("open");
@@ -3425,6 +3429,8 @@ function openDetail(f){
   var ls = (S.lastServ||{})[f.n];
   if(ls && ls.q>0 && ls.q<100000){ dQty = ls.q; if((ls.u==="g"||ls.u==="oz") && dGramPer>0) dUnit = ls.u; }
   document.getElementById("sheetSearch").blur();
+  sheetReturnTop = sheetBody().scrollTop; sheetBody().scrollTop = 0;
+  document.getElementById("trayBar").style.display = "none";
   document.getElementById("sheetSearchWrap").style.display = "none";
   document.getElementById("sheetDetail").style.display = "";
   document.getElementById("sheetTitle").textContent = "Log food";
@@ -3472,12 +3478,11 @@ document.getElementById("dQty").addEventListener("input", e=>{
   if(v>0 && v<100000){ dQty = v; updateDetail(); }
 });
 document.getElementById("sheetSearch").addEventListener("input", e=>renderSheetResults(e.target.value));
-document.getElementById("backToSearch").onclick = showSearch;
 document.getElementById("confirmAdd").onclick = ()=>{
   if(!sheetFood) return; /* guard: detail opened without a food (2026.09.21-k) */
   addToTray(sheetFood, round2(dServings()), dMeal);
   (S.lastServ = S.lastServ||{})[sheetFood.n] = {q:dQty, u:dUnit}; save();
-  showSearch();
+  showSearch(); sheetBody().scrollTop = sheetReturnTop;
 };
 
 /* ============ FOODS TAB ============ */
