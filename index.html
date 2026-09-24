@@ -1496,7 +1496,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.23-o";
+const APP_VERSION = "2026.09.23-p";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4636,20 +4636,34 @@ function celebrateMedals(){
   if(!S.medalPop) S.medalPop = {};
   let seen = S.medalPop[k];
   const m = medalsFor(k);
+  const allEarned = MEDAL_DEFS.every(md=>m[md.id]);
+  /* Triple-crown merge: plays once per day whenever all three are earned and
+     the merge hasn't celebrated yet — even if they were all earned before
+     this update or banked silently on first sight. */
+  const maybeChroma = (delay)=>{
+    if(allEarned && seen.indexOf("chroma")<0){
+      seen.push("chroma");
+      save();
+      setTimeout(chromaMerge, delay);
+    }
+  };
   if(!seen){
-    /* first sight of this day: bank what's already earned so the update itself never fanfares */
+    /* first sight of this day: bank what's already earned so individual
+       medals never fanfare on load */
     S.medalPop[k] = MEDAL_DEFS.filter(md=>m[md.id]).map(md=>md.id);
+    seen = S.medalPop[k];
     save();
+    maybeChroma(1200);
     return;
   }
   const fresh = MEDAL_DEFS.filter(md=>m[md.id] && seen.indexOf(md.id)<0);
-  if(!fresh.length) return;
+  if(!fresh.length){ maybeChroma(1200); return; }
   fresh.forEach(md=>seen.push(md.id));
   save();
   fresh.forEach((md,i)=>setTimeout(()=>totemPop(md), i*1800));
   /* all three earned: after the individual pops, the medals merge into one
      big chromatic award. Once per day. */
-  if(MEDAL_DEFS.every(md=>m[md.id]) && seen.indexOf("chroma")<0){
+  if(allEarned && seen.indexOf("chroma")<0){
     seen.push("chroma");
     save();
     setTimeout(chromaMerge, fresh.length*1800+500);
