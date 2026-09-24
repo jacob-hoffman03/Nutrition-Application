@@ -1544,7 +1544,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-c";
+const APP_VERSION = "2026.09.24-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -1582,6 +1582,9 @@ else { if(!/^#[0-9a-fA-F]{6}$/.test(s.profile.theme)) s.profile.theme = DEFAULT_
       (s.favorites||[]).forEach((x,i)=>{ if(x===on) s.favorites[i]=nn; });
       Object.values(s.days||{}).forEach(d=>MEALS.forEach(m=>((d.meals||{})[m]||[]).forEach(e=>{ if(e.n===on) e.n=nn; }))); } } });
     flagSet("ggAbbr",1); } /* Good & Gather -> G&G label abbreviation 2026.09.20-cs */
+  if(!Array.isArray(s.customFoods)) s.customFoods=[]; if(!Array.isArray(s.weights)) s.weights=[];
+  if(!Array.isArray(s.favorites)) s.favorites=[]; if(!s.days||typeof s.days!=="object") s.days={};
+  /* missing keys (old/corrupt stores) must not crash render paths that .slice() them 2026.09.24-d */
   return s; } } catch(e){}
   flagSet("zeroReset",1); /* fresh boot / unreadable state: nothing to reset, mark it done */
   freshBoot = true; /* boot code below will try restoring seed-data.json */
@@ -1670,7 +1673,8 @@ const dstr = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"
 const todayStr = () => dstr(new Date());
 let dayOffset = 0;
 const viewDate = () => { const d = new Date(); d.setDate(d.getDate()+dayOffset); return dstr(d); };
-function day(){ const k = viewDate(); if(!S.days[k]) S.days[k] = {meals:{breakfast:[],lunch:[],dinner:[],snacks:[],supplements:[]}, waterOz:0}; return S.days[k]; }
+function emptyDay(){ return {meals:{breakfast:[],lunch:[],dinner:[],snacks:[],supplements:[]}, waterOz:0}; }
+function day(){ const k = viewDate(); if(!S.days[k]) S.days[k] = emptyDay(); return S.days[k]; }
 /* 2026.09.22-h: day() auto-creates an empty record for any viewed date, so "has data"
    must be explicit — an untouched auto-created day is not a logged day. */
 function dayHasData(d){
@@ -1685,6 +1689,9 @@ function dayHasData(d){
 }
 function allFoods(){ const seen = new Set(FOODS.map(f=>f.n)); return FOODS.concat((S.customFoods||[]).filter(f=>!seen.has(f.n))); }
 function findFood(name){ return allFoods().find(f=>f.n===name); }
+/* Entry photos: logged meals don't carry a second copy of the library photo —
+   the food library is the source of truth; display resolves it by entry name. */
+function entryImg(e){ return (e&&e.img) || ((S.customFoods||[]).find(f=>f.n===(e&&e.n))||{}).img || null; }
 /* ============ FOOD COST (2026.09.22-o) ============
    Foods can carry a store price: pr = whole-package price in $, ps = servings
    per package. Cost per serving = pr/ps, so a $1 jar with 4 servings = $0.25
@@ -1698,12 +1705,12 @@ function isFav(name){ return S.favorites.includes(name); }
 function isCustom(name){ return S.customFoods.some(f=>f.n===name); }
 function toggleFav(name){ const i=S.favorites.indexOf(name); if(i>=0) S.favorites.splice(i,1); else S.favorites.push(name); save(); }
 function totals(k){
-  const d = S.days[k] || {meals:{breakfast:[],lunch:[],dinner:[],snacks:[],supplements:[]}, waterOz:0};
+  const d = S.days[k] || emptyDay();
   const t = {cal:0,p:0,c:0,f:0};
   MEALS.forEach(m => (d.meals[m]||[]).forEach(e=>{ t.cal+=e.cal; t.p+=e.p; t.c+=e.c; t.f+=e.f; }));
   return t;
 }
-const mealCals = k => { const d = S.days[k] || {meals:{breakfast:[],lunch:[],dinner:[],snacks:[],supplements:[]}}; const o={}; MEALS.forEach(m=>o[m]=(d.meals[m]||[]).reduce((a,e)=>a+e.cal,0)); return o; };
+const mealCals = k => { const d = S.days[k] || emptyDay(); const o={}; MEALS.forEach(m=>o[m]=(d.meals[m]||[]).reduce((a,e)=>a+e.cal,0)); return o; };
 const r1 = n => Math.round(n*10)/10;
 const barW = (v,goal) => (goal>0 ? Math.min(v/goal*100,100) : 0)+"%"; /* never NaN when a goal is 0 */
 function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
@@ -2028,7 +2035,6 @@ function renderDiary(){
   $("valFiv").textContent = r1(fib);
 
   const mh = $("meals"); mh.innerHTML = "";
-  const entryImg = e => e.img || ((S.customFoods||[]).find(f=>f.n===e.n)||{}).img;
   MEALS.forEach((m,mi) => {
     const items = d.meals[m]||[];
     const mc = items.reduce((a,e)=>a+e.cal,0);
@@ -2974,10 +2980,11 @@ document.getElementById("trayAdd").onclick = ()=>{
   const seenMeals = {};
   tray.forEach(t=>{
     const f = findFood(t.n); if(!f) return;
-    const e = {id:uid(), n:f.n, s:f.s, qty:t.qty, img:f.img||null,
+    const e = {id:uid(), n:f.n, s:f.s, qty:t.qty, img:null, /* photo lives on the library food; entryImg() resolves it by name */
       cal:f.cal*t.qty, p:f.p*t.qty, c:f.c*t.qty, f:f.f*t.qty,
       kind:f.kind||"food", nutrs:(f.nutrs||[]).map(x=>({n:x.n, amt:x.amt*t.qty, u:x.u})), xw:!!f.xw};
     if(dayOffset===0) e.t = Date.now(); /* log-time stamp drives tired-model recency; backfills stay untimed */
+    if(!d.meals[t.meal]) d.meals[t.meal] = [];
     d.meals[t.meal].push(e);
     seenMeals[t.meal] = 1; /* one timing observation per meal per logging action (2026.09.23-j) */
   });
@@ -3077,6 +3084,15 @@ function recentFoods(){
 }
 function delCustomFood(name){
   if(!confirm(`Delete "${name}"? Your past log entries keep their data.`)) return;
+  /* bake the photo into past entries first — they resolve the library by name,
+     which is about to disappear */
+  const doomed = (S.customFoods||[]).find(f=>f.n===name);
+  if(doomed && doomed.img){
+    for(const k in (S.days||{})){
+      const ms = (S.days[k]||{}).meals||{};
+      Object.keys(ms).forEach(m=>(ms[m]||[]).forEach(e=>{ if(e.n===name && !e.img) e.img = doomed.img; }));
+    }
+  }
   S.customFoods = S.customFoods.filter(f=>f.n!==name);
   const fi = S.favorites.indexOf(name); if(fi>=0) S.favorites.splice(fi,1);
   save(); renderFoods();
@@ -3814,8 +3830,14 @@ function paintCalCheck(){
   else if(pct > bd[1]+0.05) suggest = -150;
   const lastT = S.goals.lastAutoTune;
   const sinceT = lastT ? Math.round((new Date(todayStr()+"T12:00:00")-new Date(lastT+"T12:00:00"))/86400000) : 999;
+  /* Don't chase a missed goal: weight lagging while complete days average under
+     90% of the calorie goal means the food — not the target — is the problem. */
+  const goal = goalTotal(), avgC = avgCompleteIntake();
+  const underAte = suggest>0 && goal>0 && avgC!=null && avgC < 0.9*goal;
   if(!suggest){
     msg += "On target — hold steady and re-check in 2–3 weeks.";
+  } else if(underAte){
+    msg += "Below target — but your complete days average "+Math.round(avgC).toLocaleString()+" kcal, under 90% of your "+Math.round(goal).toLocaleString()+" kcal goal. Hit the goal first; raising the target won't help until the food is actually eaten.";
   } else if(maybeAutoTune(suggest)){
     msg += "Auto-tuned just now: maintenance "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal applied from your trend. Re-check in 2–3 weeks.";
     save(); renderGoals(); renderProgress(); renderDiary(); return;
@@ -3826,7 +3848,7 @@ function paintCalCheck(){
     msg += " Give any change 2–3 weeks before judging it.";
   }
   out.textContent = msg;
-  if(suggest && sinceT >= 21){
+  if(suggest && sinceT >= 21 && !underAte){
     wrap.style.display = "";
     btn.textContent = "Apply "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal/day";
     btn.onclick = ()=>{
@@ -4334,6 +4356,18 @@ if(!flagGet().calcNet){
   if(!S.goals.useAdaptive && S.goals.profile && S.goals.profile.weightLb>0){ recalcMaint(); autoDeriveMacros(); }
   flagSet("calcNet",1);
 }
+/* Photo dedup: log entries used to carry a second copy of their library food's
+   photo. The library is now the source of truth (entryImg resolves by name), so
+   strip copies that exactly match — entries with their own unique photo keep it. */
+if(!flagGet().imgDedup){
+  const lib = {};
+  (S.customFoods||[]).forEach(f=>{ if(f.img) lib[f.n] = f.img; });
+  for(const k in (S.days||{})){
+    const ms = (S.days[k]||{}).meals||{};
+    Object.keys(ms).forEach(m=>(ms[m]||[]).forEach(e=>{ if(e.img && lib[e.n]===e.img) e.img = null; }));
+  }
+  flagSet("imgDedup",1);
+}
 /* ================= ANALYTICS ENGINE — WEIGHT DYNAMICS =================
    Research sources (2026 refresh): Hall 2011 (dynamic energy balance — the
    3,500 kcal/lb rule is a first-week heuristic that overstates long-term change);
@@ -4442,6 +4476,19 @@ function maybeAutoTune(suggest){
   S.goals.tuneNote = "Auto-tune "+todayStr()+": maintenance "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal from your weight trend.";
   return true;
 }
+/* Complete-day gating: partial days must not teach the model. A day counts only
+   with real food AND all three bars cleared: ≥800 kcal, ≥ half of maintenance,
+   ≥ 60% of your own median day. Today is always excluded — unfinished by definition. */
+function completeDayCals(){
+  const WIN=21, raw=[];
+  for(let i=WIN-1;i>=1;i--){ const t=dayTotals(addDays(todayStr(),-i)); if(t.foodLogged) raw.push(t.cal); }
+  const srt=raw.slice().sort((a,b)=>a-b), med=srt.length?srt[Math.floor(srt.length/2)]:0;
+  const maint=calcMaintenance().maint||S.goals.maintenance||0;
+  const cals=[]; let partial=0;
+  raw.forEach(cal=>{ if(cal>=800 && cal>=0.5*maint && cal>=0.6*med) cals.push(cal); else partial++; });
+  return {cals, partial, logged:raw.length};
+}
+function avgCompleteIntake(){ const r=completeDayCals(); return r.cals.length?r.cals.reduce((a,v)=>a+v,0)/r.cals.length:null; }
 /* ============ ADAPTIVE TDEE ============
    Learns maintenance from the energy-balance equation instead of guessing it
    from an activity multiplier: TDEE = avg daily intake − (weight slope × 3500).
@@ -4454,16 +4501,15 @@ function maybeAutoTune(suggest){
 function adaptiveCalc(){
   const WIN=21, MIN_DAYS=7, MIN_SPAN=7;
   if(!(S.goals.profile.weightLb>0)) return {ok:false, reason:"profile"};
-  const cals=[];
-  for(let i=WIN-1;i>=0;i--){ const t=dayTotals(addDays(todayStr(),-i)); if(t.foodLogged) cals.push(t.cal); }
+  const comp=completeDayCals(), cals=comp.cals, partial=comp.partial;
   const ws=sortedWeights(), T=p=>new Date(p.d+"T12:00:00").getTime();
   const cutoff=new Date(todayStr()+"T12:00:00").getTime()-WIN*86400000;
   const wpts=trendMA(ws).filter(p=>T(p)>=cutoff&&p.n>=2);
   const spanD=wpts.length>=2?(T(wpts[wpts.length-1])-T(wpts[0]))/86400000:0;
   if(cals.length<MIN_DAYS||wpts.length<2||spanD<MIN_SPAN)
-    return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD)};
+    return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD), partial};
   const rateWk=halvesRate(wpts);
-  if(rateWk==null) return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD)};
+  if(rateWk==null) return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD), partial};
   const formula=calcMaintenance().maint;
   if(!(formula>0)) return {ok:false, reason:"profile"};
   const avg=cals.reduce((a,v)=>a+v,0)/cals.length;
@@ -4473,14 +4519,14 @@ function adaptiveCalc(){
   v=formula+Math.max(-400,Math.min(400,v-formula)); /* sanity: never trust the math more than ±400 from the formula */
   return {ok:true, days:cals.length, span:Math.round(spanD), avg:Math.round(avg),
           rateWk:Math.round(rateWk*100)/100, learned:Math.round(learned),
-          formula, conf, value:Math.round(v)};
+          formula, conf, value:Math.round(v), partial};
 }
 function applyAdaptive(){
   const g=S.goals, r=adaptiveCalc();
   if(!r.ok){
     /* keep the last good value and flag it stale — thin data must never nuke a learned target */
     if(g.adaptive&&g.adaptive.ok) g.adaptive.stale=true;
-    else g.adaptive={ok:false, reason:r.reason, days:r.days||0, span:r.span||0, updated:todayStr()};
+    else g.adaptive={ok:false, reason:r.reason, days:r.days||0, span:r.span||0, partial:r.partial||0, updated:todayStr()};
     save(); paintAdaptive(); renderGoals(); renderDiary(); return;
   }
   let v=r.value;
@@ -4488,7 +4534,7 @@ function applyAdaptive(){
   if(prev!=null) v=prev+Math.max(-150,Math.min(150,v-prev)); /* weekly moves capped, same spirit as auto-tune */
   v=Math.round(v);
   g.adaptive={ok:true, stale:false, value:v, formula:r.formula, learned:r.learned, avg:r.avg,
-    rateWk:r.rateWk, adj:v-r.formula, conf:r.conf, days:r.days, span:r.span, updated:todayStr()};
+    rateWk:r.rateWk, adj:v-r.formula, conf:r.conf, days:r.days, span:r.span, partial:r.partial||0, updated:todayStr()};
   g.adaptiveHist=g.adaptiveHist||[];
   const last=g.adaptiveHist[g.adaptiveHist.length-1];
   if(!last||last.d!==todayStr()) g.adaptiveHist.push({d:todayStr(), v});
@@ -4518,7 +4564,7 @@ function paintAdaptive(){
     chart.style.display="none"; $("adNote").textContent=explainer; $("adTuneNote").textContent=g.adTuneNote||""; return;
   }
   $("adVal").textContent=a.value.toLocaleString();
-  $("adSub").textContent="updated "+a.updated+" · "+a.days+" logged days"+(a.stale?" · stale — log more days":"");
+  $("adSub").textContent="updated "+a.updated+" · "+a.days+" logged days"+(a.partial?" · "+a.partial+" partial skipped":"")+(a.stale?" · stale — log more days":"");
   $("adFormula").textContent=a.formula.toLocaleString()+" kcal";
   const adj=$("adAdj");
   adj.textContent=(a.adj>=0?"+":"−")+Math.abs(a.adj).toLocaleString()+" kcal"; /* explicit − branch: never drop the sign */
@@ -4544,8 +4590,7 @@ function paintAdaptive(){
    otherwise the calculator.net formula). */
 function paintTrueMetrics(){
   const $=id=>document.getElementById(id);
-  const cals=[];
-  for(let i=20;i>=0;i--){ const t=dayTotals(addDays(todayStr(),-i)); if(t.foodLogged) cals.push(t.cal); }
+  const comp=completeDayCals(), cals=comp.cals;
   $("tmIntake").textContent = cals.length ? Math.round(cals.reduce((a,v)=>a+v,0)/cals.length).toLocaleString()+" kcal" : "–";
   const ws=sortedWeights();
   let trend=null;
@@ -4559,8 +4604,8 @@ function paintTrueMetrics(){
   if(r.ok) m.textContent=r.value.toLocaleString()+" kcal · learned";
   else { const f=calcMaintenance(); m.textContent = f.maint>0 ? f.maint.toLocaleString()+" kcal · formula" : "–"; }
   const wspan = ws.length>=2 ? Math.round((new Date(ws[ws.length-1].d+"T12:00:00")-new Date(ws[0].d+"T12:00:00"))/86400000) : 0;
-  $("tmNote").textContent = cals.length+" logged day"+(cals.length===1?"":"s")+" in the last 3 weeks · weigh-ins span "+wspan+" day"+(wspan===1?"":"s")+
-    " — updates live as you log. The learned value needs 7+ logged days and a 7-day weigh-in span.";
+  $("tmNote").textContent = cals.length+" complete day"+(cals.length===1?"":"s")+" in the last 3 weeks"+(comp.partial?" · "+comp.partial+" partial skipped":"")+" · weigh-ins span "+wspan+" day"+(wspan===1?"":"s")+
+    " — updates live as you log. The learned value needs 7+ complete days and a 7-day weigh-in span.";
 }
 /* The scale is the single source of truth for body weight: every weigh-in updates the
    profile weight, so Calculate maintenance, BMI, calorie check, and the diary all
@@ -4835,7 +4880,7 @@ function mDistinctFoods(ds){ const s=new Set(); const d=S.days[ds]; if(!d) retur
 function mEntryHour(ds, h0, h1){ const d=S.days[ds]; if(!d) return false;
   return FOOD_MEALS.some(m=>((d.meals||{})[m]||[]).some(e=>{ if(!e.t) return false; const dt=new Date(e.t); const h=dt.getHours()+dt.getMinutes()/60; return h>=h0 && h<h1; })); }
 function mPhotoCount(ds){ const d=S.days[ds]; let n=0; if(!d) return 0;
-  FOOD_MEALS.forEach(m=>((d.meals||{})[m]||[]).forEach(e=>{ if(e.img) n++; })); return n; }
+  FOOD_MEALS.forEach(m=>((d.meals||{})[m]||[]).forEach(e=>{ if(entryImg(e)) n++; })); return n; }
 function mHasSupps(ds){ const d=S.days[ds]; return !!(d && ((d.meals||{}).supplements||[]).length>0); }
 function mWaterPct(ds){ const t=waterTarget()*8; return t>0 ? (S.days[ds]||{waterOz:0}).waterOz/t*100 : 0; }
 function mLoggedDays(){ let n=0; for(const k in (S.days||{})) if(mDayHasLog(k)) n++; return n; }
