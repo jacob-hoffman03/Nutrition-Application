@@ -497,6 +497,10 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .dcard.open .ddetail{display:block;animation:ddIn .18s ease;}
 .ddetail .pad{padding-top:4px;}
 @keyframes ddIn{from{opacity:.35;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+/* 2026.09.24-t: Energy today lives at the top of the diary — keep it a slim, even row */
+#energyCard{padding:12px 16px;}
+#energyCard .whead{margin-bottom:0;align-items:center;}
+#energyCard.open .whead{margin-bottom:10px;}
 .wtcard{display:flex; justify-content:center; padding:30px 16px 26px;}
 .wtcircle{position:relative; width:212px; height:212px; border-radius:50%; border:none; cursor:pointer; font-family:inherit; color:var(--ink);
   background:radial-gradient(circle at 50% 40%, #ffffff 0%, var(--acc-soft) 62%, var(--acc-soft) 100%);
@@ -1913,7 +1917,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-s";
+const APP_VERSION = "2026.09.24-t";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
