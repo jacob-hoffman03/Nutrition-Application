@@ -4309,6 +4309,7 @@ const actPAL = p => (ACT_TIERS.find(t=>t.key===(p&&p.activityKey))||ACT_TIERS[2]
 const MODE_PCT = {lean:10, bulk:15, maintain:0}; /* Helms 2023: bigger surpluses add fat, not muscle — bulk capped at +15% */
 function calcMaintenance(){
   const p = S.goals.profile;
+  if(!(p.weightLb>0)) return {bmr:0, maint:0, formula:"—"}; /* blank slate: no stats, no number */
   const kg = p.weightLb/2.20462, cm = p.heightIn*2.54;
   let bmr, formula;
   if(p.bodyFat>0){
