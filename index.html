@@ -462,7 +462,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wlogrow input{min-width:0;}
 .wlogrow input[type="date"]{flex:0 1 112px; font-size:13px; padding:11px 4px; color:var(--ink);}
 /* ============ WEIGHT HERO CIRCLE + FULL-SCREEN DETAIL (2026.09.22) ============ */
-/* 2026.09.24-m: progress restructure — card titles, segments, expandable rows */
+/* 2026.09.24-n: progress restructure — card titles, segments, expandable rows */
 .cardttl{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
 .cardttl b{font-size:17px;letter-spacing:-.2px;}
 .cardttl .pill{margin-left:auto;}
@@ -1202,11 +1202,11 @@ body.reordering #progOverview{display:none}
 <div class="card weekcard">
       <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="m10.5 14.5 2 2 3.5-4"/></svg></span><b>This week</b><span class="pill" id="insPill" style="display:none"></span></div>
       <div class="segctl" id="weekSeg" role="tablist" aria-label="Week views">
-        <button class="segbtn on" data-seg="sum" role="tab">Summary</button>
-        <button class="segbtn" data-seg="cal" role="tab">Calories</button>
+        <button class="segbtn on" data-seg="cal" role="tab">Calories</button>
         <button class="segbtn" data-seg="mac" role="tab">Macros</button>
+        <button class="segbtn" data-seg="sum" role="tab">Summary</button>
       </div>
-      <div class="wseg" id="wseg-sum">
+      <div class="wseg" id="wseg-sum" hidden>
         <div id="insCard">
           <div id="insRows"></div>
           <div class="rangenote" id="insNote" style="margin-top:8px">Estimates from your log — not medical advice.</div>
@@ -1224,7 +1224,7 @@ body.reordering #progOverview{display:none}
           <div class="ministat"><span class="ms-label">Water today</span><b id="stWater">0 <small>oz</small></b></div>
         </div>
       </div>
-      <div class="wseg" id="wseg-cal" hidden>
+      <div class="wseg" id="wseg-cal">
         <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span></div><span class="wk-nav"><button id="pgWkPrev" aria-label="Previous week">‹</button><span class="ana-range" id="anaRange">Last 7 days</span><button id="pgWkNext" aria-label="Next week">›</button></span></div>
         <div class="bars7" id="bars7"></div>
         <div class="rangenote" id="trendChip" style="margin-top:8px"></div>
@@ -4492,7 +4492,7 @@ function wtStatusText(){
 }
 function renderProgress(){
   paintDayCycle(); /* day-cycle panel lives on Progress now (2026.09.23-g) */
-  (function(){ var s=S.weekSeg||"sum";
+  (function(){ var s=S.weekSeg||"cal";
     document.querySelectorAll("#weekSeg .segbtn").forEach(function(x){x.classList.toggle("on",x.dataset.seg===s);});
     ["sum","cal","mac"].forEach(function(k){ var el=document.getElementById("wseg-"+k); if(el) el.hidden = k!==s; });
   })();
