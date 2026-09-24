@@ -653,7 +653,7 @@ body{ background:var(--bg); }
 .panel .grab{width:40px; height:5px; border-radius:99px; background:var(--line); margin:10px auto 4px;}
 .panel h2{margin:8px 18px 12px; font-size:20px; text-align:center;}
 .panel .body{overflow-y:auto; padding:0 18px 18px; min-height:0; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y;}
-.xbtn{position:absolute; top:10px; right:12px; width:36px; height:36px; border:none; border-radius:12px;
+.xbtn{position:absolute; top:10px; right:12px; width:36px; height:36px; border:none; border-radius:12px; z-index:5;
   background:var(--acc-soft); color:var(--acc-deep); display:flex; align-items:center; justify-content:center;}
 .xbtn svg{width:15px; height:15px; display:block;}
 .qtyrow{display:flex; align-items:center; gap:12px; margin:12px 0;}
@@ -1536,7 +1536,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-a";
+const APP_VERSION = "2026.09.24-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2920,6 +2920,9 @@ document.getElementById("statusPill").onclick = ()=>{ renderZoneSheet(); documen
 document.getElementById("statusPill").onkeydown = e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); document.getElementById("statusPill").click(); } };
 document.getElementById("zoneScrim").onclick = ()=>document.getElementById("zoneSheet").classList.remove("open");
 document.getElementById("zoneX").onclick = ()=>document.getElementById("zoneSheet").classList.remove("open");
+function closeInfoSheet(){ document.getElementById("infoSheet").classList.remove("open"); }
+document.getElementById("infoScrim").onclick = closeInfoSheet;
+document.getElementById("infoX").onclick = closeInfoSheet;
 function foodThumb(f){ return f.img ? '<img src="'+f.img+'" alt="">' : (f.kind==="supp"?MEAL_ICON.supplements:FOOD_ICON); }
 function sheetRowHtml(f){
   const thumb = foodThumb(f);
@@ -5084,7 +5087,7 @@ function openDailySheet(){
   document.getElementById("infoTitle").textContent="Today's medals";
   document.getElementById("infoBody").innerHTML=
     featured.map(md=>{ const earned=medalEarnedToday(md.id);
-      return `<div class="mrow"><button class="medal g-${md.rarity}${earned?"":" dim"}"><span class="mbadge">${medalBadge(md,earned)}</span></button>`+
+      return `<div class="mrow" data-mid="${md.id}"><button class="medal g-${md.rarity}${earned?"":" dim"}"><span class="mbadge">${medalBadge(md,earned)}</span></button>`+
       `<div class="mmeta"><b>${esc(md.name)}</b><i class="r-${md.rarity}">${RARITY[md.rarity].label} · ${esc(md.goal||"")}</i>`+
       `<span>${esc(md.desc)}</span>${earned?"":progBarHTML(md)}</div><div class="mcheck">${earned?"✓":""}</div></div>`; }).join("")+
     (medalEarnedToday("crown")?`<div class="mrow"><button class="medal g-legendary"><span class="mbadge">${medalBadge(crown,true)}</span></button>`+
@@ -5092,6 +5095,7 @@ function openDailySheet(){
     `<div class="irow" style="color:var(--muted)">Fresh medals every day. Lifetime medals are always being chased in the background.</div>`+
     `<button class="mcasebtn" id="openCaseBtn">Open medal case · ${Object.keys(medalCase()).length}/${MDEF.length}</button>`;
   document.getElementById("infoSheet").classList.add("open");
+  document.querySelectorAll("#infoBody .mrow .medal").forEach(b=>{ const mid=b.closest(".mrow").dataset.mid; if(mid) b.onclick=()=>openMedalDetail(mid); });
   document.getElementById("openCaseBtn").onclick=()=>{ document.getElementById("infoSheet").classList.remove("open"); openMedalCase(); };
 }
 function openMedalDetail(id){
