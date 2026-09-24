@@ -216,13 +216,15 @@ button{font-family:inherit;}
 /* Day Cycle 2.0 (2026.09.24-y): scrub + eating-window slider + meal tap */
 #dcSvg{touch-action:pan-y;}
 .dc-seg{cursor:pointer;}
+#dayCycle{user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
 .dc-win{margin:10px 4px 0;}
-.dc-win-track{position:relative; height:30px; touch-action:none; cursor:ew-resize;}
-.dc-win-track::before{content:""; position:absolute; left:0; right:0; top:11px; height:8px; border-radius:4px; background:rgba(255,255,255,.20);}
-.dc-win-fill{position:absolute; top:11px; height:8px; border-radius:4px; background:linear-gradient(90deg,#ffdca8,#ffab3d,#ff8f3d); pointer-events:none;}
-.dc-win-handle{position:absolute; top:15px; width:20px; height:20px; margin:-10px 0 0 -10px; border-radius:50%; background:#fff; border:3px solid #8a6cff; box-shadow:0 1px 5px rgba(20,10,60,.45);}
+.dc-win-track{position:relative; height:34px; touch-action:pan-y;}
+.dc-win-track::before{content:""; position:absolute; left:0; right:0; top:13px; height:8px; border-radius:4px; background:rgba(255,255,255,.20);}
+.dc-win-fill{position:absolute; top:13px; height:8px; border-radius:4px; background:linear-gradient(90deg,#ffdca8,#ffab3d,#ff8f3d); pointer-events:none;}
+.dc-win-handle{position:absolute; top:17px; width:26px; height:26px; margin:-13px 0 0 -13px; border-radius:50%; background:#fff; border:3px solid #8a6cff; box-shadow:0 1px 5px rgba(20,10,60,.45); cursor:ew-resize; touch-action:none;}
 .dc-win-handle:active{transform:scale(1.18);}
-.dc-win-meta{display:flex; justify-content:space-between; align-items:baseline; font-size:11px; font-weight:700; color:rgba(255,255,255,.88); margin-top:1px;}
+.dc-win-meta{display:flex; justify-content:space-between; align-items:baseline; gap:8px; font-size:11px; font-weight:700; color:rgba(255,255,255,.92); margin-top:1px; white-space:nowrap;}
+.dc-win-hint{text-align:center; font-size:10.5px; font-weight:600; color:rgba(255,255,255,.72); margin-top:2px; white-space:nowrap;}
 .dc-logpill{display:inline-block; margin-left:6px; padding:3px 13px; border:0; border-radius:999px; background:#fff; color:#5b3df0; font-size:12px; font-weight:800; cursor:pointer; vertical-align:1px;}
 .pavatar{width:46px; height:46px; border-radius:50%; object-fit:cover; flex:none; background:var(--acc-soft); color:var(--acc);
   display:flex; align-items:center; justify-content:center; font-weight:800; font-size:19px; border:none; cursor:pointer; overflow:hidden; padding:0;}
@@ -1214,7 +1216,8 @@ body.reordering #progOverview{display:none}
           <div class="dc-win-handle" id="dcWinA" aria-label="First bite"></div>
           <div class="dc-win-handle" id="dcWinB" aria-label="Last bite"></div>
         </div>
-        <div class="dc-win-meta"><span id="dcWinLabel">Eating window</span><span id="dcWinRead"></span></div>
+        <div class="dc-win-meta"><span id="dcWinTimes"></span><span id="dcWinRead"></span></div>
+        <div class="dc-win-hint" id="dcWinHint"></div>
       </div>
       <div class="dc-insight" id="dcInsight"></div>
     </div>
@@ -1986,7 +1989,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-y";
+const APP_VERSION = "2026.09.24-z";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2377,8 +2380,10 @@ function paintDcWin(){
   $("dcWinA").style.left = pa+"%"; $("dcWinB").style.left = pb+"%";
   const fl = $("dcWinFill"); fl.style.left = pa+"%"; fl.style.width = Math.max(0,pb-pa)+"%";
   const eat = w.b-w.a;
-  $("dcWinRead").textContent = dcFmtDur(eat)+" eating · "+dcFmtDur(1440-eat)+" fasting";
-  $("dcWinLabel").textContent = w.auto ? "Eating window · drag to set" : "Eating window";
+  $("dcWinTimes").textContent = fmtClockS(w.a)+" – "+fmtClockS(w.b);
+  $("dcWinRead").textContent = dcFmtDur(eat)+" eating";
+  $("dcWinHint").textContent = w.auto ? "Drag the dots to set your own window"
+                                      : dcFmtDur(1440-eat)+" overnight fast · drag to adjust";
   /* shade the window onto the arc, under the day-progress */
   const fa = (w.a-DC_T0)/span, fb = (w.b-DC_T0)/span, L = 377;
   $("dcWinShade").innerHTML = '<path d="M 30 150 A 120 120 0 0 1 270 150" fill="none"'+
@@ -2431,7 +2436,8 @@ function wireDayCycle2(){
       paintDayCycle();
     }
   });
-  /* eating-window slider: nearest handle jumps to the tap, then drags */
+  /* eating-window slider: grab a dot and drag it. Tapping the track does
+     nothing (no surprise jumps); vertical page scroll still works. */
   const tr = $("dcWinTrack");
   const minFromEvent = e=>{
     const r = tr.getBoundingClientRect();
@@ -2444,11 +2450,12 @@ function wireDayCycle2(){
     S.eatWin = {a:Math.round(a), b:Math.round(b)};
     paintDcWin();
   };
-  tr.addEventListener("pointerdown", e=>{
-    const t = minFromEvent(e), w = dcEatWin();
-    dcWinDrag = Math.abs(t-w.a)<=Math.abs(t-w.b) ? "a" : "b";
-    try{ tr.setPointerCapture(e.pointerId); }catch(_){}
-    apply(t); e.preventDefault();
+  [["dcWinA","a"],["dcWinB","b"]].forEach(([id,which])=>{
+    $(id).addEventListener("pointerdown", e=>{
+      dcWinDrag = which;
+      try{ $(id).setPointerCapture(e.pointerId); }catch(_){}
+      e.preventDefault(); e.stopPropagation();
+    });
   });
   tr.addEventListener("pointermove", e=>{ if(dcWinDrag) apply(minFromEvent(e)); });
   ["pointerup","pointercancel"].forEach(ev=>tr.addEventListener(ev, ()=>{
