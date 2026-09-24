@@ -213,6 +213,17 @@ button{font-family:inherit;}
   border-radius:22px; box-shadow:0 8px 24px rgba(0,0,0,.12);}
 .daycycle svg{display:block; width:100%; max-width:340px; margin:0 auto;}
 .dc-insight{text-align:center; font-size:12.5px; font-weight:600; opacity:.92; margin-top:8px; line-height:1.45; padding:0 8px;}
+/* Day Cycle 2.0 (2026.09.24-y): scrub + eating-window slider + meal tap */
+#dcSvg{touch-action:pan-y;}
+.dc-seg{cursor:pointer;}
+.dc-win{margin:10px 4px 0;}
+.dc-win-track{position:relative; height:30px; touch-action:none; cursor:ew-resize;}
+.dc-win-track::before{content:""; position:absolute; left:0; right:0; top:11px; height:8px; border-radius:4px; background:rgba(255,255,255,.20);}
+.dc-win-fill{position:absolute; top:11px; height:8px; border-radius:4px; background:linear-gradient(90deg,#ffdca8,#ffab3d,#ff8f3d); pointer-events:none;}
+.dc-win-handle{position:absolute; top:15px; width:20px; height:20px; margin:-10px 0 0 -10px; border-radius:50%; background:#fff; border:3px solid #8a6cff; box-shadow:0 1px 5px rgba(20,10,60,.45);}
+.dc-win-handle:active{transform:scale(1.18);}
+.dc-win-meta{display:flex; justify-content:space-between; align-items:baseline; font-size:11px; font-weight:700; color:rgba(255,255,255,.88); margin-top:1px;}
+.dc-logpill{display:inline-block; margin-left:6px; padding:3px 13px; border:0; border-radius:999px; background:#fff; color:#5b3df0; font-size:12px; font-weight:800; cursor:pointer; vertical-align:1px;}
 .pavatar{width:46px; height:46px; border-radius:50%; object-fit:cover; flex:none; background:var(--acc-soft); color:var(--acc);
   display:flex; align-items:center; justify-content:center; font-weight:800; font-size:19px; border:none; cursor:pointer; overflow:hidden; padding:0;}
 .pavatar img{width:100%; height:100%; object-fit:cover; display:block;}
@@ -1178,7 +1189,7 @@ body.reordering #progOverview{display:none}
          designated meal colors, with the app's tiny meal icons + times.
          Everything is data-driven and adjusts over time as he logs. -->
     <div class="daycycle" id="dayCycle" aria-label="Day cycle">
-      <svg viewBox="0 0 300 240" aria-hidden="true">
+      <svg viewBox="0 0 300 240" aria-hidden="true" id="dcSvg">
         <defs>
           <linearGradient id="dcGrad" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stop-color="#ff9f43"/><stop offset=".38" stop-color="#ffd23f"/>
@@ -1186,6 +1197,7 @@ body.reordering #progOverview{display:none}
           </linearGradient>
         </defs>
         <path d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="14" stroke-linecap="round"/>
+        <g id="dcWinShade"></g>
         <path id="dcProg" d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="url(#dcGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377"/>
         <g id="dcSunSlits"></g>
         <g id="dcNowMark"></g>
@@ -1196,6 +1208,14 @@ body.reordering #progOverview{display:none}
         <line id="dcEatNow" y1="184" y2="200" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
         <g id="dcEatLabels" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle"></g>
       </svg>
+      <div class="dc-win">
+        <div class="dc-win-track" id="dcWinTrack" aria-label="Eating window slider">
+          <div class="dc-win-fill" id="dcWinFill"></div>
+          <div class="dc-win-handle" id="dcWinA" aria-label="First bite"></div>
+          <div class="dc-win-handle" id="dcWinB" aria-label="Last bite"></div>
+        </div>
+        <div class="dc-win-meta"><span id="dcWinLabel">Eating window</span><span id="dcWinRead"></span></div>
+      </div>
       <div class="dc-insight" id="dcInsight"></div>
     </div>
     <div class="punit" data-pid="body">
@@ -1966,7 +1986,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-x";
+const APP_VERSION = "2026.09.24-y";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2335,9 +2355,111 @@ function dcMealWindows(){
   return out;
 }
 let dcLastDay = "";
+/* Day Cycle 2.0 (2026.09.24-y): scrub-the-arc preview, eating-window slider,
+   tap-a-meal detail. Same card, same vibe — everything stays data-driven. */
+let dcScrubbing = false, dcScrub = null, dcMealFocus = null, dcWinDrag = null;
+function dcFmtDur(min){
+  min = Math.round(min); const h = Math.floor(min/60), m = min%60;
+  return ((h ? h+"h" : "") + (h&&m ? " " : "") + (m ? m+"m" : "")) || "0m";
+}
+function dcEatWin(){
+  /* persisted eating window (first bite → last bite); before he sets one it
+     follows his learned breakfast → dinner rhythm, like the rest of the card */
+  const w = S.eatWin;
+  if(w && isFinite(w.a) && isFinite(w.b) && w.b-w.a>=60) return {a:w.a, b:w.b};
+  const wins = dcMealWindows();
+  return {a:Math.round(wins.breakfast.avg), b:Math.round(wins.dinner.avg), auto:true};
+}
+function paintDcWin(){
+  if(!$("dcWinTrack")) return;
+  const w = dcEatWin(), span = DC_T1-DC_T0;
+  const pa = (w.a-DC_T0)/span*100, pb = (w.b-DC_T0)/span*100;
+  $("dcWinA").style.left = pa+"%"; $("dcWinB").style.left = pb+"%";
+  const fl = $("dcWinFill"); fl.style.left = pa+"%"; fl.style.width = Math.max(0,pb-pa)+"%";
+  const eat = w.b-w.a;
+  $("dcWinRead").textContent = dcFmtDur(eat)+" eating · "+dcFmtDur(1440-eat)+" fasting";
+  $("dcWinLabel").textContent = w.auto ? "Eating window · drag to set" : "Eating window";
+  /* shade the window onto the arc, under the day-progress */
+  const fa = (w.a-DC_T0)/span, fb = (w.b-DC_T0)/span, L = 377;
+  $("dcWinShade").innerHTML = '<path d="M 30 150 A 120 120 0 0 1 270 150" fill="none"'+
+    ' stroke="rgba(255,255,255,.30)" stroke-width="14" stroke-linecap="round"'+
+    ' stroke-dasharray="'+((fb-fa)*L).toFixed(1)+' 377" stroke-dashoffset="'+(L*(1-fb)).toFixed(1)+'"/>';
+}
+function dcSvgPoint(e){
+  const r = $("dcSvg").getBoundingClientRect();
+  return [(e.clientX-r.left)/r.width*300, (e.clientY-r.top)/r.height*240];
+}
+function dcScrubFrac(x, y){
+  const dx = x-150, dy = 150-y, d = Math.hypot(dx,dy);
+  if(d<75 || d>165 || dy<-30) return null; /* grab the arc band, not the whole card */
+  let th = Math.atan2(dy,dx); if(th<0) th = 0; if(th>Math.PI) th = Math.PI;
+  return 1-th/Math.PI;
+}
+function dcMealDetailHTML(m){
+  const w = dcMealWindows()[m], s = mealTimeStats(m);
+  const cap = m.charAt(0).toUpperCase()+m.slice(1);
+  const sub = w.learned ? ("usually "+fmtClock(w.avg)+" · "+s.n+" logs") : "still learning your timing";
+  return "<span>"+esc(cap+" · "+sub)+"</span>"+
+    '<button class="dc-logpill" data-logmeal="'+m+'">Log</button>';
+}
+function wireDayCycle2(){
+  if(!$("dcSvg") || wireDayCycle2.done) return; wireDayCycle2.done = true;
+  const svg = $("dcSvg");
+  svg.addEventListener("pointerdown", e=>{
+    const p = dcSvgPoint(e), f = dcScrubFrac(p[0],p[1]);
+    if(f==null) return;
+    dcScrubbing = true; dcScrub = DC_T0+f*(DC_T1-DC_T0);
+    try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+    paintDayCycle(); e.preventDefault();
+  });
+  svg.addEventListener("pointermove", e=>{
+    if(!dcScrubbing) return;
+    const p = dcSvgPoint(e), f = dcScrubFrac(p[0],p[1]);
+    if(f!=null){ dcScrub = DC_T0+f*(DC_T1-DC_T0); paintDayCycle(); }
+  });
+  ["pointerup","pointercancel"].forEach(ev=>svg.addEventListener(ev, ()=>{
+    if(dcScrubbing){ dcScrubbing = false; dcScrub = null; paintDayCycle(); }
+  }));
+  /* tap a meal window (segment, icon, or time) → detail + Log shortcut */
+  $("dayCycle").addEventListener("click", e=>{
+    const lm = e.target.closest("[data-logmeal]");
+    if(lm){ const m = lm.getAttribute("data-logmeal"); dcMealFocus = null; paintDayCycle(); openSheet(m); return; }
+    const sg = e.target.closest("[data-meal]");
+    if(sg){
+      const m = sg.getAttribute("data-meal");
+      dcMealFocus = (dcMealFocus===m) ? null : m;
+      paintDayCycle();
+    }
+  });
+  /* eating-window slider: nearest handle jumps to the tap, then drags */
+  const tr = $("dcWinTrack");
+  const minFromEvent = e=>{
+    const r = tr.getBoundingClientRect();
+    const f = Math.max(0, Math.min(1,(e.clientX-r.left)/r.width));
+    return Math.round((DC_T0+f*(DC_T1-DC_T0))/5)*5;
+  };
+  const apply = t=>{
+    const w = dcEatWin(); let a = w.a, b = w.b;
+    if(dcWinDrag==="a") a = Math.min(t, b-60); else b = Math.max(t, a+60);
+    S.eatWin = {a:Math.round(a), b:Math.round(b)};
+    paintDcWin();
+  };
+  tr.addEventListener("pointerdown", e=>{
+    const t = minFromEvent(e), w = dcEatWin();
+    dcWinDrag = Math.abs(t-w.a)<=Math.abs(t-w.b) ? "a" : "b";
+    try{ tr.setPointerCapture(e.pointerId); }catch(_){}
+    apply(t); e.preventDefault();
+  });
+  tr.addEventListener("pointermove", e=>{ if(dcWinDrag) apply(minFromEvent(e)); });
+  ["pointerup","pointercancel"].forEach(ev=>tr.addEventListener(ev, ()=>{
+    if(dcWinDrag){ dcWinDrag = null; save(); }
+  }));
+}
 function paintDayCycle(){
   if(!$("dayCycle")) return;
-  const now = new Date(), nowMin = now.getHours()*60+now.getMinutes();
+  wireDayCycle2();
+  const now = new Date(), realMin = now.getHours()*60+now.getMinutes();
+  const nowMin = dcScrub!=null ? dcScrub : realMin;
   const frac = Math.max(0, Math.min(1,(nowMin-DC_T0)/(DC_T1-DC_T0)));
   const X = t => 30+240*Math.max(0, Math.min(1,(t-DC_T0)/(DC_T1-DC_T0)));
   $("dcProg").style.strokeDashoffset = 377*(1-frac);
@@ -2377,18 +2499,18 @@ function paintDayCycle(){
   });
   mark += '<circle cx="'+pt[0].toFixed(1)+'" cy="'+pt[1].toFixed(1)+'" r="3.6" fill="#ffffff" style="filter:drop-shadow(0 0 5px rgba(255,255,255,.9))"/>';
   $("dcNowMark").innerHTML = mark;
-  /* clock + day progress */
-  let hh = now.getHours(); const ap = hh>=12?"PM":"AM"; hh = hh%12; if(hh===0) hh=12;
-  $("dcClock").textContent = hh+":"+String(now.getMinutes()).padStart(2,"0")+" "+ap;
+  /* clock + day progress (scrub preview drives these while dragging) */
+  let hh = Math.floor(nowMin/60); const ap = hh>=12?"PM":"AM"; hh = hh%12; if(hh===0) hh=12;
+  $("dcClock").textContent = hh+":"+String(Math.round(nowMin%60)).padStart(2,"0")+" "+ap;
   const night = nowMin<DC_T0 || nowMin>DC_T1;
-  $("dcSub").textContent = night ? "Night" : Math.round(frac*100)+"% of day";
+  $("dcSub").textContent = dcScrub!=null ? "preview · release to return" : (night ? "Night" : Math.round(frac*100)+"% of day");
   /* eat-window bar: parted into per-meal segments in the designated colors */
   const wins = dcMealWindows();
   let sg = "";
   DC_MEALS3.forEach(m=>{
     const w = wins[m];
     sg += '<rect x="'+X(w.avg-25).toFixed(1)+'" y="188" width="'+Math.max(8,X(w.avg+25)-X(w.avg-25)).toFixed(1)+
-      '" height="8" rx="4" fill="'+MEAL_SEG[m]+'" opacity="'+(w.learned?.95:.30)+'"/>';
+      '" height="8" rx="4" fill="'+MEAL_SEG[m]+'" opacity="'+(w.learned?.95:.30)+'" data-meal="'+m+'" class="dc-seg"/>';
   });
   $("dcEatSegs").innerHTML = sg;
   const en = $("dcEatNow"), nx = X(nowMin);
@@ -2398,8 +2520,8 @@ function paintDayCycle(){
   DC_MEALS3.forEach(m=>{
     const w = wins[m], cx = X(w.avg);
     const inner = MEAL_ICON[m].replace(/<\/?svg[^>]*>/g,"");
-    lb += '<svg x="'+(cx-7).toFixed(1)+'" y="205" width="14" height="14" viewBox="0 0 24 24">'+inner+'</svg>';
-    lb += '<text x="'+cx.toFixed(1)+'" y="232" opacity="'+(w.learned?1:.55)+'">'+fmtClockS(w.avg)+'</text>';
+    lb += '<svg x="'+(cx-7).toFixed(1)+'" y="205" width="14" height="14" viewBox="0 0 24 24" data-meal="'+m+'" class="dc-seg">'+inner+'</svg>';
+    lb += '<text x="'+cx.toFixed(1)+'" y="232" opacity="'+(w.learned?1:.55)+'" data-meal="'+m+'" class="dc-seg">'+fmtClockS(w.avg)+'</text>';
   });
   $("dcEatLabels").innerHTML = lb;
   /* insight: next window — wakes up at 3+ logs, same threshold as the eat bar above */
@@ -2416,7 +2538,15 @@ function paintDayCycle(){
     ins = cap+" · your best window "+fmtClock(next.s.avg-25)+"–"+fmtClock(next.s.avg+25)+
       (openNow ? " · it's now" : upcoming ? " today" : " tomorrow")+" · learned from "+next.s.n+" logs";
   }
-  $("dcInsight").textContent = ins;
+  if(dcMealFocus && DC_MEALS3.indexOf(dcMealFocus)>=0){
+    $("dcInsight").innerHTML = dcMealDetailHTML(dcMealFocus);
+  }else if(dcScrub!=null){
+    const wm = DC_MEALS3.find(m=>{ const w = wins[m]; return dcScrub>=w.avg-30 && dcScrub<=w.avg+30; });
+    $("dcInsight").textContent = fmtClock(dcScrub)+" · "+(wm ? "inside your "+wm+" window" : "between meals")+" · release to return";
+  }else{
+    $("dcInsight").textContent = ins;
+  }
+  paintDcWin();
   /* midnight rollover while the app sits open */
   const ds = todayStr();
   if(dcLastDay && dcLastDay!==ds){ dcLastDay = ds; renderAll(); return; }
@@ -5682,6 +5812,10 @@ function infoContent(k){
   if(k==="insights") return {t:"Progress insights", b:
     `<div class="irow">Correlation-style readouts from your own log — adherence vs weight trend, protein vs trend, water vs tiredness, training weeks, sodium vs bloat.</div>
      <div class="irow">They need a few weeks of consistent logging before they say anything useful, and they're <b>estimates, not medical advice</b> — sleep, stress, and illness matter too, and the app can't see those.</div>`};
+  if(k==="daycycle") return {t:"Day Cycle", b:
+    `<div class="irow"><b>Drag the arc</b> to preview any time of day. <b>Tap a meal window</b> for its usual time and a Log shortcut. The <b>eating-window slider</b> sets your first bite → last bite; the readout shows your eating vs overnight fasting hours.</div>
+     <div class="irow">Meal-timing research (chrononutrition) links <b>consistent</b> meal times and a <b>shorter eating window</b> (around 10–12 hours) to better metabolic markers — one phone-based study saw people shrink a ~15-hour window to 10 hours and lose ~3.3 kg over 16 weeks with no calorie guidance (Gill & Panda).</div>
+     <div class="irow">Front-load more calories earlier in the day and avoid late-night eating when you can. Associations, not prescriptions — consistency beats perfection.</div>`};
 }
 function openInfo(k){
   const c = infoContent(k); if(!c) return;
@@ -5715,7 +5849,7 @@ try{
 const INFO_CATS = [
   {id:"diary",    label:"Diary & logging",  keys:["waterinfo","alcinfo","vapeinfo","energy","scores"]},
   {id:"goals",    label:"Goals & targets",  keys:["activity","calorie","macros","water","advanced"]},
-  {id:"progress", label:"Progress & insights", keys:["wtgoal","milestone","bmi","calcheck","insights"]},
+  {id:"progress", label:"Progress & insights", keys:["daycycle","wtgoal","milestone","bmi","calcheck","insights"]},
   {id:"nutrients",label:"Nutrients",        keys:["nutrients"]},
   {id:"medals",   label:"Medals",           keys:["medals"]},
   {id:"data",     label:"Data & backups",   keys:["snapshots"]},
