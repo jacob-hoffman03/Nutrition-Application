@@ -235,9 +235,11 @@ button{font-family:inherit;}
   filter:blur(18px); animation:diaPulse 1.6s ease-in-out infinite;}
 @keyframes diaPulse{0%,100%{transform:scale(.92); opacity:.7;}50%{transform:scale(1.08); opacity:1;}}
 .totemmedal.chroma svg{width:min(46vw,232px);}
-/* single diamond award in the medal row (2026.09.23-q/r/s): replaces the medals
-   once the merge has played. Slow shine-sweep glint, nudged left. */
-.medal.chroma{width:40px; height:48px; position:relative; overflow:hidden; border-radius:10px; margin-right:10px;}
+/* single diamond award in the medal row (2026.09.23-q/r/s/t): replaces the
+   medals once the merge has played. Same size as the other medals.
+   Slow shine-sweep glint, nudged left in the header. */
+.medal.chroma{width:34px; height:41px; position:relative; overflow:hidden; border-radius:10px;}
+#pMedals .medal.chroma{margin-right:24px;}
 .medal.chroma::after{content:""; position:absolute; top:-15%; bottom:-15%; left:-70%; width:45%;
   background:linear-gradient(100deg, rgba(255,255,255,0), rgba(255,255,255,.85), rgba(255,255,255,0));
   transform:skewX(-18deg); animation:glintSweep 6s ease-in-out infinite; pointer-events:none;}
@@ -1503,7 +1505,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.23-s";
+const APP_VERSION = "2026.09.23-t";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4659,11 +4661,21 @@ function celebrateMedals(){
     maybeChroma(1200);
     return;
   }
-  /* migrate renamed medals (2026.09.23-r): gold->bronze, diamond->gold */
-  seen = seen.map(id=>id==="gold"?"bronze":id==="diamond"?"gold":id);
+  /* one-time migration of renamed medals (2026.09.23-r): gold->bronze,
+     diamond->gold. Guarded by the retired "diamond" id so it can never
+     remap twice; deduped to repair double-migrated banks. */
+  if(seen.indexOf("diamond")>=0)
+    seen = seen.map(id=>id==="gold"?"bronze":id==="diamond"?"gold":id);
+  seen = seen.filter((id,i)=>seen.indexOf(id)===i);
   S.medalPop[k] = seen;
   const fresh = MEDAL_DEFS.filter(md=>!md.chroma && m[md.id] && seen.indexOf(md.id)<0);
   if(!fresh.length){ maybeChroma(1200); return; }
+  if(seen.indexOf("chroma")>=0){
+    /* merge already celebrated today: bank quietly, never replay pops */
+    fresh.forEach(md=>seen.push(md.id));
+    save();
+    return;
+  }
   fresh.forEach(md=>seen.push(md.id));
   save();
   fresh.forEach((md,i)=>setTimeout(()=>totemPop(md), i*1800));
