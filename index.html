@@ -103,7 +103,7 @@ button{font-family:inherit;}
 .mico{width:34px; height:34px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center;}
 .mico svg{width:20px; height:20px;}
 .mrow .mname{flex:1; font-size:16px; font-weight:700;}
-.mrow .mkcal{font-size:14px; color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums;}
+.mrow .mkcal{font-size:11px; color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums;}
 .madd{width:30px; height:30px; border-radius:50%; border:none; background:var(--acc-soft); color:var(--acc); font-size:20px; line-height:1; font-weight:700; display:flex; align-items:center; justify-content:center;}
 .logrow{display:flex; align-items:center; gap:8px; padding:8px 0 8px 46px; border-bottom:1px solid var(--line); font-size:14px;}
 .logrow .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#3a3a42;}
@@ -1966,7 +1966,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.24-u";
+const APP_VERSION = "2026.09.24-v";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
