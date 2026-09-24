@@ -220,6 +220,21 @@ button{font-family:inherit;}
 .totemname{font-size:24px; font-weight:900; letter-spacing:3px; text-shadow:0 0 16px #fff, 0 2px 10px rgba(0,0,0,.4);}
 #saveWarn{position:fixed; left:12px; right:12px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:300; background:#3a2b00; color:#ffd97a; border:1px solid #f5b301; border-radius:12px; padding:10px 14px; font-size:13px; font-weight:600; box-shadow:0 6px 20px rgba(0,0,0,.25);}
 @keyframes totemPop{0%{transform:scale(.12) rotate(-10deg); opacity:0;}16%{transform:scale(1.14) rotate(2.5deg); opacity:1;}30%{transform:scale(1) rotate(0);}70%{transform:scale(1); opacity:1;}100%{transform:scale(1.5); opacity:0;}}
+/* chromatic triple-medal merge (2026.09.23-o): when all three medals are earned,
+   the header medals fly to the center and combine into one big award carrying
+   all three colors. Same presence as a totem pop, a pixel bigger. */
+.mergemedal{position:fixed; z-index:210; width:34px; height:41px; pointer-events:none;
+  transition:transform .8s cubic-bezier(.45,.05,.3,1), opacity .35s ease .7s;}
+.mergemedal svg{width:100%; height:100%; display:block;}
+#totemWrap.chroma .totemflash{background:
+  radial-gradient(circle at 50% 46%, rgba(255,255,255,.92), rgba(255,255,255,0) 60%),
+  conic-gradient(from 0deg, rgba(169,176,194,.5), rgba(242,183,5,.5), rgba(94,200,242,.5), rgba(169,176,194,.5));}
+.totemmedal.chroma{position:relative; z-index:0;}
+.totemmedal.chroma::before{content:""; position:absolute; inset:-34px; border-radius:50%; z-index:-1;
+  background:conic-gradient(#a9b0c2,#f2b705,#5ec8f2,#a9b0c2); filter:blur(26px); opacity:.8;
+  animation:chromaSpin 2.4s linear infinite;}
+@keyframes chromaSpin{to{transform:rotate(360deg);}}
+.totemmedal.chroma svg{width:min(46vw,232px);}
 @keyframes totemLife{0%{opacity:0;}10%{opacity:1;}70%{opacity:1;}100%{opacity:0;}}
 .prow{display:flex; align-items:center; gap:14px;}
 .prow .pmeta{flex:1;}
@@ -1481,7 +1496,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.23-n";
+const APP_VERSION = "2026.09.23-o";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4568,6 +4583,54 @@ function totemPop(md){
   void wrap.offsetWidth;
   wrap.classList.add("show");
 }
+/* chromatic award: the same medal shape filled with a gradient of all three
+   medal colors (silver -> gold -> diamond). */
+function chromaSVG(){
+  return `<svg viewBox="0 0 40 48"><defs><linearGradient id="chromaG" x1="0" y1="0" x2="1" y2="1">`+
+    `<stop offset="0" stop-color="#a9b0c2"/><stop offset=".5" stop-color="#f2b705"/><stop offset="1" stop-color="#5ec8f2"/>`+
+    `</linearGradient></defs><path d="M13 2h14l5 15-12 9-12-9z" fill="url(#chromaG)"/>`+
+    `<circle cx="20" cy="33" r="12" fill="url(#chromaG)" stroke="#ffffff" stroke-width="2"/>`+
+    `<path d="M20 26.5l2.2 4.5 4.9.7-3.5 3.5.8 5-4.4-2.3-4.4 2.3.8-5-3.5-3.5 4.9-.7z" fill="#ffffff"/></svg>`;
+}
+/* merge animation: clones of the three earned header medals fly to the screen
+   center, fade into each other, and the big chromatic award pops. */
+function chromaMerge(){
+  const wrap = document.getElementById("totemWrap");
+  const medalEl = document.getElementById("totemMedal");
+  const nm = document.getElementById("totemName");
+  const showBig = ()=>{
+    medalEl.innerHTML = chromaSVG();
+    medalEl.classList.add("chroma");
+    nm.textContent = "TRIPLE CROWN!";
+    nm.style.color = "#f2b705";
+    wrap.classList.remove("chroma","show");
+    void wrap.offsetWidth;
+    wrap.classList.add("chroma","show");
+    setTimeout(()=>{ medalEl.classList.remove("chroma"); wrap.classList.remove("chroma"); }, 1900);
+  };
+  const btns = document.querySelectorAll("#pMedals .medal");
+  const rects = [...btns].map(b=>b.getBoundingClientRect());
+  if(btns.length===3 && rects.every(r=>r.width>0)){
+    const cx = window.innerWidth/2, cy = window.innerHeight*0.46;
+    const clones = rects.map((r,i)=>{
+      const d = document.createElement("div");
+      d.className = "mergemedal";
+      d.innerHTML = btns[i].innerHTML;
+      d.style.left = r.left+"px"; d.style.top = r.top+"px";
+      document.body.appendChild(d);
+      return d;
+    });
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      clones.forEach(d=>{
+        const r = d.getBoundingClientRect();
+        const dx = cx-(r.left+r.width/2), dy = cy-(r.top+r.height/2);
+        d.style.transform = `translate(${dx}px,${dy}px) scale(.55)`;
+        d.style.opacity = "0";
+      });
+    }));
+    setTimeout(()=>{ clones.forEach(d=>d.remove()); showBig(); }, 1150);
+  } else showBig();
+}
 function celebrateMedals(){
   const k = todayStr();
   if(!S.medalPop) S.medalPop = {};
@@ -4584,6 +4647,13 @@ function celebrateMedals(){
   fresh.forEach(md=>seen.push(md.id));
   save();
   fresh.forEach((md,i)=>setTimeout(()=>totemPop(md), i*1800));
+  /* all three earned: after the individual pops, the medals merge into one
+     big chromatic award. Once per day. */
+  if(MEDAL_DEFS.every(md=>m[md.id]) && seen.indexOf("chroma")<0){
+    seen.push("chroma");
+    save();
+    setTimeout(chromaMerge, fresh.length*1800+500);
+  }
 }
 document.getElementById("infoScrim").onclick = ()=>document.getElementById("infoSheet").classList.remove("open");
 document.getElementById("infoX").onclick = ()=>document.getElementById("infoSheet").classList.remove("open");
