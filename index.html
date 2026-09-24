@@ -206,45 +206,73 @@ button{font-family:inherit;}
 .pmeta{flex:1; min-width:0;}
 .pname{font-size:17px; font-weight:800; letter-spacing:-.2px;}
 .psub{font-size:12px; color:var(--muted); font-weight:600;}
+/* medal collection system (2026.09.24): circular badges, rarity glints */
 .medals{display:flex; gap:10px; align-items:center;}
-.medal{width:34px; height:41px; border:none; background:none; padding:0; cursor:pointer; transition:transform .15s;}
+.medal{width:40px; height:40px; border:none; background:none; padding:0; cursor:pointer; position:relative; transition:transform .15s; border-radius:50%; flex:none;}
 .medal:active{transform:scale(1.12);}
-.medal svg{width:100%; height:100%; display:block;}
-/* totem-pop medal celebration (Minecraft totem style) */
-#totemWrap{position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; pointer-events:none; opacity:0;}
-#totemWrap.show{animation:totemLife 1.7s ease forwards;}
-#totemWrap .toteminner{display:flex; flex-direction:column; align-items:center; gap:12px;}
-#totemWrap.show .toteminner{animation:totemPop 1.7s cubic-bezier(.2,1.35,.32,1) forwards;}
-#totemWrap .totemflash{position:absolute; inset:0; background:radial-gradient(circle at 50% 46%, rgba(255,255,255,.9), rgba(255,255,255,0) 62%);}
-.totemmedal svg{width:min(46vw,230px); height:auto; display:block; filter:drop-shadow(0 0 26px rgba(255,255,255,.95)) drop-shadow(0 10px 34px rgba(0,0,0,.28));}
-.totemname{font-size:24px; font-weight:900; letter-spacing:3px; text-shadow:0 0 16px #fff, 0 2px 10px rgba(0,0,0,.4);}
-#saveWarn{position:fixed; left:12px; right:12px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:300; background:#3a2b00; color:#ffd97a; border:1px solid #f5b301; border-radius:12px; padding:10px 14px; font-size:13px; font-weight:600; box-shadow:0 6px 20px rgba(0,0,0,.25);}
-@keyframes totemPop{0%{transform:scale(.12) rotate(-10deg); opacity:0;}16%{transform:scale(1.14) rotate(2.5deg); opacity:1;}30%{transform:scale(1) rotate(0);}70%{transform:scale(1); opacity:1;}100%{transform:scale(1.5); opacity:0;}}
-/* chromatic triple-medal merge (2026.09.23-o): when all three medals are earned,
-   the header medals fly to the center and combine into one big award carrying
-   all three colors. Same presence as a totem pop, a pixel bigger. */
-.mergemedal{position:fixed; z-index:210; width:34px; height:41px; pointer-events:none;
-  transition:transform .8s cubic-bezier(.45,.05,.3,1), opacity .35s ease .7s;}
-.mergemedal svg{width:100%; height:100%; display:block;}
-#totemWrap.chroma .totemflash{background:
-  radial-gradient(circle at 50% 46%, rgba(255,255,255,.92), rgba(255,255,255,0) 60%),
-  radial-gradient(circle at 50% 46%, rgba(94,200,242,.45), rgba(94,200,242,0) 70%);}
-.totemmedal.chroma{position:relative; z-index:0;}
-.totemmedal.chroma::before{content:""; position:absolute; inset:-30px; border-radius:50%; z-index:-1;
-  background:radial-gradient(circle, rgba(94,200,242,.8), rgba(94,200,242,0) 70%);
-  filter:blur(18px); animation:diaPulse 1.6s ease-in-out infinite;}
-@keyframes diaPulse{0%,100%{transform:scale(.92); opacity:.7;}50%{transform:scale(1.08); opacity:1;}}
-.totemmedal.chroma svg{width:min(46vw,232px);}
-/* single diamond award in the medal row (2026.09.23-q/r/s/t): replaces the
-   medals once the merge has played. Same size as the other medals.
-   Slow shine-sweep glint, nudged left in the header. */
-.medal.chroma{width:34px; height:41px; position:relative; overflow:hidden; border-radius:10px;}
-#pMedals .medal.chroma{margin-right:24px;}
-.medal.chroma::after{content:""; position:absolute; top:-15%; bottom:-15%; left:-70%; width:45%;
+.mbadge{display:block; position:relative; overflow:hidden; border-radius:50%; width:100%; height:100%;}
+.mbadge svg{width:100%; height:100%; display:block;}
+.medal.dim{opacity:.42; filter:saturate(.35);}
+.medal .mx{position:absolute; right:-6px; bottom:-6px; background:#111827; color:#fff; font-size:10px; font-weight:800; border-radius:9px; padding:1px 5px; z-index:2;}
+/* rarity glints: uncommon pulses, rare sweeps slow, epic sweeps fast + glow, legendary spins a conic ring */
+.medal.g-uncommon .mbadge{animation:mpulse 3.2s ease-in-out infinite;}
+@keyframes mpulse{0%,100%{filter:drop-shadow(0 0 0 rgba(52,211,153,0));}50%{filter:drop-shadow(0 0 7px rgba(52,211,153,.85));}}
+.medal.g-rare .mbadge::after,.medal.g-epic .mbadge::after,.medal.g-legendary .mbadge::after{content:""; position:absolute; top:-15%; bottom:-15%; left:-70%; width:45%;
   background:linear-gradient(100deg, rgba(255,255,255,0), rgba(255,255,255,.85), rgba(255,255,255,0));
   transform:skewX(-18deg); animation:glintSweep 6s ease-in-out infinite; pointer-events:none;}
+.medal.g-epic .mbadge::after{animation-duration:3.4s;}
+.medal.g-epic .mbadge{filter:drop-shadow(0 0 5px rgba(192,132,252,.6));}
+.medal.g-legendary::before{content:""; position:absolute; inset:-4px; border-radius:50%;
+  background:conic-gradient(from 0deg,#fbbf24,#f59e0b,#f43f5e,#fbbf24);
+  -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  animation:mspin 4s linear infinite; pointer-events:none;}
+.medal.g-legendary .mbadge::after{animation-duration:2.8s;}
+@keyframes mspin{to{transform:rotate(360deg);}}
 @keyframes glintSweep{0%{left:-70%;}28%{left:135%;}100%{left:135%;}}
+/* big fanfare pop (repurposed totem) */
+#totemWrap{position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; pointer-events:none; opacity:0;}
+#totemWrap.show{animation:totemLife 1.9s ease forwards;}
+#totemWrap .toteminner{display:flex; flex-direction:column; align-items:center; gap:12px;}
+#totemWrap.show .toteminner{animation:totemPop 1.9s cubic-bezier(.2,1.35,.32,1) forwards;}
+#totemWrap .totemflash{position:absolute; inset:0; background:radial-gradient(circle at 50% 46%, rgba(255,255,255,.9), rgba(255,255,255,0) 62%);}
+.totemmedal{width:min(48vw,210px); height:min(48vw,210px); position:relative;
+  filter:drop-shadow(0 0 26px rgba(255,255,255,.95)) drop-shadow(0 10px 34px rgba(0,0,0,.28));}
+.totemmedal .mbadge{overflow:visible;}
+.totemmedal.g-legendary::before{content:""; position:absolute; inset:-14px; border-radius:50%;
+  background:conic-gradient(from 0deg,#fbbf24,#f59e0b,#f43f5e,#fbbf24); filter:blur(10px); opacity:.8; animation:mspin 3s linear infinite;}
+.totemmedalname{font-size:24px; font-weight:900; letter-spacing:3px; text-shadow:0 0 16px #fff, 0 2px 10px rgba(0,0,0,.4);}
+.totemrar{font-size:13px; font-weight:800; letter-spacing:2px; color:#fff; text-shadow:0 1px 8px rgba(0,0,0,.5);}
+@keyframes totemPop{0%{transform:scale(.12) rotate(-10deg); opacity:0;}16%{transform:scale(1.14) rotate(2.5deg); opacity:1;}30%{transform:scale(1) rotate(0);}70%{transform:scale(1); opacity:1;}100%{transform:scale(1.5); opacity:0;}}
 @keyframes totemLife{0%{opacity:0;}10%{opacity:1;}70%{opacity:1;}100%{opacity:0;}}
+/* merge fly-to-center clones */
+.mergemedal{position:fixed; z-index:210; width:40px; height:40px; pointer-events:none;
+  transition:transform .8s cubic-bezier(.45,.05,.3,1), opacity .35s ease .7s;}
+/* daily sheet rows */
+.mrow{display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line);}
+.mrow .medal{width:52px; height:52px;}
+.mmeta{flex:1; min-width:0;}
+.mmeta b{display:block; font-size:14px;}
+.mmeta i{display:block; font-style:normal; font-size:11px; font-weight:800; margin:2px 0;}
+.mmeta span{font-size:12px; color:var(--muted); display:block;}
+.mprog{display:flex; align-items:center; gap:8px; margin-top:6px;}
+.mprogbar{flex:1; height:6px; border-radius:3px; background:#e8eaf0; overflow:hidden;}
+.mprogbar i{display:block; height:100%; background:linear-gradient(90deg,var(--acc),#7c3aed); border-radius:3px;}
+.mprog span{font-size:11px; color:var(--muted); font-weight:700;}
+.mcheck{font-size:20px; color:#059669; font-weight:900; width:24px; text-align:center;}
+.mhero{display:flex; gap:14px; align-items:center; margin-bottom:8px;}
+.medal.big{width:84px; height:84px;}
+.mcasebtn{display:block; width:100%; margin-top:12px; padding:12px; border:none; border-radius:14px;
+  background:linear-gradient(135deg,var(--acc),#7c3aed); color:#fff; font-size:14px; font-weight:800; cursor:pointer;}
+/* medal case */
+.casebar{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); margin-bottom:10px; flex-wrap:wrap;}
+.casebar b{color:var(--ink); font-size:16px;}
+.rdot{font-size:11px; font-weight:800; padding:2px 8px; border-radius:10px; background:#eef0f4;}
+.r-common{color:#6b7280;} .r-uncommon{color:#059669;} .r-rare{color:#2563eb;} .r-epic{color:#7c3aed;} .r-legendary{color:#d97706;}
+.casegrid{display:grid; grid-template-columns:repeat(6,1fr); gap:10px;}
+.casegrid .medal{width:100%; height:auto; aspect-ratio:1;}
+#pMedals{margin-right:0;}
+#pMedals .medal[data-crown]{margin-right:24px;}
 .prow{display:flex; align-items:center; gap:14px;}
 .prow .pmeta{flex:1;}
 /* adherence wheel + progress photos (Settings profile) */
@@ -1138,6 +1166,9 @@ body.reordering #progOverview{display:none}
       <div class="flabel" style="margin:14px 0 8px">Today's medals</div>
       <div class="medals" id="sMedals"></div>
       <div class="rangenote" id="medalHint" style="margin-top:10px"></div>
+      <div class="flabel" style="margin:14px 0 8px">Medal case</div>
+      <div class="casebar" id="caseBar"></div>
+      <div class="casegrid" id="caseGrid"></div>
     </div>
     <input type="file" id="pPhotoFile" accept="image/*" style="display:none">
     <input type="file" id="progPhotoFile" accept="image/*" style="display:none">
@@ -1505,7 +1536,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.23-t";
+const APP_VERSION = "2026.09.24-a";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4580,138 +4611,12 @@ function openInfo(k){
   document.getElementById("infoBody").innerHTML = c.b;
   document.getElementById("infoSheet").classList.add("open");
 }
-/* Minecraft-totem style medal celebration: the medal pops big in the center of the
-   screen for a moment, then fades. */
-function totemPop(md){
-  const wrap = document.getElementById("totemWrap");
-  document.getElementById("totemMedal").innerHTML = medalSVG(md.color, true);
-  const nm = document.getElementById("totemName");
-  nm.textContent = md.name.toUpperCase()+"!";
-  nm.style.color = md.color;
-  wrap.classList.remove("show");
-  void wrap.offsetWidth;
-  wrap.classList.add("show");
-}
-/* merge animation: clones of the earned header medals fly to the screen
-   center, fade into each other, and the big diamond award pops. */
-function chromaMerge(){
-  const wrap = document.getElementById("totemWrap");
-  const medalEl = document.getElementById("totemMedal");
-  const nm = document.getElementById("totemName");
-  const showBig = ()=>{
-    medalEl.innerHTML = medalSVG("#5ec8f2", true);
-    medalEl.classList.add("chroma");
-    nm.textContent = "MAX DIAMOND!";
-    nm.style.color = "#f2b705";
-    wrap.classList.remove("chroma","show");
-    void wrap.offsetWidth;
-    wrap.classList.add("chroma","show");
-    /* the three header medals stay replaced by the single chromatic award */
-    ["pMedals","sMedals"].forEach(id=>{
-      const el = document.getElementById(id);
-      if(el){ el.innerHTML = medalRowHTML(todayStr()); wireMedals(el); }
-    });
-    setTimeout(()=>{ medalEl.classList.remove("chroma"); wrap.classList.remove("chroma"); }, 1900);
-  };
-  const btns = [...document.querySelectorAll("#pMedals .medal")]
-    .filter(b=>!b.classList.contains("chroma") && medalsFor(todayStr())[b.dataset.m]);
-  const rects = btns.map(b=>b.getBoundingClientRect());
-  if(btns.length>0 && rects.every(r=>r.width>0)){
-    const cx = window.innerWidth/2, cy = window.innerHeight*0.46;
-    const clones = rects.map((r,i)=>{
-      const d = document.createElement("div");
-      d.className = "mergemedal";
-      d.innerHTML = btns[i].innerHTML;
-      d.style.left = r.left+"px"; d.style.top = r.top+"px";
-      document.body.appendChild(d);
-      return d;
-    });
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      clones.forEach(d=>{
-        const r = d.getBoundingClientRect();
-        const dx = cx-(r.left+r.width/2), dy = cy-(r.top+r.height/2);
-        d.style.transform = `translate(${dx}px,${dy}px) scale(.55)`;
-        d.style.opacity = "0";
-      });
-    }));
-    setTimeout(()=>{ clones.forEach(d=>d.remove()); showBig(); }, 1150);
-  } else showBig();
-}
-function celebrateMedals(){
-  const k = todayStr();
-  if(!S.medalPop) S.medalPop = {};
-  let seen = S.medalPop[k];
-  const m = medalsFor(k);
-  const maxEarned = !!m.maxdiamond;
-  /* The medals combine into the diamond Max Diamond award at 1% over the
-     100% daily goal. Once per day. */
-  const maybeChroma = (delay)=>{
-    if(maxEarned && seen.indexOf("chroma")<0){
-      seen.push("chroma");
-      save();
-      setTimeout(chromaMerge, delay);
-    }
-  };
-  if(!seen){
-    /* first sight of this day: bank what's already earned so individual
-       medals never fanfare on load */
-    S.medalPop[k] = MEDAL_DEFS.filter(md=>m[md.id]).map(md=>md.id);
-    seen = S.medalPop[k];
-    save();
-    maybeChroma(1200);
-    return;
-  }
-  /* one-time migration of renamed medals (2026.09.23-r): gold->bronze,
-     diamond->gold. Guarded by the retired "diamond" id so it can never
-     remap twice; deduped to repair double-migrated banks. */
-  if(seen.indexOf("diamond")>=0)
-    seen = seen.map(id=>id==="gold"?"bronze":id==="diamond"?"gold":id);
-  seen = seen.filter((id,i)=>seen.indexOf(id)===i);
-  S.medalPop[k] = seen;
-  const fresh = MEDAL_DEFS.filter(md=>!md.chroma && m[md.id] && seen.indexOf(md.id)<0);
-  if(!fresh.length){ maybeChroma(1200); return; }
-  if(seen.indexOf("chroma")>=0){
-    /* merge already celebrated today: bank quietly, never replay pops */
-    fresh.forEach(md=>seen.push(md.id));
-    save();
-    return;
-  }
-  fresh.forEach(md=>seen.push(md.id));
-  save();
-  fresh.forEach((md,i)=>setTimeout(()=>totemPop(md), i*1800));
-  maybeChroma(fresh.length*1800+500);
-}
-document.getElementById("infoScrim").onclick = ()=>document.getElementById("infoSheet").classList.remove("open");
-document.getElementById("infoX").onclick = ()=>document.getElementById("infoSheet").classList.remove("open");
-(function(){
-  const v = document.getElementById("view-goals");
-  const infoFor = t => t.indexOf("Activity")===0 ? "activity" : t==="Calorie goal" ? "calorie" : t==="Macros" ? "macros" : t==="Water" ? "water" : t==="Advanced" ? "advanced" : null;
-  [...v.querySelectorAll(":scope > .secttl")].forEach(h=>{
-    const sec = document.createElement("div"); sec.className = "gsec";
-    h.replaceWith(sec);
-    const gh = document.createElement("div"); gh.className = "ghead";
-    const ik = infoFor(h.textContent.trim());
-    gh.innerHTML = `<span>${h.innerHTML}</span>`+(ik?`<button class="ginfo" aria-label="More info">i</button>`:"")+`<span class="gchev">›</span>`;
-    sec.appendChild(gh);
-    const body = document.createElement("div"); body.className = "gbody";
-    sec.appendChild(body);
-    let n = sec.nextSibling;
-    while(n && !(n.classList && n.classList.contains("secttl"))){ const nx = n.nextSibling; body.appendChild(n); n = nx; }
-    gh.onclick = (e)=>{ if(e.target.closest(".ginfo")) return; sec.classList.toggle("closed"); };
-    const ib = gh.querySelector(".ginfo");
-    if(ib) ib.onclick = (e)=>{ e.stopPropagation(); openInfo(ik); };
-  });
-})();
 function openGsec(name){
   document.querySelectorAll("#view-goals .gsec").forEach(s=>{
     const t = s.querySelector(".ghead span").textContent;
     if(t===name) s.classList.remove("closed");
   });
 }
-/* ============ TRAINING ============
-   The training calendar UI was removed in 2026.09.18-ay, and the training-load
-   fatigue model was retired in 2026.09.18-az (fatigue is now predicted from food).
-   What stays: trainDay() (alcohol warnings read it). */
 function addDays(ds, n){ const d = new Date(ds+"T12:00:00"); d.setDate(d.getDate()+n); return dstr(d); }
 function trainDay(ds){
   const t = S.training || (S.training = {sched:{}, done:{}});
@@ -4797,41 +4702,428 @@ const MEDAL_DEFS = [
   {id:"gold", name:"Gold", color:"#f2b705", desc:"Hit your full daily target — maintenance plus surplus."},
   {id:"maxdiamond", name:"Max Diamond", color:"#5ec8f2", chroma:true, desc:"Go 1% over your 100% daily goal. All medals combine into one diamond award."}
 ];
-function medalsFor(ds){
-  const t = totals(ds), g = S.goals;
-  const mCal = g.maintenance>0 ? g.maintenance : 0;
-  const tCal = mCal + (g.surplus>0 ? g.surplus : 0);
-  const silver = mCal>0 && t.cal >= mCal;
-  const d = S.days[ds];
-  const bronze = !!(d && ["breakfast","lunch","dinner"].every(m=>((d.meals||{})[m]||[]).length>0));
-  const gold = tCal>0 && t.cal >= tCal;
-  const maxdiamond = tCal>0 && t.cal >= tCal*1.01;
-  return {silver:!!silver, bronze:!!bronze, gold:!!gold, maxdiamond:!!maxdiamond};
+
+/* ================= MEDAL COLLECTION SYSTEM (2026.09.24) =================
+   Research-backed design — variable rewards, streaks + loss aversion,
+   visible progress, collection/completionism, tiered rarity, PRs vs self:
+   - 100+ medals in 5 rarity tiers (Common -> Legendary), each with its own
+     gradient + glint animation. Still called medals.
+   - Every day gets 3 featured daily medals, seeded by date so they're
+     different each day. Earn all 3 -> they merge into the Daily Crown.
+   - Lifetime medals (streaks, volumes, firsts) are always being chased in
+     the background. Everything earned lands in the medal case on the profile.
+   ========================================================================= */
+const RARITY = {
+  common:   {label:"Common",    g:["#a7b0c0","#6b7280"]},
+  uncommon: {label:"Uncommon",  g:["#34d399","#059669"]},
+  rare:     {label:"Rare",      g:["#60a5fa","#2563eb"]},
+  epic:     {label:"Epic",      g:["#c084fc","#7c3aed"]},
+  legendary:{label:"Legendary", g:["#fbbf24","#f59e0b","#f43f5e"]},
+};
+const RORDER = ["common","uncommon","rare","epic","legendary"];
+/* white 24x24 glyphs for the badge centers (no emoji in app UI) */
+const GLYPHS = {
+  target:'<circle cx="12" cy="12" r="8.5" fill="none" stroke="#fff" stroke-width="2.6"/><circle cx="12" cy="12" r="4.6" fill="none" stroke="#fff" stroke-width="2.6"/><circle cx="12" cy="12" r="1.9"/>',
+  bolt:'<path d="M13.5 2 5.5 13.5h5L10 22l8.5-11.5h-5.5z"/>',
+  bowl:'<path d="M3.5 12.5h17c0 4.8-3.8 8-8.5 8s-8.5-3.2-8.5-8z"/><path d="M9 8.5c1.5-2 6-2 7.5-4.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M13.5 8.5c1.5-2 5-2 6.5-4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>',
+  drop:'<path d="M12 2.8c3.6 4.6 6.2 8.2 6.2 11.8a6.2 6.2 0 0 1-12.4 0C5.8 11 8.4 7.4 12 2.8z"/>',
+  leaf:'<path d="M5 19C5 10.5 10 5.5 19 5c.5 9-4.5 14-14 14z"/>',
+  grid:'<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>',
+  flame:'<path d="M12 2.5s5.5 5 5.5 10a5.5 5.5 0 0 1-11 0c0-2 1-3.8 2.2-5.2.4 1.2 1.2 2.2 2.3 2.7-.3-2.7.2-5.2 1-7.5z"/>',
+  scale:'<circle cx="12" cy="12" r="8.5" fill="none" stroke="#fff" stroke-width="2.6"/><path d="M12 12l3.6-4.2" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="12" r="1.6"/>',
+  chart:'<rect x="4" y="12" width="4.2" height="8" rx="1.2"/><rect x="9.9" y="8" width="4.2" height="12" rx="1.2"/><rect x="15.8" y="4" width="4.2" height="16" rx="1.2"/>',
+  plus:'<path d="M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6z"/>',
+  clock:'<circle cx="12" cy="12" r="8.5" fill="none" stroke="#fff" stroke-width="2.6"/><path d="M12 7.5V12l3.4 2" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/>',
+  camera:'<path d="M4 8.5h3l1.8-2.5h6.4L17 8.5h3A1.5 1.5 0 0 1 21.5 10v7.5a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 17.5V10A1.5 1.5 0 0 1 4 8.5z"/><circle cx="12" cy="13.8" r="3.4" fill="rgba(0,0,0,.35)"/>',
+  flask:'<path d="M10 2.5h4V8l5.2 9.8a1.8 1.8 0 0 1-1.6 2.7H6.4a1.8 1.8 0 0 1-1.6-2.7L10 8z"/>',
+  crown:'<path d="M3.5 16.5 2.5 7.5l5 3.4L12 4.5l4.5 6.4 5-3.4-1 9z"/><rect x="3.5" y="18" width="17" height="2.6" rx="1.3"/>',
+  star:'<path d="M12 2.8l2.8 5.7 6.2.9-4.5 4.3 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.4l6.2-.9z"/>',
+  heart:'<path d="M12 20.5S3.8 14.8 3.8 9.4A4.6 4.6 0 0 1 12 6.6a4.6 4.6 0 0 1 8.2 2.8c0 5.4-8.2 11.1-8.2 11.1z"/>',
+  sun:'<circle cx="12" cy="12" r="5"/><g stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5 5l1.8 1.8M17.2 17.2 19 19M19 5l-1.8 1.8M6.8 17.2 5 19"/></g>',
+  moon:'<path d="M20 14.8A8.6 8.6 0 0 1 9.2 4 8.6 8.6 0 1 0 20 14.8z"/>',
+  cal:'<rect x="4" y="5" width="16" height="15" rx="2.5"/><rect x="6.6" y="11" width="10.8" height="6.4" rx="1.2" fill="rgba(0,0,0,.32)"/>',
+  spark:'<path d="M12 2l2.1 7.9L22 12l-7.9 2.1L12 22l-2.1-7.9L2 12l7.9-2.1z"/>',
+};
+/* circular badge: rarity gradient ring, dark inner disc, white glyph */
+function medalBadge(md, earned){
+  const r = RARITY[md.rarity] || RARITY.common;
+  const cols = earned ? r.g : ["#d9d9e2","#b9b9c6"];
+  const gid = "mg" + String(md.id||md.icon||"m").replace(/[^a-z0-9]/gi,"");
+  const stops = cols.map((c,i)=>`<stop offset="${cols.length>1 ? (i/(cols.length-1)) : 0}" stop-color="${c}"/>`).join("");
+  return `<svg viewBox="0 0 48 48"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1">${stops}</linearGradient></defs>`+
+    `<circle cx="24" cy="24" r="22" fill="url(#${gid})"/>`+
+    `<circle cx="24" cy="24" r="16.5" fill="${earned?"rgba(0,0,0,.30)":"#f0f0f5"}"/>`+
+    `<g transform="translate(14,14) scale(0.833)" fill="${earned?"#ffffff":"#c3c3d0"}">${GLYPHS[md.icon]||""}</g></svg>`;
 }
-function medalSVG(color, earned){
-  return `<svg viewBox="0 0 40 48"><path d="M13 2h14l5 15-12 9-12-9z" fill="${earned?color:"#dcdce4"}"/>`+
-    `<circle cx="20" cy="33" r="12" fill="${earned?color:"#ececf1"}" stroke="${earned?color:"#c9c9d4"}" stroke-width="2"/>`+
-    `<path d="M20 26.5l2.2 4.5 4.9.7-3.5 3.5.8 5-4.4-2.3-4.4 2.3.8-5-3.5-3.5 4.9-.7z" fill="${earned?"#ffffff":"#c4c4d0"}"/></svg>`;
+/* ---------- data helpers for medal tests ---------- */
+const FOOD_MEALS = ["breakfast","lunch","dinner","snacks"];
+function mDayHasLog(ds){ const d=S.days[ds]; return !!(d && FOOD_MEALS.some(m=>((d.meals||{})[m]||[]).length>0)); }
+function mNutrG(ds, canon){ /* grams of a nutrient for the day */
+  const d=S.days[ds]; let v=0;
+  if(d) FOOD_MEALS.forEach(m=>((d.meals||{})[m]||[]).forEach(e=>(e.nutrs||[]).forEach(x=>{
+    if(canonNutr(x.n)===canon){ const u=String(x.u||"").toLowerCase(); v += u==="g"?x.amt : u==="mg"?x.amt/1000 : u==="mcg"?x.amt/1e6 : x.amt; }
+  })));
+  return v;
 }
+function mCalPct(ds){ const g=goalTotal(); return g>0 ? totals(ds).cal/g*100 : 0; }
+function mStreak(pred){ /* consecutive days; today may still be in progress */
+  let ds=todayStr(), n=0;
+  if(!pred(ds)) ds=addDays(ds,-1);
+  while(pred(ds)){ n++; ds=addDays(ds,-1); if(n>1200) break; }
+  return n;
+}
+function mWeekKey(ds){ const dt=new Date(ds+"T12:00:00"); const dow=(dt.getDay()+6)%7; const mon=new Date(dt); mon.setDate(dt.getDate()-dow); return mon.getFullYear()+"-"+String(mon.getMonth()+1).padStart(2,"0")+"-"+String(mon.getDate()).padStart(2,"0"); }
+function mWeighWeekStreak(){
+  const ws=new Set((S.weights||[]).map(w=>mWeekKey(w.d)));
+  let n=0, cur=mWeekKey(todayStr());
+  if(!ws.has(cur)) cur=mWeekKey(addDays(todayStr(),-7));
+  while(ws.has(cur)){ n++; cur=mWeekKey(addDays(cur,-7)); if(n>300) break; }
+  return n;
+}
+function mAllTime(){ let cal=0,p=0,woz=0,days=0,foods=new Set();
+  for(const k in (S.days||{})){ const dd=S.days[k]; if(!dd) continue; const t=totals(k); cal+=t.cal; p+=t.p; woz+=(dd.waterOz||0);
+    if(mDayHasLog(k)) days++;
+    FOOD_MEALS.forEach(m=>((dd.meals||{})[m]||[]).forEach(e=>foods.add((e.n||"").toLowerCase()))); }
+  return {cal,p,woz,days,foods:foods.size};
+}
+function mDistinctFoods(ds){ const s=new Set(); const d=S.days[ds]; if(!d) return 0;
+  FOOD_MEALS.forEach(m=>((d.meals||{})[m]||[]).forEach(e=>s.add((e.n||"").toLowerCase()))); return s.size; }
+function mEntryHour(ds, h0, h1){ const d=S.days[ds]; if(!d) return false;
+  return FOOD_MEALS.some(m=>((d.meals||{})[m]||[]).some(e=>{ if(!e.t) return false; const dt=new Date(e.t); const h=dt.getHours()+dt.getMinutes()/60; return h>=h0 && h<h1; })); }
+function mPhotoCount(ds){ const d=S.days[ds]; let n=0; if(!d) return 0;
+  FOOD_MEALS.forEach(m=>((d.meals||{})[m]||[]).forEach(e=>{ if(e.img) n++; })); return n; }
+function mHasSupps(ds){ const d=S.days[ds]; return !!(d && ((d.meals||{}).supplements||[]).length>0); }
+function mWaterPct(ds){ const t=waterTarget()*8; return t>0 ? (S.days[ds]||{waterOz:0}).waterOz/t*100 : 0; }
+function mLoggedDays(){ let n=0; for(const k in (S.days||{})) if(mDayHasLog(k)) n++; return n; }
+function fmtBig(n){ if(n>=1e6) return (n/1e6).toFixed(n%1e6?1:0)+"M"; if(n>=1e3) return (n/1e3).toFixed(n%1e3?1:0)+"k"; return String(Math.round(n)); }
+
+/* ---------- catalog ---------- */
+const MDEF = [];
+function defMedal(o){ MDEF.push(Object.assign({kind:"daily", prog:null}, o)); return o; }
+/* tiered builder: o = {id, name, cat, icon, kind, desc(v)->str, goal(v)->str,
+   test(v)->bool, prog(v)->{v,t}|null, tiers:[[v, rarity], ...]} */
+function defTiered(o){
+  o.tiers.forEach(tr=>{
+    const v=tr[0], rarity=tr[1];
+    defMedal({id:o.id+"-"+String(v).replace(/\./g,"p"), name:o.name, goal:o.goal(v),
+      cat:o.cat, icon:o.icon, rarity, kind:o.kind||"daily",
+      desc:o.desc(v), test:()=>o.test(v), prog:o.prog?()=>o.prog(v):null});
+  });
+}
+/* ===== DAILY medals — 3 featured per day, seeded by date ===== */
+defTiered({id:"cal", name:"On Target", cat:"goal", icon:"target", kind:"daily",
+  goal:v=>v+"% of goal", desc:v=>`Hit ${v}% of your daily calorie goal.`,
+  tiers:[[40,"common"],[50,"common"],[75,"common"],[90,"uncommon"],[100,"rare"],[110,"epic"],[125,"legendary"]],
+  test:v=>mCalPct(todayStr())>=v, prog:v=>({v:Math.round(mCalPct(todayStr())), t:v})});
+defTiered({id:"pro", name:"Protein Power", cat:"protein", icon:"bolt", kind:"daily",
+  goal:v=>v+"% protein", desc:v=>`Hit ${v}% of your protein target.`,
+  tiers:[[50,"common"],[80,"uncommon"],[100,"rare"],[130,"epic"]],
+  test:v=>{ const t=S.goals.protein; return t>0 && totals(todayStr()).p>=t*v/100; },
+  prog:v=>{ const t=S.goals.protein; return t>0?{v:Math.round(totals(todayStr()).p), t:Math.round(t*v/100)}:null; }});
+defTiered({id:"meals", name:"Full Table", cat:"meals", icon:"bowl", kind:"daily",
+  goal:v=>v+" meal"+(v>1?"s":""), desc:v=>`Log ${v} meal${v>1?"s":""} today.`,
+  tiers:[[1,"common"],[2,"common"],[3,"uncommon"],[4,"rare"]],
+  test:v=>FOOD_MEALS.filter(m=>(((S.days[todayStr()]||{}).meals||{})[m]||[]).length>0).length>=v,
+  prog:v=>({v:FOOD_MEALS.filter(m=>(((S.days[todayStr()]||{}).meals||{})[m]||[]).length>0).length, t:v})});
+defTiered({id:"water", name:"Hydrated", cat:"water", icon:"drop", kind:"daily",
+  goal:v=>v+"% water", desc:v=>`Drink ${v}% of your water target.`,
+  tiers:[[25,"common"],[50,"common"],[100,"rare"],[150,"epic"]],
+  test:v=>mWaterPct(todayStr())>=v, prog:v=>({v:Math.round(mWaterPct(todayStr())), t:v})});
+defTiered({id:"fiber", name:"Roughage", cat:"fiber", icon:"leaf", kind:"daily",
+  goal:v=>v+"% fiber", desc:v=>`Hit ${v}% of your fiber target.`,
+  tiers:[[50,"common"],[100,"uncommon"]],
+  test:v=>{ const t=fiberTarget(); return t>0 && mNutrG(todayStr(),"Fiber")>=t*v/100; },
+  prog:v=>{ const t=fiberTarget(); return t>0?{v:Math.round(mNutrG(todayStr(),"Fiber")), t:Math.round(t*v/100)}:null; }});
+defTiered({id:"variety", name:"Variety Plate", cat:"variety", icon:"grid", kind:"daily",
+  goal:v=>v+" foods", desc:v=>`Log ${v} different foods today.`,
+  tiers:[[5,"common"],[8,"uncommon"],[12,"rare"]],
+  test:v=>mDistinctFoods(todayStr())>=v, prog:v=>({v:mDistinctFoods(todayStr()), t:v})});
+defMedal({id:"early-1", name:"Early Bird", goal:"log before 8am", cat:"time", icon:"sun", rarity:"uncommon",
+  desc:"Log a meal before 8am.", test:()=>mEntryHour(todayStr(),0,8)});
+defMedal({id:"night-1", name:"Night Owl", goal:"log after 10pm", cat:"time", icon:"moon", rarity:"uncommon",
+  desc:"Log a meal after 10pm.", test:()=>mEntryHour(todayStr(),22,24)});
+defTiered({id:"photo", name:"Food Paparazzi", cat:"photo", icon:"camera", kind:"daily",
+  goal:v=>v+" photo"+(v>1?"s":""), desc:v=>`Log ${v} food${v>1?"s":""} with a photo.`,
+  tiers:[[1,"common"],[5,"rare"]],
+  test:v=>mPhotoCount(todayStr())>=v, prog:v=>({v:mPhotoCount(todayStr()), t:v})});
+defMedal({id:"sugar-1", name:"Sugar Smart", goal:"under sugar target", cat:"goal", icon:"target", rarity:"uncommon",
+  desc:"Stay under 50g of sugar for the day.", test:()=>mDayHasLog(todayStr())&&mNutrG(todayStr(),"Total Sugars")<=50,
+  prog:()=>({v:Math.round(mNutrG(todayStr(),"Total Sugars")), t:50, invert:true})});
+defMedal({id:"macros-1", name:"Macro Master", goal:"all macros ±15%", cat:"goal", icon:"spark", rarity:"legendary",
+  desc:"Land protein, carbs, and fat all within 15% of target.",
+  test:()=>{ const g=S.goals; if(!(g.protein>0&&g.carbs>0&&g.fat>0)) return false; const t=totals(todayStr());
+    return [t.p/g.protein,t.c/g.carbs,t.f/g.fat].every(r=>r>=0.85&&r<=1.15); }});
+defMedal({id:"bfast-1", name:"Breakfast Club", goal:"log breakfast", cat:"meals", icon:"sun", rarity:"common",
+  desc:"Log breakfast today.", test:()=>(((S.days[todayStr()]||{}).meals||{}).breakfast||[]).length>0});
+defMedal({id:"snack-1", name:"Snack Attack", goal:"log a snack", cat:"meals", icon:"bowl", rarity:"common",
+  desc:"Log a snack today.", test:()=>(((S.days[todayStr()]||{}).meals||{}).snacks||[]).length>0});
+defMedal({id:"weekend-1", name:"Weekend Warrior", goal:"goal on weekend", cat:"goal", icon:"star", rarity:"rare",
+  desc:"Hit 100% of your calorie goal on a Saturday or Sunday.",
+  test:()=>{ const dow=new Date().getDay(); return (dow===0||dow===6)&&mCalPct(todayStr())>=100; }});
+defMedal({id:"permeal-1", name:"Protein Each Meal", goal:"20g+ per meal", cat:"protein", icon:"bolt", rarity:"rare",
+  desc:"Get 20g+ protein in breakfast, lunch, and dinner.",
+  test:()=>["breakfast","lunch","dinner"].every(m=>(((S.days[todayStr()]||{}).meals||{})[m]||[]).reduce((a,e)=>a+(e.p||0),0)>=20)});
+defMedal({id:"green-1", name:"Green Day", goal:"fiber + water 100%", cat:"fiber", icon:"leaf", rarity:"epic",
+  desc:"Hit 100% of both your fiber and water targets.",
+  test:()=>{ const ft=fiberTarget(); return ft>0&&mNutrG(todayStr(),"Fiber")>=ft&&mWaterPct(todayStr())>=100; }});
+defMedal({id:"carbs-1", name:"Carb Loader", goal:"80% carbs", cat:"goal", icon:"chart", rarity:"common",
+  desc:"Hit 80% of your carb target.", test:()=>{ const t=S.goals.carbs; return t>0&&totals(todayStr()).c>=t*0.8; }});
+defMedal({id:"fat-1", name:"Fat in Check", goal:"fat ≤110%", cat:"goal", icon:"chart", rarity:"common",
+  desc:"Keep fat at or under 110% of target.", test:()=>{ const t=S.goals.fat; return t>0&&totals(todayStr()).f<=t*1.1&&mDayHasLog(todayStr()); }});
+defMedal({id:"bigpro-1", name:"Protein Machine", goal:"150g protein", cat:"protein", icon:"bolt", rarity:"epic",
+  desc:"Eat 150g of protein in a day.", test:()=>totals(todayStr()).p>=150,
+  prog:()=>({v:Math.round(totals(todayStr()).p), t:150})});
+defMedal({id:"nosugar-1", name:"Low Sugar Day", goal:"≤15g sugar", cat:"goal", icon:"leaf", rarity:"rare",
+  desc:"Keep total sugar at or under 15g.", test:()=>mDayHasLog(todayStr())&&mNutrG(todayStr(),"Total Sugars")<=15});
+defMedal({id:"doubleday-1", name:"Double Down", goal:"6+ foods", cat:"variety", icon:"grid", rarity:"common",
+  desc:"Log 6 or more foods in a day.", test:()=>{ let n=0; const d=S.days[todayStr()]; if(d) FOOD_MEALS.forEach(m=>n+=((d.meals||{})[m]||[]).length); return n>=6; }});
+
+/* ===== LIFETIME medals — always being chased in the background ===== */
+defTiered({id:"logstreak", name:"On a Roll", cat:"streak", icon:"flame", kind:"life",
+  goal:v=>v+"-day log streak", desc:v=>`Log food ${v} days in a row.`,
+  tiers:[[3,"uncommon"],[7,"rare"],[14,"epic"],[30,"epic"],[60,"legendary"],[100,"legendary"],[150,"legendary"],[200,"legendary"]],
+  test:v=>mStreak(mDayHasLog)>=v, prog:v=>({v:mStreak(mDayHasLog), t:v})});
+defTiered({id:"goalstreak", name:"Bullseye Streak", cat:"streak", icon:"target", kind:"life",
+  goal:v=>v+"-day goal streak", desc:v=>`Hit your calorie goal ${v} days in a row.`,
+  tiers:[[2,"rare"],[5,"epic"],[10,"legendary"],[20,"legendary"],[30,"legendary"]],
+  test:v=>mStreak(ds=>mDayHasLog(ds)&&mCalPct(ds)>=100)>=v, prog:v=>({v:mStreak(ds=>mDayHasLog(ds)&&mCalPct(ds)>=100), t:v})});
+defTiered({id:"waterstreak", name:"Flow State", cat:"water", icon:"drop", kind:"life",
+  goal:v=>v+"-day water streak", desc:v=>`Hit your water target ${v} days in a row.`,
+  tiers:[[3,"uncommon"],[7,"rare"],[14,"epic"]],
+  test:v=>mStreak(ds=>mWaterPct(ds)>=100)>=v, prog:v=>({v:mStreak(ds=>mWaterPct(ds)>=100), t:v})});
+defTiered({id:"prostreak", name:"Protein Streak", cat:"protein", icon:"bolt", kind:"life",
+  goal:v=>v+"-day protein streak", desc:v=>`Hit your protein target ${v} days in a row.`,
+  tiers:[[3,"uncommon"],[7,"rare"],[14,"epic"]],
+  test:v=>mStreak(ds=>{ const t=S.goals.protein; return t>0&&totals(ds).p>=t; })>=v,
+  prog:v=>({v:mStreak(ds=>{ const t=S.goals.protein; return t>0&&totals(ds).p>=t; }), t:v})});
+defTiered({id:"weighstreak", name:"Scale Regular", cat:"weigh", icon:"scale", kind:"life",
+  goal:v=>v+"-week weigh streak", desc:v=>`Weigh in ${v} weeks in a row.`,
+  tiers:[[2,"common"],[4,"uncommon"],[8,"rare"],[12,"epic"]],
+  test:v=>mWeighWeekStreak()>=v, prog:v=>({v:mWeighWeekStreak(), t:v})});
+defTiered({id:"weighins", name:"Step On Up", cat:"weigh", icon:"scale", kind:"life",
+  goal:v=>v+" weigh-ins", desc:v=>`Log ${v} weigh-ins all time.`,
+  tiers:[[10,"common"],[25,"uncommon"],[50,"rare"],[100,"epic"]],
+  test:v=>(S.weights||[]).length>=v, prog:v=>({v:(S.weights||[]).length, t:v})});
+defMedal({id:"weigh20-1", name:"Scale Veteran", goal:"20-week streak", cat:"weigh", icon:"scale", rarity:"legendary", kind:"life",
+  desc:"Weigh in 20 weeks in a row.", test:()=>mWeighWeekStreak()>=20, prog:()=>({v:mWeighWeekStreak(), t:20})});
+defTiered({id:"calvol", name:"Fuel Tank", cat:"volume", icon:"chart", kind:"life",
+  goal:v=>fmtBig(v)+" kcal all time", desc:v=>`Log ${fmtBig(v)} calories all time.`,
+  tiers:[[50000,"common"],[100000,"uncommon"],[250000,"rare"],[500000,"epic"],[1000000,"legendary"]],
+  test:v=>mAllTime().cal>=v, prog:v=>{ const a=mAllTime(); return {v:Math.round(a.cal), t:v, big:true}; }});
+defTiered({id:"provol", name:"Protein Vault", cat:"volume", icon:"bolt", kind:"life",
+  goal:v=>v+"kg protein all time", desc:v=>`Log ${v}kg of protein all time.`,
+  tiers:[[1,"uncommon"],[5,"rare"],[10,"epic"]],
+  test:v=>mAllTime().p>=v*1000, prog:v=>({v:Math.round(mAllTime().p/100)/10, t:v})});
+defTiered({id:"watervol", name:"Reservoir", cat:"volume", icon:"drop", kind:"life",
+  goal:v=>v+"L water all time", desc:v=>`Log ${v}L of water all time.`,
+  tiers:[[50,"common"],[200,"rare"],[500,"epic"]],
+  test:v=>mAllTime().woz>=v*33.814, prog:v=>({v:Math.round(mAllTime().woz/33.814), t:v})});
+defTiered({id:"customs", name:"Mad Scientist", cat:"create", icon:"flask", kind:"life",
+  goal:v=>v+" custom food"+(v>1?"s":""), desc:v=>`Create ${v} custom food${v>1?"s":""}.`,
+  tiers:[[1,"common"],[5,"uncommon"],[15,"rare"]],
+  test:v=>(S.customFoods||[]).length>=v, prog:v=>({v:(S.customFoods||[]).length, t:v})});
+defTiered({id:"daycount", name:"Day Counter", cat:"volume", icon:"cal", kind:"life",
+  goal:v=>v+" days logged", desc:v=>`Log food on ${v} different days.`,
+  tiers:[[30,"common"],[60,"uncommon"],[100,"rare"],[200,"epic"],[365,"legendary"]],
+  test:v=>mLoggedDays()>=v, prog:v=>({v:mLoggedDays(), t:v})});
+defMedal({id:"first-log", name:"First Bite", goal:"first log", cat:"first", icon:"plus", rarity:"common", kind:"life",
+  desc:"Log your very first food.", test:()=>mLoggedDays()>=1});
+defMedal({id:"first-water", name:"First Sip", goal:"first water", cat:"first", icon:"drop", rarity:"common", kind:"life",
+  desc:"Log water for the first time.", test:()=>mAllTime().woz>0});
+defMedal({id:"first-weigh", name:"First Weigh-In", goal:"first weigh-in", cat:"first", icon:"scale", rarity:"common", kind:"life",
+  desc:"Log your first weigh-in.", test:()=>(S.weights||[]).length>=1});
+defMedal({id:"first-photo", name:"Say Cheese", goal:"first food photo", cat:"first", icon:"camera", rarity:"common", kind:"life",
+  desc:"Log a food with a photo.", test:()=>{ for(const k in (S.days||{})) if(mPhotoCount(k)>0) return true; return false; }});
+defMedal({id:"comeback-1", name:"Comeback Kid", goal:"return after 5+ days", cat:"streak", icon:"flame", rarity:"rare", kind:"life",
+  desc:"Log food after 5 or more days away.",
+  test:()=>{ const t=todayStr(); if(!mDayHasLog(t)) return false; let gap=0, ds=addDays(t,-1); while(!mDayHasLog(ds)&&gap<400){ gap++; ds=addDays(ds,-1); } return gap>=5; }});
+defMedal({id:"tdee-1", name:"Metabolism Mapped", goal:"unlock adaptive TDEE", cat:"goal", icon:"chart", rarity:"epic", kind:"life",
+  desc:"Unlock the adaptive TDEE panel: 7+ logged days across a 7-day weigh-in span.",
+  test:()=>{ if(mLoggedDays()<7) return false; const ws=(S.weights||[]).map(w=>w.d).sort(); return ws.length>1&&(new Date(ws[ws.length-1]+"T12:00:00")-new Date(ws[0]+"T12:00:00"))>=6*864e5; }});
+defMedal({id:"profile-1", name:"All Set", goal:"complete profile", cat:"first", icon:"star", rarity:"common", kind:"life",
+  desc:"Set your name and profile photo.", test:()=>!!(S.profile&&S.profile.name&&S.profile.img)});
+defMedal({id:"adherence-1", name:"Locked In", goal:"80% adherence", cat:"streak", icon:"heart", rarity:"epic", kind:"life",
+  desc:"Reach 80% adherence over the last 14 days.",
+  test:()=>{ try{ return (adherenceStats().pct||0)>=80; }catch(e){ return false; } },
+  prog:()=>{ try{ const p=adherenceStats().pct; return p==null?null:{v:p, t:80}; }catch(e){ return null; } }});
+defMedal({id:"earlyweek-1", name:"Early Bird Week", goal:"3 early mornings", cat:"time", icon:"sun", rarity:"rare", kind:"life",
+  desc:"Log before 8am on 3 of the last 7 days.",
+  test:()=>{ let n=0; for(let i=0;i<7;i++) if(mEntryHour(addDays(todayStr(),-i),0,8)) n++; return n>=3; }});
+defMedal({id:"nightweek-1", name:"Night Owl Week", goal:"3 late nights", cat:"time", icon:"moon", rarity:"rare", kind:"life",
+  desc:"Log after 10pm on 3 of the last 7 days.",
+  test:()=>{ let n=0; for(let i=0;i<7;i++) if(mEntryHour(addDays(todayStr(),-i),22,24)) n++; return n>=3; }});
+defMedal({id:"hydraweek-1", name:"Hydration Hero", goal:"3-day 150% streak", cat:"water", icon:"drop", rarity:"epic", kind:"life",
+  desc:"Drink 150% of your water target 3 days in a row.", test:()=>mStreak(ds=>mWaterPct(ds)>=150)>=3});
+defMedal({id:"wedweigh-1", name:"Weigh-in Wednesday", goal:"weigh on Wednesday", cat:"weigh", icon:"cal", rarity:"common", kind:"life",
+  desc:"Weigh in on a Wednesday.", test:()=>(S.weights||[]).some(w=>new Date(w.d+"T12:00:00").getDay()===3)});
+defMedal({id:"monthstart-1", name:"Fresh Start", goal:"log on the 1st", cat:"first", icon:"cal", rarity:"common", kind:"life",
+  desc:"Log food on the 1st of a month.", test:()=>{ for(const k in (S.days||{})) if(k.slice(8)==="01"&&mDayHasLog(k)) return true; return false; }});
+defMedal({id:"sodium-1", name:"Salt Smart", goal:"3-day low sodium", cat:"streak", icon:"heart", rarity:"uncommon", kind:"life",
+  desc:"Stay under 2,300mg sodium 3 days in a row.",
+  test:()=>mStreak(ds=>mDayHasLog(ds)&&mNutrG(ds,"Sodium")<=2.3)>=3});
+defMedal({id:"proweek-1", name:"Protein Week", goal:"7-day protein avg", cat:"protein", icon:"bolt", rarity:"rare", kind:"life",
+  desc:"Average your protein target or better over 7 days.",
+  test:()=>{ const t=S.goals.protein; if(!(t>0)) return false; let s=0,n=0; for(let i=0;i<7;i++){ const ds=addDays(todayStr(),-i); if(mDayHasLog(ds)){ s+=totals(ds).p; n++; } } return n>=5&&s/n>=t; }});
+defMedal({id:"supp-1", name:"Stacked", goal:"7-day supp streak", cat:"streak", icon:"plus", rarity:"uncommon", kind:"life",
+  desc:"Log supplements 7 days in a row.", test:()=>mStreak(mHasSupps)>=7, prog:()=>({v:mStreak(mHasSupps), t:7})});
+/* ===== special: the daily crown + legacy ===== */
+defMedal({id:"crown", name:"Daily Crown", goal:"all 3 dailies", cat:"crown", icon:"crown", rarity:"legendary", kind:"special",
+  desc:"Earn all 3 daily medals in one day.", test:()=>false});
+defMedal({id:"legacy-crown", name:"OG Triple Crown", goal:"from the old system", cat:"crown", icon:"crown", rarity:"legendary", kind:"special",
+  desc:"Carried over from the original 3-medal system.", test:()=>false});
+
+/* ---------- engine ---------- */
+function medalCase(){ if(!S.medalCase) S.medalCase={}; return S.medalCase; }
+function awardMedal(id){ const c=medalCase(); const e=c[id]||(c[id]={d:todayStr(),n:0}); e.n++; e.ld=todayStr(); save(); }
+function medalEarned(id){ return !!medalCase()[id]; }
+function medalEarnedToday(id){ const e=medalCase()[id]; return !!(e&&e.ld===todayStr()); }
+function hashStr(s){ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+/* 3 featured daily medals: one easy, one medium, one hard — seeded by date
+   so every day brings a different set (variable rewards). */
+function dailyMedals(ds){
+  const pool=MDEF.filter(m=>m.kind==="daily");
+  const bands=[pool.filter(m=>m.rarity==="common"||m.rarity==="uncommon"),
+               pool.filter(m=>m.rarity==="rare"),
+               pool.filter(m=>m.rarity==="epic"||m.rarity==="legendary")];
+  const h=hashStr("medals:"+ds), out=[];
+  const fam=id=>id.replace(/-\d+$/,"");
+  bands.forEach((arr,bi)=>{ if(!arr.length) return;
+    const base=(h+bi*0x9E3779B9)>>>0;
+    for(let t=0;t<arr.length;t++){ const m=arr[(base+t*0x85EBCA6B)%arr.length];
+      if(out.every(o=>fam(o.id)!==fam(m.id))){ out.push(m); break; } }
+  });
+  return out.slice(0,3);
+}
+function safeTest(md){ try{ return !!md.test(); }catch(e){ return false; } }
+/* first run: silently bank everything already earned (no fanfare storm),
+   and carry over the old triple-crown merges as a legacy medal. */
+function seedMedalCase(){
+  if(S.medalSeeded) return;
+  const c=medalCase();
+  MDEF.forEach(md=>{ if(md.kind==="life"&&!c[md.id]&&safeTest(md)) c[md.id]={d:todayStr(),n:1,ld:todayStr()}; });
+  let legacyN=0, firstD=null;
+  if(S.medalPop) for(const k in S.medalPop){ if((S.medalPop[k]||[]).indexOf("chroma")>=0){ legacyN++; if(!firstD||k<firstD) firstD=k; } }
+  if(legacyN>0) c["legacy-crown"]={d:firstD,n:legacyN,ld:firstD};
+  S.medalSeeded=1; save();
+}
+function checkMedals(){
+  seedMedalCase();
+  const featured=dailyMedals(todayStr()), fresh=[];
+  featured.forEach(md=>{ if(!medalEarnedToday(md.id)&&safeTest(md)){ awardMedal(md.id); fresh.push(md); } });
+  MDEF.forEach(md=>{ if(md.kind!=="life"||medalEarned(md.id)) return; if(safeTest(md)){ awardMedal(md.id); fresh.push(md); } });
+  let crowned=false;
+  if(featured.length===3&&featured.every(md=>medalEarnedToday(md.id))&&!medalEarnedToday("crown")){
+    awardMedal("crown"); crowned=true;
+    setTimeout(crownMerge, fresh.length*2300+600);
+  }
+  fresh.forEach((md,i)=>setTimeout(()=>medalFanfare(md), i*2300));
+  if(fresh.length||crowned) refreshMedalRows();
+}
+function refreshMedalRows(){
+  ["pMedals","sMedals"].forEach(id=>{ const el=document.getElementById(id); if(el){ el.innerHTML=medalRowHTML(todayStr()); wireMedals(el); } });
+  const mh=document.getElementById("medalHint"); if(mh) mh.innerHTML=medalHintHTML();
+  renderMedalCase();
+}
+/* big center-screen celebration for a newly earned medal */
+function medalFanfare(md){
+  const wrap=document.getElementById("totemWrap");
+  const mel=document.getElementById("totemMedal"), nm=document.getElementById("totemName");
+  wrap.classList.remove("show"); void wrap.offsetWidth;
+  mel.className="totemmedal g-"+md.rarity;
+  mel.innerHTML=`<span class="mbadge">${medalBadge(md,true)}</span>`;
+  nm.innerHTML=`<div class="totemmedalname">${esc(md.name.toUpperCase())}</div><div class="totemrar">${RARITY[md.rarity].label} medal earned</div>`;
+  wrap.classList.add("show");
+  setTimeout(()=>{ wrap.classList.remove("show"); refreshMedalRows(); },1900);
+}
+/* all 3 daily medals earned: they fly to the center and combine into the crown */
+function crownMerge(){
+  const row=document.getElementById("pMedals");
+  const crown=MDEF.find(m=>m.id==="crown");
+  const showBig=()=>{ medalFanfare(crown); refreshMedalRows(); };
+  const kids=row?[...row.children]:[];
+  if(!kids.length){ showBig(); return; }
+  const clones=kids.map(b=>{
+    const rc=b.getBoundingClientRect(), c=document.createElement("div");
+    c.className="mergemedal"; c.innerHTML=b.innerHTML;
+    c.style.left=rc.left+"px"; c.style.top=rc.top+"px";
+    document.body.appendChild(c); return c;
+  });
+  row.style.visibility="hidden";
+  const cx=innerWidth/2, cy=innerHeight/2;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    clones.forEach(c=>{ c.style.transform=`translate(${cx-c.offsetLeft-20}px,${cy-c.offsetTop-20}px) scale(2.4)`; c.style.opacity="0"; });
+  }));
+  setTimeout(()=>{ clones.forEach(c=>c.remove()); row.style.visibility=""; showBig(); },950);
+}
+/* header + profile rows */
 function medalRowHTML(ds){
-  const m = medalsFor(ds);
-  /* Max Diamond stays hidden until it's hit: once the merge has celebrated
-     today, the three medals stay replaced by the single diamond award */
-  const crowned = !!m.maxdiamond && S.medalPop && S.medalPop[ds] && S.medalPop[ds].indexOf("chroma")>=0;
-  if(crowned) return `<button class="medal chroma" aria-label="Max Diamond award">${medalSVG("#5ec8f2", true)}</button>`;
-  return MEDAL_DEFS.filter(md=>!md.chroma).map(md=>
-    `<button class="medal" data-m="${md.id}" aria-label="${md.name} medal${m[md.id]?" earned":""}">${medalSVG(md.color, m[md.id])}</button>`
-  ).join("");
+  if(medalEarnedToday("crown")){
+    const crown=MDEF.find(m=>m.id==="crown");
+    return `<button class="medal g-legendary" data-crown="1" aria-label="Daily Crown"><span class="mbadge">${medalBadge(crown,true)}</span></button>`;
+  }
+  return dailyMedals(ds).map(md=>{ const earned=medalEarnedToday(md.id);
+    return `<button class="medal g-${md.rarity}${earned?"":" dim"}" data-m="${md.id}" aria-label="${esc(md.name)}"><span class="mbadge">${medalBadge(md,earned)}</span></button>`; }).join("");
 }
-function wireMedals(el){ el.querySelectorAll(".medal").forEach(b=>b.onclick=()=>openMedalInfo()); }
-function openMedalInfo(){
-  const m = medalsFor(todayStr());
-  document.getElementById("infoTitle").textContent = "Daily medals";
-  document.getElementById("infoBody").innerHTML = MEDAL_DEFS.map(md=>
-    `<div class="irow"><b style="color:${md.color}">${md.name}</b> ${m[md.id]?"— earned today":"— not yet"}<br><span style="color:var(--muted)">${md.desc}</span></div>`).join("")+
-    `<div class="irow" style="color:var(--muted)">Medals reset every day.</div>`;
+function wireMedals(el){ el.querySelectorAll(".medal").forEach(b=>b.onclick=openDailySheet); }
+function medalHintHTML(){
+  const n=Object.keys(medalCase()).length;
+  return `3 new medals every day · <b>${n}/${MDEF.length}</b> in your case — tap a medal for details.`;
+}
+/* ---------- sheets ---------- */
+function progBarHTML(md){
+  if(!md.prog) return "";
+  let p; try{ p=md.prog(); }catch(e){ return ""; }
+  if(!p||!(p.t>0)) return "";
+  const pct=Math.max(0,Math.min(100,(p.invert?Math.max(0,(p.t-p.v)/p.t*100):p.v/p.t*100)));
+  const txt=(p.big?fmtBig(p.v)+" / "+fmtBig(p.t):Math.round(p.v)+" / "+Math.round(p.t));
+  return `<div class="mprog"><div class="mprogbar"><i style="width:${pct}%"></i></div><span>${txt}</span></div>`;
+}
+function openDailySheet(){
+  const featured=dailyMedals(todayStr());
+  const crown=MDEF.find(m=>m.id==="crown");
+  document.getElementById("infoTitle").textContent="Today's medals";
+  document.getElementById("infoBody").innerHTML=
+    featured.map(md=>{ const earned=medalEarnedToday(md.id);
+      return `<div class="mrow"><button class="medal g-${md.rarity}${earned?"":" dim"}"><span class="mbadge">${medalBadge(md,earned)}</span></button>`+
+      `<div class="mmeta"><b>${esc(md.name)}</b><i class="r-${md.rarity}">${RARITY[md.rarity].label} · ${esc(md.goal||"")}</i>`+
+      `<span>${esc(md.desc)}</span>${earned?"":progBarHTML(md)}</div><div class="mcheck">${earned?"✓":""}</div></div>`; }).join("")+
+    (medalEarnedToday("crown")?`<div class="mrow"><button class="medal g-legendary"><span class="mbadge">${medalBadge(crown,true)}</span></button>`+
+      `<div class="mmeta"><b>Daily Crown</b><i class="r-legendary">Legendary</i><span>All 3 daily medals earned.</span></div><div class="mcheck">✓</div></div>`:"")+
+    `<div class="irow" style="color:var(--muted)">Fresh medals every day. Lifetime medals are always being chased in the background.</div>`+
+    `<button class="mcasebtn" id="openCaseBtn">Open medal case · ${Object.keys(medalCase()).length}/${MDEF.length}</button>`;
+  document.getElementById("infoSheet").classList.add("open");
+  document.getElementById("openCaseBtn").onclick=()=>{ document.getElementById("infoSheet").classList.remove("open"); openMedalCase(); };
+}
+function openMedalDetail(id){
+  const md=MDEF.find(m=>m.id===id); if(!md) return;
+  const e=medalCase()[id];
+  document.getElementById("infoTitle").textContent=md.name;
+  document.getElementById("infoBody").innerHTML=
+    `<div class="mhero"><div class="medal big g-${md.rarity}"><span class="mbadge">${medalBadge(md,!!e)}</span></div>`+
+    `<div><b class="r-${md.rarity}" style="font-size:15px">${RARITY[md.rarity].label}</b><br><span style="color:var(--muted);font-size:13px">${esc(md.goal||"")}</span></div></div>`+
+    `<div class="irow">${esc(md.desc)}</div>${e?"":progBarHTML(md)}`+
+    `<div class="irow" style="color:var(--muted)">${e?`Earned ${e.d}${e.n>1?` · ×${e.n}`:""}`:"Not yet earned."}${md.kind==="daily"?" This medal appears in the daily rotation.":""}</div>`;
   document.getElementById("infoSheet").classList.add("open");
 }
+/* ---------- medal case on the profile ---------- */
+const CAT_LABEL={goal:"Goals",protein:"Protein",meals:"Meals",water:"Water",fiber:"Fiber",variety:"Variety",streak:"Streaks",weigh:"Weigh-ins",volume:"All-time",first:"Firsts",time:"Time",photo:"Photos",create:"Created",crown:"Crowns"};
+function renderMedalCase(){
+  const bar=document.getElementById("caseBar"), grid=document.getElementById("caseGrid");
+  if(!bar||!grid) return;
+  const c=medalCase(), n=Object.keys(c).length;
+  bar.innerHTML=`<b>${n}/${MDEF.length}</b><span>collected</span>`+RORDER.map(r=>{
+    const tot=MDEF.filter(m=>m.rarity===r).length, rn=MDEF.filter(m=>m.rarity===r&&c[m.id]).length;
+    return `<span class="rdot r-${r}">${rn}/${tot}</span>`; }).join("");
+  grid.innerHTML=MDEF.map(md=>{ const e=c[md.id];
+    return `<button class="medal g-${md.rarity}${e?"":" dim"}" data-m="${md.id}" title="${esc(md.name)}" aria-label="${esc(md.name)}"><span class="mbadge">${medalBadge(md,!!e)}</span>${e&&e.n>1?`<span class="mx">×${e.n}</span>`:""}</button>`; }).join("");
+  grid.querySelectorAll(".medal").forEach(b=>b.onclick=()=>openMedalDetail(b.dataset.m));
+}
+/* jump to the case from the daily sheet */
+function openMedalCase(){
+  showView("settings");
+  setTimeout(()=>{ const el=document.getElementById("caseGrid"); if(el) el.scrollIntoView({behavior:"smooth",block:"center"}); },150);
+}
+
 function avatarHTML(pr, px){
   const initial = ((pr.name||"").trim().charAt(0)||"•").toUpperCase();
   return pr.img ? `<img src="${pr.img}" alt="Profile photo">` : `<span>${initial}</span>`;
@@ -4843,7 +5135,7 @@ function renderProfileStrip(){
   const pm = document.getElementById("pMedals");
   pm.innerHTML = medalRowHTML(todayStr());
   wireMedals(pm);
-  celebrateMedals();
+  checkMedals();
 }
 document.getElementById("pAvatar").onclick = ()=>showView("settings");
 function renderProfileCard(){
@@ -4854,11 +5146,8 @@ function renderProfileCard(){
   const sm = document.getElementById("sMedals");
   sm.innerHTML = medalRowHTML(todayStr());
   wireMedals(sm);
-  const m = medalsFor(todayStr());
-  const n = (m.silver?1:0)+(m.bronze?1:0)+(m.gold?1:0)+(m.maxdiamond?1:0);
-  document.getElementById("medalHint").textContent = m.maxdiamond ? "Max Diamond. All combined — huge day." :
-    n===0 ? "Hit your maintenance calories to earn Silver." :
-    "Tap a medal to see what each one takes.";
+  document.getElementById("medalHint").innerHTML = medalHintHTML();
+  renderMedalCase();
   paintScoreWheel();
   renderThemePicker();
   renderPhotoStrip();
