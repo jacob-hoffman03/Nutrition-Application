@@ -228,15 +228,15 @@ button{font-family:inherit;}
 .mergemedal svg{width:100%; height:100%; display:block;}
 #totemWrap.chroma .totemflash{background:
   radial-gradient(circle at 50% 46%, rgba(255,255,255,.92), rgba(255,255,255,0) 60%),
-  conic-gradient(from 0deg, rgba(169,176,194,.5), rgba(205,127,50,.5), rgba(242,183,5,.5), rgba(94,200,242,.5), rgba(169,176,194,.5));}
+  radial-gradient(circle at 50% 46%, rgba(94,200,242,.45), rgba(94,200,242,0) 70%);}
 .totemmedal.chroma{position:relative; z-index:0;}
-.totemmedal.chroma::before{content:""; position:absolute; inset:-34px; border-radius:50%; z-index:-1;
-  background:conic-gradient(#a9b0c2,#cd7f32,#f2b705,#5ec8f2,#a9b0c2); filter:blur(26px); opacity:.8;
-  animation:chromaSpin 2.4s linear infinite;}
-@keyframes chromaSpin{to{transform:rotate(360deg);}}
+.totemmedal.chroma::before{content:""; position:absolute; inset:-30px; border-radius:50%; z-index:-1;
+  background:radial-gradient(circle, rgba(94,200,242,.8), rgba(94,200,242,0) 70%);
+  filter:blur(18px); animation:diaPulse 1.6s ease-in-out infinite;}
+@keyframes diaPulse{0%,100%{transform:scale(.92); opacity:.7;}50%{transform:scale(1.08); opacity:1;}}
 .totemmedal.chroma svg{width:min(46vw,232px);}
-/* single chromatic award in the medal row (2026.09.23-q/r): replaces the medals
-   once the triple-crown merge has played. Slow shine-sweep glint, nudged left. */
+/* single diamond award in the medal row (2026.09.23-q/r/s): replaces the medals
+   once the merge has played. Slow shine-sweep glint, nudged left. */
 .medal.chroma{width:40px; height:48px; position:relative; overflow:hidden; border-radius:10px; margin-right:10px;}
 .medal.chroma::after{content:""; position:absolute; top:-15%; bottom:-15%; left:-70%; width:45%;
   background:linear-gradient(100deg, rgba(255,255,255,0), rgba(255,255,255,.85), rgba(255,255,255,0));
@@ -1503,7 +1503,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.23-r";
+const APP_VERSION = "2026.09.23-s";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4590,24 +4590,14 @@ function totemPop(md){
   void wrap.offsetWidth;
   wrap.classList.add("show");
 }
-/* chromatic award: the same medal shape filled with a gradient of all four
-   medal colors (silver -> bronze -> gold -> diamond). */
-function chromaSVG(){
-  return `<svg viewBox="0 0 40 48"><defs><linearGradient id="chromaG" x1="0" y1="0" x2="1" y2="1">`+
-    `<stop offset="0" stop-color="#a9b0c2"/><stop offset=".38" stop-color="#cd7f32"/>`+
-    `<stop offset=".68" stop-color="#f2b705"/><stop offset="1" stop-color="#5ec8f2"/>`+
-    `</linearGradient></defs><path d="M13 2h14l5 15-12 9-12-9z" fill="url(#chromaG)"/>`+
-    `<circle cx="20" cy="33" r="12" fill="url(#chromaG)" stroke="#ffffff" stroke-width="2"/>`+
-    `<path d="M20 26.5l2.2 4.5 4.9.7-3.5 3.5.8 5-4.4-2.3-4.4 2.3.8-5-3.5-3.5 4.9-.7z" fill="#ffffff"/></svg>`;
-}
-/* merge animation: clones of the three earned header medals fly to the screen
-   center, fade into each other, and the big chromatic award pops. */
+/* merge animation: clones of the earned header medals fly to the screen
+   center, fade into each other, and the big diamond award pops. */
 function chromaMerge(){
   const wrap = document.getElementById("totemWrap");
   const medalEl = document.getElementById("totemMedal");
   const nm = document.getElementById("totemName");
   const showBig = ()=>{
-    medalEl.innerHTML = chromaSVG();
+    medalEl.innerHTML = medalSVG("#5ec8f2", true);
     medalEl.classList.add("chroma");
     nm.textContent = "MAX DIAMOND!";
     nm.style.color = "#f2b705";
@@ -4651,7 +4641,7 @@ function celebrateMedals(){
   let seen = S.medalPop[k];
   const m = medalsFor(k);
   const maxEarned = !!m.maxdiamond;
-  /* The medals combine into the chromatic Max Diamond award at 1% over the
+  /* The medals combine into the diamond Max Diamond award at 1% over the
      100% daily goal. Once per day. */
   const maybeChroma = (delay)=>{
     if(maxEarned && seen.indexOf("chroma")<0){
@@ -4793,7 +4783,7 @@ const MEDAL_DEFS = [
   {id:"silver", name:"Silver", color:"#a9b0c2", desc:"Hit your maintenance calories for the day."},
   {id:"bronze", name:"Bronze", color:"#cd7f32", desc:"Log all three meals: breakfast, lunch, and dinner."},
   {id:"gold", name:"Gold", color:"#f2b705", desc:"Hit your full daily target — maintenance plus surplus."},
-  {id:"maxdiamond", name:"Max Diamond", color:"#5ec8f2", chroma:true, desc:"Go 1% over your 100% daily goal. All medals combine into one chromatic award."}
+  {id:"maxdiamond", name:"Max Diamond", color:"#5ec8f2", chroma:true, desc:"Go 1% over your 100% daily goal. All medals combine into one diamond award."}
 ];
 function medalsFor(ds){
   const t = totals(ds), g = S.goals;
@@ -4813,14 +4803,13 @@ function medalSVG(color, earned){
 }
 function medalRowHTML(ds){
   const m = medalsFor(ds);
-  /* triple crown: once the merge has celebrated today, the medals stay
-     replaced by the single chromatic Max Diamond award */
+  /* Max Diamond stays hidden until it's hit: once the merge has celebrated
+     today, the three medals stay replaced by the single diamond award */
   const crowned = !!m.maxdiamond && S.medalPop && S.medalPop[ds] && S.medalPop[ds].indexOf("chroma")>=0;
-  if(crowned) return `<button class="medal chroma" aria-label="Max Diamond award">${chromaSVG()}</button>`;
-  return MEDAL_DEFS.map(md=>{
-    const art = md.chroma ? (m[md.id]?chromaSVG():medalSVG(md.color,false)) : medalSVG(md.color, m[md.id]);
-    return `<button class="medal" data-m="${md.id}" aria-label="${md.name} medal${m[md.id]?" earned":""}">${art}</button>`;
-  }).join("");
+  if(crowned) return `<button class="medal chroma" aria-label="Max Diamond award">${medalSVG("#5ec8f2", true)}</button>`;
+  return MEDAL_DEFS.filter(md=>!md.chroma).map(md=>
+    `<button class="medal" data-m="${md.id}" aria-label="${md.name} medal${m[md.id]?" earned":""}">${medalSVG(md.color, m[md.id])}</button>`
+  ).join("");
 }
 function wireMedals(el){ el.querySelectorAll(".medal").forEach(b=>b.onclick=()=>openMedalInfo()); }
 function openMedalInfo(){
