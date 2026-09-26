@@ -213,16 +213,10 @@ button{font-family:inherit;}
   border-radius:22px; box-shadow:0 8px 24px rgba(0,0,0,.12);}
 .daycycle svg{display:block; width:100%; max-width:340px; margin:0 auto;}
 .dc-insight{text-align:center; font-size:12.5px; font-weight:600; opacity:.92; margin-top:8px; line-height:1.45; padding:0 8px;}
-/* Day Cycle 2.0 (2026.09.24-y): scrub + eating-window slider + meal tap */
+/* Day Cycle 2.0: scrub-the-arc preview + tap-a-meal detail */
 #dcSvg{touch-action:pan-y;}
 .dc-seg{cursor:pointer;}
 #dayCycle{user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
-.dc-win{margin:10px 4px 0;}
-.dc-win-track{position:relative; height:34px; touch-action:pan-y;}
-.dc-win-track::before{content:""; position:absolute; left:0; right:0; top:13px; height:8px; border-radius:4px; background:rgba(255,255,255,.20);}
-.dc-win-fill{position:absolute; top:13px; height:8px; border-radius:4px; background:linear-gradient(90deg,#ffdca8,#ffab3d,#ff8f3d); pointer-events:none;}
-.dc-win-meta{display:flex; justify-content:space-between; align-items:baseline; gap:8px; font-size:11px; font-weight:700; color:rgba(255,255,255,.92); margin-top:1px; white-space:nowrap;}
-.dc-win-hint{text-align:center; font-size:10.5px; font-weight:600; color:rgba(255,255,255,.72); margin-top:2px; white-space:nowrap;}
 .dc-logpill{display:inline-block; margin-left:6px; padding:3px 13px; border:0; border-radius:999px; background:#fff; color:#5b3df0; font-size:12px; font-weight:800; cursor:pointer; vertical-align:1px;}
 .pavatar{width:46px; height:46px; border-radius:50%; object-fit:cover; flex:none; background:var(--acc-soft); color:var(--acc);
   display:flex; align-items:center; justify-content:center; font-weight:800; font-size:19px; border:none; cursor:pointer; overflow:hidden; padding:0;}
@@ -1198,7 +1192,6 @@ body.reordering #progOverview{display:none}
           </linearGradient>
         </defs>
         <path d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="14" stroke-linecap="round"/>
-        <g id="dcWinShade"></g>
         <path id="dcProg" d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="url(#dcGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377"/>
         <g id="dcSunSlits"></g>
         <g id="dcNowMark"></g>
@@ -1209,13 +1202,6 @@ body.reordering #progOverview{display:none}
         <line id="dcEatNow" y1="184" y2="200" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
         <g id="dcEatLabels" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle"></g>
       </svg>
-      <div class="dc-win">
-        <div class="dc-win-track" id="dcWinTrack" aria-label="Eating window">
-          <div class="dc-win-fill" id="dcWinFill"></div>
-        </div>
-        <div class="dc-win-meta"><span id="dcWinTimes"></span><span id="dcWinRead"></span></div>
-        <div class="dc-win-hint" id="dcWinHint"></div>
-      </div>
       <div class="dc-insight" id="dcInsight"></div>
     </div>
     <div class="punit" data-pid="body">
@@ -1986,7 +1972,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.25-b";
+const APP_VERSION = "2026.09.25-c";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2355,35 +2341,10 @@ function dcMealWindows(){
   return out;
 }
 let dcLastDay = "";
-/* Day Cycle 2.0 (2026.09.25-b): scrub-the-arc preview, static learned
-   eating-window display, tap-a-meal detail. Same card, same vibe —
-   everything stays data-driven; the drag-to-adjust slider is gone. */
+/* Day Cycle 2.0 (2026.09.25-c): scrub-the-arc preview, tap-a-meal detail.
+   Same card, same vibe — everything stays data-driven. The eating-window
+   system is fully removed (no bar, no handles, no readouts). */
 let dcScrubbing = false, dcScrub = null, dcMealFocus = null;
-function dcFmtDur(min){
-  min = Math.round(min); const h = Math.floor(min/60), m = min%60;
-  return ((h ? h+"h" : "") + (h&&m ? " " : "") + (m ? m+"m" : "")) || "0m";
-}
-function dcEatWin(){
-  /* eating window (first bite → last bite), driven by his learned
-     breakfast → dinner rhythm — no manual adjust (2026.09.25-b) */
-  const wins = dcMealWindows();
-  return {a:Math.round(wins.breakfast.avg), b:Math.round(wins.dinner.avg)};
-}
-function paintDcWin(){
-  if(!$("dcWinTrack")) return;
-  const w = dcEatWin(), span = DC_T1-DC_T0;
-  const pa = (w.a-DC_T0)/span*100, pb = (w.b-DC_T0)/span*100;
-  const fl = $("dcWinFill"); fl.style.left = pa+"%"; fl.style.width = Math.max(0,pb-pa)+"%";
-  const eat = w.b-w.a;
-  $("dcWinTimes").textContent = fmtClockS(w.a)+" – "+fmtClockS(w.b);
-  $("dcWinRead").textContent = dcFmtDur(eat)+" eating";
-  $("dcWinHint").textContent = dcFmtDur(1440-eat)+" overnight fast";
-  /* shade the window onto the arc, under the day-progress */
-  const fa = (w.a-DC_T0)/span, fb = (w.b-DC_T0)/span, L = 377;
-  $("dcWinShade").innerHTML = '<path d="M 30 150 A 120 120 0 0 1 270 150" fill="none"'+
-    ' stroke="rgba(255,255,255,.30)" stroke-width="14" stroke-linecap="round"'+
-    ' stroke-dasharray="'+((fb-fa)*L).toFixed(1)+' 377" stroke-dashoffset="'+(L*(1-fb)).toFixed(1)+'"/>';
-}
 function dcSvgPoint(e){
   const r = $("dcSvg").getBoundingClientRect();
   return [(e.clientX-r.left)/r.width*300, (e.clientY-r.top)/r.height*240];
@@ -2505,7 +2466,7 @@ function paintDayCycle(){
     .filter(o=>o.s.n>=3).sort((a,b)=>a.s.avg-b.s.avg);
   let ins;
   if(!learned.length){
-    ins = "Log meals for a few days and I'll learn your best eating windows.";
+    ins = "Log meals for a few days and I'll learn your usual meal times.";
   }else{
     const openNow = learned.find(o=>(mm0[o.m]||{cal:0}).cal<=0 && nowMin>=o.s.avg-30 && nowMin<=o.s.avg+120);
     const upcoming = learned.find(o=>o.s.avg>nowMin+15);
@@ -2522,7 +2483,6 @@ function paintDayCycle(){
   }else{
     $("dcInsight").textContent = ins;
   }
-  paintDcWin();
   /* midnight rollover while the app sits open */
   const ds = todayStr();
   if(dcLastDay && dcLastDay!==ds){ dcLastDay = ds; renderAll(); return; }
@@ -5791,7 +5751,7 @@ function infoContent(k){
     `<div class="irow">Correlation-style readouts from your own log — adherence vs weight trend, protein vs trend, water vs tiredness, training weeks, sodium vs bloat.</div>
      <div class="irow">They need a few weeks of consistent logging before they say anything useful, and they're <b>estimates, not medical advice</b> — sleep, stress, and illness matter too, and the app can't see those.</div>`};
   if(k==="daycycle") return {t:"Day Cycle", b:
-    `<div class="irow"><b>Drag the arc</b> to preview any time of day. <b>Tap a meal window</b> for its usual time and a Log shortcut. The <b>eating-window slider</b> sets your first bite → last bite; the readout shows your eating vs overnight fasting hours.</div>
+    `<div class="irow"><b>Drag the arc</b> to preview any time of day. <b>Tap a meal window</b> for its usual time and a Log shortcut. The colored ticks on the arc mark <b>sunrise and sunset</b>.</div>
      <div class="irow">Meal-timing research (chrononutrition) links <b>consistent</b> meal times and a <b>shorter eating window</b> (around 10–12 hours) to better metabolic markers — one phone-based study saw people shrink a ~15-hour window to 10 hours and lose ~3.3 kg over 16 weeks with no calorie guidance (Gill & Panda).</div>
      <div class="irow">Front-load more calories earlier in the day and avoid late-night eating when you can. Associations, not prescriptions — consistency beats perfection.</div>`};
 }
