@@ -1972,7 +1972,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.25-c";
+const APP_VERSION = "2026.09.25-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2218,9 +2218,9 @@ function renderZoneSheet(){
 }
 
 /* ============ WATER TARGET (research-based, auto) ============ */
-function dayHasXW(){
-  const d = S.days[viewDate()]; if(!d) return false;
-  return MEALS.some(m => (d.meals[m]||[]).some(e=>e.xw));
+function dayHasXW(ds){
+  const d = S.days[ds||viewDate()]; if(!d) return false;
+  return MEALS.some(m => ((d.meals||{})[m]||[]).some(e=>e.xw));
 }
 /* ================= ANALYTICS ENGINE — HYDRATION =================
    Research sources (2026 refresh): IOM 2004 — adequate intake ~1.0 mL/kcal total
@@ -2228,19 +2228,19 @@ function dayHasXW(){
    No newer AI supersedes these. The "8 glasses" rule has no scientific origin.
    Creatine: ISSN Kreider 2017 — does NOT cause dehydration; no extra water needed
    (the old "+2 glasses on creatine" bump is retired). */
-function waterCalc(){
+function waterCalc(ds){
   const g = S.goals;
   if(g.water>0) return {target:g.water, manual:true};
-  if(!(g.maintenance>0)) return {target:0, manual:false, tdee:0, perKcal:0, xw:dayHasXW(), tier:"—", unset:true}; /* blank slate: no phantom fallback */
+  if(!(g.maintenance>0)) return {target:0, manual:false, tdee:0, perKcal:0, xw:dayHasXW(ds), tier:"—", unset:true}; /* blank slate: no phantom fallback */
   const tdee = g.maintenance;
   const pal = actPAL(g.profile);
   const perKcal = pal>=1.7 ? 1.2 : 1.0; /* IOM 1.0-1.5 mL/kcal; 1.2 cap for active tiers */
-  const xw = dayHasXW();
+  const xw = dayHasXW(ds);
   const ml = tdee*perKcal*0.8 + (xw ? 500 : 0); /* ~80% of water from fluids; +500 mL only for a non-creatine supplement manually flagged "needs extra water" */
   const tier = (ACT_TIERS.find(t=>t.key===(g.profile&&g.profile.activityKey))||ACT_TIERS[2]).label;
   return {target:Math.max(4, Math.min(24, Math.round(ml/240))), manual:false, tdee, perKcal, xw, tier};
 }
-function waterTarget(){ return waterCalc().target; }
+function waterTarget(ds){ return waterCalc(ds).target; }
 
 /* ============ DIARY ============ */
 /* Dual concentric rings, Apple-Health style: the big outer ring fills to maintenance,
@@ -2550,7 +2550,7 @@ function renderDiary(){
     save(); renderDiary();
   });
 
-  const wtOz = waterTarget()*8; /* target in oz; 0 = unset, logging still works */
+  const wtOz = waterTarget(viewDate())*8; /* target in oz; 0 = unset, logging still works */
   const oz = Math.round((d.waterOz||0)*10)/10;
   $("waterLabel").textContent = wtOz>0 ? oz+" / "+wtOz+" oz" : oz+" oz";
   $("waterFill").style.width = (wtOz>0 ? Math.min(oz/wtOz,1)*100 : 0)+"%";
@@ -2630,7 +2630,8 @@ function alcData(d){
 }
 function bacPct(stdDrinks){
   const w = curBodyWeight()>0 ? curBodyWeight() : 120;
-  return stdDrinks*0.6*5.14/(w*0.68); /* Widmark, male r=0.68; ignores metabolism (~0.015%/hr) */
+  const r = ((S.goals.profile||{}).sex==="f") ? 0.55 : 0.68; /* 2026.09.25-d: Widmark r is 0.68 male / 0.55 female — the old code used 0.68 for everyone, understating BAC ~19% for women */
+  return stdDrinks*0.6*5.14/(w*r); /* ignores metabolism (~0.015%/hr) */
 }
 function paintAlcRing(kcal){
   const el = $("alcRing"); if(!el) return;
@@ -2980,9 +2981,11 @@ function mealMacros(ds){
      route (Wurtman). Separately, a big recent meal adds drowsiness on its own:
      larger solid meals shorten sleep-onset latency vs. smaller ones or water
      (Wells et al. 1997). Water clearly under target late in the day counts too
-     (~1.5% dehydration brings fatigue, Ganio et al. 2011). Yesterday's drinks,
-     lightly (Ebrahim et al. 2013; Penning et al. 2012).
-   - What does NOT move it: total calories, total carbs, nicotine, bloat. */
+     (~1.5% dehydration brings fatigue, Ganio et al. 2011). Yesterday's drinks —
+     and this morning's, which are really last night's — weighted
+     dose-dependently (Ebrahim et al. 2013; Penning et al. 2012). Running far
+     under the calorie goal into the afternoon counts as its own signal.
+   - What does NOT move it: total carbs, nicotine, bloat. */
 function tiredLevel(ds){
   ds = ds || todayStr();
   const d = S.days[ds] || {};
@@ -2996,7 +2999,7 @@ function tiredLevel(ds){
   else if(hr>=22 || hr<1){ pts+=4; why.push("Late-night hours — your body clock is winding down."); }
   else if(hr>=4 && hr<7){ pts+=4; why.push("Early-morning hours — the low point of the alertness cycle."); }
   /* hydration: only a genuine deficit, late in the day */
-  const w = waterCalc();
+  const w = waterCalc(ds);
   if(w.target>0 && !w.unset){
     const woz = w.target*8, wr = (d.waterOz||0)/woz;
     if(hr>=14){
@@ -3065,10 +3068,37 @@ function tiredLevel(ds){
     why.push(cap1(overdue.m)+" is overdue — you usually eat around "+fmtClock(overdue.at)+
       ", and running past your own rhythm drags energy down.");
   }
-  /* yesterday's alcohol: light, capped */
+  /* yesterday's alcohol — and this morning's, which is really last night's.
+     2026.09.25-d: two fixes. (1) Morning-after logging: drinks logged today
+     before noon count as last night's (max of the two days, never summed, so
+     no double count). (2) Weight: the old term was capped at 9 pts ("light"),
+     but dose-dependent next-day fatigue after evening drinking is well
+     established (Ebrahim et al. 2013 meta-analysis; Roehrs & Roth 2001;
+     Penning et al. 2012) — 3 std drinks now move it ~15 pts instead of 9. */
   const yd = addDays(ds,-1);
-  const yalc = alcData(S.days[yd]||{}).std;
-  if(yalc>0){ const p = Math.min(9, Math.round(yalc*3)); pts+=p; why.push(Math.round(yalc)+" drink"+(yalc>1?"s":"")+" yesterday — alcohol fragments the second half of sleep, the recovery half (Ebrahim et al. 2013)."); }
+  const yStd = alcData(S.days[yd]||{}).std, tStd = alcData(d).std;
+  const yalc = Math.max(yStd, hr<12 ? tStd : 0);
+  if(yalc>0){
+    const p = Math.min(18, Math.round(yalc*5));
+    pts+=p;
+    why.push(Math.round(yalc)+" drink"+(Math.round(yalc)===1?"":"s")+" "+(hr<12&&tStd>yStd?"last night":"yesterday")+" — alcohol fragments the second half of sleep, the recovery half, and next-day fatigue runs dose-dependent (Ebrahim et al. 2013).");
+  }
+  /* under-fueling — 2026.09.25-d: the old model ignored total calories, but
+     running on fumes into the afternoon is tiring on its own (Jay's own
+     observation: eating after an 889-kcal day pulled his energy back up).
+     Only fires on days with food actually logged — a blank log is missing
+     data, never evidence. */
+  if(hr>=15){
+    const goal = goalTotal();
+    const ateToday = FOOD_MEALS.some(m=>((d.meals||{})[m]||[]).length>0);
+    if(goal>0 && ateToday){
+      let eaten = 0;
+      FOOD_MEALS.forEach(m=>{ eaten += (mm[m]||{cal:0}).cal; });
+      const ratio = eaten/goal;
+      if(ratio<0.33){ pts+=10; why.push("Only "+Math.round(eaten).toLocaleString()+" kcal so far ("+Math.round(ratio*100)+"% of your goal) — running on fumes drags energy down on its own."); }
+      else if(ratio<0.5){ pts+=6; why.push("At "+Math.round(ratio*100)+"% of your calorie goal by "+fmtClock(hr*60)+" — an under-fueled afternoon feels heavier than a fed one."); }
+    }
+  }
   const score = Math.max(0, Math.min(100, Math.round(pts)));
   const level = score<=19?1:score<=39?2:score<=59?3:score<=79?4:5;
   return {score, level, label:["","Wired","Up","Even","Drowsy","Drained"][level], why};
@@ -3101,7 +3131,7 @@ function bloatScore(ds){
   else if(sugars>=50){ pts+=7; why.push(Math.round(sugars)+"g sugar — a mild gas risk."); }
   if(big>=900 || bigFat>=40){ pts+=14; why.push("Big"+(bigFat>=40?", fatty":"")+" meal ("+Math.round(big).toLocaleString()+" kcal) — fat slows stomach emptying, so the fullness lingers."); }
   else if(big>=650){ pts+=7; why.push("Hearty meal ("+Math.round(big).toLocaleString()+" kcal) — some fullness expected."); }
-  const w = waterCalc(), wr = w.target>0 ? (d.waterOz||0)/(w.target*8) : 1;
+  const w = waterCalc(ds), wr = w.target>0 ? (d.waterOz||0)/(w.target*8) : 1;
   if(w.target>0 && wr<0.75){ pts+=10; why.push("Behind on water ("+Math.round(wr*100)+"% of target) — when you're dry the body holds onto water, adding to the puff."); }
   const alc = alcData(d).std;
   if(alc>0){ pts+=5; why.push("Alcohol irritates the gut lining — a small extra bloat nudge."); }
@@ -3113,7 +3143,7 @@ function scoreInfoHTML(){
   const aRow = a.pct===null
     ? `<div class="irow"><b>Adherence:</b> no logged days in the last 2 weeks yet — log meals and this fills in.</div>`
     : `<div class="irow"><b>Adherence: ${a.pct}%</b> — ${a.hit} of ${a.n} logged days (last 14) hit calories within ±10% of goal and protein ≥90%. Research finds sticking to the plan predicts results better than the plan itself (Burke et al. 2011).</div>`;
-  const tHead = `<div class="irow"><b>Tired level: ${t.level}/5 — ${t.label}.</b> An estimate of how tired you feel right now, rebuilt from research: it starts neutral and only moves on real signals — the 1–3pm alertness dip (it happens even on days you skip lunch — normal, not a problem), a carb-dominant meal eaten in the last ~2 hours (glucose quiets the orexin wakefulness neurons — Burdakov et al. 2005, 2006), a big recent meal (post-meal sleepiness scales with meal size — Wells et al. 1997), water well under target late in the afternoon (Ganio et al. 2011), yesterday's drinks (Ebrahim et al. 2013). Missing data never makes it worse: there's no sleep logging yet, so sleep debt isn't counted and defaults to fine.</div>`;
+  const tHead = `<div class="irow"><b>Tired level: ${t.level}/5 — ${t.label}.</b> An estimate of how tired you feel right now, rebuilt from research: it starts neutral and only moves on real signals — the 1–3pm alertness dip (it happens even on days you skip lunch — normal, not a problem), a carb-dominant meal eaten in the last ~2 hours (glucose quiets the orexin wakefulness neurons — Burdakov et al. 2005, 2006), a big recent meal (post-meal sleepiness scales with meal size — Wells et al. 1997), water well under target late in the afternoon (Ganio et al. 2011), last night's drinks weighted by how much (Ebrahim et al. 2013 — drinks you log in the morning count as last night's), and running far under your calorie goal into the afternoon. Missing data never makes it worse: there's no sleep logging yet, so sleep debt isn't counted and defaults to fine.</div>`;
   const tRows = t.why.length
     ? t.why.map(w=>`<div class="irow">• ${esc(w)}</div>`).join("")
     : `<div class="irow">Nothing moving the needle right now.</div>`;
@@ -4265,12 +4295,20 @@ function streak(){
    "metabolic damage" term beyond what the formulas predict — the trend is the truth. */
 function targetRateBand(){
   const m = S.goals.mode, w = S.goals.profile.weightLb>0 ? S.goals.profile.weightLb : 150;
-  if(m==="lean") return [0.25, 0.5];
-  if(m==="bulk") return [0.3, 0.6];
   if(m==="maintain") return [-0.15, 0.15];
   const s = S.goals.surplus>0 ? S.goals.surplus : 0;
-  const r = s*7/3500/w*100;
-  return [r*0.6, r*1.4];
+  if(s>0){
+    /* 2026.09.25-d: derive the band from the prescribed surplus so it always
+       contains the app's own projection — a +15% bulk at 123 lb projects
+       0.66%/wk, which the old fixed [0.3,0.6] cap flagged as "too fast" and made
+       Auto-tune cut the goal for following the recommendation. Custom mode
+       already worked this way. */
+    const r = s*7/3500/w*100;
+    return [r*0.6, r*1.4];
+  }
+  if(m==="lean") return [0.25, 0.5];
+  if(m==="bulk") return [0.3, 0.6];
+  return [0, 0];
 }
 /* ============ WEIGHT GOAL + ANALYSIS (Progress) ============ */
 function sortedWeights(){ return (S.weights||[]).slice().sort((a,b)=>a.d<b.d?-1:1); }
@@ -4311,7 +4349,7 @@ function dayTotals(ds){
   const mm = mealMacros(ds);
   const n = {fiber:0, sugars:0, sodium:0, pot:0};
   MEALS.forEach(m=>{ n.fiber+=mm[m].fiber; n.sugars+=mm[m].sugars; n.sodium+=mm[m].sodium; n.pot+=mm[m].pot; });
-  const w = waterCalc();
+  const w = waterCalc(ds);
   const waterOz = Math.round((d.waterOz||0)*10)/10;
   const foodLogged = t.cal>0;
   return {ds, logged: foodLogged || waterOz>0, foodLogged, cal:t.cal, p:t.p, c:t.c, f:t.f,
@@ -5664,8 +5702,15 @@ function syncWeightFromLog(newLb, dateStr){
     autoDeriveMacros(); /* auto macros follow the new goal; manual macros stay untouched */
     S.goals.autoNote = "Auto-adjusted from "+wDisp(effW)+" "+wUnit()+" on "+dateStr+" — maintenance"+(S.goals.macroAuto!==false?" and macros":"")+" recalculated.";
     tuned = true;
+    S.goals.profHash = profHash();
+  } else if(changed && effW>0){
+    /* 2026.09.25-d: auto-adjust is off — the weight still syncs (BMI, BAC, macro
+       math all read it) but maintenance waits for the user's next Goals save.
+       The stored hash is deliberately left stale so Goals › Done detects the
+       change and recalculates; refreshing it here used to mask the divergence
+       and the goal silently went stale. */
+    S.goals.autoNote = "Weighed "+wDisp(effW)+" "+wUnit()+" on "+dateStr+" — maintenance recalculates next time you save Goals.";
   }
-  S.goals.profHash = profHash();
   return tuned;
 }
 /* ============ GOALS: collapsible sections + info buttons ============ */
@@ -6005,7 +6050,7 @@ function mEntryHour(ds, h0, h1){ const d=S.days[ds]; if(!d) return false;
 function mPhotoCount(ds){ const d=S.days[ds]; let n=0; if(!d) return 0;
   FOOD_MEALS.forEach(m=>((d.meals||{})[m]||[]).forEach(e=>{ if(entryImg(e)) n++; })); return n; }
 function mHasSupps(ds){ const d=S.days[ds]; return !!(d && ((d.meals||{}).supplements||[]).length>0); }
-function mWaterPct(ds){ const t=waterTarget()*8; return t>0 ? (S.days[ds]||{waterOz:0}).waterOz/t*100 : 0; }
+function mWaterPct(ds){ const t=waterTarget(ds)*8; return t>0 ? (S.days[ds]||{waterOz:0}).waterOz/t*100 : 0; }
 function mLoggedDays(){ let n=0; for(const k in (S.days||{})) if(mDayHasLog(k)) n++; return n; }
 function fmtBig(n){ if(n>=1e6) return (n/1e6).toFixed(n%1e6?1:0)+"M"; if(n>=1e3) return (n/1e3).toFixed(n%1e3?1:0)+"k"; return String(Math.round(n)); }
 
@@ -6096,9 +6141,9 @@ defTiered({id:"logstreak", name:"On a Roll", cat:"streak", icon:"flame", kind:"l
   tiers:[[3,"uncommon"],[7,"rare"],[14,"epic"],[30,"epic"],[60,"legendary"],[100,"legendary"],[150,"legendary"],[200,"legendary"]],
   test:v=>mStreak(mDayHasLog)>=v, prog:v=>({v:mStreak(mDayHasLog), t:v})});
 defTiered({id:"goalstreak", name:"Bullseye Streak", cat:"streak", icon:"target", kind:"life",
-  goal:v=>v+"-day goal streak", desc:v=>`Hit your calorie goal ${v} days in a row.`,
+  goal:v=>v+"-day goal streak", desc:v=>`Hit your calorie goal (90%+) ${v} days in a row.`,
   tiers:[[2,"rare"],[5,"epic"],[10,"legendary"],[20,"legendary"],[30,"legendary"]],
-  test:v=>mStreak(ds=>mDayHasLog(ds)&&mCalPct(ds)>=100)>=v, prog:v=>({v:mStreak(ds=>mDayHasLog(ds)&&mCalPct(ds)>=100), t:v})});
+  test:v=>mStreak(ds=>mDayHasLog(ds)&&mCalPct(ds)>=90)>=v, prog:v=>({v:mStreak(ds=>mDayHasLog(ds)&&mCalPct(ds)>=90), t:v})}); /* 2026.09.25-d: 90% band matches dayHit's definition of a hit — the old >=100% broke streaks on days adherence counted as hits */
 defTiered({id:"waterstreak", name:"Flow State", cat:"water", icon:"drop", kind:"life",
   goal:v=>v+"-day water streak", desc:v=>`Hit your water target ${v} days in a row.`,
   tiers:[[3,"uncommon"],[7,"rare"],[14,"epic"]],
@@ -6150,8 +6195,8 @@ defMedal({id:"comeback-1", name:"Comeback Kid", goal:"return after 5+ days", cat
   desc:"Log food after 5 or more days away.",
   test:()=>{ const t=todayStr(); if(!mDayHasLog(t)) return false; let gap=0, ds=addDays(t,-1); while(!mDayHasLog(ds)&&gap<400){ gap++; ds=addDays(ds,-1); } return gap>=5; }});
 defMedal({id:"tdee-1", name:"Metabolism Mapped", goal:"unlock adaptive TDEE", cat:"goal", icon:"chart", rarity:"epic", kind:"life",
-  desc:"Unlock the adaptive TDEE panel: 7+ logged days across a 7-day weigh-in span.",
-  test:()=>{ if(mLoggedDays()<7) return false; const ws=(S.weights||[]).map(w=>w.d).sort(); return ws.length>1&&(new Date(ws[ws.length-1]+"T12:00:00")-new Date(ws[0]+"T12:00:00"))>=6*864e5; }});
+  desc:"Unlock the adaptive TDEE panel: 7+ complete days with weigh-ins spanning 7+ days.",
+  test:()=>{ try{ return adaptiveCalc().ok; }catch(e){ return false; } }}); /* 2026.09.25-d: gate on the real adaptiveCalc gates (7+ complete days, 7-day trend span) — the old test counted any 7 logged days and a 6-day span, awarding before the panel could unlock */
 defMedal({id:"profile-1", name:"All Set", goal:"complete profile", cat:"first", icon:"star", rarity:"common", kind:"life",
   desc:"Set your name and profile photo.", test:()=>!!(S.profile&&S.profile.name&&S.profile.img)});
 defMedal({id:"adherence-1", name:"Locked In", goal:"80% adherence", cat:"streak", icon:"heart", rarity:"epic", kind:"life",
