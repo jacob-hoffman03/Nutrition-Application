@@ -881,9 +881,9 @@ body.reordering #progOverview{display:none}
       <div class="ptodayrow" style="display:none"><button id="todayPill" class="todaypill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg><span>Today</span></button></div>
       <div class="prog-main">
         <div class="hside">
-        <button class="scorewheel hwheel" id="tiredWheelH" aria-label="Tired level details">
+        <button class="scorewheel hwheel" id="tiredWheelH" aria-label="Fatigue details">
           <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="tiredArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
-          <span class="swnum"><b id="tiredNumH">–</b><i>tired</i></span>
+          <span class="swnum"><b id="tiredNumH">–</b><i>fatigue</i></span>
         </button>
         <button class="scorewheel hwheel hwheel-sm" id="bloatWheelH" aria-label="Bloat details">
           <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="bloatArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
@@ -1972,7 +1972,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.25-d";
+const APP_VERSION = "2026.09.25-e";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2986,18 +2986,17 @@ function mealMacros(ds){
      dose-dependently (Ebrahim et al. 2013; Penning et al. 2012). Running far
      under the calorie goal into the afternoon counts as its own signal.
    - What does NOT move it: total carbs, nicotine, bloat. */
+/* Fatigue estimate — 2026.09.25-e: pure consumption. Jay's call, and he's right:
+   no sleep, no body-clock — every point comes from something consumed (or not
+   consumed): alcohol, meal size and composition, sugar, water, total calories.
+   Time-of-day only gates signals that need the day to unfold (hydration,
+   under-fueling); it never adds points on its own. */
 function tiredLevel(ds){
   ds = ds || todayStr();
   const d = S.days[ds] || {};
   const cap1 = s => s.charAt(0).toUpperCase()+s.slice(1);
   let pts = 30; const why = [];
   const now = new Date(), hr = now.getHours();
-  /* circadian: the afternoon trough is expected, not pathological — it shows up
-     even on days you skip lunch (Monk et al.), so a meal only amplifies it */
-  if(hr>=13 && hr<15){ pts+=8; why.push("Mid-afternoon dip (1-3pm) — alertness naturally troughs then, whatever you ate."); }
-  else if(hr>=15 && hr<16){ pts+=4; why.push("Tail of the afternoon dip — the trough fades over 3-4pm."); }
-  else if(hr>=22 || hr<1){ pts+=4; why.push("Late-night hours — your body clock is winding down."); }
-  else if(hr>=4 && hr<7){ pts+=4; why.push("Early-morning hours — the low point of the alertness cycle."); }
   /* hydration: only a genuine deficit, late in the day */
   const w = waterCalc(ds);
   if(w.target>0 && !w.unset){
@@ -3051,6 +3050,12 @@ function tiredLevel(ds){
       pts+=3;
       why.push(cap1(lastM)+" was a hearty one ("+Math.round(x.cal).toLocaleString()+" kcal) — even a moderately big meal deepens the post-meal dip.");
     }
+    /* sugar crash: the "sugar rush" is a myth — sugar lowers alertness and
+       raises fatigue within the hour (Mantantzis et al. 2019 meta-analysis) */
+    if((x.sugars||0)>=60){
+      pts+=4;
+      why.push(cap1(lastM)+" carried "+Math.round(x.sugars)+"g sugar — past ~60g the crash outweighs the lift, and fatigue climbs within the hour.");
+    }
   }
   /* meal rhythm — 2026.09.23-e: running way past YOUR usual meal time drags
      energy down. Only fires with 5+ logged days for that meal and only when
@@ -3081,7 +3086,15 @@ function tiredLevel(ds){
   if(yalc>0){
     const p = Math.min(18, Math.round(yalc*5));
     pts+=p;
-    why.push(Math.round(yalc)+" drink"+(Math.round(yalc)===1?"":"s")+" "+(hr<12&&tStd>yStd?"last night":"yesterday")+" — alcohol fragments the second half of sleep, the recovery half, and next-day fatigue runs dose-dependent (Ebrahim et al. 2013).");
+    why.push(Math.round(yalc)+" drink"+(Math.round(yalc)===1?"":"s")+" "+(hr<12&&tStd>yStd?"last night":"yesterday")+" — next-day fatigue runs dose-dependent with evening drinking (Ebrahim et al. 2013).");
+  }
+  /* today's alcohol: a sedative in its own right, dose-dependent
+     (Roehrs & Roth 2001). Mutually exclusive with the morning-after term
+     above, so nothing double-counts. */
+  if(hr>=12 && tStd>0){
+    const p = Math.min(12, Math.round(tStd*4));
+    pts+=p;
+    why.push(Math.round(tStd)+" drink"+(Math.round(tStd)===1?"":"s")+" today — alcohol is a sedative; it drags energy down directly, more with every drink.");
   }
   /* under-fueling — 2026.09.25-d: the old model ignored total calories, but
      running on fumes into the afternoon is tiring on its own (Jay's own
@@ -3101,7 +3114,7 @@ function tiredLevel(ds){
   }
   const score = Math.max(0, Math.min(100, Math.round(pts)));
   const level = score<=19?1:score<=39?2:score<=59?3:score<=79?4:5;
-  return {score, level, label:["","Wired","Up","Even","Drowsy","Drained"][level], why};
+  return {score, level, label:["","Fresh","Steady","Fading","Heavy","Drained"][level], why};
 }
 function bloatScore(ds){
   ds = ds || todayStr();
@@ -3143,7 +3156,7 @@ function scoreInfoHTML(){
   const aRow = a.pct===null
     ? `<div class="irow"><b>Adherence:</b> no logged days in the last 2 weeks yet — log meals and this fills in.</div>`
     : `<div class="irow"><b>Adherence: ${a.pct}%</b> — ${a.hit} of ${a.n} logged days (last 14) hit calories within ±10% of goal and protein ≥90%. Research finds sticking to the plan predicts results better than the plan itself (Burke et al. 2011).</div>`;
-  const tHead = `<div class="irow"><b>Tired level: ${t.level}/5 — ${t.label}.</b> An estimate of how tired you feel right now, rebuilt from research: it starts neutral and only moves on real signals — the 1–3pm alertness dip (it happens even on days you skip lunch — normal, not a problem), a carb-dominant meal eaten in the last ~2 hours (glucose quiets the orexin wakefulness neurons — Burdakov et al. 2005, 2006), a big recent meal (post-meal sleepiness scales with meal size — Wells et al. 1997), water well under target late in the afternoon (Ganio et al. 2011), last night's drinks weighted by how much (Ebrahim et al. 2013 — drinks you log in the morning count as last night's), and running far under your calorie goal into the afternoon. Missing data never makes it worse: there's no sleep logging yet, so sleep debt isn't counted and defaults to fine.</div>`;
+  const tHead = `<div class="irow"><b>Fatigue: ${t.level}/5 — ${t.label}.</b> An estimate of fatigue from what you consumed, rebuilt from research: it starts at Steady and only moves on real consumption signals — last night's drinks weighted by dose (drinks you log in the morning count as last night's — Ebrahim et al. 2013), drinks today (alcohol is a sedative — Roehrs & Roth 2001), a carb-dominant or oversized recent meal (glucose quiets the orexin wakefulness neurons — Burdakov et al. 2005, 2006; meal size scales post-meal sleepiness — Wells et al. 1997), a sugary meal's crash (Mantantzis et al. 2019), water well under target late in the day (Ganio et al. 2011), and running far under your calorie goal. No sleep tracking, no body-clock — sleep, stress, and illness still matter, the app just can't see them. Missing data never makes it worse.</div>`;
   const tRows = t.why.length
     ? t.why.map(w=>`<div class="irow">• ${esc(w)}</div>`).join("")
     : `<div class="irow">Nothing moving the needle right now.</div>`;
@@ -4529,13 +4542,13 @@ function insightProteinVsTrend(){
 }
 /* Today only — tiredLevel() is anchored to the current clock, so a historical
    tiredness series would not be valid. Pairs today's water fact with today's
-   tired estimate, without claiming one caused the other. */
+   fatigue estimate, without claiming one caused the other. */
 function insightWaterVsTired(){
   const t = dayTotals(todayStr());
   const lv = tiredLevel();
   const waterBit = t.waterRatio!==null ? "Water "+Math.round(t.waterRatio*100)+"% of target · " : "";
   return {key:"tired", conf:"solid",
-    title: waterBit+"tired "+lv.level+"/5 ("+lv.label+")",
+    title: waterBit+"fatigue "+lv.level+"/5 ("+lv.label+")",
     copy: lv.why.length ? lv.why[0] : "Nothing moving the needle right now.",
     ev: (lv.why.length? lv.why.map(w=>"• "+w).join("<br>") : "• Nothing moving the needle right now.")+"<br><br>Rough estimates from your log, not medical verdicts — sleep, stress, and illness matter too, and the app can't see those."};
 }
