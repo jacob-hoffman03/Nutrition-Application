@@ -221,8 +221,6 @@ button{font-family:inherit;}
 .dc-win-track{position:relative; height:34px; touch-action:pan-y;}
 .dc-win-track::before{content:""; position:absolute; left:0; right:0; top:13px; height:8px; border-radius:4px; background:rgba(255,255,255,.20);}
 .dc-win-fill{position:absolute; top:13px; height:8px; border-radius:4px; background:linear-gradient(90deg,#ffdca8,#ffab3d,#ff8f3d); pointer-events:none;}
-.dc-win-handle{position:absolute; top:17px; width:26px; height:26px; margin:-13px 0 0 -13px; border-radius:50%; background:#fff; border:3px solid #8a6cff; box-shadow:0 1px 5px rgba(20,10,60,.45); cursor:ew-resize; touch-action:none;}
-.dc-win-handle:active{transform:scale(1.18);}
 .dc-win-meta{display:flex; justify-content:space-between; align-items:baseline; gap:8px; font-size:11px; font-weight:700; color:rgba(255,255,255,.92); margin-top:1px; white-space:nowrap;}
 .dc-win-hint{text-align:center; font-size:10.5px; font-weight:600; color:rgba(255,255,255,.72); margin-top:2px; white-space:nowrap;}
 .dc-logpill{display:inline-block; margin-left:6px; padding:3px 13px; border:0; border-radius:999px; background:#fff; color:#5b3df0; font-size:12px; font-weight:800; cursor:pointer; vertical-align:1px;}
@@ -1212,10 +1210,8 @@ body.reordering #progOverview{display:none}
         <g id="dcEatLabels" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle"></g>
       </svg>
       <div class="dc-win">
-        <div class="dc-win-track" id="dcWinTrack" aria-label="Eating window slider">
+        <div class="dc-win-track" id="dcWinTrack" aria-label="Eating window">
           <div class="dc-win-fill" id="dcWinFill"></div>
-          <div class="dc-win-handle" id="dcWinA" aria-label="First bite"></div>
-          <div class="dc-win-handle" id="dcWinB" aria-label="Last bite"></div>
         </div>
         <div class="dc-win-meta"><span id="dcWinTimes"></span><span id="dcWinRead"></span></div>
         <div class="dc-win-hint" id="dcWinHint"></div>
@@ -1990,7 +1986,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.25-a";
+const APP_VERSION = "2026.09.25-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2359,32 +2355,29 @@ function dcMealWindows(){
   return out;
 }
 let dcLastDay = "";
-/* Day Cycle 2.0 (2026.09.24-y): scrub-the-arc preview, eating-window slider,
-   tap-a-meal detail. Same card, same vibe — everything stays data-driven. */
-let dcScrubbing = false, dcScrub = null, dcMealFocus = null, dcWinDrag = null;
+/* Day Cycle 2.0 (2026.09.25-b): scrub-the-arc preview, static learned
+   eating-window display, tap-a-meal detail. Same card, same vibe —
+   everything stays data-driven; the drag-to-adjust slider is gone. */
+let dcScrubbing = false, dcScrub = null, dcMealFocus = null;
 function dcFmtDur(min){
   min = Math.round(min); const h = Math.floor(min/60), m = min%60;
   return ((h ? h+"h" : "") + (h&&m ? " " : "") + (m ? m+"m" : "")) || "0m";
 }
 function dcEatWin(){
-  /* persisted eating window (first bite → last bite); before he sets one it
-     follows his learned breakfast → dinner rhythm, like the rest of the card */
-  const w = S.eatWin;
-  if(w && isFinite(w.a) && isFinite(w.b) && w.b-w.a>=60) return {a:w.a, b:w.b};
+  /* eating window (first bite → last bite), driven by his learned
+     breakfast → dinner rhythm — no manual adjust (2026.09.25-b) */
   const wins = dcMealWindows();
-  return {a:Math.round(wins.breakfast.avg), b:Math.round(wins.dinner.avg), auto:true};
+  return {a:Math.round(wins.breakfast.avg), b:Math.round(wins.dinner.avg)};
 }
 function paintDcWin(){
   if(!$("dcWinTrack")) return;
   const w = dcEatWin(), span = DC_T1-DC_T0;
   const pa = (w.a-DC_T0)/span*100, pb = (w.b-DC_T0)/span*100;
-  $("dcWinA").style.left = pa+"%"; $("dcWinB").style.left = pb+"%";
   const fl = $("dcWinFill"); fl.style.left = pa+"%"; fl.style.width = Math.max(0,pb-pa)+"%";
   const eat = w.b-w.a;
   $("dcWinTimes").textContent = fmtClockS(w.a)+" – "+fmtClockS(w.b);
   $("dcWinRead").textContent = dcFmtDur(eat)+" eating";
-  $("dcWinHint").textContent = w.auto ? "Drag the dots to set your own window"
-                                      : dcFmtDur(1440-eat)+" overnight fast · drag to adjust";
+  $("dcWinHint").textContent = dcFmtDur(1440-eat)+" overnight fast";
   /* shade the window onto the arc, under the day-progress */
   const fa = (w.a-DC_T0)/span, fb = (w.b-DC_T0)/span, L = 377;
   $("dcWinShade").innerHTML = '<path d="M 30 150 A 120 120 0 0 1 270 150" fill="none"'+
@@ -2437,31 +2430,6 @@ function wireDayCycle2(){
       paintDayCycle();
     }
   });
-  /* eating-window slider: grab a dot and drag it. Tapping the track does
-     nothing (no surprise jumps); vertical page scroll still works. */
-  const tr = $("dcWinTrack");
-  const minFromEvent = e=>{
-    const r = tr.getBoundingClientRect();
-    const f = Math.max(0, Math.min(1,(e.clientX-r.left)/r.width));
-    return Math.round((DC_T0+f*(DC_T1-DC_T0))/5)*5;
-  };
-  const apply = t=>{
-    const w = dcEatWin(); let a = w.a, b = w.b;
-    if(dcWinDrag==="a") a = Math.min(t, b-60); else b = Math.max(t, a+60);
-    S.eatWin = {a:Math.round(a), b:Math.round(b)};
-    paintDcWin();
-  };
-  [["dcWinA","a"],["dcWinB","b"]].forEach(([id,which])=>{
-    $(id).addEventListener("pointerdown", e=>{
-      dcWinDrag = which;
-      try{ $(id).setPointerCapture(e.pointerId); }catch(_){}
-      e.preventDefault(); e.stopPropagation();
-    });
-  });
-  tr.addEventListener("pointermove", e=>{ if(dcWinDrag) apply(minFromEvent(e)); });
-  ["pointerup","pointercancel"].forEach(ev=>tr.addEventListener(ev, ()=>{
-    if(dcWinDrag){ dcWinDrag = null; save(); }
-  }));
 }
 function paintDayCycle(){
   if(!$("dayCycle")) return;
