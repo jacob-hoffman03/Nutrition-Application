@@ -215,10 +215,7 @@ button{font-family:inherit;}
 .dc-insight{text-align:center; font-size:12.5px; font-weight:600; opacity:.92; margin-top:8px; line-height:1.45; padding:0 8px;}
 /* 2026.09.27-a: log-lag chips — he usually logs after eating; the learned meal
    windows shift back by this so they reflect eat time, not log time. */
-.dc-lag{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px; margin-top:10px; font-size:11.5px; font-weight:600; opacity:.95;}
-.dc-lag-lbl{opacity:.85;}
-.dc-lag-chip{border:1px solid rgba(255,255,255,.45); background:rgba(255,255,255,.14); color:#fff; border-radius:999px; padding:4px 11px; font-size:11.5px; font-weight:700; cursor:pointer;}
-.dc-lag-chip.on{background:#fff; color:var(--acc-deep); border-color:#fff;}
+.dc-daytype{margin:10px auto 0; display:block; border:1px solid rgba(255,255,255,.45); background:rgba(255,255,255,.14); color:#fff; border-radius:999px; padding:5px 14px; font-size:11.5px; font-weight:700; cursor:pointer;}
 /* Day Cycle 2.0: scrub-the-arc preview + tap-a-meal detail */
 #dcSvg{touch-action:pan-y;}
 .dc-seg{cursor:pointer;}
@@ -1209,7 +1206,7 @@ body.reordering #progOverview{display:none}
         <g id="dcEatLabels" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle"></g>
       </svg>
       <div class="dc-insight" id="dcInsight"></div>
-      <div class="dc-lag" id="dcLag"></div>
+      <button class="dc-daytype" id="dcDayType"></button>
     </div>
     <div class="punit" data-pid="body">
 <div class="card bodycard">
@@ -1979,7 +1976,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.27-a";
+const APP_VERSION = "2026.09.27-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2034,10 +2031,47 @@ if(!S.mealTimes || typeof S.mealTimes!=="object"){
 }else{
   MEALS.forEach(m=>{ if(!Array.isArray(S.mealTimes[m])) S.mealTimes[m]=[]; });
 }
-/* 2026.09.27-a: log lag — minutes between eating and logging. He usually logs
-   ~1h after the meal, so learned meal times are recorded back-shifted to the
-   real eat time instead of the log time. */
-if(typeof S.logLagMin!=="number" || !(S.logLagMin>=0)) S.logLagMin = 0;
+delete S.logLagMin; /* 2026.09.27-b: log-lag option removed per Jay */
+/* 2026.09.27-b: work/off day types. Mon/Wed/Fri (TrulyPizza) + Sat (aPizzaDoho)
+   run a completely different meal schedule than Tue/Thu/Sun, so meal times are
+   learned separately per day type and the card shows today's type. */
+if(!S.dayTypeOv || typeof S.dayTypeOv!=="object") S.dayTypeOv = {};
+const WORK_WEEKDAYS = [1,3,5,6]; /* Mon Wed Fri Sat */
+function isWorkDayAuto(kstr){
+  return WORK_WEEKDAYS.indexOf(new Date(kstr+"T12:00:00").getDay())>=0;
+}
+function dayType(kstr){
+  const ov = (S.dayTypeOv||{})[kstr];
+  if(ov==="work" || ov==="off") return ov;
+  return isWorkDayAuto(kstr) ? "work" : "off";
+}
+function toggleDayType(){
+  const k = todayStr(), auto = isWorkDayAuto(k)?"work":"off";
+  const next = dayType(k)==="work" ? "off" : "work";
+  if(!S.dayTypeOv) S.dayTypeOv = {};
+  if(next===auto) delete S.dayTypeOv[k]; else S.dayTypeOv[k] = next;
+  save(); renderAll();
+}
+/* one-time rebuild: tag learned observations by day type from entry timestamps
+   (last 30 days). Legacy untagged numbers were a work/off mix — the exact thing
+   Jay flagged as untrustworthy — so they get dropped and each schedule relearns. */
+if(!flagGet().mealSplit1){
+  const out = {breakfast:[], lunch:[], dinner:[], snacks:[]};
+  const nowMs = Date.now(), keys = Object.keys(S.days||{}).sort().slice(-30);
+  keys.forEach(k=>{
+    const d = S.days[k]; if(!d || !d.meals) return;
+    const w = dayType(k)==="work" ? 1 : 0;
+    MEALS.forEach(m=>{
+      const ts = (d.meals[m]||[]).map(e=>e.t).filter(t=>t && t<=nowMs);
+      if(ts.length){
+        const dt = new Date(Math.min.apply(null, ts));
+        out[m].push({t: dt.getHours()*60+dt.getMinutes(), w:w});
+        if(out[m].length>30) out[m].shift();
+      }
+    });
+  });
+  S.mealTimes = out; save(); flagSet("mealSplit1",1);
+}
 /* 2026.09.22-c: restore Jay's full weigh-in history — all 26 logs from his Fuel HTML
    export (fuel-data-2.json) plus the 6 old-app entries recovered from his Apple Health
    sync (2026.09.22-b). One-time and additive only: dates he already logged keep his
@@ -2282,38 +2316,28 @@ const DC_T0 = 5*60, DC_T1 = 23*60; /* arc spans 5am → 11pm */
 function recordMealTime(meal){
   if(!S.mealTimes || !Array.isArray(S.mealTimes[meal])) return;
   const n = new Date();
-  /* 2026.09.27-a: back-shift by the log lag so the learned window is the eat
-     time, not the time he got around to logging it */
-  const lag = S.logLagMin||0;
-  const mins = (((n.getHours()*60+n.getMinutes()-lag)%1440)+1440)%1440;
-  S.mealTimes[meal].push(mins);
+  /* 2026.09.27-b: tag each observation with today's type so work days and off
+     days learn their own schedules */
+  S.mealTimes[meal].push({t: n.getHours()*60+n.getMinutes(), w: dayType(todayStr())==="work"?1:0});
   if(S.mealTimes[meal].length>30) S.mealTimes[meal].shift();
   /* caller saves right after logging */
 }
-/* changing the lag re-bases every learned observation by the delta, so the
-   week of already-logged (late) times corrects instantly instead of aging out */
-function setLogLag(mins){
-  mins = Math.max(0, Math.min(180, mins|0));
-  const old = S.logLagMin||0, delta = mins-old;
-  S.logLagMin = mins;
-  if(delta!==0 && S.mealTimes){
-    ["breakfast","lunch","dinner","snacks"].forEach(m=>{
-      const a = S.mealTimes[m];
-      if(Array.isArray(a)) for(let i=0;i<a.length;i++) a[i] = (((a[i]-delta)%1440)+1440)%1440;
-    });
-  }
-  save(); renderAll();
-}
-function mealTimeStats(meal){
+function mealTimeStats(meal, work){
+  /* 2026.09.27-b: stats are per day type — pass true for the work-day schedule,
+     false for the off-day one. Legacy untagged numbers are ignored. */
   const a = (S.mealTimes && S.mealTimes[meal]) || [];
-  if(!a.length) return {avg:0, n:0};
+  const want = work?1:0;
+  const f = a.filter(o=>o && typeof o==="object" && o.w===want && typeof o.t==="number");
+  if(!f.length) return {avg:0, n:0};
   /* circular mean: times straddling midnight (23:50 + 0:10) average to ~midnight, not noon */
   let sx=0, sy=0;
-  a.forEach(t=>{ const r=t/1440*2*Math.PI; sx+=Math.cos(r); sy+=Math.sin(r); });
-  let avg = Math.atan2(sy/a.length, sx/a.length)/(2*Math.PI)*1440;
+  f.forEach(o=>{ const r=o.t/1440*2*Math.PI; sx+=Math.cos(r); sy+=Math.sin(r); });
+  let avg = Math.atan2(sy/f.length, sx/f.length)/(2*Math.PI)*1440;
   avg = ((avg%1440)+1440)%1440;
-  return {avg, n:a.length};
+  return {avg, n:f.length};
 }
+/* today's schedule type, as a boolean for mealTimeStats */
+function workToday(){ return dayType(todayStr())==="work"; }
 function fmtClock(mins){
   mins = ((Math.round(mins)%1440)+1440)%1440;
   let h = Math.floor(mins/60); const m = mins%60, ap = h>=12?"PM":"AM";
@@ -2361,10 +2385,11 @@ function dcDonut(cx,cy,r0,r1,a0,a1){
 const DC_MEALS3 = ["breakfast","lunch","dinner"];
 const DC_DEFAULT = {breakfast:480, lunch:750, dinner:1110};
 function dcMealWindows(){
-  /* learned window per meal (avg ±25 min); faded defaults until 3+ logs */
-  const out = {};
+  /* learned window per meal (avg ±25 min); faded defaults until 3+ logs —
+     2026.09.27-b: windows are per day type, so work days show the work schedule */
+  const work = workToday(), out = {};
   DC_MEALS3.forEach(m=>{
-    const s = mealTimeStats(m);
+    const s = mealTimeStats(m, work);
     out[m] = s.n>=3 ? {avg:s.avg, n:s.n, learned:true} : {avg:DC_DEFAULT[m], n:0, learned:false};
   });
   return out;
@@ -2385,7 +2410,7 @@ function dcScrubFrac(x, y){
   return 1-th/Math.PI;
 }
 function dcMealDetailHTML(m){
-  const w = dcMealWindows()[m], s = mealTimeStats(m);
+  const w = dcMealWindows()[m], s = mealTimeStats(m, workToday());
   const cap = m.charAt(0).toUpperCase()+m.slice(1);
   const sub = w.learned ? ("usually "+fmtClock(w.avg)+" · "+s.n+" logs") : "still learning your timing";
   return "<span>"+esc(cap+" · "+sub)+"</span>"+
@@ -2491,7 +2516,7 @@ function paintDayCycle(){
   });
   $("dcEatLabels").innerHTML = lb;
   /* insight: next window — wakes up at 3+ logs, same threshold as the eat bar above */
-  const learned = DC_MEALS3.map(m=>({m, s:mealTimeStats(m)}))
+  const learned = DC_MEALS3.map(m=>({m, s:mealTimeStats(m, workToday())}))
     .filter(o=>o.s.n>=3).sort((a,b)=>a.s.avg-b.s.avg);
   let ins;
   if(!learned.length){
@@ -2512,16 +2537,15 @@ function paintDayCycle(){
   }else{
     $("dcInsight").textContent = ins;
   }
-  /* 2026.09.27-a: log-lag chips — one tap declares "I log ~1h after I eat" and
-     every learned window shifts back to the real eat time, past logs included */
+  /* 2026.09.27-b: work/off day toggle — auto from his weekly pattern
+     (Mon/Wed/Fri/Sat = work), tap to override today. The card shows that
+     type's learned windows. */
   (function(){
-    const el = $("dcLag"); if(!el) return;
-    const lag = S.logLagMin||0;
-    const opts = [[0,"right away"],[30,"30 min late"],[60,"1 hr late"],[120,"2 hrs late"]];
-    el.innerHTML = '<span class="dc-lag-lbl">I log</span>'+opts.map(o=>
-      '<button class="dc-lag-chip'+(lag===o[0]?" on":"")+'" data-lag="'+o[0]+'">'+o[1]+'</button>'
-    ).join("")+'<span class="dc-lag-lbl">after I eat</span>';
-    el.querySelectorAll(".dc-lag-chip").forEach(b=>{ b.onclick = ()=>setLogLag(+b.dataset.lag); });
+    const el = $("dcDayType"); if(!el) return;
+    const k = todayStr(), t = dayType(k);
+    const auto = !(S.dayTypeOv && S.dayTypeOv[k]);
+    el.textContent = (t==="work" ? "Work day" : "Day off") + (auto ? " · auto" : "");
+    el.onclick = e=>{ e.stopPropagation(); toggleDayType(); };
   })();
   /* midnight rollover while the app sits open */
   const ds = todayStr();
@@ -3050,8 +3074,9 @@ function tiredLevel(ds){
      2026.09.23-e: meal times are LEARNED from Jay's own logs now (mealTimes),
      falling back to typical times until 3+ logs exist for a meal. */
   const MEAL_AT = {breakfast:8, lunch:12.5, dinner:18.5};
+  const wtired = dayType(ds)==="work"; /* 2026.09.27-b: fatigue uses that day's schedule */
   ["breakfast","lunch","dinner"].forEach(m=>{
-    const s = mealTimeStats(m);
+    const s = mealTimeStats(m, wtired);
     if(s.n>=3) MEAL_AT[m] = s.avg/60;
   });
   const mm = mealMacros(ds);
@@ -3102,7 +3127,7 @@ function tiredLevel(ds){
      the meal is still unlogged today; missing data stays neutral. */
   let overdue = null;
   ["breakfast","lunch","dinner"].forEach(m=>{
-    const s = mealTimeStats(m);
+    const s = mealTimeStats(m, wtired);
     if(s.n>=5 && (mm[m]||{cal:0}).cal<=0){ /* "unlogged" means nothing logged — matches the now-marker */
       const late = hr - s.avg/60;
       if(late>=1.5 && (!overdue || late>overdue.late)) overdue = {m, late, at:s.avg};
