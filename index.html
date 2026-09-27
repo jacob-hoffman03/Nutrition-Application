@@ -213,6 +213,12 @@ button{font-family:inherit;}
   border-radius:22px; box-shadow:0 8px 24px rgba(0,0,0,.12);}
 .daycycle svg{display:block; width:100%; max-width:340px; margin:0 auto;}
 .dc-insight{text-align:center; font-size:12.5px; font-weight:600; opacity:.92; margin-top:8px; line-height:1.45; padding:0 8px;}
+/* 2026.09.27-a: log-lag chips — he usually logs after eating; the learned meal
+   windows shift back by this so they reflect eat time, not log time. */
+.dc-lag{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px; margin-top:10px; font-size:11.5px; font-weight:600; opacity:.95;}
+.dc-lag-lbl{opacity:.85;}
+.dc-lag-chip{border:1px solid rgba(255,255,255,.45); background:rgba(255,255,255,.14); color:#fff; border-radius:999px; padding:4px 11px; font-size:11.5px; font-weight:700; cursor:pointer;}
+.dc-lag-chip.on{background:#fff; color:var(--acc-deep); border-color:#fff;}
 /* Day Cycle 2.0: scrub-the-arc preview + tap-a-meal detail */
 #dcSvg{touch-action:pan-y;}
 .dc-seg{cursor:pointer;}
@@ -1203,6 +1209,7 @@ body.reordering #progOverview{display:none}
         <g id="dcEatLabels" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle"></g>
       </svg>
       <div class="dc-insight" id="dcInsight"></div>
+      <div class="dc-lag" id="dcLag"></div>
     </div>
     <div class="punit" data-pid="body">
 <div class="card bodycard">
@@ -1972,7 +1979,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.25-e";
+const APP_VERSION = "2026.09.27-a";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2027,6 +2034,10 @@ if(!S.mealTimes || typeof S.mealTimes!=="object"){
 }else{
   MEALS.forEach(m=>{ if(!Array.isArray(S.mealTimes[m])) S.mealTimes[m]=[]; });
 }
+/* 2026.09.27-a: log lag — minutes between eating and logging. He usually logs
+   ~1h after the meal, so learned meal times are recorded back-shifted to the
+   real eat time instead of the log time. */
+if(typeof S.logLagMin!=="number" || !(S.logLagMin>=0)) S.logLagMin = 0;
 /* 2026.09.22-c: restore Jay's full weigh-in history — all 26 logs from his Fuel HTML
    export (fuel-data-2.json) plus the 6 old-app entries recovered from his Apple Health
    sync (2026.09.22-b). One-time and additive only: dates he already logged keep his
@@ -2271,9 +2282,27 @@ const DC_T0 = 5*60, DC_T1 = 23*60; /* arc spans 5am → 11pm */
 function recordMealTime(meal){
   if(!S.mealTimes || !Array.isArray(S.mealTimes[meal])) return;
   const n = new Date();
-  S.mealTimes[meal].push(n.getHours()*60+n.getMinutes());
+  /* 2026.09.27-a: back-shift by the log lag so the learned window is the eat
+     time, not the time he got around to logging it */
+  const lag = S.logLagMin||0;
+  const mins = (((n.getHours()*60+n.getMinutes()-lag)%1440)+1440)%1440;
+  S.mealTimes[meal].push(mins);
   if(S.mealTimes[meal].length>30) S.mealTimes[meal].shift();
   /* caller saves right after logging */
+}
+/* changing the lag re-bases every learned observation by the delta, so the
+   week of already-logged (late) times corrects instantly instead of aging out */
+function setLogLag(mins){
+  mins = Math.max(0, Math.min(180, mins|0));
+  const old = S.logLagMin||0, delta = mins-old;
+  S.logLagMin = mins;
+  if(delta!==0 && S.mealTimes){
+    ["breakfast","lunch","dinner","snacks"].forEach(m=>{
+      const a = S.mealTimes[m];
+      if(Array.isArray(a)) for(let i=0;i<a.length;i++) a[i] = (((a[i]-delta)%1440)+1440)%1440;
+    });
+  }
+  save(); renderAll();
 }
 function mealTimeStats(meal){
   const a = (S.mealTimes && S.mealTimes[meal]) || [];
@@ -2483,6 +2512,17 @@ function paintDayCycle(){
   }else{
     $("dcInsight").textContent = ins;
   }
+  /* 2026.09.27-a: log-lag chips — one tap declares "I log ~1h after I eat" and
+     every learned window shifts back to the real eat time, past logs included */
+  (function(){
+    const el = $("dcLag"); if(!el) return;
+    const lag = S.logLagMin||0;
+    const opts = [[0,"right away"],[30,"30 min late"],[60,"1 hr late"],[120,"2 hrs late"]];
+    el.innerHTML = '<span class="dc-lag-lbl">I log</span>'+opts.map(o=>
+      '<button class="dc-lag-chip'+(lag===o[0]?" on":"")+'" data-lag="'+o[0]+'">'+o[1]+'</button>'
+    ).join("")+'<span class="dc-lag-lbl">after I eat</span>';
+    el.querySelectorAll(".dc-lag-chip").forEach(b=>{ b.onclick = ()=>setLogLag(+b.dataset.lag); });
+  })();
   /* midnight rollover while the app sits open */
   const ds = todayStr();
   if(dcLastDay && dcLastDay!==ds){ dcLastDay = ds; renderAll(); return; }
@@ -5017,9 +5057,12 @@ function renderProgress(){
   })();
   const days = weekDays(weekOffset);
   const logged = days.filter(x=>x.logged);
+  /* 2026.09.27-a: one window (last 7 days incl. today) and one rule (days with
+     food logged) for every average on this page, so they can never disagree */
+  const lg = days.filter(x=>x.cal>0);
   document.getElementById("stStreak").textContent = streak();
-  document.getElementById("stAvgCal").textContent = logged.length ? Math.round(logged.reduce((a,x)=>a+x.cal,0)/logged.length).toLocaleString() : 0;
-  document.getElementById("stAvgP").textContent = (logged.length ? Math.round(logged.reduce((a,x)=>a+x.p,0)/logged.length) : 0)+"g";
+  document.getElementById("stAvgCal").textContent = lg.length ? Math.round(lg.reduce((a,x)=>a+x.cal,0)/lg.length).toLocaleString() : 0;
+  document.getElementById("stAvgP").textContent = (lg.length ? Math.round(lg.reduce((a,x)=>a+x.p,0)/lg.length) : 0)+"g";
   const bb = document.getElementById("bars7"); bb.innerHTML = "";
   const max = Math.max(...days.map(x=>x.cal), (S.goals.maintenance>0?S.goals.maintenance:0)+(S.goals.surplus>0?S.goals.surplus:0), 1);
   days.forEach(x=>{
@@ -5033,7 +5076,11 @@ function renderProgress(){
   /* analytics header: 7-day total */
   const wkTotal = days.reduce((a,x)=>a+x.cal,0);
   $("anaTotal").textContent = Math.round(wkTotal).toLocaleString();
-  $("anaAvg").textContent = Math.round(wkTotal/7).toLocaleString()+"/day average";
+  /* 2026.09.27-a: average over logged days (not ÷7), with the count shown —
+     matches the weekly review and the ministat below */
+  $("anaAvg").textContent = lg.length
+    ? Math.round(wkTotal/lg.length).toLocaleString()+"/day average · "+lg.length+" of 7 days"
+    : "no logged days yet";
   /* week backtrack labels + nav state */
   const wkLbl = weekOffset===0 ? "Last 7 days" : weekLabel(days);
   $("anaRange").textContent = wkLbl;
@@ -5146,13 +5193,15 @@ document.querySelectorAll("#wRange button").forEach(b=>{
    hit rate, trend-weight change, and exactly one suggested change. Needs 3+
    logged days or it stays hidden instead of guessing. */
 function weeklyReviewData(){
-  const days = [];
-  for(let i=7;i>=1;i--) days.push(addDays(todayStr(), -i));
-  const logged = days.map(k=>({k, t:totals(k)})).filter(x=>x.t.cal>0);
+  /* 2026.09.27-a: same window as the This-week panel — last 7 calendar days
+     including today — so "Avg intake" can never disagree with it or the
+     Avg kcal/7d ministat again. (The old i=7..1 loop silently excluded today.) */
+  const days = weekDays(0);
+  const logged = days.filter(x=>x.cal>0);
   if(logged.length < 3) return {ok:false};
   const goal = goalTotal(), pGoal = S.goals.protein||0;
-  const avgCal = logged.reduce((a,x)=>a+x.t.cal,0)/logged.length;
-  const pHit = pGoal>0 ? logged.filter(x=>x.t.p>=pGoal*0.9).length : 0;
+  const avgCal = logged.reduce((a,x)=>a+x.cal,0)/logged.length;
+  const pHit = pGoal>0 ? logged.filter(x=>x.p>=pGoal*0.9).length : 0;
   let wtChg = null;
   const ws = sortedWeights();
   if(ws.length>=2){
