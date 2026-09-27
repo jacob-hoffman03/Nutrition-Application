@@ -432,12 +432,15 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .slabel{font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding:20px 20px 6px;}
 /* 2026.09.27-d: work schedule editor + overdue-meal nudge */
 .wstrip{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:10px 0 6px;}
-.wday{border:0; background:none; padding:10px 2px 8px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:1px; color:var(--muted);}
-.wday .wn{font-size:10px; font-weight:700;}
-.wday .wl{font-size:21px; font-weight:800; color:var(--ink);}
-.wday .wdot{width:7px; height:7px; border-radius:50%; background:#dcdce4; margin-top:5px;}
-.wday.on .wdot{background:var(--acc);}
-.wday.sel{background:#fff; box-shadow:0 6px 18px rgba(20,20,40,.14);}
+/* 2026.09.27-e: scoped to #wStrip — .wday is also the intake weekstrip's class,
+   and the unscoped .sel rule was painting the intake's selected day as a white
+   pill instead of its white circle. */
+#wStrip .wday{border:0; background:none; padding:10px 2px 8px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:1px; color:var(--muted);}
+#wStrip .wday .wn{font-size:10px; font-weight:700;}
+#wStrip .wday .wl{font-size:21px; font-weight:800; color:var(--ink);}
+#wStrip .wday .wdot{width:7px; height:7px; border-radius:50%; background:#dcdce4; margin-top:5px;}
+#wStrip .wday.on .wdot{background:var(--acc);}
+#wStrip .wday.sel{background:#fff; box-shadow:0 6px 18px rgba(20,20,40,.14);}
 .wdet{display:flex; align-items:center; justify-content:space-between; padding:14px 2px;}
 .wdet .wt{font-size:16px; font-weight:700;}
 .wdet .ws{font-size:13px; color:var(--muted); font-weight:600; margin-top:2px;}
@@ -483,10 +486,17 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .stat2 span{font-size:12px; color:var(--muted); font-weight:600;}
 .wgoalbar{height:8px; border-radius:5px; background:#ececf1; overflow:hidden; margin-top:6px;}
 .wgoalbar i{display:block; height:100%; background:linear-gradient(90deg,var(--acc-deep),var(--acc)); border-radius:5px; transition:width .3s;}
-.bars7{display:flex; align-items:flex-end; gap:6px; height:110px; margin-top:8px;}
-.bars7 .bcol{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; cursor:pointer;}
+.bars7{display:flex; align-items:flex-end; gap:6px; height:136px; margin-top:8px;}
+.bars7 .bcol{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; justify-content:flex-end; min-width:0;}
 .bars7 .bar{width:100%; max-width:30px; background:linear-gradient(#8f8ff7,var(--acc)); border-radius:6px 6px 3px 3px; min-height:4px;}
-.bars7 .bl{font-size:10px; color:var(--muted);}
+/* 2026.09.27-e: day-by-day labels in the schedule strip's visual language —
+   small kcal on top, weekday name, day number, work/off dot */
+.bars7 .bkcal{font-size:10px; font-weight:700; color:var(--muted); white-space:nowrap; line-height:1;}
+.bars7 .bl{font-size:10px; color:var(--muted); font-weight:600; line-height:1;}
+.bars7 .bdn{font-size:13px; font-weight:800; color:var(--ink); line-height:1;}
+.bars7 .bcol.today .bdn{color:var(--acc);}
+.bars7 .bdot{width:6px; height:6px; border-radius:50%; background:#dcdce4; flex:none;}
+.bars7 .bcol.work .bdot{background:var(--acc);}
 .wrow{display:flex; align-items:center; justify-content:space-between; padding:9px 2px; border-top:1px solid var(--line); font-size:14px;}
 .wrow b{font-variant-numeric:tabular-nums;}
 .wlogrow{display:flex; gap:8px; margin-top:10px;}
@@ -2024,7 +2034,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.27-d";
+const APP_VERSION = "2026.09.27-e";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -5247,10 +5257,17 @@ function renderProgress(){
   const bb = document.getElementById("bars7"); bb.innerHTML = "";
   const max = Math.max(...days.map(x=>x.cal), (S.goals.maintenance>0?S.goals.maintenance:0)+(S.goals.surplus>0?S.goals.surplus:0), 1);
   days.forEach(x=>{
-    const c = document.createElement("div"); c.className="bcol";
-    c.innerHTML = `<div class="bar" style="height:${Math.max(x.cal/max*100,2)}%;${x.k===todayStr()?"background:linear-gradient(var(--acc),var(--acc-deep));":""}"></div><div class="bl">${x.label}</div>`;
-    const bl = c.querySelector(".bl"), kcal = Math.round(x.cal).toLocaleString();
-    c.onclick = ()=>{ const show = bl.dataset.k!=="1"; bl.dataset.k = show?"1":""; bl.textContent = show?kcal:x.label; };
+    const c = document.createElement("div");
+    const dt = new Date(x.k+"T12:00:00"), isT = x.k===todayStr();
+    /* 2026.09.27-e: schedule-strip style labels — kcal, name, day number,
+       work/off dot. kcal always visible, so the tap-to-reveal is gone. */
+    c.className = "bcol"+(isWorkDayAuto(x.k)?" work":"")+(isT?" today":"");
+    c.innerHTML =
+      `<div class="bkcal">${x.logged?Math.round(x.cal).toLocaleString():"–"}</div>`+
+      `<div class="bar" style="height:${Math.max(x.cal/max*100,2)}%;${isT?"background:linear-gradient(var(--acc),var(--acc-deep));":""}"></div>`+
+      `<div class="bl">${dt.toLocaleDateString(undefined,{weekday:"short"})}</div>`+
+      `<div class="bdn">${dt.getDate()}</div>`+
+      `<div class="bdot"></div>`;
     bb.appendChild(c);
   });
   const w = S.weights.slice().sort((a,b)=>a.d<b.d?-1:1);
