@@ -497,6 +497,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .bars7 .bcol.today .bdn{color:var(--acc);}
 .bars7 .bdot{width:6px; height:6px; border-radius:50%; background:#dcdce4; flex:none;}
 .bars7 .bcol.work .bdot{background:var(--acc);}
+.bars7 .bcol.future{opacity:.38;}
 .wrow{display:flex; align-items:center; justify-content:space-between; padding:9px 2px; border-top:1px solid var(--line); font-size:14px;}
 .wrow b{font-variant-numeric:tabular-nums;}
 .wlogrow{display:flex; gap:8px; margin-top:10px;}
@@ -2034,7 +2035,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.27-e";
+const APP_VERSION = "2026.09.27-f";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4514,8 +4515,11 @@ const MAX_WEEKS_BACK = 52;
 function weekDays(off){
   off = off||0;
   const out = [];
-  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i-off*7); const k=dstr(d);
-    out.push({k, label:d.toLocaleDateString(undefined,{weekday:"narrow"}), ...totals(k), logged:dayHasData(S.days[k])}); }
+  /* 2026.09.27-f: calendar week Mon–Sun (not Sun–Sat / rolling 7) */
+  const t = new Date(); t.setHours(12,0,0,0);
+  const mon = new Date(t); mon.setDate(t.getDate()-((t.getDay()+6)%7)-off*7);
+  for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); const k=dstr(d);
+    out.push({k, label:d.toLocaleDateString(undefined,{weekday:"narrow"}), future:k>todayStr(), ...totals(k), logged:dayHasData(S.days[k])}); }
   return out;
 }
 function weekLabel(days){
@@ -5261,7 +5265,7 @@ function renderProgress(){
     const dt = new Date(x.k+"T12:00:00"), isT = x.k===todayStr();
     /* 2026.09.27-e: schedule-strip style labels — kcal, name, day number,
        work/off dot. kcal always visible, so the tap-to-reveal is gone. */
-    c.className = "bcol"+(isWorkDayAuto(x.k)?" work":"")+(isT?" today":"");
+    c.className = "bcol"+(isWorkDayAuto(x.k)?" work":"")+(isT?" today":"")+(x.future?" future":"");
     c.innerHTML =
       `<div class="bkcal">${x.logged?Math.round(x.cal).toLocaleString():"–"}</div>`+
       `<div class="bar" style="height:${Math.max(x.cal/max*100,2)}%;${isT?"background:linear-gradient(var(--acc),var(--acc-deep));":""}"></div>`+
