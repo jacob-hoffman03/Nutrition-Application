@@ -430,6 +430,29 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .srow.danger{color:var(--red);}
 /* settings refresh — section labels, icon tiles, stat chips */
 .slabel{font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding:20px 20px 6px;}
+/* 2026.09.27-d: work schedule editor + overdue-meal nudge */
+.wstrip{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:10px 0 6px;}
+.wday{border:0; background:none; padding:10px 2px 8px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:1px; color:var(--muted);}
+.wday .wn{font-size:10px; font-weight:700;}
+.wday .wl{font-size:21px; font-weight:800; color:var(--ink);}
+.wday .wdot{width:7px; height:7px; border-radius:50%; background:#dcdce4; margin-top:5px;}
+.wday.on .wdot{background:var(--acc);}
+.wday.sel{background:#fff; box-shadow:0 6px 18px rgba(20,20,40,.14);}
+.wdet{display:flex; align-items:center; justify-content:space-between; padding:14px 2px;}
+.wdet .wt{font-size:16px; font-weight:700;}
+.wdet .ws{font-size:13px; color:var(--muted); font-weight:600; margin-top:2px;}
+.wtgl{width:52px; height:32px; border-radius:16px; border:0; background:#e3e3ea; position:relative; transition:background .2s; flex:none;}
+.wtgl .knob{position:absolute; top:2px; left:2px; width:28px; height:28px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.18); transition:left .2s;}
+.wtgl.on{background:var(--green);}
+.wtgl.on .knob{left:22px;}
+.nudge{display:none; align-items:center; gap:10px; background:var(--card); border-radius:var(--radius); padding:12px 12px 12px 14px; margin-bottom:12px;}
+.nudge.show{display:flex;}
+.nudge .nico{width:34px; height:34px; border-radius:50%; background:var(--acc-soft); color:var(--acc-deep); display:flex; align-items:center; justify-content:center; flex:none;}
+.nudge .nico svg{width:19px; height:19px;}
+.nudge .ntxt{font-size:14px; font-weight:700; flex:1; line-height:1.3;}
+.nudge .ntxt small{display:block; font-weight:600; color:var(--muted); font-size:12px; margin-top:1px;}
+.nudge .nlog{border:0; background:var(--acc); color:#fff; font-weight:800; font-size:13px; padding:9px 16px; border-radius:999px; flex:none;}
+.nudge .nx{border:0; background:none; color:var(--muted); font-size:19px; padding:6px 4px; flex:none; line-height:1;}
 .srow .sleft{display:flex;align-items:center;gap:12px;min-width:0;}
 .sicon{width:34px;height:34px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;background:rgba(125,125,160,.14);color:var(--acc);flex:none;}
 .sicon svg{width:20px;height:20px;display:block;}
@@ -868,6 +891,7 @@ body.reordering #progOverview{display:none}
       <div class="pmeta"><div class="pname" id="pName">You</div><div class="psub">Today's medals</div></div>
       <div class="medals" id="pMedals"></div>
     </div>
+    <div class="nudge" id="nudgeBar"></div>
     <div class="card dcard" id="energyCard">
       <div class="whead dhead" data-d="energy" role="button" tabindex="0" aria-label="Energy details"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2.5 5.5 13.5h4.8L10 21.5l7.5-11h-4.8L13 2.5z"/></svg></span><b>Energy today</b><button class="ginfo" id="energyInfo" aria-label="About energy check-ins">i</button></span><span style="display:flex;align-items:center;gap:8px"><span class="wlbl" id="energyLabel"></span><span class="chev2 dchev">›</span></span></div>
       <div class="ddetail" id="ddetail-energy"><div class="pad">
@@ -1337,6 +1361,10 @@ body.reordering #progOverview{display:none}
     </div>
     <input type="file" id="pPhotoFile" accept="image/*" style="display:none">
     <input type="file" id="progPhotoFile" accept="image/*" style="display:none">
+    <div class="slabel">Schedule</div>
+    <div class="card slim" style="margin-top:6px;">
+      <button class="srow" id="schedRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/><path d="M3.5 12.5h17"/></svg></span>Work schedule</span><span class="sval"><b id="schedRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
+    </div>
     <div class="slabel">Targets</div>
     <div class="card slim" style="margin-top:6px;">
       <button class="srow" id="goalRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></span>Goals</span><span class="sval"><b id="goalRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
@@ -1410,6 +1438,26 @@ body.reordering #progOverview{display:none}
       <div class="flabel" id="infoListLabel" style="margin:0 0 4px"></div>
       <div id="infoList"></div>
     </div>
+  </section>
+
+  <section class="view" id="view-worksched">
+    <div class="topbar">
+      <button class="tbtn" id="wschedBack" aria-label="Back">‹</button>
+      <h1>Work schedule <button class="ginfo" id="wschedInfo" aria-label="Work schedule information">i</button></h1>
+      <div style="width:44px"></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="flabel" style="margin:0 0 4px">My work days</div>
+      <div class="wstrip" id="wStrip"></div>
+      <div class="hint">Tap a day to select it, flip the switch to mark it work or off.</div>
+    </div>
+    <div class="card slim">
+      <div class="wdet">
+        <div><div class="wt" id="wDetName">Monday</div><div class="ws" id="wDetSub">Work day</div></div>
+        <button class="wtgl" id="wDetTgl" aria-label="Toggle work day"><span class="knob"></span></button>
+      </div>
+    </div>
+    <div class="hint" style="padding:0 20px">Meal times are learned separately for work days and days off. Past meal times keep the schedule they were learned under.</div>
   </section>
 
   <nav class="tabbar"><div class="inner">
@@ -1976,7 +2024,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.27-c";
+const APP_VERSION = "2026.09.27-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2039,9 +2087,13 @@ delete S.logLagMin; /* 2026.09.27-b: log-lag option removed per Jay */
    run a completely different meal schedule than Tue/Thu/Sun, so meal times are
    learned separately per day type and the card shows today's type. */
 if(!S.dayTypeOv || typeof S.dayTypeOv!=="object") S.dayTypeOv = {};
-const WORK_WEEKDAYS = [1,3,5,6]; /* Mon Wed Fri Sat */
+/* 2026.09.27-d: editable weekly work schedule (Settings › Work schedule).
+   Stored as JS weekday numbers (0=Sun..6=Sat); default = Jay's two-job week. */
+const WORK_WEEKDAYS_DEF = [1,3,5,6]; /* Mon Wed Fri Sat */
+if(!Array.isArray(S.workDays)) S.workDays = WORK_WEEKDAYS_DEF.slice();
+function workDays(){ return Array.isArray(S.workDays) ? S.workDays.filter(x=>x>=0&&x<=6) : WORK_WEEKDAYS_DEF.slice(); }
 function isWorkDayAuto(kstr){
-  return WORK_WEEKDAYS.indexOf(new Date(kstr+"T12:00:00").getDay())>=0;
+  return workDays().indexOf(new Date(kstr+"T12:00:00").getDay())>=0;
 }
 function dayType(kstr){
   const ov = (S.dayTypeOv||{})[kstr];
@@ -2057,6 +2109,82 @@ function toggleDayType(){
   const cut = addDays(todayStr(),-7);
   Object.keys(S.dayTypeOv).forEach(x=>{ if(x<cut) delete S.dayTypeOv[x]; });
   save(); renderAll();
+}
+/* 2026.09.27-d: work schedule editor (Settings › Work schedule) */
+const WD_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const WD_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const WD_LET = ["S","M","T","W","T","F","S"];
+const WD_ORDER = [1,2,3,4,5,6,0]; /* week strip starts Monday */
+function workDaysSummary(){
+  const w = workDays();
+  if(!w.length) return "No work days";
+  if(w.length>=7) return "Every day";
+  return WD_ORDER.filter(d=>w.indexOf(d)>=0).map(d=>WD_SHORT[d]).join(" · ");
+}
+let wsSel = new Date().getDay();
+function setWorkDay(d, on){
+  const w = workDays().filter(x=>x!==d);
+  if(on) w.push(d);
+  S.workDays = w;
+  /* keep today's one-off pill honest: drop the override if it now matches the schedule */
+  const k = todayStr(), ov = (S.dayTypeOv||{})[k];
+  if(ov && ov===(isWorkDayAuto(k)?"work":"off")) delete S.dayTypeOv[k];
+  save(); renderWorkSched(); renderAll();
+}
+function renderWorkSched(){
+  const w = workDays(), strip = $("wStrip");
+  if(!strip) return;
+  strip.innerHTML = "";
+  WD_ORDER.forEach(d=>{
+    const on = w.indexOf(d)>=0;
+    const b = document.createElement("button");
+    b.className = "wday"+(on?" on":"")+(d===wsSel?" sel":"");
+    b.setAttribute("aria-label", WD_NAMES[d]+(on?", work day":", day off"));
+    b.innerHTML = `<span class="wn">${WD_SHORT[d]}</span><span class="wl">${WD_LET[d]}</span><span class="wdot"></span>`;
+    b.onclick = ()=>{
+      if(wsSel===d) setWorkDay(d, !on); /* re-tap the selected day = quick toggle */
+      else { wsSel = d; renderWorkSched(); }
+    };
+    strip.appendChild(b);
+  });
+  $("wDetName").textContent = WD_NAMES[wsSel];
+  $("wDetSub").textContent = w.indexOf(wsSel)>=0 ? "Work day" : "Day off";
+  $("wDetTgl").classList.toggle("on", w.indexOf(wsSel)>=0);
+}
+/* 2026.09.27-d: quiet overdue-meal nudge. Mirrors the fatigue model's overdue
+   rule (1.5h+ past YOUR learned time for that day type, 5+ observations, meal
+   still unlogged) and shows one slim banner at the top of the diary — never a
+   popup. Fades out after 4h so it can't nag all evening. */
+let nudgeOff = {};
+function overdueMeal(){
+  const k = todayStr();
+  Object.keys(nudgeOff).forEach(x=>{ if(x < k+":") delete nudgeOff[x]; }); /* prune old dismissals */
+  const now = new Date(), hr = now.getHours()+now.getMinutes()/60;
+  const w = dayType(k)==="work", meals = (S.days[k]&&S.days[k].meals)||{};
+  let best = null;
+  ["breakfast","lunch","dinner"].forEach(m=>{
+    const s = mealTimeStats(m, w);
+    if(s.n<5) return;
+    if((meals[m]||[]).length>0) return; /* already logged — nothing overdue */
+    if(nudgeOff[k+":"+m]) return;
+    const late = hr - s.avg/60;
+    if(late>=1.5 && late<4 && (!best || late>best.late)) best = {m, late, at:s.avg};
+  });
+  return best;
+}
+function dismissNudge(m){ nudgeOff[todayStr()+":"+m] = 1; renderDiary(); }
+function renderNudge(isToday){
+  const nb = $("nudgeBar");
+  if(!nb) return;
+  const od = isToday ? overdueMeal() : null;
+  if(!od){ nb.classList.remove("show"); nb.innerHTML = ""; return; }
+  nb.classList.add("show");
+  const label = MEAL_LABEL[od.m];
+  nb.innerHTML =
+    `<span class="nico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>`+
+    `<span class="ntxt">${label} is overdue<small>You usually eat around ${fmtClock(od.at)}</small></span>`+
+    `<button class="nlog" onclick="openSheet('${od.m}')">Log</button>`+
+    `<button class="nx" aria-label="Dismiss" onclick="dismissNudge('${od.m}')">×</button>`;
 }
 /* 2026.09.27-c: extracted so backup-restore can re-run it on pre-split backups.
    Iterates LEARN_MEALS only — 2026.09.27-b crashed here on supplement entries
@@ -2586,6 +2714,7 @@ function renderDiary(){
   renderProfileStrip();
   const dt = new Date(k+"T12:00:00");
   const isToday = k === todayStr();
+  renderNudge(isToday); /* 2026.09.27-d: quiet overdue-meal banner, today only */
   $("dayTitle").textContent = isToday ? "Today" : (dt.getMonth()+1)+"/"+dt.getDate()+"/"+String(dt.getFullYear()).slice(2);
   $("daySub").textContent = dt.toLocaleDateString(undefined,{weekday:"long", month:"short", day:"numeric"});
   $("calEaten").textContent = Math.round(t.cal).toLocaleString();
@@ -5866,6 +5995,10 @@ function infoContent(k){
      <div class="irow"><b>Auto-tune maintenance:</b> when 2+ weeks of weigh-ins show your real gain rate missing the target band, Fuel nudges maintenance ±150 kcal — max once per 2 weeks.</div>
      <div class="irow">The formulas are only ±10% accurate — your weigh-in trend is the calibration instrument.</div>`};
   if(k==="scores") return {t:"Energy & bloat", b: scoreInfoHTML()};
+  if(k==="schedule") return {t:"Work schedule", b:
+    `<div class="irow"><b>Settings › Work schedule</b> sets which weekdays are work days — tap a day to select it, flip the switch to mark it work or off. Meal times are learned <b>separately</b> for work days and days off, so your "usual lunch" follows the right schedule.</div>
+     <div class="irow">Past meal times keep the schedule they were learned under. The Work day / Day off pill on the diary is a one-day override — it never changes the weekly schedule.</div>
+     <div class="irow"><b>Overdue nudge:</b> when a meal runs 1.5+ hours past your usual time for that day type (with 5+ logged days behind it) and you haven't logged it yet, a quiet banner appears at the top of the diary.</div>`};
   if(k==="wtgoal") return {t:"Weight goal", b:
     `<div class="irow">The bar measures your run from the <b>starting point</b> (your weight when the goal was set) to the goal — the % is how much of that run is done.</div>
      <div class="irow">Pace comes from your weigh-ins (halves-by-date rate). Daily weight swings ±1–2%, so <b>2+ weeks</b> of entries smooths the noise — judge the trend, not any single day.</div>
@@ -5944,7 +6077,7 @@ try{
    Every explainer lives in infoContent(); this index groups them so the app
    surface stays clean of paragraphs. ⓘ buttons next to main titles land here. */
 const INFO_CATS = [
-  {id:"diary",    label:"Diary & logging",  keys:["waterinfo","alcinfo","vapeinfo","energy","scores"]},
+  {id:"diary",    label:"Diary & logging",  keys:["waterinfo","alcinfo","vapeinfo","energy","scores","schedule"]},
   {id:"goals",    label:"Goals & targets",  keys:["activity","calorie","macros","water","advanced"]},
   {id:"progress", label:"Progress & insights", keys:["daycycle","wtgoal","milestone","bmi","calcheck","insights"]},
   {id:"nutrients",label:"Nutrients",        keys:["nutrients"]},
@@ -6789,8 +6922,13 @@ function renderSettings(){
   document.getElementById("dFoods").textContent = Object.values(S.days).reduce((a,d)=>a+MEALS.filter(m=>m!=="supplements").reduce((x,m)=>x+(d.meals[m]||[]).length,0),0); /* supplements aren't food (2026.09.24-x) */
   document.getElementById("dWeigh").textContent = (S.weights||[]).length;
   const mrv=document.getElementById("medalCaseRowVal"); if(mrv) mrv.textContent=Object.keys(medalCase()).length+"/"+MDEF.length;
+  const swv=document.getElementById("schedRowVal"); if(swv) swv.textContent=workDaysSummary();
   const srv=document.getElementById("snapRowVal"); if(srv) srv.textContent=listSnapshots().length+" saved";
 }
+document.getElementById("schedRow").onclick = ()=>{ wsSel = new Date().getDay(); showView("worksched"); };
+document.getElementById("wschedBack").onclick = ()=>showView("settings");
+document.getElementById("wschedInfo").onclick = ()=>openInfo("schedule");
+document.getElementById("wDetTgl").onclick = ()=>setWorkDay(wsSel, workDays().indexOf(wsSel)<0);
 document.getElementById("medalCaseRow").onclick = ()=>showView("medals");
 document.getElementById("medalsBack").onclick = ()=>showView("settings");
 document.getElementById("snapRow").onclick = ()=>showView("snaps");
@@ -6862,10 +7000,11 @@ function showView(v){
   curView = v;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active", x.id==="view-"+v));
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",
-    t.dataset.v===v || (v==="analysis"&&t.dataset.v==="diary") || (v==="goals"&&t.dataset.v==="settings") || (v==="medals"&&t.dataset.v==="settings") || (v==="snaps"&&t.dataset.v==="settings") || (v==="info"&&t.dataset.v==="settings")));
+    t.dataset.v===v || (v==="analysis"&&t.dataset.v==="diary") || (v==="goals"&&t.dataset.v==="settings") || (v==="medals"&&t.dataset.v==="settings") || (v==="snaps"&&t.dataset.v==="settings") || (v==="worksched"&&t.dataset.v==="settings") || (v==="info"&&t.dataset.v==="settings")));
   if(v==="progress"){ weekOffset = 0; renderProgress(); } /* always open on the current 7 days 2026.09.21-j */
   if(v==="settings") renderSettings();
   if(v==="medals") renderMedalsPage();
+  if(v==="worksched") renderWorkSched();
   if(v==="snaps") renderSnaps();
   if(v==="info") renderInfo();
   if(v==="foods") renderFoods();
