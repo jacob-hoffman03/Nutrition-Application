@@ -1087,7 +1087,7 @@ body.reordering #progOverview{display:none}
       <div class="gsub" id="gainProj" style="font-weight:700"></div>
     </div>
     <div class="card">
-      <div class="fhead"><span class="flabel">Goal</span></div>
+      <div class="flabel" style="margin:0 0 10px">Goal</div>
       <div class="chips" id="goalMode">
         <button class="chip" data-m="lean" data-pct="10">Lean Bulk</button>
         <button class="chip" data-m="bulk" data-pct="15">Bulk</button>
@@ -1128,9 +1128,15 @@ body.reordering #progOverview{display:none}
         </div>
         <div class="rangenote" id="adSuggest" style="display:none;font-weight:700"></div>
         <div class="rangenote" id="adNote"></div>
-        <div class="card">
-          <div class="cfrow"><span><b style="font-size:14px">Use as my maintenance</b></span><button class="chip" id="adToggle">Off</button></div>
-          <div class="cfrow" style="margin-top:8px"><span class="ph">Learns from your last 3 weeks</span><button class="chip" id="adRecalc">Recalculate</button></div>
+        <div class="card slim">
+          <div class="wdet">
+            <div><div class="wt">Use as my maintenance</div><div class="ws">Learns from your last 3 weeks</div></div>
+            <button class="wtgl" id="adToggle" role="switch" aria-checked="false" aria-label="Use adaptive TDEE as maintenance"><span class="knob"></span></button>
+          </div>
+          <div class="wdet" style="border-top:1px solid var(--line)">
+            <div><div class="wt">Recalculate</div><div class="ws">Refresh the learned value now</div></div>
+            <button class="chip" id="adRecalc">Recalculate</button>
+          </div>
         </div>
         <div class="rangenote" id="adTuneNote"></div>
         <div class="secttl">True metrics</div>
@@ -1163,7 +1169,7 @@ body.reordering #progOverview{display:none}
       <div class="ghead"><span>Water</span><b class="gval" id="waterHeadVal"></b><span class="gchev">›</span></div>
       <div class="gbody">
         <div class="card">
-          <div class="fhead"><span class="flabel">Daily target</span><span class="chips" id="waterMode" style="margin:0"><button class="chip" data-w="auto">Auto</button><button class="chip" data-w="8">8</button><button class="chip" data-w="10">10</button><button class="chip" data-w="12">12</button><button class="chip" data-w="14">14</button></span></div>
+          <div class="fhead"><span class="flabel" style="color:var(--ink);font-size:16px">Daily target</span><span class="chips" id="waterMode" style="margin:0"><button class="chip" data-w="auto">Auto</button><button class="chip" data-w="8">8</button><button class="chip" data-w="10">10</button><button class="chip" data-w="12">12</button><button class="chip" data-w="14">14</button></span></div>
           <div class="cfrow"><span>Custom <span class="ph">(glasses, 0 = Auto)</span></span><input id="waterCustom" type="number" inputmode="numeric" style="width:84px"></div>
         </div>
         <div class="rangenote" id="waterBreak"></div>
@@ -1194,9 +1200,15 @@ body.reordering #progOverview{display:none}
     <div class="gsec closed" id="gsecAdv">
       <div class="ghead"><span>Advanced</span><span class="gchev">›</span></div>
       <div class="gbody">
-        <div class="card">
-          <div class="cfrow"><span><b style="font-size:14px">Auto-adjust as I gain weight</b></span><button class="chip" id="pfAuto">Off</button></div>
-          <div class="cfrow" style="margin-top:8px"><span><b style="font-size:14px">Auto-tune maintenance</b></span><button class="chip" id="pfTune">Off</button></div>
+        <div class="card slim">
+          <div class="wdet">
+            <div><div class="wt">Auto-adjust as I gain weight</div><div class="ws">Recalculates maintenance from new weigh-ins</div></div>
+            <button class="wtgl" id="pfAuto" role="switch" aria-checked="false" aria-label="Auto-adjust as I gain weight"><span class="knob"></span></button>
+          </div>
+          <div class="wdet" style="border-top:1px solid var(--line)">
+            <div><div class="wt">Auto-tune maintenance</div><div class="ws">Nudges maintenance toward your weight trend</div></div>
+            <button class="wtgl" id="pfTune" role="switch" aria-checked="false" aria-label="Auto-tune maintenance"><span class="knob"></span></button>
+          </div>
         </div>
         <div class="rangenote" id="pfAutoNote"></div>
         <div class="rangenote" id="pfTuneNote"></div>
@@ -1720,7 +1732,7 @@ body.reordering #progOverview{display:none}
         <div class="cfsec">Serving unit</div>
         <div class="cfcard"><div class="chips" id="cUnitChips" style="padding:12px 0"></div></div>
         <div class="cfsec">Hydration</div>
-        <div class="cfcard"><label class="crow"><input type="checkbox" id="cXW"><span>Needs extra water<span class="chint">adds +2 glasses to your water target on days you log it — not needed for creatine (ISSN 2017)</span></span></label></div>
+        <div class="cfcard"><div class="wdet" id="cXWRow" style="cursor:pointer"><div><div class="wt">Needs extra water</div><div class="ws">Adds +2 glasses to your water target on days you log it — not needed for creatine</div></div><button class="wtgl" id="cXWTgl" tabindex="-1" aria-hidden="true"><span class="knob"></span></button></div><input type="checkbox" id="cXW" style="display:none"></div>
       </div>
       <div class="cfsec">Photo <span style="font-weight:400">(optional)</span></div>
       <div class="cfcard">
@@ -2035,7 +2047,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.27-g";
+const APP_VERSION = "2026.09.27-h";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4296,7 +4308,7 @@ function editCustomFood(name){
       rows[rows.length-1].children[1].value = x.amt;
     });
     cNutrSeed = [...document.querySelectorAll("#cNutrRows .nutrrow")].map(r=>r.children[0].value+"|"+r.children[2].value).join(";");
-    document.getElementById("cXW").checked = !!f.xw;
+    document.getElementById("cXW").checked = !!f.xw; paintXWTgl();
   } else {
     document.getElementById("fProt").value = f.p || "";
     document.getElementById("fCarb").value = f.c || "";
@@ -4328,7 +4340,7 @@ function resetCustomForm(){
   document.querySelectorAll("#cFoodUnitChips .chip").forEach(x=>x.classList.toggle("sel", x.dataset.u==="g"));
   document.querySelectorAll("#cUnitChips .chip").forEach(x=>x.classList.toggle("sel", x.dataset.u==="capsule"));
   document.getElementById("cNutrRows").innerHTML = ""; cNutrSeed = "";
-  document.getElementById("cXW").checked = false;
+  document.getElementById("cXW").checked = false; paintXWTgl();
   const sv = document.getElementById("cServ"); sv.dataset.dirty = "";
   document.getElementById("cCal").placeholder = "Required";
 }
@@ -5788,10 +5800,10 @@ function renderProfile(){
     (p.heightIn>0 ? ft+"′"+fi+"″" : "—") + " · " +
     (p.weightLb>0 ? (met ? (p.weightLb/2.20462).toFixed(1)+" kg" : Math.round(p.weightLb*10)/10+" lb") : "—");
   const at = document.getElementById("pfAuto");
-  at.textContent = p.auto?"On":"Off"; at.classList.toggle("sel", !!p.auto);
+  at.classList.toggle("on", !!p.auto); at.setAttribute("aria-checked", !!p.auto);
   document.getElementById("pfAutoNote").textContent = S.goals.autoNote || "";
   const tn = document.getElementById("pfTune");
-  tn.textContent = S.goals.autoTune?"On":"Off"; tn.classList.toggle("sel", !!S.goals.autoTune);
+  tn.classList.toggle("on", !!S.goals.autoTune); tn.setAttribute("aria-checked", !!S.goals.autoTune);
   document.getElementById("pfTuneNote").textContent = S.goals.tuneNote || "";
   paintMaintNote();
 }
@@ -5882,8 +5894,8 @@ function applyAdaptive(){
 function paintAdaptive(){
   const g=S.goals, a=g.adaptive, $=id=>document.getElementById(id);
   const tg=$("adToggle");
-  tg.textContent = g.useAdaptive ? "On" : (a&&a.ok ? "Apply" : "Off");
-  tg.classList.toggle("sel",!!g.useAdaptive);
+  tg.classList.toggle("on", !!g.useAdaptive);
+  tg.setAttribute("aria-checked", !!g.useAdaptive);
   const sg=$("adSuggest");
   if(a&&a.ok&&!g.useAdaptive){
     sg.style.display="";
@@ -6876,6 +6888,9 @@ document.getElementById("adToggle").onclick = ()=>{
   save(); renderGoals(); renderDiary();
 };
 document.getElementById("adRecalc").onclick = ()=>{ commitGoalsInputs(); applyAdaptive(); };
+/* 2026.09.27-h: "Needs extra water" is a schedule-style switch row now */
+function paintXWTgl(){ const c=document.getElementById("cXW"), b=document.getElementById("cXWTgl"); if(c&&b) b.classList.toggle("on", c.checked); }
+document.getElementById("cXWRow").onclick = ()=>{ const c=document.getElementById("cXW"); c.checked=!c.checked; paintXWTgl(); };
 document.querySelectorAll("#goalMode .chip").forEach(c=>c.onclick=()=>{
   commitGoalsInputs();
   if(!(S.goals.maintenance>0)){ alert("Calculate your maintenance first."); return; }
