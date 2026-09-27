@@ -1976,7 +1976,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.27-b";
+const APP_VERSION = "2026.09.27-c";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2026,10 +2026,13 @@ let S = load();
 /* 2026.09.23-e: meal-time learning. Every food log records minutes-since-midnight
    per meal (last 30 kept). Powers the day-cycle panel's learned meal dots, the
    "best window to eat" insight, and the tired model's real meal times. */
+/* the four food meals learn timing; supplements never did (nothing reads them) */
+const LEARN_MEALS = ["breakfast","lunch","dinner","snacks"];
 if(!S.mealTimes || typeof S.mealTimes!=="object"){
   S.mealTimes = {breakfast:[], lunch:[], dinner:[], snacks:[]};
 }else{
-  MEALS.forEach(m=>{ if(!Array.isArray(S.mealTimes[m])) S.mealTimes[m]=[]; });
+  LEARN_MEALS.forEach(m=>{ if(!Array.isArray(S.mealTimes[m])) S.mealTimes[m]=[]; });
+  delete S.mealTimes.supplements; /* write-only dead key from the MEALS loop */
 }
 delete S.logLagMin; /* 2026.09.27-b: log-lag option removed per Jay */
 /* 2026.09.27-b: work/off day types. Mon/Wed/Fri (TrulyPizza) + Sat (aPizzaDoho)
@@ -2050,18 +2053,21 @@ function toggleDayType(){
   const next = dayType(k)==="work" ? "off" : "work";
   if(!S.dayTypeOv) S.dayTypeOv = {};
   if(next===auto) delete S.dayTypeOv[k]; else S.dayTypeOv[k] = next;
+  /* 2026.09.27-c: prune stale overrides — only today matters going forward */
+  const cut = addDays(todayStr(),-7);
+  Object.keys(S.dayTypeOv).forEach(x=>{ if(x<cut) delete S.dayTypeOv[x]; });
   save(); renderAll();
 }
-/* one-time rebuild: tag learned observations by day type from entry timestamps
-   (last 30 days). Legacy untagged numbers were a work/off mix — the exact thing
-   Jay flagged as untrustworthy — so they get dropped and each schedule relearns. */
-if(!flagGet().mealSplit1){
+/* 2026.09.27-c: extracted so backup-restore can re-run it on pre-split backups.
+   Iterates LEARN_MEALS only — 2026.09.27-b crashed here on supplement entries
+   because the out literal had no "supplements" key. */
+function rebuildMealTimes(){
   const out = {breakfast:[], lunch:[], dinner:[], snacks:[]};
   const nowMs = Date.now(), keys = Object.keys(S.days||{}).sort().slice(-30);
   keys.forEach(k=>{
     const d = S.days[k]; if(!d || !d.meals) return;
     const w = dayType(k)==="work" ? 1 : 0;
-    MEALS.forEach(m=>{
+    LEARN_MEALS.forEach(m=>{
       const ts = (d.meals[m]||[]).map(e=>e.t).filter(t=>t && t<=nowMs);
       if(ts.length){
         const dt = new Date(Math.min.apply(null, ts));
@@ -2070,7 +2076,17 @@ if(!flagGet().mealSplit1){
       }
     });
   });
-  S.mealTimes = out; save(); flagSet("mealSplit1",1);
+  S.mealTimes = out;
+}
+function mealTimesNeedRebuild(){
+  return LEARN_MEALS.some(m=>((S.mealTimes&&S.mealTimes[m])||[]).some(o=>!o||typeof o!=="object"));
+}
+/* one-time rebuild: tag learned observations by day type from entry timestamps
+   (last 30 days). Legacy untagged numbers were a work/off mix — the exact thing
+   Jay flagged as untrustworthy — so they get dropped and each schedule relearns. */
+if(!flagGet().mealSplit1){
+  rebuildMealTimes();
+  if(save()) flagSet("mealSplit1",1); /* don't mark done if the save failed */
 }
 /* 2026.09.22-c: restore Jay's full weigh-in history — all 26 logs from his Fuel HTML
    export (fuel-data-2.json) plus the 6 old-app entries recovered from his Apple Health
@@ -2314,13 +2330,24 @@ function ringPaint(eCal, mCal, tCal){
    tired model real meal times instead of fixed guesses. */
 const DC_T0 = 5*60, DC_T1 = 23*60; /* arc spans 5am → 11pm */
 function recordMealTime(meal){
-  if(!S.mealTimes || !Array.isArray(S.mealTimes[meal])) return;
+  /* 2026.09.27-c: returns the observation so Undo can retract it */
+  if(LEARN_MEALS.indexOf(meal)<0) return null; /* supplements don't learn timing */
+  if(!S.mealTimes || !Array.isArray(S.mealTimes[meal])) return null;
   const n = new Date();
   /* 2026.09.27-b: tag each observation with today's type so work days and off
      days learn their own schedules */
-  S.mealTimes[meal].push({t: n.getHours()*60+n.getMinutes(), w: dayType(todayStr())==="work"?1:0});
+  const obs = {t: n.getHours()*60+n.getMinutes(), w: dayType(todayStr())==="work"?1:0};
+  S.mealTimes[meal].push(obs);
   if(S.mealTimes[meal].length>30) S.mealTimes[meal].shift();
+  return obs;
   /* caller saves right after logging */
+}
+function unrecordMealTime(meal, obs){
+  /* 2026.09.27-c: Undo on a log must also retract its timing observation,
+     or log→undo cycles inject phantom windows into the learned schedule */
+  if(!obs || !S.mealTimes || !Array.isArray(S.mealTimes[meal])) return;
+  const i = S.mealTimes[meal].indexOf(obs);
+  if(i>=0) S.mealTimes[meal].splice(i,1);
 }
 function mealTimeStats(meal, work){
   /* 2026.09.27-b: stats are per day type — pass true for the work-day schedule,
@@ -3794,12 +3821,12 @@ function quickLog(f){
   const e = buildEntry(f, round2(lastServServings(f, S.lastServ && S.lastServ[f.n])));
   if(!d.meals[meal]) d.meals[meal] = [];
   d.meals[meal].push(e);
-  if(dayOffset===0) recordMealTime(meal); /* one timing observation per logging action */
+  const mtObs = dayOffset===0 ? recordMealTime(meal) : null; /* one timing observation per logging action */
   save(); renderDiary(); haptic();
   showToast("Logged "+f.n+" · "+Math.round(e.cal)+" kcal", "Undo", ()=>{
     const dd = day(), arr = dd.meals[meal]||[];
     const i = arr.findIndex(x=>x.id===e.id);
-    if(i>=0){ arr.splice(i,1); save(); renderDiary(); }
+    if(i>=0){ arr.splice(i,1); unrecordMealTime(meal, mtObs); save(); renderDiary(); }
   });
 }
 /* ---- quick-add: bare calories/macros, no food search — a rough entry beats a skipped day ---- */
@@ -3820,7 +3847,7 @@ document.getElementById("qAddBtn").onclick = ()=>{
   const d = day();
   if(!d.meals[meal]) d.meals[meal] = [];
   d.meals[meal].push(e);
-  if(dayOffset===0) recordMealTime(meal); /* one timing observation per logging action */
+  const mtObsQ = dayOffset===0 ? recordMealTime(meal) : null; /* one timing observation per logging action */
   ["qKcal","qP","qC","qF"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("sheetQuick").style.display = "none";
   document.getElementById("sheetQuickToggle").textContent = "+ Quick add calories";
@@ -3828,7 +3855,7 @@ document.getElementById("qAddBtn").onclick = ()=>{
   showToast("Logged "+Math.round(e.cal)+" kcal", "Undo", ()=>{
     const dd = day(), arr = dd.meals[meal]||[];
     const i = arr.findIndex(x=>x.id===e.id);
-    if(i>=0){ arr.splice(i,1); save(); renderDiary(); }
+    if(i>=0){ arr.splice(i,1); unrecordMealTime(meal, mtObsQ); save(); renderDiary(); }
   });
 };
 function addToTray(f, qty, meal){
@@ -4772,11 +4799,11 @@ function paintWtAnalysis(){
     bv.textContent = "—"; pill.style.display = "none"; mark.style.display = "none";
     const needH = !(hIn>0), needW = !(w>0);
     note.innerHTML = (needH && needW)
-      ? `Log your weight below and add your height in <button class="linkbtn" id="bmiGoProf">Goals › Profile</button> for BMI, a healthy range, and rate stats.`
+      ? `Log your weight below and add your height in <button class="linkbtn bmi-go-prof">Goals › Profile</button> for BMI, a healthy range, and rate stats.`
       : needH
-      ? `Add your height in <button class="linkbtn" id="bmiGoProf">Goals › Profile</button> for BMI and your healthy weight range.`
+      ? `Add your height in <button class="linkbtn bmi-go-prof">Goals › Profile</button> for BMI and your healthy weight range.`
       : `Log your weight below for BMI and rate stats.`;
-    const go = document.getElementById("bmiGoProf");
+    const go = note.querySelector(".bmi-go-prof");
     if(go) go.onclick = ()=>{ commitGoalsInputs(); save(); renderGoals(); showView("goals"); };
     stats.innerHTML = ""; ctx.textContent = ""; ctx.style.display = "none"; BMI_CTX = "";
     return;
@@ -6089,10 +6116,12 @@ const GLYPHS = {
   spark:'<path d="M12 2l2.1 7.9L22 12l-7.9 2.1L12 22l-2.1-7.9L2 12l7.9-2.1z"/>',
 };
 /* circular badge: rarity gradient ring, dark inner disc, white glyph */
+let __mgN = 0; /* 2026.09.27-c: unique gradient id per badge instance — duplicate
+   SVG def ids are invalid HTML and trip audits when a medal renders twice */
 function medalBadge(md, earned){
   const r = RARITY[md.rarity] || RARITY.common;
   const cols = earned ? r.g : ["#d9d9e2","#b9b9c6"];
-  const gid = "mg" + String(md.id||md.icon||"m").replace(/[^a-z0-9]/gi,"");
+  const gid = "mg" + String(md.id||md.icon||"m").replace(/[^a-z0-9]/gi,"") + (++__mgN);
   const stops = cols.map((c,i)=>`<stop offset="${cols.length>1 ? (i/(cols.length-1)) : 0}" stop-color="${c}"/>`).join("");
   return `<svg width="48" height="48" viewBox="0 0 48 48"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1">${stops}</linearGradient></defs>`+
     `<circle cx="24" cy="24" r="22" fill="url(#${gid})"/>`+
@@ -6799,6 +6828,11 @@ document.getElementById("importFile").onchange = e=>{
       if(!S.training) S.training = {sched:{}, done:{}};
       if(!S.mealTimes) S.mealTimes = {breakfast:[], lunch:[], dinner:[], snacks:[]};
       ["breakfast","lunch","dinner","snacks"].forEach(m=>{ if(!Array.isArray(S.mealTimes[m])) S.mealTimes[m]=[]; });
+      if(!S.dayTypeOv || typeof S.dayTypeOv!=="object") S.dayTypeOv = {};
+      /* 2026.09.27-c: pre-split backup holds untagged numbers the learners now
+         ignore — re-tag them from the restored entry timestamps instead of
+         dropping to "still learning" */
+      if(mealTimesNeedRebuild()) rebuildMealTimes();
       if(!S.goals.profHash){ const p0=S.goals.profile||{}; S.goals.profHash=[p0.weightLb,p0.heightIn,p0.age,p0.sex,p0.bodyFat,p0.activityKey].join("|"); }
       if(!S.days) S.days = {};
       save(); dayOffset = 0; renderAll(); showView("diary");
