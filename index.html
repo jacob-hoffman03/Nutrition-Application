@@ -910,24 +910,24 @@ body.reordering #progOverview{display:none}
 .caltrack{position:relative;height:528px;margin:0 2px;overflow:visible;}
 .caltrack .spine{position:absolute;top:0;bottom:0;left:50%;width:2px;margin-left:-1px;background:#e3e7f1;border-radius:2px;z-index:1;}
 .caltrack .tick{position:absolute;left:50%;width:9px;height:2px;margin-left:-4.5px;background:#d4dae7;border-radius:1px;z-index:2;transform:translateY(-50%);}
-.caltrack .tick.mid{background:var(--acc);width:15px;margin-left:-7.5px;}
-.sleepmoon{position:absolute;left:50%;top:-11px;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:6;box-shadow:0 2px 8px rgba(20,24,40,.25);}
+.caltrack .tick.mid{background:#111;width:15px;margin-left:-7.5px;}
+.sleepmoon{position:absolute;left:50%;top:-11px;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:7;box-shadow:0 2px 8px rgba(20,24,40,.25);}
 .sleepmoon svg{width:13px;height:13px;}
 .caltrack .chlab{position:absolute;right:50%;margin-right:9px;transform:translateY(-50%);font-size:8px;font-weight:700;color:#9aa3b2;z-index:3;pointer-events:none;white-space:nowrap;text-align:right;}
-.caltrack .chlab.mid{color:var(--acc);}
+.caltrack .chlab.mid{color:#111;}
 .caltrack .hl{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,.9);}
 .caltrack .hl.mid{background:var(--acc);opacity:.6;height:2px;z-index:4;}
-.eatband{position:absolute;left:2px;right:2px;border-radius:6px;pointer-events:none;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.eatband{position:absolute;left:2px;right:2px;border-radius:6px;pointer-events:none;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:4;}
 .eatband .el{display:block;text-align:center;font-size:7.5px;font-weight:800;letter-spacing:.2px;white-space:nowrap;color:#6b4210;line-height:1.3;}
 .eatband .et{display:block;text-align:center;font-size:7px;font-weight:700;white-space:nowrap;color:#6b4210;opacity:.75;line-height:1.3;font-variant-numeric:tabular-nums;}
 .eatband .eck{position:absolute;top:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#22c55e;color:#fff;font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;line-height:1;}
-.calblk{position:absolute;left:2px;right:2px;border-radius:6px;padding:3px 2px;overflow:hidden;box-sizing:border-box;pointer-events:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.calblk{position:absolute;left:2px;right:2px;border-radius:6px;padding:3px 2px;overflow:hidden;box-sizing:border-box;pointer-events:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:5;}
 .calblk.short .bl,.calblk.short .bt{display:none;}
-.calblk .bl{font-size:9px;font-weight:800;line-height:1.2;display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.calblk .bt{font-size:8px;font-weight:700;opacity:.8;display:block;max-width:100%;white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.3;}
+.calblk .bl{font-size:7.5px;font-weight:800;line-height:1.2;display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.calblk .bt{font-size:7px;font-weight:700;opacity:.8;display:block;max-width:100%;white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.3;}
 .calblk.plan .bl,.calblk.plan .bt{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.28);}
 .calblk .ck{position:absolute;top:2px;right:2px;width:13px;height:13px;border-radius:50%;background:#22c55e;color:#fff;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;line-height:1;}
-.calnow{position:absolute;left:0;right:0;height:2px;background:#f43f5e;z-index:5;pointer-events:none;}
+.calnow{position:absolute;left:0;right:0;height:2px;background:#f43f5e;z-index:6;pointer-events:none;}
 .calnow::before{content:"";position:absolute;left:2px;top:-4px;width:10px;height:10px;border-radius:50%;background:#f43f5e;}
 /* calendar event editor */
 .callabel{width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:12px;padding:12px;font-size:15px;font-weight:600;margin-top:6px;}
@@ -2157,7 +2157,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.27-o";
+const APP_VERSION = "2026.09.27-p";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2365,6 +2365,7 @@ function renderCalendar(){
     }
     for(let h=0;h<24;h+=3){
       if(vDur(h*60,h*60+180)<90) continue;
+      if(sR.length && vY(h*60)<20) continue;
       const l = document.createElement("div");
       l.className = "chlab"+(h===12?" mid":"");
       l.style.top = vY(h*60)+"px";
