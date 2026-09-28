@@ -883,6 +883,55 @@ body.reordering #progOverview{display:none}
 .pr-handle{width:56px;height:58px;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab;flex:none}
 .pr-handle svg{width:24px;height:24px;stroke:var(--muted);fill:none;stroke-width:2.4;stroke-linecap:round}
 .pr-row.dragging{box-shadow:0 16px 34px rgba(60,60,120,.28);opacity:.97;position:relative;z-index:60}
+/* ---- Nutrition calendar (2026.09.27-i): week of vertical 24h gray tracks.
+   Left lane = learned eating windows (auto, meal colors); right lane = work /
+   gym / custom blocks in any color. Timestamps run 12a-12a with a midday line. */
+.calnav{display:flex;align-items:center;justify-content:space-between;margin:12px 4px 10px;}
+.calarrow{width:40px;height:40px;border-radius:13px;border:1.5px solid var(--line);background:#fff;font-size:20px;color:var(--acc);font-weight:800;line-height:1;}
+.calnav .cttl{font-size:16px;font-weight:800;}
+.calnav .cwk{font-size:12px;color:var(--muted);font-weight:600;margin-top:2px;}
+.callegend{display:flex;gap:14px;align-items:center;padding:0 6px 10px;font-size:11.5px;color:var(--muted);font-weight:600;}
+.callegend .dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px;}
+.calwrap{background:var(--card);border-radius:var(--radius);box-shadow:0 10px 28px rgba(84,84,180,.08);padding:12px 6px 14px 2px;margin:0 12px;}
+.calgrid{display:flex;align-items:stretch;}
+.calaxis{width:36px;flex:none;display:flex;flex-direction:column;}
+.axspacer{height:56px;flex:none;}
+.axistrack{position:relative;height:960px;flex:none;}
+.axistrack .al{position:absolute;right:5px;transform:translateY(-50%);font-size:9px;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums;}
+.axistrack .al.mid{color:var(--acc);font-weight:800;}
+.calcols{flex:1;display:flex;min-width:0;}
+.calday{flex:1;min-width:0;display:flex;flex-direction:column;}
+.caldh{height:56px;flex:none;text-align:center;padding-top:2px;}
+.caldh .dn{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+.caldh .dt{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;}
+.caldh .dd{width:6px;height:6px;border-radius:50%;margin:3px auto 0;background:#cfcfda;}
+.caldh .dd.work{background:var(--acc);}
+.calday.today .dt{color:var(--acc);}
+.caltrack{position:relative;height:960px;background:#ebebf2;border-radius:10px;overflow:hidden;margin:0 2px;}
+.caltrack .hl{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,.9);}
+.caltrack .hl.mid{background:var(--acc);opacity:.6;height:2px;z-index:4;}
+.lane{position:absolute;top:0;bottom:0;pointer-events:none;}
+.lane.eat{left:3px;right:52%;}
+.lane.plan{left:52%;right:3px;}
+.calblk{position:absolute;left:0;right:0;border-radius:6px;padding:3px 4px;overflow:hidden;box-sizing:border-box;pointer-events:auto;}
+.calblk .bl{font-size:9px;font-weight:800;line-height:1.2;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.calblk .bt{font-size:8px;font-weight:700;opacity:.8;display:block;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.calblk.eat .bl{color:#7a4a12;}
+.calblk.eat .bt{color:#8a5a1c;}
+.calblk.plan .bl,.calblk.plan .bt{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.28);}
+.calblk .ck{position:absolute;top:2px;right:2px;width:13px;height:13px;border-radius:50%;background:#22c55e;color:#fff;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;line-height:1;}
+.calnow{position:absolute;left:0;right:0;height:2px;background:#f43f5e;z-index:5;pointer-events:none;}
+.calnow::before{content:"";position:absolute;left:2px;top:-4px;width:10px;height:10px;border-radius:50%;background:#f43f5e;}
+/* calendar event editor */
+.callabel{width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:12px;padding:12px;font-size:15px;font-weight:600;margin-top:6px;}
+.caltime{display:flex;gap:10px;margin-top:12px;}
+.caltime>div{flex:1;}
+.caltime input[type=time]{width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:12px;padding:11px;font-size:15px;font-weight:700;margin-top:6px;background:#fff;}
+.calcolors{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 4px;align-items:center;}
+.csw{width:36px;height:36px;border-radius:50%;border:none;padding:0;cursor:pointer;flex:none;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6),0 1px 4px rgba(0,0,0,.18);}
+.csw.sel{outline:3px solid var(--ink);outline-offset:2px;}
+.csw.custom{background:conic-gradient(#f43f5e,#ff9f43,#ffd23f,#22c55e,#2f8bff,#a78bfa,#f43f5e);overflow:hidden;position:relative;}
+.csw.custom input{position:absolute;inset:-8px;opacity:0;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -1483,6 +1532,28 @@ body.reordering #progOverview{display:none}
     <div class="hint" style="padding:0 20px">Meal times are learned separately for work days and days off. Past meal times keep the schedule they were learned under.</div>
   </section>
 
+  <!-- NUTRITION CALENDAR (2026.09.27-i) -->
+  <section class="view" id="view-calendar">
+    <div class="topbar">
+      <div style="width:44px"></div>
+      <h1>Calendar</h1>
+      <div style="width:44px"></div>
+    </div>
+    <div class="calnav">
+      <button class="calarrow" id="calPrev" aria-label="Previous week">&lsaquo;</button>
+      <div style="text-align:center"><div class="cttl" id="calTitle">This week</div><div class="cwk" id="calRange"></div></div>
+      <button class="calarrow" id="calNext" aria-label="Next week">&rsaquo;</button>
+    </div>
+    <div class="callegend" id="calLegend"></div>
+    <div class="calwrap">
+      <div class="calgrid">
+        <div class="calaxis"><div class="axspacer"></div><div class="axistrack" id="calAxis"></div></div>
+        <div class="calcols" id="calCols"></div>
+      </div>
+    </div>
+    <div class="hint" style="padding:10px 22px 34px">Tap any gray slot to add work, gym or anything else. Your learned meal times fill in automatically on the left.</div>
+  </section>
+
   <nav class="tabbar"><div class="inner">
     <button class="tab active" data-v="diary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>
@@ -1494,10 +1565,43 @@ body.reordering #progOverview{display:none}
     <button class="tab" data-v="foods">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       Foods</button>
+    <button class="tab" data-v="calendar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10.5h18"/></svg>
+      Calendar</button>
     <button class="tab" data-v="settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Settings</button>
   </div></nav>
+</div>
+
+<!-- CALENDAR EVENT SHEET -->
+<div class="sheet" id="calSheet">
+  <div class="scrim" id="calScrim"></div>
+  <div class="panel">
+    <button class="xbtn" id="calX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    <div class="grab"></div>
+    <h2 id="calSheetTitle">New block</h2>
+    <div class="body">
+      <div class="label">Type</div>
+      <div class="chips" id="calKindRow" style="margin-top:8px">
+        <button class="chip" data-k="work">Work</button>
+        <button class="chip" data-k="gym">Gym</button>
+        <button class="chip" data-k="custom">Custom</button>
+      </div>
+      <div class="label" style="margin-top:14px">Label</div>
+      <input id="calLabel" class="callabel" maxlength="26" placeholder="Work">
+      <div class="label" style="margin-top:14px">Days</div>
+      <div class="chips" id="calDaysRow" style="margin-top:8px"></div>
+      <div class="caltime">
+        <div><div class="label">Start</div><input type="time" id="calStart" value="09:00"></div>
+        <div><div class="label">End</div><input type="time" id="calEnd" value="17:00"></div>
+      </div>
+      <div class="label" style="margin-top:14px">Color</div>
+      <div class="calcolors" id="calColors"></div>
+      <button class="bigbtn" id="calSave">Save</button>
+      <button class="ghostbtn" id="calDelete" hidden>Delete</button>
+    </div>
+  </div>
 </div>
 
 <!-- INFO POPUP (Goals section explainers) -->
@@ -2047,7 +2151,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.27-h";
+const APP_VERSION = "2026.09.27-i";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2114,6 +2218,10 @@ if(!S.dayTypeOv || typeof S.dayTypeOv!=="object") S.dayTypeOv = {};
    Stored as JS weekday numbers (0=Sun..6=Sat); default = Jay's two-job week. */
 const WORK_WEEKDAYS_DEF = [1,3,5,6]; /* Mon Wed Fri Sat */
 if(!Array.isArray(S.workDays)) S.workDays = WORK_WEEKDAYS_DEF.slice();
+/* 2026.09.27-i: nutrition calendar blocks. Weekly-recurring entries:
+   {id, kind:"work"|"gym"|"custom", label, days:[0..6 Sun..Sat],
+    start/end = minutes since midnight, color}. */
+if(!Array.isArray(S.calEvents)) S.calEvents = [];
 function workDays(){ return Array.isArray(S.workDays) ? S.workDays.filter(x=>x>=0&&x<=6) : WORK_WEEKDAYS_DEF.slice(); }
 function isWorkDayAuto(kstr){
   return workDays().indexOf(new Date(kstr+"T12:00:00").getDay())>=0;
@@ -2174,6 +2282,203 @@ function renderWorkSched(){
   $("wDetSub").textContent = w.indexOf(wsSel)>=0 ? "Work day" : "Day off";
   $("wDetTgl").classList.toggle("on", w.indexOf(wsSel)>=0);
 }
+/* ================= NUTRITION CALENDAR (2026.09.27-i) =================
+   Week of vertical 24h gray tracks (Mon-Sun). Left lane = learned eating
+   windows (auto, meal colors, 5+ observations like the overdue nudge);
+   right lane = work / gym / custom blocks in any color, weekly-recurring.
+   Timestamps run 12a-12a with an emphasized midday line. */
+let calWeekOff = 0, calEditId = null, calDraft = null, calColorTouched = false;
+const CAL_H = 40; /* px per hour */
+const CAL_KINDS = {work:{label:"Work",color:"#2f8bff"}, gym:{label:"Gym",color:"#22c55e"}, custom:{label:"Custom",color:"#a78bfa"}};
+const CAL_COLORS = ["#2f8bff","#22c55e","#a78bfa","#f43f5e","#ff9f43","#ffd23f","#14b8a6","#64748b"];
+const CAL_MEALS = ["breakfast","lunch","dinner"];
+const MON3 = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function calMonday(){
+  const t = new Date(todayStr()+"T12:00:00");
+  t.setDate(t.getDate()-((t.getDay()+6)%7)+calWeekOff*7);
+  return dstr(t);
+}
+function calDateShort(ds){
+  const d = new Date(ds+"T12:00:00");
+  return WD_SHORT[d.getDay()]+" "+MON3[d.getMonth()]+" "+d.getDate();
+}
+function calKindDef(k){ return CAL_KINDS[k]||CAL_KINDS.custom; }
+function calMinsToTime(m){ return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"); }
+function calTimeToMins(v){ const p = String(v||"").split(":"); return (parseInt(p[0],10)||0)*60+(parseInt(p[1],10)||0); }
+function renderCalendar(){
+  const mon = calMonday(), sun = addDays(mon,6), cols = $("calCols");
+  if(!cols) return;
+  $("calTitle").textContent = calWeekOff===0?"This week":(calWeekOff===-1?"Last week":"Week of "+calDateShort(mon));
+  $("calRange").textContent = calDateShort(mon)+" \u2013 "+calDateShort(sun);
+  $("calLegend").innerHTML =
+    '<span><span class="dot" style="background:'+MEAL_SEG.breakfast+'"></span>Eating windows</span>'+
+    '<span><span class="dot" style="background:#2f8bff"></span>Scheduled</span>'+
+    '<span><span class="dot" style="background:#22c55e;border-radius:50%"></span>Logged</span>';
+  const ax = $("calAxis"); ax.innerHTML = "";
+  for(let h=0;h<=24;h+=3){
+    const l = document.createElement("div");
+    l.className = "al"+(h===12?" mid":"");
+    l.style.top = (h*CAL_H)+"px";
+    l.textContent = (h===0||h===24)?"12a":(h===12?"12p":(h<12?h+"a":(h-12)+"p"));
+    ax.appendChild(l);
+  }
+  cols.innerHTML = "";
+  const nowD = new Date(), nowMin = nowD.getHours()*60+nowD.getMinutes();
+  for(let i=0;i<7;i++){
+    const ds = addDays(mon,i), dow = new Date(ds+"T12:00:00").getDay();
+    const isWork = dayType(ds)==="work", isToday = ds===todayStr();
+    const col = document.createElement("div");
+    col.className = "calday"+(isToday?" today":"");
+    col.innerHTML = '<div class="caldh"><div class="dn">'+WD_SHORT[dow]+'</div><div class="dt">'+parseInt(ds.slice(8,10),10)+
+      '</div><div class="dd'+(isWork?" work":"")+'"></div></div>';
+    const tr = document.createElement("div");
+    tr.className = "caltrack";
+    for(let h=0;h<=24;h++){
+      const hl = document.createElement("div");
+      hl.className = "hl"+(h===12?" mid":"");
+      hl.style.top = (h*CAL_H)+"px";
+      tr.appendChild(hl);
+    }
+    const laneE = document.createElement("div"); laneE.className = "lane eat";
+    const laneP = document.createElement("div"); laneP.className = "lane plan";
+    /* learned eating windows — same 5-observation bar as the overdue nudge */
+    const meals = (S.days[ds]&&S.days[ds].meals)||{};
+    CAL_MEALS.forEach(m=>{
+      const st = mealTimeStats(m, isWork);
+      if(!st || st.n<5) return;
+      const a = Math.max(0, st.avg-30), b = Math.min(1440, st.avg+30);
+      const blk = document.createElement("div");
+      blk.className = "calblk eat";
+      blk.style.top = (a/60*CAL_H)+"px";
+      blk.style.height = Math.max((b-a)/60*CAL_H, 20)+"px";
+      blk.style.background = MEAL_SEG[m];
+      const logged = ((meals[m]||[]).length>0);
+      blk.innerHTML = '<span class="bl">'+esc(MEAL_LABEL[m])+'</span><span class="bt">'+fmtClockS(st.avg)+"</span>"+
+        (logged?'<span class="ck">\u2713</span>':"");
+      blk.title = MEAL_LABEL[m]+" around "+fmtClock(st.avg);
+      laneE.appendChild(blk);
+    });
+    /* scheduled blocks */
+    (S.calEvents||[]).filter(e=>e&&e.days&&e.days.indexOf(dow)>=0).forEach(e=>{
+      const blk = document.createElement("div");
+      blk.className = "calblk plan";
+      blk.style.top = (e.start/60*CAL_H)+"px";
+      blk.style.height = Math.max((e.end-e.start)/60*CAL_H, 20)+"px";
+      blk.style.background = e.color||"#2f8bff";
+      blk.innerHTML = '<span class="bl">'+esc(e.label||"")+"</span>"+
+        '<span class="bt">'+fmtClockS(e.start)+"\u2013"+fmtClockS(e.end)+"</span>";
+      blk.onclick = ev=>{ ev.stopPropagation(); openCalEditor({event:e}); };
+      laneP.appendChild(blk);
+    });
+    if(isToday){
+      const nl = document.createElement("div");
+      nl.className = "calnow"; nl.style.top = (nowMin/60*CAL_H)+"px";
+      tr.appendChild(nl);
+    }
+    tr.appendChild(laneE); tr.appendChild(laneP);
+    tr.onclick = e=>{
+      const r = tr.getBoundingClientRect();
+      let mins = Math.round(((e.clientY-r.top)/CAL_H*60)/30)*30;
+      mins = Math.max(0, Math.min(1410, mins));
+      openCalEditor({day:dow, start:mins});
+    };
+    col.appendChild(tr); cols.appendChild(col);
+  }
+}
+function openCalEditor(opts){
+  if(opts.event){
+    const e = opts.event;
+    calEditId = e.id;
+    calDraft = {kind:e.kind||"custom", label:e.label||"", days:(e.days||[]).slice(),
+      start:e.start, end:e.end, color:e.color||"#2f8bff"};
+    $("calSheetTitle").textContent = "Edit block";
+    $("calDelete").hidden = false;
+  }else{
+    calEditId = null;
+    calDraft = {kind:"work", label:"Work", days:[opts.day],
+      start:opts.start, end:Math.min(opts.start+60,1439), color:CAL_KINDS.work.color};
+    $("calSheetTitle").textContent = "New block";
+    $("calDelete").hidden = true;
+  }
+  calColorTouched = false;
+  renderCalEditor();
+  $("calSheet").classList.add("open");
+}
+function closeCalEditor(){ const sh = $("calSheet"); if(sh) sh.classList.remove("open"); calDraft = null; }
+function renderCalEditor(){
+  const d = calDraft; if(!d) return;
+  document.querySelectorAll("#calKindRow .chip").forEach(c=>c.classList.toggle("sel", c.dataset.k===d.kind));
+  $("calLabel").value = d.label||"";
+  $("calLabel").placeholder = calKindDef(d.kind).label;
+  const dr = $("calDaysRow"); dr.innerHTML = "";
+  WD_ORDER.forEach(wd=>{
+    const c = document.createElement("button");
+    c.className = "chip"+(d.days.indexOf(wd)>=0?" sel":"");
+    c.textContent = WD_SHORT[wd];
+    c.onclick = ()=>{
+      const i = d.days.indexOf(wd);
+      if(i>=0) d.days.splice(i,1); else d.days.push(wd);
+      c.classList.toggle("sel", i<0);
+    };
+    dr.appendChild(c);
+  });
+  $("calStart").value = calMinsToTime(d.start);
+  $("calEnd").value = calMinsToTime(d.end);
+  const cr = $("calColors"); cr.innerHTML = "";
+  CAL_COLORS.forEach(col=>{
+    const b = document.createElement("button");
+    b.className = "csw"+(d.color===col?" sel":"");
+    b.style.background = col;
+    b.setAttribute("aria-label","Color "+col);
+    b.onclick = ()=>{ d.color = col; calColorTouched = true; renderCalEditor(); };
+    cr.appendChild(b);
+  });
+  const cust = document.createElement("span");
+  cust.className = "csw custom"+(CAL_COLORS.indexOf(d.color)<0?" sel":"");
+  cust.innerHTML = '<input type="color" id="calCustomColor" value="'+esc(d.color||"#2f8bff")+'">';
+  cr.appendChild(cust);
+  $("calCustomColor").oninput = e=>{
+    d.color = e.target.value; calColorTouched = true; cust.classList.add("sel");
+    cr.querySelectorAll(".csw").forEach(x=>{ if(x!==cust) x.classList.remove("sel"); });
+  };
+}
+/* static editor wiring — elements sit before the scripts, safe at top level */
+document.querySelectorAll("#calKindRow .chip").forEach(c=>c.onclick=()=>{
+  if(!calDraft) return;
+  const k = c.dataset.k, prev = calKindDef(calDraft.kind);
+  calDraft.kind = k;
+  if(!calColorTouched || calDraft.color===prev.color) calDraft.color = calKindDef(k).color;
+  if(!calDraft.label || calDraft.label===prev.label) calDraft.label = calKindDef(k).label;
+  if(k==="work" && !calEditId && calDraft.days.length<=1) calDraft.days = workDays().slice();
+  renderCalEditor();
+});
+document.getElementById("calLabel").oninput = e=>{ if(calDraft) calDraft.label = e.target.value; };
+document.getElementById("calSave").onclick = ()=>{
+  if(!calDraft) return;
+  const d = calDraft;
+  d.start = Math.max(0, Math.min(1439, calTimeToMins(document.getElementById("calStart").value)));
+  d.end = Math.max(0, Math.min(1439, calTimeToMins(document.getElementById("calEnd").value)));
+  if(d.end<=d.start) d.end = Math.min(d.start+60, 1439);
+  if(!d.days.length) d.days = [new Date(todayStr()+"T12:00:00").getDay()];
+  d.label = (d.label||"").trim()||calKindDef(d.kind).label;
+  if(!Array.isArray(S.calEvents)) S.calEvents = [];
+  if(calEditId){
+    const i = S.calEvents.findIndex(e=>e.id===calEditId);
+    if(i>=0) S.calEvents[i] = Object.assign({id:calEditId}, d);
+  }else{
+    S.calEvents.push(Object.assign({id:"ce"+Date.now().toString(36)}, d));
+  }
+  save(); closeCalEditor(); renderCalendar();
+};
+document.getElementById("calDelete").onclick = ()=>{
+  if(calEditId) S.calEvents = (S.calEvents||[]).filter(e=>e.id!==calEditId);
+  save(); closeCalEditor(); renderCalendar();
+};
+document.getElementById("calX").onclick = closeCalEditor;
+document.getElementById("calScrim").onclick = closeCalEditor;
+document.getElementById("calPrev").onclick = ()=>{ calWeekOff--; renderCalendar(); };
+document.getElementById("calNext").onclick = ()=>{ calWeekOff++; renderCalendar(); };
+
 /* 2026.09.27-d: quiet overdue-meal nudge. Mirrors the fatigue model's overdue
    rule (1.5h+ past YOUR learned time for that day type, 5+ observations, meal
    still unlogged) and shows one slim banner at the top of the diary — never a
@@ -7041,6 +7346,7 @@ function showView(v){
   if(v==="settings") renderSettings();
   if(v==="medals") renderMedalsPage();
   if(v==="worksched") renderWorkSched();
+  if(v==="calendar"){ calWeekOff = 0; renderCalendar(); } /* always open on the current week */
   if(v==="snaps") renderSnaps();
   if(v==="info") renderInfo();
   if(v==="foods") renderFoods();
