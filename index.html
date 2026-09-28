@@ -911,8 +911,8 @@ body.reordering #progOverview{display:none}
 .caltrack .hl{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,.9);}
 .caltrack .hl.mid{background:var(--acc);opacity:.6;height:2px;z-index:4;}
 .eatband{position:absolute;left:2px;right:2px;border-radius:6px;pointer-events:none;overflow:hidden;box-sizing:border-box;}
-.eatband .el{position:absolute;top:3px;left:0;right:0;text-align:center;font-size:7.5px;font-weight:800;letter-spacing:.2px;white-space:nowrap;}
-.eatband.nolabel .el{display:none;}
+.eatband .el{display:block;text-align:center;font-size:7.5px;font-weight:800;letter-spacing:.2px;white-space:nowrap;color:#6b4210;margin-top:3px;line-height:1.3;}
+.eatband .et{display:block;text-align:center;font-size:7px;font-weight:700;white-space:nowrap;color:#6b4210;opacity:.75;line-height:1.3;font-variant-numeric:tabular-nums;}
 .eatband .eck{position:absolute;top:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#22c55e;color:#fff;font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;line-height:1;}
 .calblk{position:absolute;left:2px;right:2px;border-radius:6px;padding:3px 2px;overflow:hidden;box-sizing:border-box;pointer-events:auto;text-align:center;}
 .calblk.short .bl,.calblk.short .bt{display:none;}
@@ -1552,7 +1552,7 @@ body.reordering #progOverview{display:none}
         <div class="calcols" id="calCols"></div>
       </div>
     </div>
-    <div class="hint" style="padding:10px 22px 34px">Tap any gray slot to add work, gym or anything else. Soft bands show your usual meal times.</div>
+    <div class="hint" style="padding:10px 22px 34px">Tap any gray slot to add work, gym or anything else. Meal bands predict your usual times and shift as you log.</div>
   </section>
 
   <nav class="tabbar"><div class="inner">
@@ -2149,7 +2149,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.27-k";
+const APP_VERSION = "2026.09.27-l";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2341,18 +2341,18 @@ function renderCalendar(){
     const meals = (S.days[ds]&&S.days[ds].meals)||{};
     CAL_MEALS.forEach(m=>{
       const st = mealTimeStats(m, isWork);
-      if(!st || st.n<5) return;
+      if(!st || st.n<2) return; /* predictions appear from 2 logs, sharpen with more */
       const a = Math.max(0, st.avg-30), b = Math.min(1440, st.avg+30);
-      const h = Math.max((b-a)/60*CAL_H, 18);
+      const h = Math.max((b-a)/60*CAL_H, 30);
       const band = document.createElement("div");
-      band.className = "eatband"+(h<26?" nolabel":"");
+      band.className = "eatband";
       band.style.top = (a/60*CAL_H)+"px";
       band.style.height = h+"px";
-      band.style.background = MEAL_SEG[m]+"2e";
+      band.style.background = MEAL_SEG[m]+(st.n>=5?"b3":"66"); /* locked 70% / learning 40% */
       const logged = ((meals[m]||[]).length>0);
-      band.innerHTML = '<span class="el" style="color:'+MEAL_SEG[m]+'">'+esc(MEAL_LABEL[m])+"</span>"+
+      band.innerHTML = '<span class="el">'+esc(MEAL_LABEL[m])+'</span><span class="et">'+fmtClockS(st.avg)+"</span>"+
         (logged?'<span class="eck">\u2713</span>':"");
-      band.title = MEAL_LABEL[m]+" around "+fmtClock(st.avg);
+      band.title = MEAL_LABEL[m]+" around "+fmtClock(st.avg)+" ("+st.n+" logs)";
       tr.appendChild(band);
     });
     /* scheduled blocks — full column width */
