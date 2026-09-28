@@ -893,8 +893,8 @@ body.reordering #progOverview{display:none}
 .callegend{display:flex;gap:14px;align-items:center;padding:0 6px 8px;font-size:11px;color:var(--muted);font-weight:600;}
 .callegend .dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px;}
 .calwrap{background:var(--card);border-radius:var(--radius);box-shadow:0 10px 28px rgba(84,84,180,.08);padding:12px 6px 14px 2px;margin:0 12px;}
-.calgrid{display:flex;align-items:stretch;}
-.calaxis{width:36px;flex:none;display:flex;flex-direction:column;}
+.calgrid{display:flex;align-items:flex-start;}
+.calaxis{display:none;}
 .axspacer{height:44px;flex:none;}
 .axistrack{position:relative;height:528px;flex:none;}
 .axistrack .al{position:absolute;right:5px;transform:translateY(-50%);font-size:9px;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums;}
@@ -908,6 +908,11 @@ body.reordering #progOverview{display:none}
 .caldh .dd.work{background:var(--acc);}
 .calday.today .dt{color:var(--acc);}
 .caltrack{position:relative;height:528px;background:#ebebf2;border-radius:10px;overflow:hidden;margin:0 2px;}
+.caltrack .chlab{position:absolute;left:4px;transform:translateY(-50%);font-size:8px;font-weight:700;color:#9aa3b2;z-index:3;pointer-events:none;white-space:nowrap;}
+.caltrack .chlab.mid{color:var(--acc);}
+.sleepstrip{position:absolute;left:2px;right:2px;height:16px;border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:5;overflow:hidden;}
+.sleepstrip.thin{height:9px;}
+.sleepstrip span{font-size:8px;font-weight:800;color:#fff;opacity:.92;white-space:nowrap;letter-spacing:.2px;}
 .caltrack .hl{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,.9);}
 .caltrack .hl.mid{background:var(--acc);opacity:.6;height:2px;z-index:4;}
 .eatband{position:absolute;left:2px;right:2px;border-radius:6px;pointer-events:none;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;}
@@ -917,7 +922,7 @@ body.reordering #progOverview{display:none}
 .calblk{position:absolute;left:2px;right:2px;border-radius:6px;padding:3px 2px;overflow:hidden;box-sizing:border-box;pointer-events:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
 .calblk.short .bl,.calblk.short .bt{display:none;}
 .calblk .bl{font-size:9px;font-weight:800;line-height:1.2;display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.calblk .bt{font-size:8px;font-weight:700;opacity:.8;display:block;max-width:100%;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.calblk .bt{font-size:8px;font-weight:700;opacity:.8;display:block;max-width:100%;white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.3;}
 .calblk.plan .bl,.calblk.plan .bt{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.28);}
 .calblk .ck{position:absolute;top:2px;right:2px;width:13px;height:13px;border-radius:50%;background:#22c55e;color:#fff;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;line-height:1;}
 .calnow{position:absolute;left:0;right:0;height:2px;background:#f43f5e;z-index:5;pointer-events:none;}
@@ -1552,7 +1557,7 @@ body.reordering #progOverview{display:none}
         <div class="calcols" id="calCols"></div>
       </div>
     </div>
-    <div class="hint" style="padding:10px 22px 34px">Tap any gray slot to add work, gym or anything else. Meal bands predict your usual times and shift as you log.</div>
+    <div class="hint" style="padding:10px 22px 34px">Tap a gray slot to add a block. Add a Sleep block to collapse the night and shrink the calendar to your day.</div>
   </section>
 
   <nav class="tabbar"><div class="inner">
@@ -1584,6 +1589,7 @@ body.reordering #progOverview{display:none}
       <div class="chips" id="calKindRow" style="margin-top:8px">
         <button class="chip" data-k="work">Work</button>
         <button class="chip" data-k="gym">Gym</button>
+        <button class="chip" data-k="sleep">Sleep</button>
         <button class="chip" data-k="custom">Custom</button>
       </div>
       <div class="label" style="margin-top:14px">Label</div>
@@ -2149,7 +2155,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.27-m";
+const APP_VERSION = "2026.09.27-n";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2287,7 +2293,7 @@ function renderWorkSched(){
    Timestamps run 12a-12a with an emphasized midday line. */
 let calWeekOff = 0, calEditId = null, calDraft = null, calColorTouched = false;
 const CAL_H = 22; /* px per hour — full 24h fits on one phone screen */
-const CAL_KINDS = {work:{label:"Work",color:"#2f8bff"}, gym:{label:"Gym",color:"#22c55e"}, custom:{label:"Custom",color:"#a78bfa"}};
+const CAL_KINDS = {work:{label:"Work",color:"#2f8bff"}, gym:{label:"Gym",color:"#22c55e"}, sleep:{label:"Sleep",color:"#2e3444"}, custom:{label:"Custom",color:"#a78bfa"}};
 const CAL_COLORS = ["#2f8bff","#22c55e","#a78bfa","#f43f5e","#ff9f43","#ffd23f","#14b8a6","#64748b"];
 const CAL_MEALS = ["breakfast","lunch","dinner"];
 const MON3 = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -2303,6 +2309,22 @@ function calDateShort(ds){
 function calKindDef(k){ return CAL_KINDS[k]||CAL_KINDS.custom; }
 function calMinsToTime(m){ return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"); }
 function calTimeToMins(v){ const p = String(v||"").split(":"); return (parseInt(p[0],10)||0)*60+(parseInt(p[1],10)||0); }
+/* 2026.09.27-n: sleep blocks collapse their hours out of the grid. Returns merged
+   non-wrapping [start,end) minute ranges for a weekday. */
+function sleepRanges(dow){
+  const out=[];
+  (S.calEvents||[]).forEach(e=>{
+    if(!e||e.kind!=="sleep"||!e.days||e.days.indexOf(dow)<0) return;
+    const s=+e.start||0; let en=+e.end||0;
+    if(en<=s) en+=1440;
+    if(en-s>=1439) return;
+    if(en<=1440) out.push([s,en]); else { out.push([s,1440]); out.push([0,en-1440]); }
+  });
+  out.sort((a,b)=>a[0]-b[0]);
+  const m=[];
+  out.forEach(r=>{ const l=m[m.length-1]; if(l&&r[0]<=l[1]) l[1]=Math.max(l[1],r[1]); else m.push([r[0],r[1]]); });
+  return m;
+}
 function renderCalendar(){
   const mon = calMonday(), sun = addDays(mon,6), cols = $("calCols");
   if(!cols) return;
@@ -2312,14 +2334,6 @@ function renderCalendar(){
     '<span><span class="dot" style="background:'+MEAL_SEG.breakfast+'"></span>Eating windows</span>'+
     '<span><span class="dot" style="background:#2f8bff"></span>Scheduled</span>'+
     '<span><span class="dot" style="background:#22c55e;border-radius:50%"></span>Logged</span>';
-  const ax = $("calAxis"); ax.innerHTML = "";
-  for(let h=0;h<=24;h+=3){
-    const l = document.createElement("div");
-    l.className = "al"+(h===12?" mid":"");
-    l.style.top = (h*CAL_H)+"px";
-    l.textContent = (h===0||h===24)?"12a":(h===12?"12p":(h<12?h+"a":(h-12)+"p"));
-    ax.appendChild(l);
-  }
   cols.innerHTML = "";
   const nowD = new Date(), nowMin = nowD.getHours()*60+nowD.getMinutes();
   for(let i=0;i<7;i++){
@@ -2331,11 +2345,46 @@ function renderCalendar(){
       '</div><div class="dd'+(isWork?" work":"")+'"></div></div>';
     const tr = document.createElement("div");
     tr.className = "caltrack";
-    for(let h=0;h<=24;h++){
+    /* sleep collapse: map clock minutes -> compressed y for this day */
+    const sR = sleepRanges(dow);
+    const vY = t=>{ let y=t; for(const r of sR){ if(t>r[0]) y-=Math.min(t,r[1])-r[0]; } return y/60*CAL_H; };
+    const vDur = (a,b)=>{ let d=b-a; for(const r of sR){ d-=Math.max(0,Math.min(b,r[1])-Math.max(a,r[0])); } return Math.max(0,d); };
+    const inSleep = t=>sR.some(r=>t>=r[0]&&t<r[1]);
+    const trackH = (1440-sR.reduce((a,r)=>a+(r[1]-r[0]),0))/60*CAL_H;
+    tr.style.height = trackH+"px";
+    for(let h=0;h<24;h++){
+      if(vDur(h*60,h*60+60)<=0) continue;
       const hl = document.createElement("div");
       hl.className = "hl"+(h===12?" mid":"");
-      hl.style.top = (h*CAL_H)+"px";
+      hl.style.top = vY(h*60)+"px";
       tr.appendChild(hl);
+    }
+    const bot = document.createElement("div");
+    bot.className = "hl"; bot.style.top = (trackH-1)+"px"; tr.appendChild(bot);
+    for(let h=0;h<24;h+=3){
+      if(vDur(h*60,h*60+180)<90) continue;
+      const l = document.createElement("div");
+      l.className = "chlab"+(h===12?" mid":"");
+      l.style.top = vY(h*60)+"px";
+      l.textContent = h===0?"12a":h===12?"12p":h<12?h+"a":(h-12)+"p";
+      tr.appendChild(l);
+    }
+    /* sleep strips: slim collapsed-night markers, tap to edit */
+    if(sR.length){
+      const sEv = (S.calEvents||[]).find(e=>e&&e.kind==="sleep"&&e.days&&e.days.indexOf(dow)>=0);
+      const sLbl = sEv?("Sleep "+fmtClockC(sEv.start)+"\u2013"+fmtClockC(sEv.end)):"Sleep";
+      const mkStrip=(topPx,lbl,thin)=>{
+        const sp = document.createElement("div");
+        sp.className = "sleepstrip"+(thin?" thin":"");
+        sp.style.top = topPx+"px";
+        sp.style.background = (sEv&&sEv.color)||"#2e3444";
+        if(lbl) sp.innerHTML = "<span>"+esc(lbl)+"</span>";
+        sp.onclick = ev=>{ ev.stopPropagation(); if(sEv) openCalEditor({event:sEv}); };
+        tr.appendChild(sp);
+      };
+      if(sR[0][0]===0) mkStrip(2,sLbl,false);
+      const last = sR[sR.length-1];
+      if(last[1]===1440) mkStrip(trackH-(sR[0][0]===0?11:18), sR[0][0]===0?null:sLbl, sR[0][0]===0);
     }
     /* learned eating windows — soft full-width bands, taps pass through to the track */
     const meals = (S.days[ds]&&S.days[ds].meals)||{};
@@ -2343,40 +2392,46 @@ function renderCalendar(){
       const st = mealTimeStats(m, isWork);
       if(!st || st.n<2) return; /* predictions appear from 2 logs, sharpen with more */
       const a = Math.max(0, st.avg-30), b = Math.min(1440, st.avg+30);
-      const h = Math.max((b-a)/60*CAL_H, 30);
+      if(vDur(a,b)<30) return; /* meal falls inside sleep */
+      const h = Math.max(vDur(a,b)/60*CAL_H, 30);
       const band = document.createElement("div");
       band.className = "eatband";
-      band.style.top = (a/60*CAL_H)+"px";
+      band.style.top = vY(a)+"px";
       band.style.height = h+"px";
       band.style.background = MEAL_SEG[m]+(st.n>=5?"b3":"66"); /* locked 70% / learning 40% */
       const logged = ((meals[m]||[]).length>0);
-      band.innerHTML = '<span class="el">'+esc(MEAL_LABEL[m])+'</span><span class="et">'+fmtClockS(st.avg)+"</span>"+
-        (logged?'<span class="eck">\u2713</span>':"");
+      band.innerHTML = '<span class="el">'+esc(MEAL_LABEL[m])+'</span><span class="et">'+fmtClockS(st.avg)+(logged?" \u2713":"")+"</span>";
       band.title = MEAL_LABEL[m]+" around "+fmtClock(st.avg)+" ("+st.n+" logs)";
       tr.appendChild(band);
     });
-    /* scheduled blocks — full column width */
-    (S.calEvents||[]).filter(e=>e&&e.days&&e.days.indexOf(dow)>=0).forEach(e=>{
-      const h = Math.max((e.end-e.start)/60*CAL_H, 20);
+    /* scheduled blocks — full column width (sleep kind collapses, never draws) */
+    (S.calEvents||[]).filter(e=>e&&e.kind!=="sleep"&&e.days&&e.days.indexOf(dow)>=0).forEach(e=>{
+      const d = vDur(e.start,e.end);
+      if(d<30) return; /* swallowed by sleep */
+      const h = Math.max(d/60*CAL_H, 20);
       const blk = document.createElement("div");
-      blk.className = "calblk plan"+(h<32?" short":"");
-      blk.style.top = (e.start/60*CAL_H)+"px";
+      blk.className = "calblk plan"+(h<44?" short":"");
+      blk.style.top = vY(e.start)+"px";
       blk.style.height = h+"px";
       blk.style.background = e.color||"#2f8bff";
       blk.innerHTML = '<span class="bl">'+esc(e.label||"")+"</span>"+
-        '<span class="bt">'+fmtClockS(e.start)+"\u2013"+fmtClockS(e.end)+"</span>";
+        '<span class="bt">'+fmtClockS(e.start)+"<br>\u2013 "+fmtClockS(e.end)+"</span>";
       blk.onclick = ev=>{ ev.stopPropagation(); openCalEditor({event:e}); };
       tr.appendChild(blk);
     });
-    if(isToday){
+    if(isToday && !inSleep(nowMin)){
       const nl = document.createElement("div");
-      nl.className = "calnow"; nl.style.top = (nowMin/60*CAL_H)+"px";
+      nl.className = "calnow"; nl.style.top = vY(nowMin)+"px";
       tr.appendChild(nl);
     }
     tr.onclick = e=>{
       const r = tr.getBoundingClientRect();
-      let mins = Math.round(((e.clientY-r.top)/CAL_H*60)/30)*30;
+      const yPx = e.clientY-r.top;
+      let lo=0, hi=1440; /* invert the compressed mapping */
+      for(let k=0;k<24;k++){ const mid=(lo+hi)/2; if(vY(mid)<yPx) lo=mid; else hi=mid; }
+      let mins = Math.round(lo/30)*30;
       mins = Math.max(0, Math.min(1410, mins));
+      for(const rg of sR){ if(mins>=rg[0]&&mins<rg[1]) mins=rg[1]; }
       openCalEditor({day:dow, start:mins});
     };
     col.appendChild(tr); cols.appendChild(col);
@@ -2447,6 +2502,7 @@ document.querySelectorAll("#calKindRow .chip").forEach(c=>c.onclick=()=>{
   if(!calColorTouched || calDraft.color===prev.color) calDraft.color = calKindDef(k).color;
   if(!calDraft.label || calDraft.label===prev.label) calDraft.label = calKindDef(k).label;
   if(k==="work" && !calEditId && calDraft.days.length<=1) calDraft.days = workDays().slice();
+  if(k==="sleep" && !calEditId){ calDraft.start=1380; calDraft.end=420; calDraft.days=[0,1,2,3,4,5,6]; }
   renderCalEditor();
 });
 document.getElementById("calLabel").oninput = e=>{ if(calDraft) calDraft.label = e.target.value; };
@@ -2455,7 +2511,8 @@ document.getElementById("calSave").onclick = ()=>{
   const d = calDraft;
   d.start = Math.max(0, Math.min(1439, calTimeToMins(document.getElementById("calStart").value)));
   d.end = Math.max(0, Math.min(1439, calTimeToMins(document.getElementById("calEnd").value)));
-  if(d.end<=d.start) d.end = Math.min(d.start+60, 1439);
+  if(d.kind==="sleep"){ if(d.end===d.start) d.end = (d.start+480)%1440; /* overnight wrap allowed */ }
+  else if(d.end<=d.start) d.end = Math.min(d.start+60, 1439);
   if(!d.days.length) d.days = [new Date(todayStr()+"T12:00:00").getDay()];
   d.label = (d.label||"").trim()||calKindDef(d.kind).label;
   if(!Array.isArray(S.calEvents)) S.calEvents = [];
@@ -2828,6 +2885,7 @@ function dcXY(frac){ /* point on the arc: frac 0 = 5am (left) → 1 = 11pm (righ
   const th = Math.PI*(1-frac);
   return [150+120*Math.cos(th), 150-120*Math.sin(th)];
 }
+function fmtClockC(t){ t=((Math.round(t)%1440)+1440)%1440; const h24=Math.floor(t/60), m=t%60, ap=h24<12?"a":"p", h=h24%12||12; return h+(m?":"+String(m).padStart(2,"0"):"")+ap; }
 function fmtClockS(mins){
   mins = ((Math.round(mins)%1440)+1440)%1440;
   let h = Math.floor(mins/60); const ap = h>=12?"p":"a"; h = h%12; if(h===0) h=12;
