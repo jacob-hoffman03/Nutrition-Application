@@ -907,12 +907,14 @@ body.reordering #progOverview{display:none}
 .caldh .dd{width:6px;height:6px;border-radius:50%;margin:3px auto 0;background:#cfcfda;}
 .caldh .dd.work{background:var(--acc);}
 .calday.today .dt{color:var(--acc);}
-.caltrack{position:relative;height:528px;background:#ebebf2;border-radius:10px;overflow:hidden;margin:0 2px;}
-.caltrack .chlab{position:absolute;left:4px;transform:translateY(-50%);font-size:8px;font-weight:700;color:#9aa3b2;z-index:3;pointer-events:none;white-space:nowrap;}
+.caltrack{position:relative;height:528px;margin:0 2px;overflow:visible;}
+.caltrack .spine{position:absolute;top:0;bottom:0;left:50%;width:2px;margin-left:-1px;background:#e3e7f1;border-radius:2px;z-index:1;}
+.caltrack .tick{position:absolute;left:50%;width:9px;height:2px;margin-left:-4.5px;background:#d4dae7;border-radius:1px;z-index:2;transform:translateY(-50%);}
+.caltrack .tick.mid{background:var(--acc);width:15px;margin-left:-7.5px;}
+.sleepmoon{position:absolute;left:50%;top:-11px;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:6;box-shadow:0 2px 8px rgba(20,24,40,.25);}
+.sleepmoon svg{width:13px;height:13px;}
+.caltrack .chlab{position:absolute;right:50%;margin-right:9px;transform:translateY(-50%);font-size:8px;font-weight:700;color:#9aa3b2;z-index:3;pointer-events:none;white-space:nowrap;text-align:right;}
 .caltrack .chlab.mid{color:var(--acc);}
-.sleepstrip{position:absolute;left:2px;right:2px;height:16px;border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:5;overflow:hidden;}
-.sleepstrip.thin{height:9px;}
-.sleepstrip span{font-size:8px;font-weight:800;color:#fff;opacity:.92;white-space:nowrap;letter-spacing:.2px;}
 .caltrack .hl{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,.9);}
 .caltrack .hl.mid{background:var(--acc);opacity:.6;height:2px;z-index:4;}
 .eatband{position:absolute;left:2px;right:2px;border-radius:6px;pointer-events:none;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;}
@@ -1557,7 +1559,7 @@ body.reordering #progOverview{display:none}
         <div class="calcols" id="calCols"></div>
       </div>
     </div>
-    <div class="hint" style="padding:10px 22px 34px">Tap a gray slot to add a block. Add a Sleep block to collapse the night and shrink the calendar to your day.</div>
+    <div class="hint" style="padding:10px 22px 34px">Tap a day to add a block. Set Sleep to collapse the night — everything sits on your timeline.</div>
   </section>
 
   <nav class="tabbar"><div class="inner">
@@ -2155,7 +2157,7 @@ function saveTrimPhotos(){
   if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
   return true;
 }
-const APP_VERSION = "2026.09.27-n";
+const APP_VERSION = "2026.09.27-o";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2352,15 +2354,15 @@ function renderCalendar(){
     const inSleep = t=>sR.some(r=>t>=r[0]&&t<r[1]);
     const trackH = (1440-sR.reduce((a,r)=>a+(r[1]-r[0]),0))/60*CAL_H;
     tr.style.height = trackH+"px";
+    const spine = document.createElement("div");
+    spine.className = "spine"; tr.appendChild(spine);
     for(let h=0;h<24;h++){
       if(vDur(h*60,h*60+60)<=0) continue;
-      const hl = document.createElement("div");
-      hl.className = "hl"+(h===12?" mid":"");
-      hl.style.top = vY(h*60)+"px";
-      tr.appendChild(hl);
+      const tk = document.createElement("div");
+      tk.className = "tick"+(h===12?" mid":"");
+      tk.style.top = vY(h*60)+"px";
+      tr.appendChild(tk);
     }
-    const bot = document.createElement("div");
-    bot.className = "hl"; bot.style.top = (trackH-1)+"px"; tr.appendChild(bot);
     for(let h=0;h<24;h+=3){
       if(vDur(h*60,h*60+180)<90) continue;
       const l = document.createElement("div");
@@ -2369,22 +2371,17 @@ function renderCalendar(){
       l.textContent = h===0?"12a":h===12?"12p":h<12?h+"a":(h-12)+"p";
       tr.appendChild(l);
     }
-    /* sleep strips: slim collapsed-night markers, tap to edit */
+    /* sleep moon: single tappable marker for the collapsed night */
     if(sR.length){
       const sEv = (S.calEvents||[]).find(e=>e&&e.kind==="sleep"&&e.days&&e.days.indexOf(dow)>=0);
-      const sLbl = sEv?("Sleep "+fmtClockC(sEv.start)+"\u2013"+fmtClockC(sEv.end)):"Sleep";
-      const mkStrip=(topPx,lbl,thin)=>{
-        const sp = document.createElement("div");
-        sp.className = "sleepstrip"+(thin?" thin":"");
-        sp.style.top = topPx+"px";
-        sp.style.background = (sEv&&sEv.color)||"#2e3444";
-        if(lbl) sp.innerHTML = "<span>"+esc(lbl)+"</span>";
-        sp.onclick = ev=>{ ev.stopPropagation(); if(sEv) openCalEditor({event:sEv}); };
-        tr.appendChild(sp);
-      };
-      if(sR[0][0]===0) mkStrip(2,sLbl,false);
-      const last = sR[sR.length-1];
-      if(last[1]===1440) mkStrip(trackH-(sR[0][0]===0?11:18), sR[0][0]===0?null:sLbl, sR[0][0]===0);
+      const moon = document.createElement("button");
+      moon.className = "sleepmoon";
+      moon.style.background = (sEv&&sEv.color)||"#2e3444";
+      moon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13.2A8.2 8.2 0 1 1 10.8 4 6.6 6.6 0 0 0 20 13.2z"/></svg>';
+      if(sEv) moon.title = "Sleep "+fmtClockC(sEv.start)+"\u2013"+fmtClockC(sEv.end);
+      moon.setAttribute("aria-label", "Edit sleep");
+      moon.onclick = ev=>{ ev.stopPropagation(); if(sEv) openCalEditor({event:sEv}); };
+      tr.appendChild(moon);
     }
     /* learned eating windows — soft full-width bands, taps pass through to the track */
     const meals = (S.days[ds]&&S.days[ds].meals)||{};
