@@ -2226,7 +2226,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.01-c";
+const APP_VERSION = "2026.10.01-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2267,6 +2267,10 @@ else { if(!/^#[0-9a-fA-F]{6}$/.test(s.profile.theme)) s.profile.theme = DEFAULT_
   if(!Array.isArray(s.customFoods)) s.customFoods=[]; if(!Array.isArray(s.weights)) s.weights=[];
   if(!Array.isArray(s.favorites)) s.favorites=[]; if(!s.days||typeof s.days!=="object") s.days={};
   /* missing keys (old/corrupt stores) must not crash render paths that .slice() them 2026.09.24-e */
+  /* 2026.10.01-d: purge dead (null/undefined) entries from meal arrays — an
+     interrupted write can leave holes, and a single hole crashed boot-time
+     totals/tired-model loops that read e.t / e.cal unguarded. */
+  Object.values(s.days||{}).forEach(function(d){ if(!d||!d.meals) return; MEALS.forEach(function(m){ if(Array.isArray(d.meals[m])) d.meals[m] = d.meals[m].filter(function(e){ return !!e; }); }); });
   return s; } } catch(e){}
   flagSet("zeroReset",1); /* fresh boot / unreadable state: nothing to reset, mark it done */
   freshBoot = true; /* boot code below will try restoring seed-data.json */
@@ -7988,22 +7992,28 @@ function learnMealTemplates(){
   var T = {}, cutoff = addDays(todayStr(), -60), today = todayStr();
   MEALS.forEach(function(m){
     T[m] = [];
-    var sigCount = {}, sigQty = {};
+    var sigCount = {}, sigNames = {}, sigQty = {};
     Object.keys(S.days).forEach(function(k){
       if(k<cutoff || k>today) return;
       var items = (((S.days[k]||{}).meals||{})[m]||[]).filter(function(e){ return e && e.n; });
       if(!items.length) return;
-      var sig = items.map(function(e){ return e.n; }).sort().join(" + ");
+      /* 2026.10.01-d: never split the signature back into names — food names can
+         contain " + " themselves (e.g. "Clif Bar, Fruit + Nut Bar"), which broke
+         the old join/split round-trip and crashed the whole Plan page. The key
+         uses \u0001 and the true name list rides alongside it. */
+      var names = items.map(function(e){ return e.n; }).sort();
+      var sig = names.join("");
       sigCount[sig] = (sigCount[sig]||0)+1;
-      var q = sigQty[sig] || (sigQty[sig] = {});
+      if(!sigNames[sig]){ sigNames[sig] = names; sigQty[sig] = {}; }
+      var q = sigQty[sig];
       items.forEach(function(e){ (q[e.n] = q[e.n]||[]).push(e.qty||1); });
     });
     Object.keys(sigCount).sort(function(a,b){ return sigCount[b]-sigCount[a]; }).slice(0,3).forEach(function(sig){
       if(sigCount[sig]<3) return;
       var q = sigQty[sig];
-      var items = sig.split(" + ").map(function(n){
-        var qs = q[n].slice().sort(function(a,b){ return a-b; });
-        var med = qs[Math.floor(qs.length/2)];
+      var items = sigNames[sig].map(function(n){
+        var qs = (q[n]||[]).slice().sort(function(a,b){ return a-b; });
+        var med = qs.length ? qs[Math.floor(qs.length/2)] : 1;
         return {n:n, qty:Math.max(.5, Math.round(med*2)/2)};
       });
       T[m].push({items:items, count:sigCount[sig]});
