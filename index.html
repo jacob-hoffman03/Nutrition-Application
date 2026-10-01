@@ -1097,21 +1097,22 @@ body.reordering #progOverview{display:none}
       <h1>Plan</h1>
       <div style="width:44px"></div>
     </div>
-    <div class="plabel">PROGRESS</div>
+    <div class="plabel"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff8f3d;margin-right:7px"></span>PROGRESS</div>
     <div class="pbanners" id="planBanners"></div>
-    <div class="plabel">TODAY'S PLAN <span id="planDayTot"></span></div>
+    <div id="planGoalsBody"></div>
+    <div class="plabel"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff9f43;margin-right:7px"></span>TODAY'S PLAN <span id="planDayTot"></span></div>
     <div id="planDayBody"></div>
     <div style="display:flex;gap:8px;margin:10px 0 0">
       <button class="bigbtn" id="planPageBuild" style="flex:1;margin:0">Rebuild</button>
       <button class="bigbtn" id="planPageLogAll" style="flex:1;margin:0">Log it all</button>
     </div>
-    <div class="plabel">WORTH TRYING</div>
+    <div class="plabel"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#8b7cf0;margin-right:7px"></span>WORTH TRYING</div>
     <div style="font-size:12.5px;color:var(--muted);margin:-2px 0 10px;line-height:1.5">Bulking staples from real 3,500-kcal plans, sized for your goal.</div>
     <div id="planTryBody"></div>
-    <div class="plabel">TARGET RUN <span id="planShopCost"></span></div>
+    <div class="plabel"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#66bb6a;margin-right:7px"></span>TARGET RUN <span id="planShopCost"></span></div>
     <div style="font-size:12.5px;color:var(--muted);margin:-2px 0 10px;line-height:1.5">One week of your plan, grouped by aisle. Tap to check off.</div>
     <div class="card" id="planShopBody" style="padding:4px 16px 12px"></div>
-    <div class="plabel">MAKE IT STICK</div>
+    <div class="plabel"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4fc3f7;margin-right:7px"></span>MAKE IT STICK</div>
     <div id="planTipsBody" style="margin-bottom:16px"></div>
   </section>
 
@@ -2225,7 +2226,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.01-b";
+const APP_VERSION = "2026.10.01-c";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -7979,11 +7980,61 @@ function planTypicalQty(P, meal, name){
   var q = hf ? hf.qty/hf.n : 1;
   return Math.min(3, Math.max(.5, Math.round(q*2)/2));
 }
-function buildMealPlan(meal, P, pool, alloc, def, loggedNames, freqMax){
+/* 2026.10.01-c: whole-meal templates. Instead of assembling a meal from top
+   individual foods, learn the exact lineups Jay repeats — e.g. 3 eggs + bagel +
+   peanut butter + banana — with median quantities. A template needs 3+ repeats
+   in the 60-day window to qualify. */
+function learnMealTemplates(){
+  var T = {}, cutoff = addDays(todayStr(), -60), today = todayStr();
+  MEALS.forEach(function(m){
+    T[m] = [];
+    var sigCount = {}, sigQty = {};
+    Object.keys(S.days).forEach(function(k){
+      if(k<cutoff || k>today) return;
+      var items = (((S.days[k]||{}).meals||{})[m]||[]).filter(function(e){ return e && e.n; });
+      if(!items.length) return;
+      var sig = items.map(function(e){ return e.n; }).sort().join(" + ");
+      sigCount[sig] = (sigCount[sig]||0)+1;
+      var q = sigQty[sig] || (sigQty[sig] = {});
+      items.forEach(function(e){ (q[e.n] = q[e.n]||[]).push(e.qty||1); });
+    });
+    Object.keys(sigCount).sort(function(a,b){ return sigCount[b]-sigCount[a]; }).slice(0,3).forEach(function(sig){
+      if(sigCount[sig]<3) return;
+      var q = sigQty[sig];
+      var items = sig.split(" + ").map(function(n){
+        var qs = q[n].slice().sort(function(a,b){ return a-b; });
+        var med = qs[Math.floor(qs.length/2)];
+        return {n:n, qty:Math.max(.5, Math.round(med*2)/2)};
+      });
+      T[m].push({items:items, count:sigCount[sig]});
+    });
+  });
+  return T;
+}
+function buildMealPlan(meal, P, pool, alloc, def, loggedNames, freqMax, templates){
   /* strict gate: once a meal has real history (>=5 logs), only foods Jay has
      actually eaten AT THAT MEAL may be picked. New ideas come through the
      "Try instead" suggestion, never smuggled into the plan itself. */
   var strict = P.meals[meal].n >= 5;
+  var tpl = (strict && templates && templates[meal] && templates[meal][0]) || null;
+  if(tpl){
+    /* his actual repeated lineup, scaled to the meal's calorie share */
+    var titems = [], base = 0;
+    tpl.items.forEach(function(ti){
+      if(loggedNames.indexOf(ti.n)>=0) return;
+      var lib = planLibFood(ti.n);
+      if(lib){ titems.push({lib:lib, qty:ti.qty}); base += lib.f.cal*ti.qty; }
+    });
+    if(titems.length && base>0){
+      var tf = Math.max(.75, Math.min(1.6, alloc/base));
+      var items = titems.map(function(x){
+        var q = Math.max(.5, Math.round(x.qty*tf*2)/2);
+        return {n:x.lib.f.n, qty:q, cal:Math.round(x.lib.f.cal*q),
+          p:Math.round((x.lib.f.p||0)*q), c:Math.round((x.lib.f.c||0)*q), f:Math.round((x.lib.f.f||0)*q)};
+      });
+      return {items:items, cal:items.reduce(function(a,x){ return a+x.cal; },0), tplN:tpl.count};
+    }
+  }
   var mpool = strict ? pool.filter(function(it){ return !!P.meals[meal].foods[it.n]; }) : pool;
   if(!mpool.length) mpool = pool;
   var items = [], chosen = [], cal = 0;
@@ -8064,17 +8115,18 @@ function buildPlan(){
   var loggedNames = [];
   PLAN_MEALS.forEach(function(m){ (dd[m]||[]).forEach(function(e){ if(e && e.n) loggedNames.push(e.n); }); });
   var def = planDefVec(remP, remC, remF, remFib);
+  var templates = learnMealTemplates();
   var meals = {}, totCal = 0, totP = 0;
   openMeals.forEach(function(m){
     var share = sizeTot>0 ? sizes[m]/sizeTot : (PLAN_SHARE_FALLBACK[m]||.2);
     var alloc = Math.max(120, remCal*share);
     var freqMax = 1;
     Object.keys(P.meals[m].foods).forEach(function(n){ freqMax = Math.max(freqMax, P.meals[m].foods[n].n); });
-    var built = buildMealPlan(m, P, pool, alloc, def, loggedNames, freqMax);
+    var built = buildMealPlan(m, P, pool, alloc, def, loggedNames, freqMax, templates);
     /* portion top-up: his usual portions undershoot the goal, so scale servings
        (capped 1.6x — bigger plates, not absurd ones) so the plan actually lands
        near the day's target instead of just repeating the shortfall. */
-    if(built.items.length && built.cal < alloc*.85){
+    if(!built.tplN && built.items.length && built.cal < alloc*.85){
       var f = Math.min(1.6, alloc/Math.max(1,built.cal));
       built.items.forEach(function(it){
         var lib = planLibFood(it.n), nq = Math.round(it.qty*f*2)/2;
@@ -8088,7 +8140,7 @@ function buildPlan(){
     var usualTop = Object.keys(P.meals[m].foods).sort(function(a,b){ return P.meals[m].foods[b].n - P.meals[m].foods[a].n; }).slice(0,5);
     var plannedNames = built.items.map(function(x){ return x.n; });
     var alt = planAltSuggestion(m, P, pool, def, usualTop, plannedNames);
-    meals[m] = {items:built.items, cal:built.cal, alt:alt, alloc:Math.round(alloc)};
+    meals[m] = {items:built.items, cal:built.cal, alt:alt, alloc:Math.round(alloc), tplN:built.tplN||0};
     totCal += built.cal;
     built.items.forEach(function(it){ totP += it.p; });
   });
@@ -8125,6 +8177,7 @@ function paintPlanCard(){
     var mp = _plan.meals[m];
     if(!mp) return;
     html += '<div style="margin:10px 0 2px;font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--muted)">'+MEAL_LABEL_L[m].toUpperCase()+'</div>';
+    if(mp.tplN) html += '<div style="font-size:11px;color:var(--muted);margin:-1px 0 5px">Your usual lineup \u00b7 logged '+mp.tplN+'\u00d7</div>';
     if(!mp.items.length){
       html += '<div style="font-size:13px;color:var(--muted)">Nothing fits this meal yet — log more '+MEAL_LABEL_L[m].toLowerCase()+'s and I\'ll learn.</div>';
     } else {
@@ -8169,9 +8222,57 @@ function planLogMeal(m){
 }
 /* ============ PLAN PAGE 2026.10.01-b — progression banners, the smart day,
    research-backed meals worth trying, and the Target run ============ */
+var PLAN_MEAL_ACCENT = {breakfast:"#ff9f43", lunch:"#ffab3d", dinner:"#8b7cf0", snacks:"#ff7f2a", supplements:"#8b7cf0"};
+function planGoalData(){
+  /* eaten + planned, projected against today's goals */
+  planEnsure();
+  var t = totals(viewDate());
+  var pe = {cal:0, p:0, c:0, f:0}, fibPlan = 0;
+  if(_plan && _plan.meals) _plan.openMeals.forEach(function(m){
+    var mp = _plan.meals[m]; if(!mp) return;
+    pe.cal += mp.cal;
+    mp.items.forEach(function(it){
+      pe.p += it.p; pe.c += it.c; pe.f += it.f;
+      var lib = planLibFood(it.n);
+      if(lib && lib.fib) fibPlan += lib.fib*it.qty;
+    });
+  });
+  var fibEaten = 0;
+  try{ fibEaten = fiberTotal(viewDate()); }catch(e){}
+  var G = [
+    {k:"Calories", unit:"kcal", proj:t.cal+pe.cal, goal:goalTotal(), col:"#ff8f3d"},
+    {k:"Protein", unit:"g", proj:t.p+pe.p, goal:(S.goals.protein||0), col:"#8b7cf0"},
+    {k:"Carbs", unit:"g", proj:t.c+pe.c, goal:(S.goals.carbs||0), col:"#ffab3d"},
+    {k:"Fat", unit:"g", proj:t.f+pe.f, goal:(S.goals.fat||0), col:"#4fc3f7"},
+    {k:"Fiber", unit:"g", proj:fibEaten+fibPlan, goal:fiberTarget(), col:"#66bb6a"}
+  ];
+  var score = 0, n = 0;
+  G.forEach(function(g){
+    if(g.goal>0){ score += Math.min(1, g.proj/g.goal); n++; }
+    g.pct = g.goal>0 ? Math.min(100, Math.round(g.proj/g.goal*100)) : 0;
+  });
+  return {rows:G, score:n?Math.round(score/n*100):0};
+}
+function renderPlanGoals(){
+  var body = document.getElementById("planGoalsBody");
+  if(!body) return;
+  var D = planGoalData();
+  var C = 2*Math.PI*26, arc = (C*D.score/100).toFixed(1);
+  var ring = '<svg width="76" height="76" viewBox="0 0 76 76" style="flex:none">'
+    + '<circle cx="38" cy="38" r="26" fill="none" stroke="#eeeef4" stroke-width="8"/>'
+    + '<circle cx="38" cy="38" r="26" fill="none" stroke="#ff9f43" stroke-width="8" stroke-linecap="round" stroke-dasharray="'+arc+' '+C.toFixed(1)+'" transform="rotate(-90 38 38)"/>'
+    + '<text x="38" y="43" text-anchor="middle" font-size="16" font-weight="800" fill="#1c1c22">'+D.score+'%</text></svg>';
+  var rows = D.rows.map(function(g){
+    return '<div style="margin:10px 0 0"><div style="display:flex;font-size:12.5px;margin-bottom:4px"><span style="font-weight:700">'+g.k+'</span><span style="margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums">'+Math.round(g.proj).toLocaleString()+' / '+Math.round(g.goal).toLocaleString()+' '+g.unit+'</span></div>'
+      + '<div style="height:8px;border-radius:5px;background:#f0f0f5;overflow:hidden"><div style="height:100%;width:'+g.pct+'%;border-radius:5px;background:'+g.col+'"></div></div></div>';
+  }).join("");
+  body.innerHTML = '<div class="card" style="border-top:3px solid #ff9f43"><div style="display:flex;gap:14px;align-items:center;margin-bottom:4px">'+ring
+    + '<div><b style="font-size:15px">Today\u2019s goals</b><div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:3px">Eaten + planned, against your daily targets.</div></div></div>'
+    + rows + '</div>';
+}
 function renderPlanPage(){
   if(typeof curView!=="undefined" && curView!=="plan") return;
-  renderPlanBanners(); renderPlanDay(); renderPlanTry(); renderPlanShop(); renderPlanTips();
+  renderPlanBanners(); renderPlanGoals(); renderPlanDay(); renderPlanTry(); renderPlanShop(); renderPlanTips();
 }
 function renderPlanBanners(){
   var el = document.getElementById("planBanners");
@@ -8217,7 +8318,8 @@ function renderPlanDay(){
       return '<div class="logrow"><span class="nm">'+esc(it.n)+' <span>'+it.qty+' \u00d7 serving</span></span><span class="kc">'+it.cal+'</span></div>';
     }).join("") : '<div style="font-size:13px;color:var(--muted)">Already logged.</div>';
     var alt = mp.alt ? '<div style="display:flex;gap:8px;align-items:center;margin:6px 0 4px;padding:8px 10px;background:#f6f6fa;border-radius:12px"><div style="font-size:12.5px;line-height:1.45;flex:1"><b>Try instead:</b> '+esc(mp.alt.n)+' <span style="color:var(--muted)">\u2014 '+esc(mp.alt.reason)+'.</span></div><button class="chip" data-pg-swap="'+m+'" style="flex:none">Swap</button></div>' : "";
-    return '<div class="card"><div style="display:flex;align-items:baseline;margin-bottom:6px"><b>'+MEAL_L[m]+'</b><span style="margin-left:auto;font-size:12px;color:var(--muted)">'+mp.cal.toLocaleString()+' kcal</span></div>'+rows+alt+'<button class="chip" data-pg-log="'+m+'" style="margin-top:8px">Log this meal</button></div>';
+    var badge = mp.tplN ? '<div style="font-size:11px;color:var(--muted);margin:0 0 8px">Your usual lineup \u00b7 logged '+mp.tplN+'\u00d7</div>' : "";
+    return '<div class="card" style="border-top:3px solid '+(PLAN_MEAL_ACCENT[m]||"#ff9f43")+'"><div style="display:flex;align-items:baseline"><b>'+MEAL_L[m]+'</b><span style="margin-left:auto;font-size:12px;color:var(--muted)">'+mp.cal.toLocaleString()+' kcal</span></div>'+badge+rows+alt+'<button class="chip" data-pg-log="'+m+'" style="margin-top:8px">Log this meal</button></div>';
   }).join("");
   body.querySelectorAll("[data-pg-swap]").forEach(function(b){ b.onclick = function(){ planSwapMeal(b.getAttribute("data-pg-swap")); }; });
   body.querySelectorAll("[data-pg-log]").forEach(function(b){ b.onclick = function(){ planLogMeal(b.getAttribute("data-pg-log")); }; });
@@ -8228,18 +8330,24 @@ function renderPlanDay(){
    and his own chicken-rice leveled up. Items resolve against Fuel's food DB —
    anything missing is skipped, never guessed. */
 var PLAN_TRY = [
-  {name:"PB Banana Bulk Shake", meal:"snacks",
+  {name:"PB Banana Bulk Shake", meal:"snacks", focus:"Liquid calories",
    why:"The hardgainer's cheat code \u2014 big calories that drink like nothing. Every 3,500-kcal plan uses a shake like this to close the gap.",
    items:[["Whey Protein Nutritional Supplement, Strawberry",1],["Fairlife Milk, Ultra- Filtered",2],["Bananas, Raw",1],["Simply Jif Creamy Peanut Butter",2]]},
-  {name:"Overnight Oats Bowl", meal:"breakfast",
+  {name:"Overnight Oats Bowl", meal:"breakfast", focus:"Overnight prep",
    why:"Prep it the night before, grab and go. Oats + peanut butter + milk lands a huge breakfast before you're even awake.",
    items:[["Quaker Old Fashioned Oats 42 Oz",1.5],["Fairlife Milk, Ultra- Filtered",1.5],["Simply Jif Creamy Peanut Butter",1.5],["Bananas, Raw",1]]},
-  {name:"Creamy Chicken Pasta", meal:"dinner",
+  {name:"Creamy Chicken Pasta", meal:"dinner", focus:"Heavier dinner",
    why:"Chicken-and-rice's heavier cousin \u2014 pasta packs more calories per bite, and cottage cheese melts into a high-protein sauce.",
    items:[["Chicken Breast, Skinless, Boneless",1],["Pasta, Cooked, Enriched, With Added Salt",2],["Daisy Cottage Cheese, 2% Milkfat, Low Fat",1]]},
-  {name:"Chicken Burrito Bowl", meal:"lunch",
+  {name:"Chicken Burrito Bowl", meal:"lunch", focus:"Your usual, upgraded",
    why:"Your usual, wrapped up \u2014 chicken and rice in warm tortillas. Same foods you already eat, easier to eat more of.",
-   items:[["Chicken Breast, Skinless, Boneless",1],["Rice, White, Medium-Grain, Cooked, Unenriched",2],["Mission Foods, Mission Flour Tortillas, Soft Taco, 8 Inch",2]]}
+   items:[["Chicken Breast, Skinless, Boneless",1],["Rice, White, Medium-Grain, Cooked, Unenriched",2],["Mission Foods, Mission Flour Tortillas, Soft Taco, 8 Inch",2]]},
+  {name:"Greek Yogurt Power Bowl", meal:"breakfast", focus:"Recovery + steady energy",
+   why:"30g+ protein up front ends the overnight muscle breakdown and keeps blood sugar flat till lunch \u2014 the even-distribution pattern research ties to ~25% better daily muscle building (Mamerow 2014).",
+   items:[["Chobani Plain Non- Fat Greek Yogurt",1.5],["Quaker Old Fashioned Oats 42 Oz",1],["Bananas, Raw",1],["Simply Jif Creamy Peanut Butter",1]]},
+  {name:"PB Banana Oat Shake", meal:"breakfast", focus:"Fast mornings",
+   why:"For no-cook mornings: whey + oats + banana + peanut butter drinks like a shake and lands like a full breakfast.",
+   items:[["Whey Protein Nutritional Supplement, Strawberry",1],["Fairlife Milk, Ultra- Filtered",1.5],["Quaker Old Fashioned Oats 42 Oz",1],["Bananas, Raw",1],["Simply Jif Creamy Peanut Butter",1]]}
 ];
 var PLAN_TRY_MEAL_L = {breakfast:"breakfast", lunch:"lunch", dinner:"dinner", snacks:"snack"};
 function renderPlanTry(){
@@ -8252,7 +8360,8 @@ function renderPlanTry(){
     var cal = 0, p = 0;
     items.forEach(function(x){ cal += x.it.f.cal*x.qty; p += (x.it.f.p||0)*x.qty; });
     var list = items.map(function(x){ return esc(x.it.n)+" \u00d7 "+x.qty; }).join(" \u00b7 ");
-    return '<div class="card"><div style="display:flex;align-items:baseline;gap:8px"><b>'+esc(card.name)+'</b><span style="margin-left:auto;font-size:12px;color:var(--muted);flex:none">'+Math.round(cal).toLocaleString()+' kcal \u00b7 '+Math.round(p)+'g P</span></div>'
+    var fchip = card.focus ? '<span style="font-size:10.5px;font-weight:800;letter-spacing:.4px;color:#8b7cf0;background:#efedfd;border-radius:20px;padding:3px 9px;flex:none">'+esc(card.focus).toUpperCase()+'</span>' : "";
+    return '<div class="card" style="border-top:3px solid #8b7cf0"><div style="display:flex;align-items:center;gap:8px"><b>'+esc(card.name)+'</b><span style="margin-left:auto;flex:none">'+fchip+'</span></div><div style="display:flex;align-items:baseline;gap:8px;margin-top:2px"><span style="font-size:12px;color:var(--muted);flex:none">'+Math.round(cal).toLocaleString()+' kcal \u00b7 '+Math.round(p)+'g P</span></div>'
       + '<div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin:6px 0">'+esc(card.why)+'</div>'
       + '<div style="font-size:12.5px;margin-bottom:10px;line-height:1.6">'+list+'</div>'
       + '<button class="chip" data-pg-try="'+ci+'">Log it ('+PLAN_TRY_MEAL_L[card.meal]+')</button></div>';
