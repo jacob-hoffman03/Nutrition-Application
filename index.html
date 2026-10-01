@@ -2226,7 +2226,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.01-d";
+const APP_VERSION = "2026.10.01-e";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2264,6 +2264,11 @@ else { if(!/^#[0-9a-fA-F]{6}$/.test(s.profile.theme)) s.profile.theme = DEFAULT_
       (s.favorites||[]).forEach((x,i)=>{ if(x===on) s.favorites[i]=nn; });
       Object.values(s.days||{}).forEach(d=>MEALS.forEach(m=>((d.meals||{})[m]||[]).forEach(e=>{ if(e.n===on) e.n=nn; }))); } } });
     flagSet("ggAbbr",1); } /* Good & Gather -> G&G label abbreviation 2026.09.20-cs */
+  if(!flagGet().crabFix){ /* 2026.10.01-e: Jay's custom food typo "Crab Balance" -> "Carb Balance" */
+    (s.customFoods||[]).forEach(function(f){ if(f.n && f.n.indexOf("Crab Balance")>=0){ var on=f.n, nn=on.replace("Crab Balance","Carb Balance"); f.n=nn;
+      (s.favorites||[]).forEach(function(x,i){ if(x===on) s.favorites[i]=nn; });
+      Object.values(s.days||{}).forEach(function(d){ MEALS.forEach(function(m){ ((d.meals||{})[m]||[]).forEach(function(e){ if(e && e.n===on) e.n=nn; }); }); }); } });
+    flagSet("crabFix",1); }
   if(!Array.isArray(s.customFoods)) s.customFoods=[]; if(!Array.isArray(s.weights)) s.weights=[];
   if(!Array.isArray(s.favorites)) s.favorites=[]; if(!s.days||typeof s.days!=="object") s.days={};
   /* missing keys (old/corrupt stores) must not crash render paths that .slice() them 2026.09.24-e */
@@ -7977,7 +7982,10 @@ function planScoreCandidate(it, meal, P, def, chosen, loggedNames, freqMax){
   });
   var pairScore = pn ? Math.min(1, pair/(pn*3)) : 0;
   var fibScore = def.fib>1 ? Math.min(1, it.fib/Math.max(1,def.fib)) : 0;
-  return .45*mealFit + .30*gap + .15*pairScore + .10*fibScore;
+  /* 2026.10.01-e: when the fiber gap is big (>15g), upweight fiber carriers —
+     research says get it from calorie-dense foods (oats, beans, fruit), not salad. */
+  var fibW = def.fib>15 ? .18 : .10;
+  return (.45-(fibW-.10))*mealFit + .30*gap + .15*pairScore + fibW*fibScore;
 }
 function planTypicalQty(P, meal, name){
   var hf = P.meals[meal].foods[name];
@@ -8021,11 +8029,28 @@ function learnMealTemplates(){
   });
   return T;
 }
-function buildMealPlan(meal, P, pool, alloc, def, loggedNames, freqMax, templates){
+function buildMealPlan(meal, P, pool, alloc, def, loggedNames, freqMax, templates, avoidNames){
   /* strict gate: once a meal has real history (>=5 logs), only foods Jay has
      actually eaten AT THAT MEAL may be picked. New ideas come through the
      "Try instead" suggestion, never smuggled into the plan itself. */
   var strict = P.meals[meal].n >= 5;
+  var mpool = strict ? pool.filter(function(it){ return !!P.meals[meal].foods[it.n]; }) : pool;
+  if(!mpool.length) mpool = pool;
+  /* 2026.10.01-e: don't repeat a food already planned at another meal today
+     (bagels at breakfast AND lunch). Falls back gracefully when the pool is tiny. */
+  avoidNames = avoidNames || [];
+  if(avoidNames.length){
+    var mp2 = mpool.filter(function(it){ return avoidNames.indexOf(it.n)<0; });
+    if(mp2.length>=2) mpool = mp2;
+  }
+  function mealFitOf(it){ var hf = P.meals[meal].foods[it.n]; return hf ? hf.n/freqMax : 0; }
+  var items = [], chosen = [], cal = 0, tplN = 0;
+  function pushItem(it, qty){
+    qty = Math.max(.5, Math.round(qty*2)/2);
+    var itemCal = it.f.cal*qty;
+    items.push({n:it.n, qty:qty, cal:Math.round(itemCal), p:Math.round((it.f.p||0)*qty), c:Math.round((it.f.c||0)*qty), f:Math.round((it.f.f||0)*qty)});
+    chosen.push(it.n); cal += itemCal;
+  }
   var tpl = (strict && templates && templates[meal] && templates[meal][0]) || null;
   if(tpl){
     /* his actual repeated lineup, scaled to the meal's calorie share */
@@ -8037,43 +8062,95 @@ function buildMealPlan(meal, P, pool, alloc, def, loggedNames, freqMax, template
     });
     if(titems.length && base>0){
       var tf = Math.max(.75, Math.min(1.6, alloc/base));
-      var items = titems.map(function(x){
+      titems.forEach(function(x){
         var q = Math.max(.5, Math.round(x.qty*tf*2)/2);
-        return {n:x.lib.f.n, qty:q, cal:Math.round(x.lib.f.cal*q),
-          p:Math.round((x.lib.f.p||0)*q), c:Math.round((x.lib.f.c||0)*q), f:Math.round((x.lib.f.f||0)*q)};
+        pushItem({n:x.lib.f.n, f:x.lib.f}, q);
       });
-      return {items:items, cal:items.reduce(function(a,x){ return a+x.cal; },0), tplN:tpl.count};
+      tplN = tpl.count;
     }
   }
-  var mpool = strict ? pool.filter(function(it){ return !!P.meals[meal].foods[it.n]; }) : pool;
-  if(!mpool.length) mpool = pool;
-  var items = [], chosen = [], cal = 0;
-  for(var step=0; step<3 && cal < alloc*.75; step++){
-    var best = null, bestScore = -1;
+  if(!items.length){
+    for(var step=0; step<3 && cal < alloc*.75; step++){
+      var best = null, bestScore = -1;
+      mpool.forEach(function(it){
+        if(chosen.indexOf(it.n)>=0) return;
+        var sc = planScoreCandidate(it, meal, P, def, chosen, loggedNames, freqMax);
+        if(sc > bestScore){ bestScore = sc; best = it; }
+      });
+      if(!best || bestScore<=0) break;
+      var qty = planTypicalQty(P, meal, best.n);
+      var itemCal = best.f.cal*qty;
+      if(cal + itemCal > alloc*1.25 && items.length>0) break;
+      if(cal===0 && itemCal > alloc*1.5) qty = Math.max(.5, Math.round((alloc/best.f.cal)*2)/2);
+      itemCal = best.f.cal*qty;
+      if(itemCal < 30) break;
+      pushItem(best, qty);
+    }
+  }
+  /* 2026.10.01-e: protein floor — research says ~0.4g/kg/meal x 4+ meals drives
+     muscle building (~22g+ at his weight). Applies to template meals too: his
+     real lineups get a protein top-up from foods he's eaten at that meal.
+     Snacks are exempt (light by design). */
+  function mealProtein(){ return items.reduce(function(a,x){ return a+x.p; }, 0); }
+  if(meal!=="snacks" && mealProtein() < 22){
+    var bp = null, bpScore = -1;
     mpool.forEach(function(it){
       if(chosen.indexOf(it.n)>=0) return;
-      var sc = planScoreCandidate(it, meal, P, def, chosen, loggedNames, freqMax);
-      if(sc > bestScore){ bestScore = sc; best = it; }
+      var q = planTypicalQty(P, meal, it.n);
+      var sc = ((it.f.p||0)*q) * (.3 + mealFitOf(it));
+      if(sc > bpScore){ bpScore = sc; bp = {it:it, q:q}; }
     });
-    if(!best || bestScore<=0) break;
-    var qty = planTypicalQty(P, meal, best.n);
-    var itemCal = best.f.cal*qty;
-    if(cal + itemCal > alloc*1.25 && items.length>0) break;
-    if(cal===0 && itemCal > alloc*1.5) qty = Math.max(.5, Math.round((alloc/best.f.cal)*2)/2);
-    itemCal = best.f.cal*qty;
-    if(itemCal < 30) break;
-    items.push({n:best.n, qty:qty, cal:Math.round(itemCal), p:Math.round(best.f.p*qty), c:Math.round(best.f.c*qty), f:Math.round(best.f.f*qty)});
-    chosen.push(best.n); cal += itemCal;
+    if(bp && (bp.it.f.p||0)*bp.q >= 8) pushItem(bp.it, bp.q);
+    /* stage 2: pool exhausted — bigger portion of the most protein-dense food
+       already in the meal (his food, just more of it). */
+    if(mealProtein() < 22 && items.length){
+      var bi = 0, bd = -1;
+      items.forEach(function(x,i){
+        var lb = planLibFood(x.n);
+        var d = lb ? (lb.f.p||0)/Math.max(1,lb.f.cal) : 0;
+        if(d > bd){ bd = d; bi = i; }
+      });
+      var lb2 = planLibFood(items[bi].n);
+      if(lb2){
+        var typQ = planTypicalQty(P, meal, items[bi].n);
+        var newQ = Math.min(typQ*2, Math.round((items[bi].qty+.5)*2)/2);
+        if(newQ > items[bi].qty && cal + lb2.f.cal*(newQ-items[bi].qty) <= alloc*1.25){
+          var dq = newQ - items[bi].qty;
+          items[bi].qty = newQ;
+          items[bi].cal = Math.round(lb2.f.cal*newQ);
+          items[bi].p = Math.round((lb2.f.p||0)*newQ);
+          items[bi].c = Math.round((lb2.f.c||0)*newQ);
+          items[bi].f = Math.round((lb2.f.f||0)*newQ);
+          cal += lb2.f.cal*dq;
+        }
+      }
+    }
   }
-  return {items:items, cal:Math.round(cal)};
+  /* 2026.10.01-e: calorie gap-closer — his usuals undershoot the day goal, so
+     keep adding calorie-dense foods he eats at this meal until the meal lands
+     near its share (was: plan stopped at 3 light items and left 600+ kcal out). */
+  var guard = 0;
+  while(cal < alloc*.8 && items.length < 5 && guard++ < 3){
+    var bc = null, bcScore = -1;
+    mpool.forEach(function(it){
+      if(chosen.indexOf(it.n)>=0) return;
+      var q2 = planTypicalQty(P, meal, it.n);
+      var sc2 = (it.f.cal*q2) * (.25 + mealFitOf(it));
+      if(sc2 > bcScore){ bcScore = sc2; bc = {it:it, q:q2}; }
+    });
+    if(!bc || bc.it.f.cal*bc.q < 80) break;
+    pushItem(bc.it, bc.q);
+  }
+  return {items:items, cal:Math.round(cal), tplN:tplN};
 }
-function planAltSuggestion(meal, P, pool, def, usualTop, plannedNames){
+function planAltSuggestion(meal, P, pool, def, usualTop, plannedNames, skipNames){
   /* something never eaten at this meal that fits the gaps + pairs with the usuals */
-  plannedNames = plannedNames || [];
+  plannedNames = plannedNames || []; skipNames = skipNames || [];
   var best = null, bestScore = -1;
   pool.forEach(function(it){
     if(P.meals[meal].foods[it.n]) return; /* already a usual here */
     if(plannedNames.indexOf(it.n)>=0) return; /* already in the plan above */
+    if(skipNames.indexOf(it.n)>=0) return; /* already suggested at another meal */
     var pair = 0, pn = 0;
     usualTop.forEach(function(u){ var v = planPair(P, u, it.n); if(v>0){ pair += v; pn++; } });
     var pairScore = pn ? Math.min(1, pair/(pn*2)) : 0;
@@ -8089,7 +8166,7 @@ function planAltSuggestion(meal, P, pool, def, usualTop, plannedNames){
   else if(def.c>=def.p && def.c>=def.f) reason = "brings the carbs you're missing today";
   else reason = "rounds out the fat you're light on today";
   var usual = usualTop[0] ? " instead of "+usualTop[0] : "";
-  return {n:best.n, qty:1, cal:Math.round(best.f.cal), reason:reason+usual};
+  return {n:best.n, qty:1, for:usualTop[0]||null, cal:Math.round(best.f.cal), reason:reason+usual};
 }
 function buildPlan(){
   var ds = viewDate(), t = totals(ds), goal = goalTotal();
@@ -8102,7 +8179,15 @@ function buildPlan(){
   var d = S.days[ds]||{}, dd = d.meals||{};
   var openMeals = PLAN_MEALS.filter(function(m){ return !(dd[m] && dd[m].length); });
   if(!openMeals.length || (remCal < 50 && remP < 1 && remFib < 1)){
-    _plan = {d:ds, meals:null, note:"You're covered for the day — nothing left to plan."};
+    /* 2026.10.01-e: honest covered state — "covered" used to show even 674 kcal
+       under target. If every meal is logged but he's short of the goal, say so
+       and name the fix instead of pretending the day is done. */
+    var note = "You're covered for the day — nothing left to plan.";
+    if(!openMeals.length && t.cal < goal*.9){
+      var short = Math.round(goal - t.cal);
+      note = "All meals are logged, but you're "+short.toLocaleString()+" kcal under target. A shake (+\u2248470 kcal) or bigger portions tomorrow close the gap.";
+    }
+    _plan = {d:ds, meals:null, note:note};
     paintPlanCard(); return;
   }
   /* candidate pool: foods Jay has actually logged + his favorites/customs */
@@ -8127,16 +8212,18 @@ function buildPlan(){
   var def = planDefVec(remP, remC, remF, remFib);
   var templates = learnMealTemplates();
   var meals = {}, totCal = 0, totP = 0;
+  var avoidNames = [], usedAlts = []; /* 2026.10.01-e: no food repeats across meals, no repeated swap suggestions */
   openMeals.forEach(function(m){
     var share = sizeTot>0 ? sizes[m]/sizeTot : (PLAN_SHARE_FALLBACK[m]||.2);
     var alloc = Math.max(120, remCal*share);
     var freqMax = 1;
     Object.keys(P.meals[m].foods).forEach(function(n){ freqMax = Math.max(freqMax, P.meals[m].foods[n].n); });
-    var built = buildMealPlan(m, P, pool, alloc, def, loggedNames, freqMax, templates);
+    var built = buildMealPlan(m, P, pool, alloc, def, loggedNames, freqMax, templates, avoidNames);
     /* portion top-up: his usual portions undershoot the goal, so scale servings
-       (capped 1.6x — bigger plates, not absurd ones) so the plan actually lands
-       near the day's target instead of just repeating the shortfall. */
-    if(!built.tplN && built.items.length && built.cal < alloc*.85){
+       (capped 1.6x and never past the meal's share — bigger plates, not absurd
+       ones) so the plan actually lands near the day's target instead of just
+       repeating the shortfall. Applies to template meals too. */
+    if(built.items.length && built.cal < alloc*.85){
       var f = Math.min(1.6, alloc/Math.max(1,built.cal));
       built.items.forEach(function(it){
         var lib = planLibFood(it.n), nq = Math.round(it.qty*f*2)/2;
@@ -8149,8 +8236,10 @@ function buildPlan(){
     }
     var usualTop = Object.keys(P.meals[m].foods).sort(function(a,b){ return P.meals[m].foods[b].n - P.meals[m].foods[a].n; }).slice(0,5);
     var plannedNames = built.items.map(function(x){ return x.n; });
-    var alt = planAltSuggestion(m, P, pool, def, usualTop, plannedNames);
+    var alt = planAltSuggestion(m, P, pool, def, usualTop, plannedNames, usedAlts);
+    if(alt) usedAlts.push(alt.n);
     meals[m] = {items:built.items, cal:built.cal, alt:alt, alloc:Math.round(alloc), tplN:built.tplN||0};
+    built.items.forEach(function(x){ if(avoidNames.indexOf(x.n)<0) avoidNames.push(x.n); });
     totCal += built.cal;
     built.items.forEach(function(it){ totP += it.p; });
   });
@@ -8166,7 +8255,15 @@ function paintPlanCard(){
     /* drop meals that got logged after the plan was built */
     var dd = ((S.days[_plan.d]||{}).meals)||{}, alive = false;
     _plan.openMeals.forEach(function(m){ if(dd[m] && dd[m].length){ _plan.meals[m] = null; } else if(_plan.meals[m]) alive = true; });
-    if(!alive){ _plan = {d:_plan.d, meals:null, note:"You're covered for the day — nothing left to plan."}; }
+    if(!alive){
+      /* 2026.10.01-e: honest covered state (see buildPlan) */
+      var note2 = "You're covered for the day — nothing left to plan.";
+      try{
+        var t2 = totals(_plan.d), g2 = goalTotal();
+        if(t2.cal < g2*.9) note2 = "All meals are logged, but you're "+Math.round(g2-t2.cal).toLocaleString()+" kcal under target. A shake (+\u2248470 kcal) or bigger portions tomorrow close the gap.";
+      }catch(e){}
+      _plan = {d:_plan.d, meals:null, note:note2};
+    }
   }
   if(!_plan){
     label.textContent = "";
@@ -8186,7 +8283,9 @@ function paintPlanCard(){
   _plan.openMeals.forEach(function(m){
     var mp = _plan.meals[m];
     if(!mp) return;
-    html += '<div style="margin:10px 0 2px;font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--muted)">'+MEAL_LABEL_L[m].toUpperCase()+'</div>';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 2px">'
+      + '<div style="font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--muted)">'+MEAL_LABEL_L[m].toUpperCase()+'</div>'
+      + '<button class="chip" data-plan-regen="'+m+'" aria-label="New ideas for '+MEAL_LABEL_L[m]+'" style="flex:none;font-size:13px;line-height:1;padding:4px 10px">\u21bb</button></div>';
     if(mp.tplN) html += '<div style="font-size:11px;color:var(--muted);margin:-1px 0 5px">Your usual lineup \u00b7 logged '+mp.tplN+'\u00d7</div>';
     if(!mp.items.length){
       html += '<div style="font-size:13px;color:var(--muted)">Nothing fits this meal yet — log more '+MEAL_LABEL_L[m].toLowerCase()+'s and I\'ll learn.</div>';
@@ -8205,6 +8304,9 @@ function paintPlanCard(){
   body.querySelectorAll("[data-plan-swap]").forEach(function(b){
     b.onclick = function(){ planSwapMeal(b.getAttribute("data-plan-swap")); };
   });
+  body.querySelectorAll("[data-plan-regen]").forEach(function(b){
+    b.onclick = function(){ planRegenMeal(b.getAttribute("data-plan-regen")); };
+  });
   if(logBtn) logBtn.style.display = "none";
   var anyItems = _plan.openMeals.some(function(m){ return _plan.meals[m] && _plan.meals[m].items.length; });
   if(logBtn) logBtn.style.display = anyItems ? "" : "none";
@@ -8214,10 +8316,85 @@ function planSwapMeal(m){
   if(!mp || !mp.alt) return;
   var it = planLibFood(mp.alt.n);
   if(!it) return;
-  mp.items = [{n:mp.alt.n, qty:1, cal:Math.round(it.f.cal), p:Math.round(it.f.p||0), c:Math.round(it.f.c||0), f:Math.round(it.f.f||0)}];
-  mp.cal = mp.items[0].cal; mp.alt = null;
+  /* 2026.10.01-e: swap replaces ONLY the item the suggestion names ("instead of X"),
+     not the whole meal — the old code nuked the other items (e.g. a 3-item breakfast
+     collapsed to a single tortilla). */
+  var ni = {n:mp.alt.n, qty:1, cal:Math.round(it.f.cal), p:Math.round(it.f.p||0), c:Math.round(it.f.c||0), f:Math.round(it.f.f||0)};
+  var idx = -1;
+  if(mp.alt.for) mp.items.forEach(function(x,i){ if(idx<0 && x.n===mp.alt.for) idx = i; });
+  if(idx<0) idx = 0;
+  if(mp.items.length) mp.items[idx] = ni; else mp.items = [ni];
+  mp.cal = mp.items.reduce(function(a,x){ return a+x.cal; }, 0);
+  mp.alt = null;
   _plan.totCal = 0; _plan.totP = 0;
   _plan.openMeals.forEach(function(mm){ var x = _plan.meals[mm]; if(x){ _plan.totCal += x.cal; x.items.forEach(function(ii){ _plan.totP += ii.p; }); } });
+  paintPlanCard();
+  if(typeof curView!=="undefined" && curView==="plan") renderPlanDay();
+}
+/* 2026.10.01-e: regenerate ONE meal (Eat This Much's "Regenerate Meal") — new
+   ideas for this meal only, everything else stays. Skips the usual-lineup
+   template on purpose so it actually comes back different. */
+function planRegenMeal(m){
+  var mp = _plan && _plan.meals && _plan.meals[m];
+  if(!mp) return;
+  var ds = _plan.d, t = totals(ds), goal = goalTotal();
+  var P = learnEating();
+  var remCal = Math.max(0, goal - t.cal);
+  var remP = Math.max(0, (S.goals.protein||0) - t.p);
+  var remC = Math.max(0, (S.goals.carbs||0) - t.c);
+  var remF = Math.max(0, (S.goals.fat||0) - t.f);
+  var remFib = Math.max(0, fiberTarget() - fiberTotal(ds));
+  var def = planDefVec(remP, remC, remF, remFib);
+  var pool = [], seen = {};
+  Object.keys(P.food).forEach(function(n){ var it = planLibFood(n); if(it && !seen[n]){ seen[n]=1; pool.push(it); } });
+  (S.favorites||[]).concat((S.customFoods||[]).map(function(f){return f.n;})).forEach(function(n){
+    if(!seen[n]){ var it = planLibFood(n); if(it){ seen[n]=1; pool.push(it); } }
+  });
+  if(!pool.length) return;
+  var d = S.days[ds]||{}, dd = d.meals||{};
+  var loggedNames = [];
+  PLAN_MEALS.forEach(function(mm){ (dd[mm]||[]).forEach(function(e){ if(e && e.n) loggedNames.push(e.n); }); });
+  var sizeTot = 0, sizes = {};
+  _plan.openMeals.forEach(function(mm){
+    var M = P.meals[mm];
+    sizes[mm] = M.n>0 ? M.cal/M.n : 0;
+    sizeTot += sizes[mm];
+  });
+  var share = sizeTot>0 ? sizes[m]/sizeTot : (PLAN_SHARE_FALLBACK[m]||.2);
+  var alloc = Math.max(120, remCal*share);
+  var freqMax = 1;
+  Object.keys(P.meals[m].foods).forEach(function(n){ freqMax = Math.max(freqMax, P.meals[m].foods[n].n); });
+  /* variety: avoid this meal's current items + foods planned at other meals */
+  var avoid = mp.items.map(function(x){ return x.n; });
+  _plan.openMeals.forEach(function(mm){
+    if(mm===m || !_plan.meals[mm]) return;
+    _plan.meals[mm].items.forEach(function(x){ if(avoid.indexOf(x.n)<0) avoid.push(x.n); });
+  });
+  var built = buildMealPlan(m, P, pool, alloc, def, loggedNames, freqMax, null, avoid);
+  if(built.items.length && built.cal < alloc*.85){
+    var f = Math.min(1.6, alloc/Math.max(1,built.cal));
+    built.items.forEach(function(it){
+      var lib = planLibFood(it.n), nq = Math.round(it.qty*f*2)/2;
+      if(lib && nq > it.qty){
+        it.qty = nq; it.cal = Math.round(lib.f.cal*nq);
+        it.p = Math.round((lib.f.p||0)*nq); it.c = Math.round((lib.f.c||0)*nq); it.f = Math.round((lib.f.f||0)*nq);
+      }
+    });
+    built.cal = built.items.reduce(function(a,x){ return a+x.cal; }, 0);
+  }
+  var usualTop = Object.keys(P.meals[m].foods).sort(function(a,b){ return P.meals[m].foods[b].n - P.meals[m].foods[a].n; }).slice(0,5);
+  var plannedNames = built.items.map(function(x){ return x.n; });
+  var usedAlts = [];
+  _plan.openMeals.forEach(function(mm){
+    if(mm!==m && _plan.meals[mm] && _plan.meals[mm].alt) usedAlts.push(_plan.meals[mm].alt.n);
+  });
+  var alt = planAltSuggestion(m, P, pool, def, usualTop, plannedNames, usedAlts);
+  _plan.meals[m] = {items:built.items, cal:built.cal, alt:alt, alloc:Math.round(alloc), tplN:0};
+  _plan.totCal = 0; _plan.totP = 0;
+  _plan.openMeals.forEach(function(mm){
+    var x = _plan.meals[mm];
+    if(x){ _plan.totCal += x.cal; x.items.forEach(function(ii){ _plan.totP += ii.p; }); }
+  });
   paintPlanCard();
   if(typeof curView!=="undefined" && curView==="plan") renderPlanDay();
 }
@@ -8352,6 +8529,12 @@ var PLAN_TRY = [
   {name:"Chicken Burrito Bowl", meal:"lunch", focus:"Your usual, upgraded",
    why:"Your usual, wrapped up \u2014 chicken and rice in warm tortillas. Same foods you already eat, easier to eat more of.",
    items:[["Chicken Breast, Skinless, Boneless",1],["Rice, White, Medium-Grain, Cooked, Unenriched",2],["Mission Foods, Mission Flour Tortillas, Soft Taco, 8 Inch",2]]},
+  {name:"Beef & White Rice Bowl", meal:"dinner", focus:"Vertical Diet base",
+   why:"Stan Efferding's Vertical Diet starts here \u2014 red meat + white rice. It digests fast so you're hungry again in 3 hours, and the beef brings creatine, zinc, and iron along with 50g+ protein.",
+   items:[["Beef, Ground, 80% Lean Meat / 20% Fat, Loaf, Cooked, Baked",2],["Rice, White, Medium-Grain, Cooked, Unenriched",2]]},
+  {name:"Chili Bean Bowl", meal:"lunch", focus:"Fiber fix",
+   why:"One container of chili carries ~25g protein and a load of bean fiber inside real calories \u2014 this is how a 10g-fiber day climbs toward 43g without eating salad.",
+   items:[["Chili With Beans, Microwavable Bowls",1],["Rice, White, Medium-Grain, Cooked, Unenriched",1.5]]},
   {name:"Greek Yogurt Power Bowl", meal:"breakfast", focus:"Recovery + steady energy",
    why:"30g+ protein up front ends the overnight muscle breakdown and keeps blood sugar flat till lunch \u2014 the even-distribution pattern research ties to ~25% better daily muscle building (Mamerow 2014).",
    items:[["Chobani Plain Non- Fat Greek Yogurt",1.5],["Quaker Old Fashioned Oats 42 Oz",1],["Bananas, Raw",1],["Simply Jif Creamy Peanut Butter",1]]},
