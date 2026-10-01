@@ -960,6 +960,7 @@ body.reordering #progOverview{display:none}
       <div class="medals" id="pMedals"></div>
     </div>
     <div class="nudge" id="nudgeBar"></div>
+    <div id="autoZone"></div>
     <div class="card dcard" id="energyCard">
       <div class="whead dhead" data-d="energy" role="button" tabindex="0" aria-label="Energy details"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2.5 5.5 13.5h4.8L10 21.5l7.5-11h-4.8L13 2.5z"/></svg></span><b>Energy today</b><button class="ginfo" id="energyInfo" aria-label="About energy check-ins">i</button></span><span style="display:flex;align-items:center;gap:8px"><span class="wlbl" id="energyLabel"></span><span class="chev2 dchev">›</span></span></div>
       <div class="ddetail" id="ddetail-energy"><div class="pad">
@@ -1060,6 +1061,17 @@ body.reordering #progOverview{display:none}
       <div class="ddetail" id="ddetail-vape"><div class="pad">
       <div class="vapelevels" id="vapeLevels"></div>
       <div class="alcwarn" id="vapeWarn" style="display:none"></div>
+      </div></div>
+    </div>
+
+    <div class="card dcard" id="dcard-plan">
+      <div class="whead dhead" data-d="plan" role="button" tabindex="0" aria-label="Day plan details"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg></span><b>Day plan</b><button class="ginfo" id="planInfo" aria-label="About the day plan">i</button></span><span style="display:flex;align-items:center;gap:8px"><span class="wlbl" id="planLabel"></span><span class="chev2 dchev">›</span></span></div>
+      <div class="ddetail" id="ddetail-plan"><div class="pad">
+      <div id="planBody"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="bigbtn" id="planBuild" style="flex:1;margin:0">Build my day</button>
+        <button class="bigbtn" id="planLogAll" style="flex:1;margin:0;display:none">Log it all</button>
+      </div>
       </div></div>
     </div>
 
@@ -1755,6 +1767,12 @@ body.reordering #progOverview{display:none}
             <input id="qF" type="number" inputmode="decimal" placeholder="fat g" aria-label="Fat grams">
           </div>
           <button class="bigbtn qaddbtn" id="qAddBtn">Log quick entry</button>
+          <input type="file" id="qPhotoFile" accept="image/*" style="display:none">
+          <button class="cphotobtn" id="qPhotoBtn" style="width:100%;margin-top:8px">+ Add meal photo</button>
+          <div id="qPhotoPrev" style="display:none;margin-top:8px;align-items:center;gap:10px">
+            <img id="qPhotoImg" style="width:64px;height:64px;border-radius:14px;object-fit:cover" alt="Meal photo">
+            <button class="cphotodel" id="qPhotoDel">Remove</button>
+          </div>
         </div>
         <div id="sheetSmart"></div>
         <div class="fhead">
@@ -2171,7 +2189,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.09.30-a";
+const APP_VERSION = "2026.09.30-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -3133,6 +3151,8 @@ function renderDiary(){
   const dt = new Date(k+"T12:00:00");
   const isToday = k === todayStr();
   renderNudge(isToday); /* 2026.09.27-d: quiet overdue-meal banner, today only */
+  if(typeof paintAutoZone==="function") paintAutoZone(); /* 2026.09.30-b: autopilot feed + proposals */
+  if(typeof paintPlanCard==="function") paintPlanCard(); /* 2026.09.30-b: day plan */
   $("dayTitle").textContent = isToday ? "Today" : (dt.getMonth()+1)+"/"+dt.getDate()+"/"+String(dt.getFullYear()).slice(2);
   $("daySub").textContent = dt.toLocaleDateString(undefined,{weekday:"long", month:"short", day:"numeric"});
   $("calEaten").textContent = Math.round(t.cal).toLocaleString();
@@ -4389,13 +4409,14 @@ document.getElementById("qAddBtn").onclick = ()=>{
   const kcalIn = gv("qKcal"), p = gv("qP"), c = gv("qC"), f = gv("qF");
   if(!(kcalIn>0) && !(p+c+f>0)){ showToast("Enter calories or macros first"); return; }
   const cal = kcalIn>0 ? Math.round(kcalIn) : Math.round(p*4 + c*4 + f*9);
-  const e = {id:uid(), n:"Quick add", s:"manual entry", qty:1, cal, p, c, f, kind:"food"};
+  const e = {id:uid(), n:window.__qPhoto?"Photo log":"Quick add", s:"manual entry", qty:1, cal, p, c, f, kind:"food", img:window.__qPhoto||null};
   const meal = sheetMeal || "snacks";
   const d = day();
   if(!d.meals[meal]) d.meals[meal] = [];
   d.meals[meal].push(e);
   const mtObsQ = dayOffset===0 ? recordMealTime(meal) : null; /* one timing observation per logging action */
   ["qKcal","qP","qC","qF"].forEach(id=>document.getElementById(id).value="");
+  window.__qPhoto=null; var _qp=document.getElementById("qPhotoPrev"); if(_qp) _qp.style.display="none"; /* 2026.09.30-b: clear meal photo */
   document.getElementById("sheetQuick").style.display = "none";
   document.getElementById("sheetQuickToggle").textContent = "+ Quick add calories";
   save(); renderDiary(); haptic();
@@ -5811,6 +5832,11 @@ function weeklyReviewData(){
   const goal = goalTotal(), pGoal = S.goals.protein||0;
   const avgCal = logged.reduce((a,x)=>a+x.cal,0)/logged.length;
   const pHit = pGoal>0 ? logged.filter(x=>x.p>=pGoal*0.9).length : 0;
+  /* 2026.09.30-b: adherence (days at 90%+ of goal) + best/worst day by % of goal */
+  const adhHit = goal>0 ? logged.filter(x=>x.cal>=goal*0.9).length : 0;
+  const wday = k=>new Date(k+"T12:00:00").toLocaleDateString(undefined,{weekday:"short"});
+  let best=null, worst=null;
+  if(goal>0 && logged.length){ const by=logged.slice().sort((a,b)=>(a.cal/goal)-(b.cal/goal)); worst=by[0]; best=by[by.length-1]; }
   let wtChg = null;
   const ws = sortedWeights();
   if(ws.length>=2){
@@ -5819,13 +5845,19 @@ function weeklyReviewData(){
     const ago = ma.filter(p=>T(p)<=T(now)-6*86400000).pop();
     if(ago) wtChg = now.w - ago.w;
   }
+  /* 2026.09.30-b: pace to the weight goal at the current trend pace */
+  let pace=null;
+  try{ const gp=goalProjection(); if(gp.ok) pace={rateWk:gp.rateWk, etaDate:gp.etaDate, rangeTxt:gp.rangeTxt}; }catch(e){}
   /* exactly one suggestion, priority-ordered */
   let tip;
   const wu = wUnit();
+  const st = trendState();
   if(goal>0 && avgCal < goal*0.9)
     tip = "Averaging "+Math.round(avgCal).toLocaleString()+" of your "+Math.round(goal).toLocaleString()+" kcal goal — add ~"+Math.round(goal-avgCal).toLocaleString()+" kcal/day (a shake or an extra snack closes it).";
   else if(pGoal>0 && pHit/logged.length < 0.7)
     tip = "Protein landed "+pHit+" of "+logged.length+" days — anchor each meal with 30–40g and the average takes care of itself.";
+  else if(st.conf==="solid" && Math.abs(st.rateWk)<0.15 && logged.length>0 && adhHit/logged.length>=0.7 && S.goals.surplus>0)
+    tip = "Trend is flat across 2+ weeks at "+Math.round(adhHit/logged.length*100)+"% adherence — the goal itself is the ceiling now, not your effort. Check the Autopilot suggestion up top.";
   else if(wtChg!=null && wtChg < -0.2 && S.goals.weight > curBodyWeight())
     tip = "Trend weight drifted "+wDisp(Math.abs(wtChg)).toFixed(1)+" "+wu+" down while bulking — the surplus isn't landing. Eat to the goal 7 days straight, then re-check.";
   else if(wtChg!=null && wtChg > 1.5)
@@ -5833,7 +5865,11 @@ function weeklyReviewData(){
   else
     tip = "Solid week — hold the line and re-check next week.";
   return {ok:true, n:logged.length, avgCal:Math.round(avgCal), goal:Math.round(goal),
-          pHit, pGoal:Math.round(pGoal), wtChg, tip};
+          pHit, pGoal:Math.round(pGoal), wtChg, tip,
+          adh:logged.length?Math.round(adhHit/logged.length*100):0,
+          best:best?{d:wday(best.k),pct:Math.round(best.cal/goal*100)}:null,
+          worst:worst?{d:wday(worst.k),pct:Math.round(worst.cal/goal*100)}:null,
+          pace};
 }
 function paintWeeklyReview(){
   const r = weeklyReviewData(), card = document.getElementById("wkrevCard");
@@ -5846,7 +5882,10 @@ function paintWeeklyReview(){
   const row = (l,v)=>'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">'+l+'</span><b>'+v+'</b></div>';
   document.getElementById("wkrevRows").innerHTML =
     row("Avg intake", r.avgCal.toLocaleString()+" of "+r.goal.toLocaleString()+" kcal ("+pct+"%)") +
+    row("Adherence", r.adh+"% of days at 90%+ of goal") +
+    (r.best ? row("Best / worst day", r.best.d+" "+r.best.pct+"% · "+r.worst.d+" "+r.worst.pct+"%") : "") +
     row("Protein days", r.pGoal>0 ? r.pHit+" of "+r.n+" at "+r.pGoal+"g+" : "—") +
+    (r.pace ? row("Pace to "+wDisp(S.goals.weight).toFixed(0)+" "+wu, fmtRate(r.pace.rateWk)+" "+wu+"/wk → ≈"+r.pace.etaDate+" ("+r.pace.rangeTxt+")") : "") +
     row("Trend weight", r.wtChg==null ? "—" : (r.wtChg>=0?"+":"−")+wDisp(Math.abs(r.wtChg)).toFixed(1)+" "+wu+" this week");
   document.getElementById("wkrevTip").textContent = r.tip;
 }
@@ -7724,6 +7763,239 @@ if(freshBoot && !eraseBlocked && typeof fetch==="function"){
   }, {passive:true});
   document.addEventListener("touchcancel", ()=>{ if(active){ active=false; const av=activeViewEl(); if(av){ av.style.transition=""; av.style.transform=""; } } }, {passive:true});
 })();
+</script>
+<script>
+/* ============ AUTOPILOT 2026.09.30-b — everything automatic from progressive data ============
+   The reshape: Fuel no longer waits to be managed. Once a day, on boot, the engine reads
+   Jay's own logged progress — intake trend, weight trend, adherence — and moves every number
+   itself: maintenance (learned, same ±150/wk cap and ±400 sanity band as Calorie Check),
+   surplus via the goal-mode percent, and macros from the current targets. Every change lands
+   in the one-line feed with its reason. The only thing that ever asks permission is a big
+   move (stall → raise the goal), which arrives as an approve/dismiss card. Nothing is ever
+   deleted or reset — worst case a target stays where it was. */
+var AUTO_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 3v4h-4"/></svg>';
+function autoState(){
+  if(!S.auto) S.auto = {};
+  var a = S.auto;
+  if(!Array.isArray(a.feed)) a.feed = [];
+  if(!Array.isArray(a.props)) a.props = [];
+  return a;
+}
+function autoLog(text){
+  var a = autoState();
+  a.feed.unshift({d: todayStr(), t: text});
+  if(a.feed.length > 40) a.feed.length = 40;
+}
+function autoCheckStall(){
+  /* bulk-only for now: flat trend + strong adherence = the goal is the ceiling */
+  var a = autoState(), g = S.goals;
+  if(!(g.surplus > 0)) return;
+  var st = trendState();
+  if(st.conf !== "solid" || st.rateWk == null) return;
+  var comp = completeDayCals();
+  if(comp.cals.length < 7) return;
+  var recent = comp.cals.slice(-7);
+  var avg = recent.reduce(function(x,y){ return x+y; }, 0) / recent.length;
+  var goal = goalTotal();
+  if(!(goal > 0) || avg < goal * 0.9) return;
+  var kind = null, to = 0, txt = "";
+  if(Math.abs(st.rateWk) < 0.15){
+    kind = "stall"; to = g.surplus + 150;
+    txt = "Weight's been flat for 2+ weeks and you're hitting " + Math.round(avg).toLocaleString() +
+      " of your " + Math.round(goal).toLocaleString() +
+      " kcal goal — that's a stall, not a willpower problem. Raise the goal to " +
+      Math.round(goal + 150).toLocaleString() + " kcal?";
+  } else if(st.rateWk > 1.0){
+    kind = "fast"; to = Math.max(0, g.surplus - 100);
+    txt = "Gaining " + fmtRate(st.rateWk) + " lb/wk — faster than a lean bulk needs. Trim the goal to " +
+      Math.round(goal - 100).toLocaleString() + " kcal to keep it mostly muscle?";
+  }
+  if(!kind) return;
+  var quiet = addDays(todayStr(), -14);
+  if(a.props.some(function(p){ return p.kind === kind && p.d >= quiet; })) return; /* acted or dismissed in the last 14d: stay quiet */
+  a.props.unshift({id: uid(), d: todayStr(), kind: kind, from: g.surplus, to: to, text: txt, done: 0});
+  if(a.props.length > 12) a.props.length = 12;
+}
+function autoApplyProp(id){
+  var a = autoState(), g = S.goals;
+  var p = null;
+  for(var i = 0; i < a.props.length; i++) if(a.props[i].id === id) p = a.props[i];
+  if(!p || p.done) return;
+  p.done = 1;
+  if(p.kind === "stall" || p.kind === "fast"){
+    g.surplus = p.to; autoDeriveMacros();
+    autoLog("Goal → " + Math.round(goalTotal()).toLocaleString() + " kcal (" + (p.kind === "stall" ? "+150" : "−100") + " — your call).");
+  }
+  save(); renderAll();
+  showToast("Goal updated");
+}
+function autoDismissProp(id){
+  var a = autoState();
+  for(var i = 0; i < a.props.length; i++) if(a.props[i].id === id) a.props[i].done = 1;
+  save(); paintAutoZone();
+}
+function paintAutoZone(){
+  var z = document.getElementById("autoZone");
+  if(!z) return;
+  var a = autoState(), html = "";
+  a.props.forEach(function(p){
+    if(p.done) return;
+    html += '<div class="card" style="border:1.5px solid var(--acc);margin-bottom:10px">' +
+      '<div style="font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--acc);margin-bottom:4px">AUTOPILOT SUGGESTION</div>' +
+      '<div style="font-size:14px;line-height:1.5">' + esc(p.text) + '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:10px">' +
+      '<button class="bigbtn" style="flex:1;margin:0" data-ap-apply="' + p.id + '">Apply</button>' +
+      '<button class="bigbtn" style="flex:1;margin:0;background:none;border:1.5px solid var(--line);color:var(--ink)" data-ap-dismiss="' + p.id + '">Not now</button>' +
+      '</div></div>';
+  });
+  var feed = a.feed.slice(0, 3);
+  if(feed.length){
+    html += '<div class="card" style="margin-bottom:10px">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">' +
+      '<span class="sicon sm">' + AUTO_SVG + '</span><b style="font-size:14px">Autopilot</b>' +
+      '<span style="margin-left:auto;font-size:11px;color:var(--muted)">' + esc(a.lastRun || "") + '</span></div>' +
+      feed.map(function(f){
+        return '<div style="font-size:13px;color:var(--muted);padding:6px 0;border-top:1px solid var(--line)">' + esc(f.t) + '</div>';
+      }).join("") + '</div>';
+  }
+  z.innerHTML = html;
+  z.querySelectorAll("[data-ap-apply]").forEach(function(b){ b.onclick = function(){ autoApplyProp(b.getAttribute("data-ap-apply")); }; });
+  z.querySelectorAll("[data-ap-dismiss]").forEach(function(b){ b.onclick = function(){ autoDismissProp(b.getAttribute("data-ap-dismiss")); }; });
+}
+/* ---- day plan: builds the rest of today from favorite foods, one tap to log ---- */
+var _plan = null;
+function planCands(){
+  var out = [], seen = {};
+  (S.favorites || []).forEach(function(n){ var f = findFood(n); if(f && f.cal > 0 && !seen[n]){ seen[n] = 1; out.push(f); } });
+  (S.customFoods || []).forEach(function(f){ if(f && f.cal > 0 && !seen[f.n]){ seen[f.n] = 1; out.push(f); } });
+  return out;
+}
+function buildPlan(){
+  var t = totals(viewDate()), goal = goalTotal();
+  var remCal = Math.max(0, goal - t.cal), remP = Math.max(0, (S.goals.protein || 0) - t.p);
+  if(remCal < 50 && remP < 1){ _plan = {d: todayStr(), items: [], note: "You're at your goal — nothing left to plan."}; paintPlanCard(); return; }
+  var cands = planCands();
+  if(!cands.length){ _plan = {d: todayStr(), items: [], note: "Favorite a few foods (Foods tab) and I'll build your day from them."}; paintPlanCard(); return; }
+  var items = [], cal = 0, p = 0, i, f, q;
+  var byP = cands.slice().sort(function(a, b){ return (b.p / b.cal) - (a.p / a.cal); });
+  for(i = 0; i < byP.length && p < remP && items.length < 6 && cal < remCal * 1.15; i++){
+    f = byP[i]; if(f.p < 5) continue;
+    q = Math.min(3, Math.max(1, Math.ceil((remP - p) / f.p)));
+    items.push({f: f, qty: q}); cal += f.cal * q; p += f.p * q;
+  }
+  var byC = cands.slice().sort(function(a, b){ return b.cal - a.cal; });
+  for(i = 0; i < byC.length && cal < remCal && items.length < 6; i++){
+    f = byC[i];
+    if(items.some(function(it){ return it.f.n === f.n; })) continue;
+    q = Math.min(2, Math.max(1, Math.round((remCal - cal) / f.cal)));
+    if(f.cal * q < 40) continue;
+    items.push({f: f, qty: q}); cal += f.cal * q; p += f.p * q;
+  }
+  _plan = {d: todayStr(), items: items, cal: Math.round(cal), p: Math.round(p), eatenCal: t.cal};
+  paintPlanCard();
+}
+function paintPlanCard(){
+  var body = document.getElementById("planBody"), label = document.getElementById("planLabel");
+  if(!body || !label) return;
+  var logBtn = document.getElementById("planLogAll");
+  /* the plan goes stale the moment today changes underneath it — rebuild silently */
+  if(_plan && !_plan.note && (_plan.d !== todayStr() || Math.abs(totals(viewDate()).cal - _plan.eatenCal) > 1)) _plan = null;
+  if(!_plan){
+    label.textContent = "";
+    body.innerHTML = '<div style="font-size:13px;color:var(--muted);line-height:1.5">I\'ll build the rest of your day from your favorite foods — covering what\'s left of your calories and protein. One tap logs it all.</div>';
+    if(logBtn) logBtn.style.display = "none";
+    return;
+  }
+  if(_plan.note){
+    label.textContent = "";
+    body.innerHTML = '<div style="font-size:13px;color:var(--muted);line-height:1.5">' + esc(_plan.note) + '</div>';
+    if(logBtn) logBtn.style.display = "none";
+    return;
+  }
+  label.textContent = _plan.cal.toLocaleString() + " kcal · " + Math.round(_plan.p) + "g P";
+  body.innerHTML = _plan.items.map(function(it){
+    return '<div class="logrow"><span class="nm">' + esc(it.f.n) + ' <span>' + it.qty + ' × ' + esc(it.f.s || "serving") + '</span></span><span class="kc">' + Math.round(it.f.cal * it.qty) + '</span></div>';
+  }).join("");
+  if(logBtn) logBtn.style.display = _plan.items.length ? "" : "none";
+}
+function planLogAll(){
+  if(!_plan || !_plan.items.length) return;
+  var d = day(), meal = (typeof mealForNow === "function") ? mealForNow() : "snacks";
+  if(!d.meals[meal]) d.meals[meal] = [];
+  _plan.items.forEach(function(it){ d.meals[meal].push(buildEntry(it.f, it.qty)); });
+  if(typeof dayOffset !== "undefined" && dayOffset === 0 && typeof recordMealTime === "function") recordMealTime(meal);
+  _plan = null; save(); renderAll();
+  showToast("Plan logged");
+}
+function autoPilot(){
+  var a = autoState(), g = S.goals, today = todayStr(), changed = false;
+  /* first autopilot boot: the Day plan card opens once so it's discovered */
+  if(S.diaryPanels && S.diaryPanels.plan === undefined){
+    S.diaryPanels.plan = 1;
+    var pc = document.getElementById("dcard-plan");
+    if(pc) pc.classList.add("open");
+  }
+  if(a.lastRun !== today){
+    a.lastRun = today;
+    /* 1. learned maintenance auto-applies — same guards as the manual Calorie Check */
+    var r = adaptiveCalc();
+    if(r.ok){
+      var prev = (g.adaptive && g.adaptive.value > 0) ? g.adaptive.value : null;
+      var v = r.value;
+      if(prev != null) v = prev + Math.max(-150, Math.min(150, v - prev));
+      v = Math.round(v);
+      g.adaptive = {ok: true, stale: false, value: v, formula: r.formula, learned: r.learned, avg: r.avg,
+        rateWk: r.rateWk, adj: v - r.formula, conf: r.conf, days: r.days, span: r.span, partial: r.partial || 0, updated: today};
+      g.adaptiveHist = g.adaptiveHist || [];
+      var last = g.adaptiveHist[g.adaptiveHist.length - 1];
+      if(!last || last.d !== today) g.adaptiveHist.push({d: today, v: v});
+      if(g.adaptiveHist.length > 26) g.adaptiveHist = g.adaptiveHist.slice(-26);
+      if(prev == null || v !== prev){
+        g.maintenance = v; applyModePct(); autoDeriveMacros(); changed = true;
+        autoLog("Maintenance → " + v.toLocaleString() + " kcal, learned from your last " + r.days + " days of eating + weigh-ins.");
+      }
+    } else if(g.adaptive && g.adaptive.ok){
+      g.adaptive.stale = true; /* thin data: keep the last good value, flag it */
+    }
+    /* 2. stall / too-fast proposals — the one approve step */
+    autoCheckStall();
+    save();
+    if(changed) renderAll();
+  }
+  paintAutoZone(); paintPlanCard();
+}
+/* ---- wiring (runs once; elements are static HTML above the scripts) ---- */
+(function(){
+  var pb = document.getElementById("planBuild"); if(pb) pb.onclick = buildPlan;
+  var pl = document.getElementById("planLogAll"); if(pl) pl.onclick = planLogAll;
+  var pi = document.getElementById("planInfo");
+  if(pi) pi.addEventListener("click", function(e){
+    e.stopPropagation();
+    showToast("Autopilot builds the rest of your day from your favorites.");
+  });
+  /* photo quick-log: snap the meal, punch in the numbers, the photo rides along */
+  var qpb = document.getElementById("qPhotoBtn"), qpf = document.getElementById("qPhotoFile");
+  if(qpb && qpf){
+    qpb.onclick = function(){ qpf.click(); };
+    qpf.onchange = function(){
+      var f = qpf.files && qpf.files[0]; if(!f) return;
+      downscalePhoto(f, 640, function(url){
+        window.__qPhoto = url;
+        var img = document.getElementById("qPhotoImg"), pv = document.getElementById("qPhotoPrev");
+        if(img) img.src = url;
+        if(pv) pv.style.display = "flex";
+      });
+      qpf.value = "";
+    };
+    var qpd = document.getElementById("qPhotoDel");
+    if(qpd) qpd.onclick = function(){
+      window.__qPhoto = null;
+      var pv = document.getElementById("qPhotoPrev");
+      if(pv) pv.style.display = "none";
+    };
+  }
+})();
+autoPilot();
 </script>
 </body>
 </html>
