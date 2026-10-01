@@ -2090,7 +2090,8 @@ function save(){
    are NEVER a substitute for export: they live in the same browser storage as
    the live data, so they guard against in-app corruption, not a lost phone.
    Quota-safe: snapshots stay under ~4MB total and silently skip before they can
-   ever crowd out the live save. fuel.v1 itself is never touched. */
+   ever crowd out the live save. If they still crowd it (the ~5MB origin quota is
+   shared), the live save reclaims the oldest snapshots first. fuel.v1 itself is never touched. */
 const SNAP_PRE = "fuel.snap.", SNAP_KEEP = 7, SNAP_BUDGET = 4*1024*1024;
 function listSnapshots(){
   const out = [];
@@ -2143,21 +2144,34 @@ function renderSnaps(){
 }
 function saveTrimPhotos(){
   const photos = (S.profile && S.profile.photos) || [];
-  let dropped = 0;
+  let dropped = 0, snapsDropped = 0;
   for(;;){
     try{ localStorage.setItem(KEY, JSON.stringify(S)); hideSaveWarn(); break; }
     catch(e){
       if(!isQuotaErr(e)){ showSaveWarn("Couldn't save — storage error."); return false; }
-      if(!photos.length){ showSaveWarn("Phone storage is full — free up space and reopen Fuel."); return false; }
-      let oldest = 0;
-      for(let i=1;i<photos.length;i++) if(photos[i].d < photos[oldest].d) oldest = i;
-      photos.splice(oldest,1); dropped++;
+      if(photos.length){
+        let oldest = 0;
+        for(let i=1;i<photos.length;i++) if(photos[i].d < photos[oldest].d) oldest = i;
+        photos.splice(oldest,1); dropped++;
+        continue;
+      }
+      /* No progress photos left: snapshots are expendable backups sharing the same
+         ~5MB origin quota, so drop the oldest one and retry before giving up. */
+      const snaps = listSnapshots(); /* newest first */
+      if(!snaps.length){ showSaveWarn("Fuel is out of storage space — delete old food photos, then reopen Fuel."); return false; }
+      try{ localStorage.removeItem(snaps[snaps.length-1]); }catch(_){}
+      snapsDropped++;
     }
   }
-  if(dropped>0) showSaveWarn("Storage was full — removed "+dropped+" oldest progress photo"+(dropped>1?"s":"")+" to protect your logs. Your food, weight and training data is safe.");
+  if(dropped>0 || snapsDropped>0){
+    const bits = [];
+    if(dropped>0) bits.push("removed "+dropped+" oldest progress photo"+(dropped>1?"s":""));
+    if(snapsDropped>0) bits.push("removed "+snapsDropped+" old backup snapshot"+(snapsDropped>1?"s":""));
+    showSaveWarn("Storage was full — "+bits.join(" and ")+" to protect your logs. Your food, weight and training data is safe.");
+  }
   return true;
 }
-const APP_VERSION = "2026.09.27-q";
+const APP_VERSION = "2026.09.30-a";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
