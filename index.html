@@ -939,6 +939,18 @@ body.reordering #progOverview{display:none}
 .csw.sel{outline:3px solid var(--ink);outline-offset:2px;}
 .csw.custom{background:conic-gradient(#f43f5e,#ff9f43,#ffd23f,#22c55e,#2f8bff,#a78bfa,#f43f5e);overflow:hidden;position:relative;}
 .csw.custom input{position:absolute;inset:-8px;opacity:0;cursor:pointer;}
+
+.plabel{font-size:11px;font-weight:800;letter-spacing:1px;color:var(--muted);margin:20px 0 8px}
+.plabel span{float:right;letter-spacing:0;text-transform:none;font-weight:700}
+.pbanners{display:flex;gap:10px;overflow-x:auto;margin:0 -14px;padding:2px 14px 8px;-webkit-overflow-scrolling:touch}
+.pbanner{flex:0 0 196px;background:var(--card);border-radius:var(--radius);padding:13px 14px;box-shadow:0 10px 28px rgba(84,84,180,.08)}
+.pbanner .pv{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
+.pbanner .pk{font-size:10.5px;color:var(--muted);font-weight:800;letter-spacing:.6px;margin-top:3px}
+.pbanner .ps{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.45}
+.shoprow{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.shoprow .shopcheck{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800}
+.shoprow.done .shopcheck{background:var(--acc);border-color:var(--acc)}
+.shoprow.done .shopname{color:var(--muted);text-decoration:line-through}
 </style>
 </head>
 <body>
@@ -1079,6 +1091,30 @@ body.reordering #progOverview{display:none}
   </section>
 
   <!-- ANALYSIS -->
+  <section class="view" id="view-plan">
+    <div class="topbar">
+      <button class="tbtn" id="planBack" aria-label="Back">&#8249;</button>
+      <h1>Plan</h1>
+      <div style="width:44px"></div>
+    </div>
+    <div class="plabel">PROGRESS</div>
+    <div class="pbanners" id="planBanners"></div>
+    <div class="plabel">TODAY'S PLAN <span id="planDayTot"></span></div>
+    <div id="planDayBody"></div>
+    <div style="display:flex;gap:8px;margin:10px 0 0">
+      <button class="bigbtn" id="planPageBuild" style="flex:1;margin:0">Rebuild</button>
+      <button class="bigbtn" id="planPageLogAll" style="flex:1;margin:0">Log it all</button>
+    </div>
+    <div class="plabel">WORTH TRYING</div>
+    <div style="font-size:12.5px;color:var(--muted);margin:-2px 0 10px;line-height:1.5">Bulking staples from real 3,500-kcal plans, sized for your goal.</div>
+    <div id="planTryBody"></div>
+    <div class="plabel">TARGET RUN <span id="planShopCost"></span></div>
+    <div style="font-size:12.5px;color:var(--muted);margin:-2px 0 10px;line-height:1.5">One week of your plan, grouped by aisle. Tap to check off.</div>
+    <div class="card" id="planShopBody" style="padding:4px 16px 12px"></div>
+    <div class="plabel">MAKE IT STICK</div>
+    <div id="planTipsBody" style="margin-bottom:16px"></div>
+  </section>
+
   <section class="view" id="view-analysis">
     <div class="topbar">
       <button class="tbtn" id="analysisBack" aria-label="Back">‹</button>
@@ -2189,7 +2225,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.01-a";
+const APP_VERSION = "2026.10.01-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -7470,7 +7506,7 @@ function showView(v){
   curView = v;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active", x.id==="view-"+v));
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",
-    t.dataset.v===v || (v==="analysis"&&t.dataset.v==="diary") || (v==="goals"&&t.dataset.v==="settings") || (v==="medals"&&t.dataset.v==="settings") || (v==="snaps"&&t.dataset.v==="settings") || (v==="worksched"&&t.dataset.v==="settings") || (v==="calendar"&&t.dataset.v==="diary") || (v==="info"&&t.dataset.v==="settings")));
+    t.dataset.v===v || (v==="analysis"&&t.dataset.v==="diary") || (v==="goals"&&t.dataset.v==="settings") || (v==="medals"&&t.dataset.v==="settings") || (v==="snaps"&&t.dataset.v==="settings") || (v==="worksched"&&t.dataset.v==="settings") || (v==="calendar"&&t.dataset.v==="diary") || (v==="plan"&&t.dataset.v==="diary") || (v==="info"&&t.dataset.v==="settings")));
   if(v==="progress"){ weekOffset = 0; renderProgress(); } /* always open on the current 7 days 2026.09.21-j */
   if(v==="settings") renderSettings();
   if(v==="medals") renderMedalsPage();
@@ -7480,6 +7516,7 @@ function showView(v){
   if(v==="info") renderInfo();
   if(v==="foods") renderFoods();
   if(v==="analysis") renderAnalysis();
+  if(v==="plan") renderPlanPage();
   if(v==="goals") renderGoals();
   const av = activeViewEl(); if(av) av.scrollTop = 0;
 }
@@ -8103,21 +8140,208 @@ function paintPlanCard(){
   });
   body.innerHTML = html;
   body.querySelectorAll("[data-plan-swap]").forEach(function(b){
-    b.onclick = function(){
-      var m = b.getAttribute("data-plan-swap"), mp = _plan && _plan.meals && _plan.meals[m];
-      if(!mp || !mp.alt) return;
-      var it = planLibFood(mp.alt.n);
-      if(!it) return;
-      mp.items = [{n:mp.alt.n, qty:1, cal:Math.round(it.f.cal), p:Math.round(it.f.p||0), c:Math.round(it.f.c||0), f:Math.round(it.f.f||0)}];
-      mp.cal = mp.items[0].cal; mp.alt = null;
-      _plan.totCal = 0; _plan.totP = 0;
-      _plan.openMeals.forEach(function(mm){ var x = _plan.meals[mm]; if(x){ _plan.totCal += x.cal; x.items.forEach(function(ii){ _plan.totP += ii.p; }); } });
-      paintPlanCard();
-    };
+    b.onclick = function(){ planSwapMeal(b.getAttribute("data-plan-swap")); };
   });
   if(logBtn) logBtn.style.display = "none";
   var anyItems = _plan.openMeals.some(function(m){ return _plan.meals[m] && _plan.meals[m].items.length; });
   if(logBtn) logBtn.style.display = anyItems ? "" : "none";
+}
+function planSwapMeal(m){
+  var mp = _plan && _plan.meals && _plan.meals[m];
+  if(!mp || !mp.alt) return;
+  var it = planLibFood(mp.alt.n);
+  if(!it) return;
+  mp.items = [{n:mp.alt.n, qty:1, cal:Math.round(it.f.cal), p:Math.round(it.f.p||0), c:Math.round(it.f.c||0), f:Math.round(it.f.f||0)}];
+  mp.cal = mp.items[0].cal; mp.alt = null;
+  _plan.totCal = 0; _plan.totP = 0;
+  _plan.openMeals.forEach(function(mm){ var x = _plan.meals[mm]; if(x){ _plan.totCal += x.cal; x.items.forEach(function(ii){ _plan.totP += ii.p; }); } });
+  paintPlanCard();
+  if(typeof curView!=="undefined" && curView==="plan") renderPlanDay();
+}
+function planLogMeal(m){
+  var mp = _plan && _plan.meals && _plan.meals[m];
+  if(!mp || !mp.items.length) return;
+  var d = day(); if(!d.meals[m]) d.meals[m] = [];
+  mp.items.forEach(function(it){ var f = planLibFood(it.n); if(f) d.meals[m].push(buildEntry(f.f, it.qty)); });
+  _plan = null; save(); renderAll();
+  showToast(({breakfast:"Breakfast",lunch:"Lunch",dinner:"Dinner",snacks:"Snack"})[m]+" logged");
+  if(typeof curView!=="undefined" && curView==="plan") renderPlanPage();
+}
+/* ============ PLAN PAGE 2026.10.01-b — progression banners, the smart day,
+   research-backed meals worth trying, and the Target run ============ */
+function renderPlanPage(){
+  if(typeof curView!=="undefined" && curView!=="plan") return;
+  renderPlanBanners(); renderPlanDay(); renderPlanTry(); renderPlanShop(); renderPlanTips();
+}
+function renderPlanBanners(){
+  var el = document.getElementById("planBanners");
+  if(!el) return;
+  var cards = [];
+  try{
+    var gp = goalProjection();
+    if(gp.ok) cards.push({v:"\u2248 "+gp.etaDate, k:"PACE TO "+Math.round(S.goals.weight)+" "+wUnit().toUpperCase(), s:fmtRate(gp.rateWk)+" "+wUnit()+"/wk \u00b7 "+gp.rangeTxt});
+  }catch(e){}
+  try{
+    var ser = adherenceSeries(7), hits = ser.filter(function(x){ return x.hit; }).length;
+    var lg = ser.filter(function(x){ return x.foodLogged; });
+    var avg = lg.length ? Math.round(lg.reduce(function(a,x){ return a+x.cal; },0)/lg.length) : 0;
+    cards.push({v:hits+" of 7", k:"DAYS ON PLAN", s:avg ? avg.toLocaleString()+" kcal avg \u00b7 "+lg.length+" logged" : "log this week to light this up"});
+  }catch(e){}
+  try{
+    var st = trendState();
+    cards.push({v:st.rateWk==null ? "\u2014" : fmtRate(st.rateWk)+" "+wUnit()+"/wk", k:"WEIGHT TREND", s:st.conf==="solid" ? "2+ weeks of weigh-ins" : "weigh in to sharpen this"});
+  }catch(e){}
+  el.innerHTML = cards.map(function(c){
+    return '<div class="pbanner"><div class="pv">'+esc(c.v)+'</div><div class="pk">'+esc(c.k)+'</div><div class="ps">'+esc(c.s)+'</div></div>';
+  }).join("");
+}
+function planEnsure(){
+  if(!_plan || _plan.d!==viewDate()) buildPlan();
+}
+function renderPlanDay(){
+  planEnsure();
+  var body = document.getElementById("planDayBody"), tot = document.getElementById("planDayTot");
+  if(!body) return;
+  var logAll = document.getElementById("planPageLogAll");
+  if(!_plan || !_plan.meals || _plan.note){
+    body.innerHTML = '<div class="card" style="font-size:13px;color:var(--muted);line-height:1.5">'+esc((_plan&&_plan.note)||"Nothing to plan.")+'</div>';
+    if(tot) tot.textContent = "";
+    if(logAll) logAll.style.display = "none";
+    return;
+  }
+  if(tot) tot.textContent = _plan.totCal.toLocaleString()+" of "+Math.round(_plan.goal).toLocaleString()+" kcal";
+  var MEAL_L = {breakfast:"Breakfast", lunch:"Lunch", dinner:"Dinner", snacks:"Snacks"};
+  body.innerHTML = _plan.openMeals.map(function(m){
+    var mp = _plan.meals[m]; if(!mp) return "";
+    var rows = mp.items.length ? mp.items.map(function(it){
+      return '<div class="logrow"><span class="nm">'+esc(it.n)+' <span>'+it.qty+' \u00d7 serving</span></span><span class="kc">'+it.cal+'</span></div>';
+    }).join("") : '<div style="font-size:13px;color:var(--muted)">Already logged.</div>';
+    var alt = mp.alt ? '<div style="display:flex;gap:8px;align-items:center;margin:6px 0 4px;padding:8px 10px;background:#f6f6fa;border-radius:12px"><div style="font-size:12.5px;line-height:1.45;flex:1"><b>Try instead:</b> '+esc(mp.alt.n)+' <span style="color:var(--muted)">\u2014 '+esc(mp.alt.reason)+'.</span></div><button class="chip" data-pg-swap="'+m+'" style="flex:none">Swap</button></div>' : "";
+    return '<div class="card"><div style="display:flex;align-items:baseline;margin-bottom:6px"><b>'+MEAL_L[m]+'</b><span style="margin-left:auto;font-size:12px;color:var(--muted)">'+mp.cal.toLocaleString()+' kcal</span></div>'+rows+alt+'<button class="chip" data-pg-log="'+m+'" style="margin-top:8px">Log this meal</button></div>';
+  }).join("");
+  body.querySelectorAll("[data-pg-swap]").forEach(function(b){ b.onclick = function(){ planSwapMeal(b.getAttribute("data-pg-swap")); }; });
+  body.querySelectorAll("[data-pg-log]").forEach(function(b){ b.onclick = function(){ planLogMeal(b.getAttribute("data-pg-log")); }; });
+  if(logAll) logAll.style.display = "";
+}
+/* Real 3,500-kcal bulking staples (Academy of Nutrition & Dietetics weight-gain
+   plan; common hardgainer templates): liquid calories, oats + PB, beef + pasta,
+   and his own chicken-rice leveled up. Items resolve against Fuel's food DB —
+   anything missing is skipped, never guessed. */
+var PLAN_TRY = [
+  {name:"PB Banana Bulk Shake", meal:"snacks",
+   why:"The hardgainer's cheat code \u2014 big calories that drink like nothing. Every 3,500-kcal plan uses a shake like this to close the gap.",
+   items:[["Whey Protein Nutritional Supplement, Strawberry",1],["Fairlife Milk, Ultra- Filtered",2],["Bananas, Raw",1],["Simply Jif Creamy Peanut Butter",2]]},
+  {name:"Overnight Oats Bowl", meal:"breakfast",
+   why:"Prep it the night before, grab and go. Oats + peanut butter + milk lands a huge breakfast before you're even awake.",
+   items:[["Quaker Old Fashioned Oats 42 Oz",1.5],["Fairlife Milk, Ultra- Filtered",1.5],["Simply Jif Creamy Peanut Butter",1.5],["Bananas, Raw",1]]},
+  {name:"Creamy Chicken Pasta", meal:"dinner",
+   why:"Chicken-and-rice's heavier cousin \u2014 pasta packs more calories per bite, and cottage cheese melts into a high-protein sauce.",
+   items:[["Chicken Breast, Skinless, Boneless",1],["Pasta, Cooked, Enriched, With Added Salt",2],["Daisy Cottage Cheese, 2% Milkfat, Low Fat",1]]},
+  {name:"Chicken Burrito Bowl", meal:"lunch",
+   why:"Your usual, wrapped up \u2014 chicken and rice in warm tortillas. Same foods you already eat, easier to eat more of.",
+   items:[["Chicken Breast, Skinless, Boneless",1],["Rice, White, Medium-Grain, Cooked, Unenriched",2],["Mission Foods, Mission Flour Tortillas, Soft Taco, 8 Inch",2]]}
+];
+var PLAN_TRY_MEAL_L = {breakfast:"breakfast", lunch:"lunch", dinner:"dinner", snacks:"snack"};
+function renderPlanTry(){
+  var body = document.getElementById("planTryBody");
+  if(!body) return;
+  body.innerHTML = PLAN_TRY.map(function(card, ci){
+    var items = [];
+    card.items.forEach(function(pair){ var it = planLibFood(pair[0]); if(it) items.push({it:it, qty:pair[1]}); });
+    if(items.length<2) return "";
+    var cal = 0, p = 0;
+    items.forEach(function(x){ cal += x.it.f.cal*x.qty; p += (x.it.f.p||0)*x.qty; });
+    var list = items.map(function(x){ return esc(x.it.n)+" \u00d7 "+x.qty; }).join(" \u00b7 ");
+    return '<div class="card"><div style="display:flex;align-items:baseline;gap:8px"><b>'+esc(card.name)+'</b><span style="margin-left:auto;font-size:12px;color:var(--muted);flex:none">'+Math.round(cal).toLocaleString()+' kcal \u00b7 '+Math.round(p)+'g P</span></div>'
+      + '<div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin:6px 0">'+esc(card.why)+'</div>'
+      + '<div style="font-size:12.5px;margin-bottom:10px;line-height:1.6">'+list+'</div>'
+      + '<button class="chip" data-pg-try="'+ci+'">Log it ('+PLAN_TRY_MEAL_L[card.meal]+')</button></div>';
+  }).join("");
+  body.querySelectorAll("[data-pg-try]").forEach(function(b){
+    b.onclick = function(){ planLogTry(parseInt(b.getAttribute("data-pg-try"),10)); };
+  });
+}
+function planLogTry(ci){
+  var card = PLAN_TRY[ci]; if(!card) return;
+  var d = day(); if(!d.meals[card.meal]) d.meals[card.meal] = [];
+  var n = 0;
+  card.items.forEach(function(pair){
+    var it = planLibFood(pair[0]);
+    if(it){ d.meals[card.meal].push(buildEntry(it.f, pair[1])); n++; }
+  });
+  if(!n){ showToast("Foods not found"); return; }
+  _plan = null; save(); renderAll();
+  showToast("Logged "+card.name);
+  if(typeof curView!=="undefined" && curView==="plan") renderPlanPage();
+}
+function shopCat(n){
+  var s = n.toLowerCase();
+  if(/chicken|beef|turkey|\begg|tuna|steak|pork|\bfish|whey/.test(s)) return "Protein";
+  if(/milk|yogurt|cheese/.test(s)) return "Dairy";
+  if(/rice|pasta|bagel|\boat|cereal|granola|\bbread|tortilla/.test(s)) return "Carbs";
+  if(/broccoli|banana|apple|berr|carrot|vegetable|fruit|spinach|potato/.test(s)) return "Produce";
+  if(/peanut|almond|\bnut|honey|olive oil|butter|marinara|sauce/.test(s)) return "Pantry";
+  return "Other";
+}
+function planShopKey(){
+  var d = new Date(), dow = (d.getDay()+6)%7;
+  d.setDate(d.getDate()-dow);
+  return d.toISOString().slice(0,10);
+}
+function renderPlanShop(){
+  var body = document.getElementById("planShopBody"), costEl = document.getElementById("planShopCost");
+  if(!body) return;
+  planEnsure();
+  if(!S.planShop || S.planShop.wk!==planShopKey()) S.planShop = {wk:planShopKey(), done:{}};
+  var agg = {};
+  if(_plan && _plan.meals) _plan.openMeals.forEach(function(m){
+    var mp = _plan.meals[m]; if(!mp) return;
+    mp.items.forEach(function(it){ agg[it.n] = (agg[it.n]||0)+it.qty*7; });
+  });
+  var names = Object.keys(agg);
+  if(!names.length){
+    body.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px 0">Build the day plan first \u2014 the list writes itself.</div>';
+    if(costEl) costEl.textContent = "";
+    return;
+  }
+  var groups = {}, totalCost = 0;
+  names.forEach(function(n){
+    var it = planLibFood(n); if(!it) return;
+    var c = shopCat(n);
+    (groups[c] = groups[c]||[]).push(n);
+    var u = (typeof foodUnitCost==="function") ? foodUnitCost(it.f) : 0;
+    if(u>0) totalCost += u*agg[n];
+  });
+  var order = ["Protein","Dairy","Carbs","Produce","Pantry","Other"];
+  body.innerHTML = order.filter(function(c){ return groups[c]; }).map(function(c){
+    return '<div style="font-size:11px;font-weight:800;letter-spacing:1px;color:var(--muted);margin:12px 0 2px">'+c.toUpperCase()+'</div>'
+      + groups[c].sort().map(function(n){
+        var done = !!S.planShop.done[n];
+        var q = Math.round(agg[n]*2)/2;
+        return '<div class="shoprow'+(done?" done":"")+'" data-shop="'+esc(n)+'"><span class="shopcheck">'+(done?"\u2713":"")+'</span><span class="shopname" style="flex:1">'+esc(n)+'</span><span style="font-size:12px;color:var(--muted);flex:none">'+q+' \u00d7</span></div>';
+      }).join("");
+  }).join("");
+  if(costEl) costEl.textContent = totalCost>0 ? "\u2248 $"+totalCost.toFixed(0)+"/wk" : "";
+  body.querySelectorAll("[data-shop]").forEach(function(r){
+    r.onclick = function(){
+      var n = r.getAttribute("data-shop");
+      if(S.planShop.done[n]) delete S.planShop.done[n]; else S.planShop.done[n] = 1;
+      save(); renderPlanShop();
+    };
+  });
+}
+var PLAN_TIPS = [
+  {t:"Drink 500 of them", d:"A daily shake (whey + milk + banana + peanut butter) is \u2248470 kcal and 35g protein that doesn't feel like a meal. Every 3,500-kcal template leans on liquid calories \u2014 they're the easiest gap-closer there is."},
+  {t:"Cook rice + chicken once", d:"Sunday: a big batch of rice and a tray of chicken breast covers four or five lunches. Your logs already say rice + chicken works \u2014 make it frictionless."},
+  {t:"Peanut butter is a cheat code", d:"Two tablespoons on anything \u2014 bagel, oats, shake \u2014 is \u2248200 kcal and 8g protein with zero extra fullness."},
+  {t:"Eat on a clock", d:"Your meal times are already learned in the Calendar tab. Anchoring breakfast within an hour of waking keeps the whole day's appetite on schedule."}
+];
+function renderPlanTips(){
+  var body = document.getElementById("planTipsBody");
+  if(!body) return;
+  body.innerHTML = PLAN_TIPS.map(function(t){
+    return '<div class="card"><b style="font-size:14px">'+esc(t.t)+'</b><div style="font-size:13px;color:var(--muted);line-height:1.5;margin-top:4px">'+esc(t.d)+'</div></div>';
+  }).join("");
 }
 function planLogAll(){
   if(!_plan || !_plan.meals) return;
@@ -8134,6 +8358,7 @@ function planLogAll(){
   });
   _plan = null; save(); renderAll();
   showToast("Day plan logged");
+  if(typeof curView!=="undefined" && curView==="plan") renderPlanPage();
 }
 
 function autoPilot(){
@@ -8175,7 +8400,10 @@ function autoPilot(){
 }
 /* ---- wiring (runs once; elements are static HTML above the scripts) ---- */
 (function(){
-  var pb = document.getElementById("planBuild"); if(pb) pb.onclick = buildPlan;
+  var pb = document.getElementById("planBuild"); if(pb) pb.onclick = function(){ showView("plan"); };
+  var pback = document.getElementById("planBack"); if(pback) pback.onclick = function(){ showView("diary"); };
+  var ppgb = document.getElementById("planPageBuild"); if(ppgb) ppgb.onclick = function(){ _plan = null; buildPlan(); renderPlanPage(); };
+  var ppgl = document.getElementById("planPageLogAll"); if(ppgl) ppgl.onclick = planLogAll;
   var pl = document.getElementById("planLogAll"); if(pl) pl.onclick = planLogAll;
   var pi = document.getElementById("planInfo");
   if(pi) pi.addEventListener("click", function(e){
