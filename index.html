@@ -952,6 +952,22 @@ body.reordering #progOverview{display:none}
 
 .plabel{font-size:11px;font-weight:800;letter-spacing:1px;color:var(--muted);margin:20px 0 8px}
 .plabel span{float:right;letter-spacing:0;text-transform:none;font-weight:700}
+/* plan hero — diary-style gradient card for the #1 bulk instrument */
+.planhero{background:linear-gradient(135deg,#35c878 0%,#1da35c 100%);color:#fff;border-radius:var(--radius);
+  padding:18px 16px 15px;box-shadow:0 10px 28px rgba(47,191,113,.28);position:relative;overflow:hidden}
+.planhero::after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08);top:-70px;right:-50px;pointer-events:none}
+.planhero .ph-stats{display:flex;gap:16px;margin-top:14px;position:relative;z-index:1}
+.planhero .ph-stat-l{font-size:10px;letter-spacing:.6px;opacity:.8;font-weight:700}
+.planhero .ph-stat-v{font-size:19px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+/* plan accordions — progressive disclosure for secondary sections */
+.pacc{margin-bottom:10px;overflow:hidden}
+.pacc-head{width:100%;display:flex;align-items:center;gap:10px;padding:15px 16px;border:none;background:none;font-family:inherit;cursor:pointer;text-align:left;color:var(--ink)}
+.pacc-dot{width:10px;height:10px;border-radius:50%;flex:none}
+.pacc-head b{font-size:15px}
+.pacc-sub{margin-left:auto;font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap}
+.pacc-chev{width:20px;height:20px;color:var(--muted);flex:none;transition:transform .2s ease}
+.pacc.open .pacc-chev{transform:rotate(180deg)}
+.pacc-body{padding:0 16px 16px}
 .pbanners{display:flex;gap:10px;overflow-x:auto;margin:0 -14px;padding:2px 14px 8px;-webkit-overflow-scrolling:touch}
 .pbanner{flex:0 0 196px;background:var(--card);border-radius:var(--radius);padding:13px 14px;box-shadow:0 10px 28px rgba(84,84,180,.08)}
 .pbanner .pv{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
@@ -1109,27 +1125,16 @@ body.reordering #progOverview{display:none}
       <h1>Plan</h1>
       <div style="width:44px"></div>
     </div>
-    <div class="plabel"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff8f3d;margin-right:7px"></span>PROGRESS</div>
-    <div class="pbanners" id="planBanners"></div>
-    <div class="plabel"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2fbf71;margin-right:7px"></span>BULK PACE</div>
-    <div class="card" id="bulkPaceBody" style="border-top:3px solid #2fbf71;margin-bottom:12px"></div>
-    <div id="planGoalsBody"></div>
+    <div id="planHero"></div>
+    <div class="pbanners" id="planBanners" style="margin-top:12px"></div>
     <div class="plabel"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff9f43;margin-right:7px"></span>TODAY'S PLAN <span id="planDayTot"></span></div>
     <div id="planDayBody"></div>
     <div style="display:flex;gap:8px;margin:10px 0 0">
       <button class="bigbtn" id="planPageBuild" style="flex:1;margin:0">Rebuild</button>
       <button class="bigbtn" id="planPageLogAll" style="flex:1;margin:0">Log it all</button>
     </div>
-    <div class="plabel"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#8b7cf0;margin-right:7px"></span>WORTH TRYING</div>
-    <div style="font-size:12.5px;color:var(--muted);margin:-2px 0 10px;line-height:1.5">Bulking staples from real 3,500-kcal plans, sized for your goal.</div>
-    <div id="planTryBody"></div>
-    <div class="plabel"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#66bb6a;margin-right:7px"></span>TARGET RUN <span id="planShopCost"></span></div>
-    <div style="font-size:12.5px;color:var(--muted);margin:-2px 0 10px;line-height:1.5">One week of your plan, grouped by aisle. Tap to check off.</div>
-    <div class="card" id="planShopBody" style="padding:4px 16px 12px"></div>
-    <div class="plabel"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4fc3f7;margin-right:7px"></span>MAKE IT STICK</div>
-    <div id="planTipsBody" style="margin-bottom:16px"></div>
-    <div class="plabel"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff5a5a;margin-right:7px"></span>TRAINING</div>
-    <div class="card" id="trainBody" style="border-top:3px solid #ff5a5a;margin-bottom:16px"></div>
+    <div id="planGoalsBody" style="margin-top:14px"></div>
+    <div id="planAcc" style="margin-top:4px"></div>
   </section>
 
   <section class="view" id="view-analysis">
@@ -2242,7 +2247,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.01-l";
+const APP_VERSION = "2026.10.01-m";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -8490,7 +8495,7 @@ function renderPlanGoals(){
 }
 function renderPlanPage(){
   if(typeof curView!=="undefined" && curView!=="plan") return;
-  renderPlanBanners(); renderBulkPace(); renderPlanGoals(); renderPlanDay(); renderPlanTry(); renderPlanShop(); renderPlanTips(); renderTraining();
+  renderPlanBanners(); renderBulkPace(); renderPlanAccordions(); renderPlanGoals(); renderPlanDay(); renderPlanTry(); renderPlanShop(); renderPlanTips(); renderTraining();
 }
 /* ============ BULK PACE 2026.10.01 — the video's Step 3 as a live instrument ====
    Tyler Tong's protocol: weigh every morning, decide by WEEKLY AVERAGE.
@@ -8505,47 +8510,76 @@ function weekAvgW(endDs, days){
   return {avg: vals.reduce(function(a,b){return a+b;},0)/vals.length, n: vals.length};
 }
 function renderBulkPace(){
-  var el = document.getElementById("bulkPaceBody");
+  var el = document.getElementById("planHero");
   if(!el) return;
   var today = todayStr(), curW = curBodyWeight();
   var targetLb = curW>0 ? curW*0.005 : 0.65;
   function f1(v){ return (Math.round(v*10)/10).toFixed(1); }
-  var head = '<div style="display:flex;align-items:center;gap:8px"><b>Bulk pace</b>'
-    + '<span style="margin-left:auto;font-size:11px;color:var(--muted)">target +0.5%/wk (\u2248'+f1(targetLb)+' lb)</span></div>';
   var cur = weekAvgW(today,7), prev = weekAvgW(addDays(today,-7),7);
   if(!cur || !prev || cur.n<2 || prev.n<2){
-    el.innerHTML = head + '<div style="font-size:13px;color:var(--muted);line-height:1.5;margin-top:6px">'
-      + 'The video\u2019s rule: weigh every morning and let the <b>weekly average</b> decide \u2014 not any single weigh-in. '
-      + 'Gain about 0.5% of bodyweight a week ('+f1(targetLb)+' lb at your weight). Weigh daily and this card tracks the verdict for you.</div>';
+    el.innerHTML = '<div class="planhero"><div style="display:flex;align-items:baseline;position:relative;z-index:1"><b style="font-size:15px">Bulk Pace</b>'
+      + '<span style="margin-left:auto;font-size:12px;opacity:.85">target +0.5%/wk</span></div>'
+      + '<div style="font-size:13.5px;line-height:1.55;margin-top:10px;position:relative;z-index:1">Weigh every morning and let the <b>weekly average</b> decide \u2014 not any single weigh-in. Gain about 0.5% of bodyweight a week ('+f1(targetLb)+' lb at your weight). Weigh daily and this card tracks the verdict for you.</div></div>';
     return;
   }
   var chg = cur.avg-prev.avg, pct = prev.avg>0 ? chg/prev.avg*100 : 0;
-  var verdict, vc;
-  if(chg > 2){ verdict = "Over the 2-lb weekly limit \u2014 ease portions back slightly."; vc = "#e05252"; }
-  else if(pct >= 0.3 && pct <= 0.8){ verdict = "On track \u2014 this is the pace that builds muscle without the fat."; vc = "#2fbf71"; }
-  else if(pct > 0.8){ verdict = "Faster than 0.5%/week \u2014 most of the extra is fat. Trim ~200 kcal/day."; vc = "#e05252"; }
-  else if(pct >= 0.15){ verdict = "Moving, but under pace \u2014 nudge portions up a little."; vc = "#ff9f43"; }
+  var head, detail, hc;
+  if(chg > 2){ head = "Too fast"; detail = "Over the 2-lb weekly limit \u2014 ease portions back slightly."; hc = "#fff"; }
+  else if(pct >= 0.3 && pct <= 0.8){ head = "On track"; detail = "This is the pace that builds muscle without the fat."; hc = "#fff"; }
+  else if(pct > 0.8){ head = "Too fast"; detail = "Faster than 0.5%/week \u2014 most of the extra is fat. Trim ~200 kcal/day."; hc = "#fff"; }
+  else if(pct >= 0.15){ head = "Under pace"; detail = "Moving, but under pace \u2014 nudge portions up a little."; hc = "#fff"; }
   else {
     var prev2 = weekAvgW(addDays(today,-14),7);
     var stall2 = prev2 && prev2.n>=2 && (cur.avg-prev2.avg)/prev2.avg*100 < 0.3;
-    verdict = stall2 ? "Flat for 2 weeks \u2014 the video\u2019s rule: eat a little more (+200 kcal/day)."
-                     : "Flat this week \u2014 one flat week is noise. If next week is flat too, add ~200 kcal/day.";
-    vc = "#ff9f43";
+    head = stall2 ? "Flat 2 weeks" : "Flat week";
+    detail = stall2 ? "The video\u2019s rule: eat a little more (+200 kcal/day)."
+                    : "One flat week is noise. If next week is flat too, add ~200 kcal/day.";
+    hc = "#fff";
   }
-  el.innerHTML = head
-    + '<div style="display:flex;gap:20px;margin:10px 0 8px">'
-    + '<div><div style="font-size:10.5px;color:var(--muted);letter-spacing:.4px">THIS WEEK AVG</div><div style="font-size:20px;font-weight:800">'+f1(cur.avg)+'</div></div>'
-    + '<div><div style="font-size:10.5px;color:var(--muted);letter-spacing:.4px">LAST WEEK AVG</div><div style="font-size:20px;font-weight:800">'+f1(prev.avg)+'</div></div>'
-    + '<div><div style="font-size:10.5px;color:var(--muted);letter-spacing:.4px">CHANGE</div><div style="font-size:20px;font-weight:800;color:'+vc+'">'+(chg>=0?"+":"\u2212")+f1(Math.abs(chg))+'</div></div>'
-    + '</div>'
-    + '<div style="font-size:13px;line-height:1.5"><b style="color:'+vc+'">'+esc(verdict)+'</b></div>'
-    + '<div style="font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5">From the bulking video: daily weigh-ins, weekly average, +0.5%/week. Two flat weeks \u2192 eat more. Over 2 lb in a week \u2192 eat less.</div>';
+  function stat(l,v,c){ return '<div><div class="ph-stat-l">'+l+'</div><div class="ph-stat-v"'+(c?' style="color:'+c+'"':'')+'>'+v+'</div></div>'; }
+  var chgTxt = (chg>=0?"+":"\u2212")+f1(Math.abs(chg));
+  el.innerHTML = '<div class="planhero"><div style="display:flex;align-items:baseline;position:relative;z-index:1"><b style="font-size:15px">Bulk Pace</b>'
+    + '<span style="margin-left:auto;font-size:12px;opacity:.85">target +0.5%/wk (\u2248'+f1(targetLb)+' lb)</span></div>'
+    + '<div style="font-size:26px;font-weight:800;margin:10px 0 4px;position:relative;z-index:1;color:'+hc+'">'+esc(head)+'</div>'
+    + '<div style="font-size:13.5px;line-height:1.5;opacity:.92;position:relative;z-index:1">'+esc(detail)+'</div>'
+    + '<div class="ph-stats">'+stat("THIS WEEK",f1(cur.avg))+stat("LAST WEEK",f1(prev.avg))+stat("CHANGE",chgTxt)+'</div></div>';
 }
-/* ============ TRAINING 2026.10.01 — the video's Step 4 ==========================
-   Food is the fuel; training decides whether the surplus becomes muscle. */
+/* ============ PLAN ACCORDIONS 2026.10.01 — progressive disclosure ================
+   Secondary sections collapse into Fuel-style cards. Tap the header to expand. */
+var _accOpen = {};
+function planAccordion(id, color, title, sub, bodyId, hint){
+  return '<div class="card pacc'+(_accOpen[id]?' open':'')+'" id="pacc-'+id+'">'
+    + '<button class="pacc-head" data-acc="'+id+'"><span class="pacc-dot" style="background:'+color+'"></span><b>'+title+'</b>'
+    + '<span class="pacc-sub" id="pacc-sub-'+id+'">'+sub+'</span>'
+    + '<svg class="pacc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>'
+    + '<div class="pacc-body"'+(_accOpen[id]?'':' hidden')+'><div style="font-size:12.5px;color:var(--muted);margin:0 0 10px;line-height:1.5">'+hint+'</div><div id="'+bodyId+'"></div></div>'
+    + '</div>';
+}
+function renderPlanAccordions(){
+  var el = document.getElementById("planAcc");
+  if(!el) return;
+  el.innerHTML =
+      planAccordion("try", "#8b7cf0", "Worth Trying", "", "planTryBody", "Bulking staples from real 3,500-kcal plans, sized for your goal.")
+    + planAccordion("train", "#ff5a5a", "Training", "", "trainBody", "Food is the fuel \u2014 training decides whether it becomes muscle.")
+    + planAccordion("shop", "#66bb6a", "Target Run", "", "planShopBody", "One week of your plan, grouped by aisle. Tap to check off.")
+    + planAccordion("tips", "#4fc3f7", "Make It Stick", "", "planTipsBody", "Small habits that keep the bulk on track.");
+  el.querySelectorAll(".pacc-head").forEach(function(b){
+    b.onclick = function(){
+      var id = b.getAttribute("data-acc"), card = document.getElementById("pacc-"+id);
+      _accOpen[id] = !_accOpen[id];
+      card.classList.toggle("open", _accOpen[id]);
+      card.querySelector(".pacc-body").hidden = !_accOpen[id];
+    };
+  });
+}
+function planAccSub(id, txt){
+  var s = document.getElementById("pacc-sub-"+id);
+  if(s) s.textContent = txt;
+}
 function renderTraining(){
   var el = document.getElementById("trainBody");
   if(!el) return;
+  planAccSub("train", "3 rules");
   el.innerHTML = '<b style="font-size:14px">Train like it matters</b>'
     + '<div style="font-size:13px;color:var(--muted);line-height:1.55;margin-top:6px">Eating gives you the fuel to grow \u2014 training is what tells your body to build muscle instead of storing fat. From the video:</div>'
     + '<div style="font-size:13px;line-height:1.55;margin-top:8px"><b>1. Hard sets.</b> Stop 1\u20132 reps shy of failure on most sets \u2014 that\u2019s where the growth happens, without the extra fatigue and injury risk of grinding every set to zero. Save true failure for safe isolation moves (curls, lateral raises). How close you get matters more than piling on easy sets.</div>'
@@ -8644,6 +8678,7 @@ var PLAN_TRY_MEAL_L = {breakfast:"breakfast", lunch:"lunch", dinner:"dinner", sn
 function renderPlanTry(){
   var body = document.getElementById("planTryBody");
   if(!body) return;
+  planAccSub("try", PLAN_TRY.length+" ideas");
   body.innerHTML = PLAN_TRY.map(function(card, ci){
     var items = [];
     card.items.forEach(function(pair){ var it = planLibFood(pair[0]); if(it) items.push({it:it, qty:pair[1]}); });
@@ -8722,6 +8757,7 @@ function renderPlanShop(){
       }).join("");
   }).join("");
   if(costEl) costEl.textContent = totalCost>0 ? "\u2248 $"+totalCost.toFixed(0)+"/wk" : "";
+  planAccSub("shop", Object.keys(agg).length+" items"+(totalCost>0?" \u00b7 \u2248$"+totalCost.toFixed(0):""));
   body.querySelectorAll("[data-shop]").forEach(function(r){
     r.onclick = function(){
       var n = r.getAttribute("data-shop");
@@ -8741,6 +8777,7 @@ var PLAN_TIPS = [
 function renderPlanTips(){
   var body = document.getElementById("planTipsBody");
   if(!body) return;
+  planAccSub("tips", PLAN_TIPS.length+" habits");
   body.innerHTML = PLAN_TIPS.map(function(t){
     return '<div class="card"><b style="font-size:14px">'+esc(t.t)+'</b><div style="font-size:13px;color:var(--muted);line-height:1.5;margin-top:4px">'+esc(t.d)+'</div></div>';
   }).join("");
