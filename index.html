@@ -2247,7 +2247,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.01-n";
+const APP_VERSION = "2026.10.02-o";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -8687,7 +8687,7 @@ function renderPlanTry(){
     items.forEach(function(x){ cal += x.it.f.cal*x.qty; p += (x.it.f.p||0)*x.qty; });
     var list = items.map(function(x){ return esc(x.it.n)+" \u00d7 "+x.qty; }).join(" \u00b7 ");
     var fchip = card.focus ? '<span style="font-size:10.5px;font-weight:800;letter-spacing:.4px;color:#8b7cf0;background:#efedfd;border-radius:20px;padding:3px 9px;flex:none">'+esc(card.focus).toUpperCase()+'</span>' : "";
-    return '<div class="card" style="border-top:3px solid #8b7cf0"><div style="display:flex;align-items:center;gap:8px"><b>'+esc(card.name)+'</b><span style="margin-left:auto;flex:none">'+fchip+'</span></div><div style="display:flex;align-items:baseline;gap:8px;margin-top:2px"><span style="font-size:12px;color:var(--muted);flex:none">'+Math.round(cal).toLocaleString()+' kcal \u00b7 '+Math.round(p)+'g P</span></div>'
+    return '<div style="background:#f6f6fb;border-radius:16px;padding:14px;margin-bottom:10px;border-top:3px solid #8b7cf0"><div style="display:flex;align-items:center;gap:8px"><b>'+esc(card.name)+'</b><span style="margin-left:auto;flex:none">'+fchip+'</span></div><div style="display:flex;align-items:baseline;gap:8px;margin-top:2px"><span style="font-size:12px;color:var(--muted);flex:none">'+Math.round(cal).toLocaleString()+' kcal \u00b7 '+Math.round(p)+'g P</span></div>'
       + '<div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin:6px 0">'+esc(card.why)+'</div>'
       + '<div style="font-size:12.5px;margin-bottom:10px;line-height:1.6">'+list+'</div>'
       + '<button class="chip" data-pg-try="'+ci+'">Log it ('+PLAN_TRY_MEAL_L[card.meal]+')</button></div>';
@@ -8779,7 +8779,7 @@ function renderPlanTips(){
   if(!body) return;
   planAccSub("tips", PLAN_TIPS.length+" habits");
   body.innerHTML = PLAN_TIPS.map(function(t){
-    return '<div class="card"><b style="font-size:14px">'+esc(t.t)+'</b><div style="font-size:13px;color:var(--muted);line-height:1.5;margin-top:4px">'+esc(t.d)+'</div></div>';
+    return '<div style="padding:12px 0;border-top:1px solid var(--line)"><b style="font-size:14px">'+esc(t.t)+'</b><div style="font-size:13px;color:var(--muted);line-height:1.5;margin-top:4px">'+esc(t.d)+'</div></div>';
   }).join("");
 }
 function planLogAll(){
