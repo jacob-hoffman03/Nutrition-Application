@@ -410,6 +410,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .rangenote{font-size:12px; color:var(--muted); margin-top:8px;}
 .linkbtn{background:none; border:none; padding:0; color:var(--acc); font:inherit; font-weight:700; cursor:pointer; text-decoration:underline;}
 .macro3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:12px;}
+.mslider{width:100%;margin:8px 0 2px;accent-color:var(--acc);}
 .daycost{text-align:center; font-size:12.5px; color:var(--muted); font-weight:600; margin:-2px 0 10px;}
 .m3{border-radius:18px; padding:14px 8px; text-align:center;}
 .m3.c{background:rgba(126,126,242,.13);} .m3.p{background:rgba(18,207,174,.13);} .m3.f{background:rgba(251,111,132,.13);}
@@ -1127,6 +1128,11 @@ body.reordering #progOverview{display:none}
     </div>
     <div id="planHero"></div>
     <div class="pbanners" id="planBanners" style="margin-top:12px"></div>
+    <div class="card" style="margin-top:12px;padding:14px 16px">
+      <div style="display:flex;align-items:center"><b style="font-size:14px">Portions</b><span id="planScaleVal" style="margin-left:auto;font-size:14px;font-weight:800;color:var(--acc)">100%</span></div>
+      <input type="range" id="planScale" min="80" max="130" step="5" value="100" style="width:100%;margin:10px 0 4px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:600"><span>80% · light day</span><span>130% · hungry</span></div>
+    </div>
     <div class="plabel"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff9f43;margin-right:7px"></span>TODAY'S PLAN <span id="planDayTot"></span></div>
     <div id="planDayBody"></div>
     <div style="display:flex;gap:8px;margin:10px 0 0">
@@ -1282,9 +1288,9 @@ body.reordering #progOverview{display:none}
     </div>
     <div class="rangenote" id="macroAutoNote" style="margin:2px 0 10px"></div>
     <div class="macro3">
-      <div class="m3 c"><div class="mn">Carbs</div><div class="mp" id="gmCp">–</div><div class="mg"><input id="gmC" type="number" inputmode="numeric"> g</div><div class="mkcal" id="gmCk"></div></div>
-      <div class="m3 p"><div class="mn">Protein</div><div class="mp" id="gmPp">–</div><div class="mg"><input id="gmP" type="number" inputmode="numeric"> g</div><div class="mkcal" id="gmPk"></div></div>
-      <div class="m3 f"><div class="mn">Fat</div><div class="mp" id="gmFp">–</div><div class="mg"><input id="gmF" type="number" inputmode="numeric"> g</div><div class="mkcal" id="gmFk"></div></div>
+      <div class="m3 c"><div class="mn">Carbs</div><div class="mp" id="gmCp">–</div><div class="mg"><input id="gmC" type="number" inputmode="numeric"> g</div><input type="range" class="mslider" id="gmCs" min="0" max="800" step="5" aria-label="Carbs grams"><div class="mkcal" id="gmCk"></div></div>
+      <div class="m3 p"><div class="mn">Protein</div><div class="mp" id="gmPp">–</div><div class="mg"><input id="gmP" type="number" inputmode="numeric"> g</div><input type="range" class="mslider" id="gmPs" min="0" max="400" step="5" aria-label="Protein grams"><div class="mkcal" id="gmPk"></div></div>
+      <div class="m3 f"><div class="mn">Fat</div><div class="mp" id="gmFp">–</div><div class="mg"><input id="gmF" type="number" inputmode="numeric"> g</div><input type="range" class="mslider" id="gmFs" min="0" max="300" step="5" aria-label="Fat grams"><div class="mkcal" id="gmFk"></div></div>
     </div>
     <div class="card" style="margin-bottom:12px">
       <div class="cfrow"><span><b>Fiber</b> <span class="ph" id="fiberAutoTag"></span></span><span><b id="gmFip" style="margin-right:8px">–</b><input id="gmFi" type="number" inputmode="numeric" style="width:64px"> g</span></div>
@@ -2247,7 +2253,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.02-o";
+const APP_VERSION = "2026.10.02-p";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -7263,6 +7269,7 @@ function renderGoals(){
   document.getElementById("goalTotal").textContent = Math.round(tot).toLocaleString();
   document.getElementById("goalSub").textContent = Math.round(g.maintenance).toLocaleString()+" maintenance + "+Math.round(g.surplus>0?g.surplus:0).toLocaleString()+" surplus";
   document.getElementById("gmC").value = g.carbs; document.getElementById("gmP").value = g.protein; document.getElementById("gmF").value = g.fat;
+  if(typeof syncMacroSliders==="function") syncMacroSliders();
   const fct = (g.nutrTargets||{}).Fiber;
   document.getElementById("gmFi").value = fct ? fct.val : "";
   document.getElementById("gmFi").placeholder = "auto";
@@ -7340,7 +7347,24 @@ document.getElementById("goalSlider").addEventListener("input", e=>{
      won't overwrite what he typed. Tap Auto to re-sync from the calorie goal. */
   if(S.goals.macroAuto!==false){ S.goals.macroAuto = false; }
   commitMacroInputs(); save(); updateMacroSplit();
+  var sl = document.getElementById(id+"s"); if(sl) sl.value = document.getElementById(id).value||0;
 }));
+/* macro sliders — drag to adjust, synced both ways with the number inputs */
+[["gmCs","gmC"],["gmPs","gmP"],["gmFs","gmF"]].forEach(function(pair){
+  var sl = document.getElementById(pair[0]), num = document.getElementById(pair[1]);
+  if(!sl || !num) return;
+  sl.addEventListener("input", function(){
+    num.value = sl.value;
+    if(S.goals.macroAuto!==false){ S.goals.macroAuto = false; }
+    commitMacroInputs(); save(); updateMacroSplit();
+  });
+});
+function syncMacroSliders(){
+  [["gmCs","gmC"],["gmPs","gmP"],["gmFs","gmF"]].forEach(function(pair){
+    var sl = document.getElementById(pair[0]), num = document.getElementById(pair[1]);
+    if(sl && num) sl.value = parseFloat(num.value)||0;
+  });
+}
 document.getElementById("gmFi").addEventListener("input", ()=>{
   commitMacroInputs(); save(); updateMacroSplit();
 });
@@ -8204,6 +8228,8 @@ function buildPlan(){
   var remP = Math.max(0, (S.goals.protein||0) - t.p);
   var remC = Math.max(0, (S.goals.carbs||0) - t.c);
   var remF = Math.max(0, (S.goals.fat||0) - t.f);
+  var pscale = S.planScale||1;
+  if(pscale!==1){ remCal*=pscale; remP*=pscale; remC*=pscale; remF*=pscale; }
   var remFib = Math.max(0, fiberTarget() - fiberTotal(ds));
   var d = S.days[ds]||{}, dd = d.meals||{};
   var openMeals = PLAN_MEALS.filter(function(m){ return !(dd[m] && dd[m].length); });
@@ -8842,6 +8868,19 @@ function autoPilot(){
   var pb = document.getElementById("planBuild"); if(pb) pb.onclick = function(){ showView("plan"); };
   var ppgb = document.getElementById("planPageBuild"); if(ppgb) ppgb.onclick = function(){ _plan = null; buildPlan(); renderPlanPage(); };
   var ppgl = document.getElementById("planPageLogAll"); if(ppgl) ppgl.onclick = planLogAll;
+  var pscale = document.getElementById("planScale");
+  if(pscale){
+    pscale.value = Math.round((S.planScale||1)*100);
+    document.getElementById("planScaleVal").textContent = pscale.value+"%";
+    pscale.oninput = function(){
+      S.planScale = pscale.value/100; save();
+      document.getElementById("planScaleVal").textContent = pscale.value+"%";
+      _plan = null; buildPlan(); renderPlanPage();
+      /* keep the slider where he left it after re-render */
+      var ps2 = document.getElementById("planScale");
+      if(ps2){ ps2.value = pscale.value; document.getElementById("planScaleVal").textContent = pscale.value+"%"; }
+    };
+  }
   var pl = document.getElementById("planLogAll"); if(pl) pl.onclick = planLogAll;
   var pi = document.getElementById("planInfo");
   if(pi) pi.addEventListener("click", function(e){
