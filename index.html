@@ -106,10 +106,16 @@ button{font-family:inherit;}
 .mrow .mkcal{font-size:11px; color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums;}
 .madd{width:30px; height:30px; border-radius:50%; border:none; background:var(--acc-soft); color:var(--acc); font-size:20px; line-height:1; font-weight:700; display:flex; align-items:center; justify-content:center;}
 .logrow{display:flex; align-items:center; gap:8px; padding:8px 0 8px 46px; border-bottom:1px solid var(--line); font-size:13px;}
-.logrow .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#3a3a42;}
-.logrow .nm span{color:var(--muted); font-size:11px;}
 .logrow .kc{font-weight:700; font-variant-numeric:tabular-nums;}
 .logrow .lthumb{width:40px; height:40px; border-radius:12px; overflow:hidden; flex:none; background:var(--card);}
+.logrow .nm{display:flex; flex-direction:column; align-items:flex-start; justify-content:center; flex:1; min-width:0; overflow:hidden; color:#3a3a42;}
+.logrow .nmt{font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;}
+.logrow .nmt .nmsub{color:var(--muted); font-size:11px;}
+.fbadges{display:flex; gap:6px; margin-top:5px;}
+.fb{width:13px; height:13px; border-radius:50%; background:#e4e4ea; flex:none;}
+.fb.b-bulk{background:#22c55e;}
+.fb.b-lean{background:#3b82f6;}
+.fb.b-fiber{background:#f59e0b;}
 .logrow .lthumb img{width:100%; height:100%; object-fit:cover; display:block;}
 .logdel{border:none; background:none; color:#c9c9d2; font-size:18px; width:28px; height:28px;}
 /* water */
@@ -2253,7 +2259,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.02-q";
+const APP_VERSION = "2026.10.02-r";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2820,6 +2826,26 @@ function isVerifiedFood(name){ return !isCustom(name) && VERIFIED_FOODS.some(f=>
 function entryImg(e){ if(e&&e.img) return e.img; const n=e&&e.n; if(!n) return null;
   const cf=(S.customFoods||[]).find(f=>f.n===n); if(cf&&cf.img) return cf.img;
   const lf=findFood(n); return (lf&&lf.img)||null; }
+/* Food badges: 3 dots under the food title — Bulk (green), Lean (blue), Fiber (amber).
+   Gray = doesn't qualify. Bulk = energy-dense food that helps hit the surplus
+   (protein under 35% of calories). Lean = protein-forward (30%+ of cal from protein,
+   fat under 35%). Fiber = 3g+ per serving (supports digestion on a bulk). */
+function foodBadges(f){
+  var none={bulk:false,lean:false,fiber:false};
+  if(!f || !(f.cal>0)) return none;
+  var pc=(f.p||0)*4, fc=(f.f||0)*9, cal=f.cal;
+  var bulk = pc/cal < 0.35;
+  var lean = pc/cal >= 0.30 && fc/cal <= 0.35;
+  var fib=0; (f.nutrs||[]).forEach(function(n){ if(/fiber/i.test(n.n||"")) fib += n.amt||0; });
+  return {bulk:bulk, lean:lean, fiber:fib>=3};
+}
+function foodBadgeHTML(f){
+  var b = foodBadges(f);
+  return '<span class="fbadges" aria-hidden="true">'
+    +'<i class="fb'+(b.bulk?' b-bulk':'')+'" title="Bulk-friendly"></i>'
+    +'<i class="fb'+(b.lean?' b-lean':'')+'" title="Lean protein"></i>'
+    +'<i class="fb'+(b.fiber?' b-fiber':'')+'" title="High fiber"></i></span>';
+}
 /* ============ FOOD COST (2026.09.22-o) ============
    Foods can carry a store price: pr = whole-package price in $, ps = servings
    per package. Cost per serving = pr/ps, so a $1 jar with 4 servings = $0.25
@@ -3268,7 +3294,7 @@ function renderDiary(){
       const sub = (e.nutrs && e.nutrs.length)
         ? `${esc(e.s)}${e.qty>1?` × ${e.qty}`:""} · ${e.nutrs.map(x=>`${r1(x.amt)} ${esc(x.u)}`).join(" + ")}`
         : `${e.qty} × ${esc(e.s)}`;
-      return `<div class="logrow">${im?`<span class="lthumb"><img src="${im}" alt=""></span>`:""}<span class="nm">${esc(e.n)} <span>${sub}</span></span><span class="kc">${Math.round(e.cal)}</span><button class="logdel" data-m="${m}" data-id="${e.id}">×</button></div>`;
+      return `<div class="logrow">${im?`<span class="lthumb"><img src="${im}" alt=""></span>`:""}<span class="nm"><span class="nmt">${esc(e.n)} <span class="nmsub">${sub}</span></span>${foodBadgeHTML(findFood(e.n)||e)}</span><span class="kc">${Math.round(e.cal)}</span><button class="logdel" data-m="${m}" data-id="${e.id}">×</button></div>`;
     }).join("") : "";
     const wrap = document.createElement("div");
     wrap.innerHTML = html;
@@ -6535,6 +6561,11 @@ function infoContent(k){
      <div class="irow"><b>Auto-tune maintenance:</b> when 2+ weeks of weigh-ins show your real gain rate missing the target band, Fuel nudges maintenance ±150 kcal — max once per 2 weeks.</div>
      <div class="irow">The formulas are only ±10% accurate — your weigh-in trend is the calibration instrument.</div>`};
   if(k==="scores") return {t:"Energy & bloat", b: scoreInfoHTML()};
+  if(k==="badges") return {t:"Food badges", b:
+    `<div class="irow">The three dots under every food name say what the food is good for — a colored dot means yes, gray means no.</div>
+     <div class="irow"><b style="color:#22c55e">●</b> <b>Bulk</b> — energy-dense food that helps you hit your surplus (under 35% of its calories from protein).</div>
+     <div class="irow"><b style="color:#3b82f6">●</b> <b>Lean</b> — protein-forward (30%+ of calories from protein, under 35% from fat).</div>
+     <div class="irow"><b style="color:#f59e0b">●</b> <b>Fiber</b> — 3g+ fiber per serving, keeps digestion moving on a bulk.</div>`};
   if(k==="schedule") return {t:"Work schedule", b:
     `<div class="irow"><b>Settings › Work schedule</b> sets which weekdays are work days — tap a day to select it, flip the switch to mark it work or off. Meal times are learned <b>separately</b> for work days and days off, so your "usual lunch" follows the right schedule.</div>
      <div class="irow">Past meal times keep the schedule they were learned under. The Work day / Day off pill on the diary is a one-day override — it never changes the weekly schedule.</div>
@@ -6617,7 +6648,7 @@ try{
    Every explainer lives in infoContent(); this index groups them so the app
    surface stays clean of paragraphs. ⓘ buttons next to main titles land here. */
 const INFO_CATS = [
-  {id:"diary",    label:"Diary & logging",  keys:["waterinfo","alcinfo","vapeinfo","energy","scores","schedule"]},
+  {id:"diary",    label:"Diary & logging",  keys:["waterinfo","alcinfo","vapeinfo","energy","scores","badges","schedule"]},
   {id:"goals",    label:"Goals & targets",  keys:["activity","calorie","macros","water","advanced"]},
   {id:"progress", label:"Progress & insights", keys:["daycycle","wtgoal","milestone","bmi","calcheck","insights"]},
   {id:"nutrients",label:"Nutrients",        keys:["nutrients"]},
@@ -8349,7 +8380,8 @@ function paintPlanCard(){
     } else {
       html += mp.items.map(function(it){
         var im = (typeof entryImg==="function") ? entryImg(it) : null;
-        return '<div class="logrow">'+(im?'<span class="lthumb"><img src="'+im+'" alt=""></span>':"")+'<span class="nm">'+esc(it.n)+' <span>'+it.qty+' × serving</span></span><span class="kc">'+it.cal+'</span></div>';
+        var fb = (typeof foodBadgeHTML==="function") ? foodBadgeHTML(findFood(it.n)||it) : "";
+        return '<div class="logrow">'+(im?'<span class="lthumb"><img src="'+im+'" alt=""></span>':"")+'<span class="nm"><span class="nmt">'+esc(it.n)+' <span class="nmsub">'+it.qty+' × serving</span></span>'+fb+'</span><span class="kc">'+it.cal+'</span></div>';
       }).join("");
     }
     if(mp.alt){
@@ -8656,7 +8688,8 @@ function renderPlanDay(){
     var mp = _plan.meals[m]; if(!mp) return "";
     var rows = mp.items.length ? mp.items.map(function(it){
       var im = (typeof entryImg==="function") ? entryImg(it) : null;
-      return '<div class="logrow">'+(im?'<span class="lthumb"><img src="'+im+'" alt=""></span>':"")+'<span class="nm">'+esc(it.n)+' <span>'+it.qty+' \u00d7 serving</span></span><span class="kc">'+it.cal+'</span></div>';
+      var fb = (typeof foodBadgeHTML==="function") ? foodBadgeHTML(findFood(it.n)||it) : "";
+      return '<div class="logrow">'+(im?'<span class="lthumb"><img src="'+im+'" alt=""></span>':"")+'<span class="nm"><span class="nmt">'+esc(it.n)+' <span class="nmsub">'+it.qty+' \u00d7 serving</span></span>'+fb+'</span><span class="kc">'+it.cal+'</span></div>';
     }).join("") : '<div style="font-size:13px;color:var(--muted)">Already logged.</div>';
     var alt = mp.alt ? '<div style="display:flex;gap:8px;align-items:center;margin:6px 0 4px;padding:8px 10px;background:#f6f6fa;border-radius:12px"><div style="font-size:12.5px;line-height:1.45;flex:1"><b>Try instead:</b> '+esc(mp.alt.n)+' <span style="color:var(--muted)">\u2014 '+esc(mp.alt.reason)+'.</span></div><button class="chip" data-pg-swap="'+m+'" style="flex:none">Swap</button></div>' : "";
     var badge = mp.tplN ? '<div style="font-size:11px;color:var(--muted);margin:0 0 8px">Your usual lineup \u00b7 logged '+mp.tplN+'\u00d7</div>' : "";
