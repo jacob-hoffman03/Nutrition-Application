@@ -616,7 +616,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 /* tab bar — 2026.10.01-j: docked card. Sharp straight top edge (hairline),
    rounded bottom corners floating above the bottom edge. Stays in flex flow. */
 .tabbar{flex:none; z-index:30;
-  margin:2px 0 calc(2px + env(safe-area-inset-bottom));
+  margin:2px 0 6px;
   background:rgba(255,255,255,.86);
   backdrop-filter:blur(22px) saturate(1.5); -webkit-backdrop-filter:blur(22px) saturate(1.5);
   border-top:1px solid rgba(20,20,60,.09);
@@ -2242,7 +2242,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.01-k";
+const APP_VERSION = "2026.10.01-l";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
