@@ -2253,7 +2253,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.02-p";
+const APP_VERSION = "2026.10.02-q";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -8348,7 +8348,8 @@ function paintPlanCard(){
       html += '<div style="font-size:13px;color:var(--muted)">Nothing fits this meal yet — log more '+MEAL_LABEL_L[m].toLowerCase()+'s and I\'ll learn.</div>';
     } else {
       html += mp.items.map(function(it){
-        return '<div class="logrow"><span class="nm">'+esc(it.n)+' <span>'+it.qty+' × serving</span></span><span class="kc">'+it.cal+'</span></div>';
+        var im = (typeof entryImg==="function") ? entryImg(it) : null;
+        return '<div class="logrow">'+(im?'<span class="lthumb"><img src="'+im+'" alt=""></span>':"")+'<span class="nm">'+esc(it.n)+' <span>'+it.qty+' × serving</span></span><span class="kc">'+it.cal+'</span></div>';
       }).join("");
     }
     if(mp.alt){
@@ -8654,7 +8655,8 @@ function renderPlanDay(){
   body.innerHTML = _plan.openMeals.map(function(m){
     var mp = _plan.meals[m]; if(!mp) return "";
     var rows = mp.items.length ? mp.items.map(function(it){
-      return '<div class="logrow"><span class="nm">'+esc(it.n)+' <span>'+it.qty+' \u00d7 serving</span></span><span class="kc">'+it.cal+'</span></div>';
+      var im = (typeof entryImg==="function") ? entryImg(it) : null;
+      return '<div class="logrow">'+(im?'<span class="lthumb"><img src="'+im+'" alt=""></span>':"")+'<span class="nm">'+esc(it.n)+' <span>'+it.qty+' \u00d7 serving</span></span><span class="kc">'+it.cal+'</span></div>';
     }).join("") : '<div style="font-size:13px;color:var(--muted)">Already logged.</div>';
     var alt = mp.alt ? '<div style="display:flex;gap:8px;align-items:center;margin:6px 0 4px;padding:8px 10px;background:#f6f6fa;border-radius:12px"><div style="font-size:12.5px;line-height:1.45;flex:1"><b>Try instead:</b> '+esc(mp.alt.n)+' <span style="color:var(--muted)">\u2014 '+esc(mp.alt.reason)+'.</span></div><button class="chip" data-pg-swap="'+m+'" style="flex:none">Swap</button></div>' : "";
     var badge = mp.tplN ? '<div style="font-size:11px;color:var(--muted);margin:0 0 8px">Your usual lineup \u00b7 logged '+mp.tplN+'\u00d7</div>' : "";
