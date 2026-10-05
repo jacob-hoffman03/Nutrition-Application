@@ -66,6 +66,7 @@ button{font-family:inherit;}
 .wday.istoday .wn{background:#dcdcfb;}
 .wday:disabled{opacity:.35;}
 .wday .wdot{width:5px; height:5px; border-radius:50%;}
+.wday .wdots{display:flex; gap:4px; align-items:center; justify-content:center;}
 .wday .wdot.log{background:#b9b9f5;}
 .wday .wdot.now{background:#ff9f43;}
 /* status bar (added feature) */
@@ -2110,7 +2111,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.05-i";
+const APP_VERSION = "2026.10.05-j";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2474,8 +2475,9 @@ function renderWeek(){
     const dd = S.days[ks];
     const logged = dd && MEALS.some(m=>(dd.meals[m]||[]).length);
     const dotCls = ks===todayStr() ? "now" : (logged ? "log" : "");
-    const alcDot = (dd && alcData(dd).std>0) ? '<span class="wdot" style="background:#b00020"></span>' : "";
-    b.innerHTML = '<span class="wd">'+names[i]+'</span><span class="wn">'+d.getDate()+'</span><span class="wdot '+dotCls+'" style="'+(dotCls?"":"opacity:0")+'"></span>'+alcDot;
+    const hadAlc = dd && alcData(dd).std>0;
+    const dotsHtml = '<span class="wdot '+dotCls+'"></span>' + (hadAlc ? '<span class="wdot" style="background:#b00020"></span>' : "");
+    b.innerHTML = '<span class="wd">'+names[i]+'</span><span class="wn">'+d.getDate()+'</span><span class="wdots" style="'+((dotCls||hadAlc)?"":"opacity:0")+'">'+dotsHtml+'</span>';
     b.onclick = ()=>{ const t2 = new Date(); t2.setHours(12,0,0,0); const dd2 = new Date(d); dd2.setHours(12,0,0,0); dayOffset = Math.round((dd2-t2)/864e5); renderDiary(); };
     strip.appendChild(b);
   }
