@@ -2104,7 +2104,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.05-d";
+const APP_VERSION = "2026.10.05-e";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -3162,6 +3162,7 @@ function openCloseSheet(){
     showToast(was ? "Day reopened" : "Day closed — nice work");
   };
   document.getElementById("closeSheet").classList.add("open");
+  paintNegatives(document.getElementById("closeSheet"));
 }
 function closeCloseSheet(){ document.getElementById("closeSheet").classList.remove("open"); }
 document.getElementById("closeX").onclick = closeCloseSheet;
@@ -7190,6 +7191,7 @@ function showView(v){
   if(v==="analysis") renderAnalysis();
   if(v==="goals") renderGoals();
   const av = activeViewEl(); if(av) av.scrollTop = 0;
+  paintNegatives();
 }
 /* 2026.09.22-k: Apple-Photos-style reorder — compact row list with drag handles, checkmark saves */
 const PROG_UNITS = ["body","auto","week"];
@@ -7302,7 +7304,43 @@ document.querySelectorAll(".xrow").forEach(function(r){
     var open=d.classList.toggle("open"); r.classList.toggle("open",open);
   };
 });
-function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); applyProgLayout(); }
+/* 2026.10.05-e: negative values render dark red, app-wide. Runs after every
+   render; walks text nodes once and wraps standalone negative numbers
+   (−25.5, -1,254). Skips dates (2026-10-05), SVG, scripts, inputs, and
+   already-wrapped nodes, so it is idempotent across re-renders. */
+function paintNegatives(root){
+  var r = root || document.body;
+  var walker = document.createTreeWalker(r, NodeFilter.SHOW_TEXT, {
+    acceptNode: function(n){
+      var v = n.nodeValue;
+      if(!v || (v.indexOf("-")<0 && v.indexOf("−")<0)) return NodeFilter.FILTER_REJECT;
+      var p = n.parentElement;
+      if(!p || p.closest("svg") || p.closest("script,style")) return NodeFilter.FILTER_REJECT;
+      var tag = p.tagName;
+      if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT") return NodeFilter.FILTER_REJECT;
+      if(p.classList && p.classList.contains("neg")) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  var nodes = [], n;
+  while((n = walker.nextNode())) nodes.push(n);
+  var re = /(^|[\s(])((?:−|-)(?=\d)\d[\d,]*(?:\.\d+)?)(?![\d-])/g, m;
+  nodes.forEach(function(tn){
+    var txt = tn.nodeValue, out = "", last = 0, found = false;
+    re.lastIndex = 0;
+    while((m = re.exec(txt))){
+      found = true;
+      out += esc(txt.slice(last, m.index)) + m[1] + '<span class="neg" style="color:#b00020">' + esc(m[2]) + "</span>";
+      last = m.index + m[0].length;
+    }
+    if(!found) return;
+    out += esc(txt.slice(last));
+    var sp = document.createElement("span");
+    sp.innerHTML = out;
+    tn.parentNode.replaceChild(sp, tn);
+  });
+}
+function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); applyProgLayout(); paintNegatives(); }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.v));
 /* Progress sub-tabs were removed in 2026.09.22-a: Progress is a single view whose
    weight circle opens the full-screen #wtDetail sheet. */
