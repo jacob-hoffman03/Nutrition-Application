@@ -997,9 +997,6 @@ body.reordering #progOverview{display:none}
     <div class="fiberbar"><span class="flabel">Fiber</span><div class="mbar"><i id="barFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div><span class="fval"><i id="valFiv">0</i><small> / <span id="valFig">0</span>g</small></span></div>
     <div class="card mealcard" id="meals"></div>
 
-    <!-- AUTOPILOT ZONE: suggestions + feed (paints only when it has something to say) -->
-    <div id="autoZone"></div>
-
     <div class="card watercard dcard" id="dcard-water">
       <div class="whead dhead" data-d="water" role="button" tabindex="0" aria-label="Water details"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3.5c3.2 4.3 5.8 7.7 5.8 10.7a5.8 5.8 0 1 1-11.6 0C6.2 11.2 8.8 7.8 12 3.5z"/></svg></span><b>Water</b><button class="ginfo" id="waterInfo" aria-label="About your water target">i</button></span><span style="display:flex;align-items:center;gap:8px"><span class="wlbl" id="waterLabel"></span><span class="chev2 dchev">›</span></span></div>
       <div class="ddetail" id="ddetail-water"><div class="pad">
@@ -1351,6 +1348,13 @@ body.reordering #progOverview{display:none}
         <button class="srow" id="muscleGoalBtn" style="margin-top:8px"><span>Muscle goal: <b id="muscleGoalLbl">0 lb</b></span><span class="chev2">›</span></button>
       </div></div>
     </div>
+    </div>
+    <div class="punit" data-pid="auto">
+<div class="card">
+      <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 3v4h-4"/></svg></span><b>Autopilot</b><span id="autoLastRun" style="margin-left:auto;font-size:11px;color:var(--muted)"></span></div>
+      <div style="font-size:12.5px;color:var(--muted);margin:0 0 4px;line-height:1.5">Retunes your maintenance from your eating + weigh-ins, so your target tracks your body.</div>
+      <div id="autoZoneP"></div>
+</div>
     </div>
     <div class="punit" data-pid="week">
 <div class="card weekcard">
@@ -2100,7 +2104,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.05-b";
+const APP_VERSION = "2026.10.05-c";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -7181,8 +7185,8 @@ function showView(v){
   const av = activeViewEl(); if(av) av.scrollTop = 0;
 }
 /* 2026.09.22-k: Apple-Photos-style reorder — compact row list with drag handles, checkmark saves */
-const PROG_UNITS = ["body","week"];
-const PROG_TITLES = {body:"Body",week:"This week"};
+const PROG_UNITS = ["body","auto","week"];
+const PROG_TITLES = {body:"Body",auto:"Autopilot",week:"This week"};
 const LINES_SVG = '<svg viewBox="0 0 24 24"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
 const CHECK_SVG = '<svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
 function progUnits(){ return Array.prototype.slice.call(document.querySelectorAll("#progOverview .punit")); }
@@ -7530,7 +7534,7 @@ function autoDismissProp(id){
   save(); paintAutoZone();
 }
 function paintAutoZone(){
-  var z = document.getElementById("autoZone");
+  var z = document.getElementById("autoZoneP");
   if(!z) return;
   var a = autoState(), html = "";
   a.props.forEach(function(p){
@@ -7547,16 +7551,16 @@ function paintAutoZone(){
   var curIx = -1;
   for(var cix = 0; cix < feed.length; cix++){ if(feed[cix].t.indexOf("Maintenance ") === 0){ curIx = cix; break; } }
   if(feed.length){
-    html += '<div style="margin:10px 0">' +
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">' +
-      '<span class="sicon sm">' + AUTO_SVG + '</span><b style="font-size:14px">Autopilot</b>' +
-      '<span style="margin-left:auto;font-size:11px;color:var(--muted)">' + esc(a.lastRun || "") + '</span></div>' +
-      feed.map(function(f, ix){
-        var pill = ix === curIx ? ' <span style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;color:#0b7a4b;background:#e2f4e9;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:1px">CURRENT</span>' : "";
-        return '<div style="font-size:13px;color:var(--muted);padding:6px 0;border-top:1px solid var(--line)">' + esc(f.t) + pill + '</div>';
-      }).join("") + '</div>';
+    html += feed.map(function(f, ix){
+      var pill = ix === curIx ? ' <span style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;color:#0b7a4b;background:#e2f4e9;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:1px">CURRENT</span>' : "";
+      return '<div style="font-size:13px;color:var(--muted);padding:6px 0;border-top:1px solid var(--line)">' + esc(f.t) + pill + '</div>';
+    }).join("");
   }
+  var lr = document.getElementById("autoLastRun");
+  if(lr) lr.textContent = a.lastRun || "";
   z.innerHTML = html;
+  var unit = document.querySelector('#progOverview [data-pid="auto"]');
+  if(unit) unit.style.display = html ? "" : "none";
   z.querySelectorAll("[data-ap-apply]").forEach(function(b){ b.onclick = function(){ autoApplyProp(b.getAttribute("data-ap-apply")); }; });
   z.querySelectorAll("[data-ap-dismiss]").forEach(function(b){ b.onclick = function(){ autoDismissProp(b.getAttribute("data-ap-dismiss")); }; });
 }
