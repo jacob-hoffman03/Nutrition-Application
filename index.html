@@ -501,12 +501,18 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .setprofile .pmeta{flex:1; min-width:0;}
 .setprofile .sname{font-size:19px; font-weight:800; border:none; background:none; color:var(--ink); width:100%; outline:none; padding:0; font-family:inherit; letter-spacing:-.2px;}
 .setprofile .ssub{font-size:13px; color:var(--muted); font-weight:600; margin-top:3px;}
-.setrow{display:flex; align-items:center; justify-content:space-between; width:100%; background:var(--card); border:none; border-radius:24px; padding:16px; font-size:16px; font-weight:700; color:var(--ink); text-align:left; margin:0 0 10px; cursor:pointer; font-family:inherit;}
+.setrow{display:flex; align-items:center; gap:14px; width:100%; background:var(--card); border:none; border-radius:30px; padding:20px 18px; font-size:17px; font-weight:600; color:var(--ink); text-align:left; margin:0 0 10px; cursor:pointer; font-family:inherit;}
 .setrow:active{transform:scale(.985);}
-.setrow .sleft{display:flex; align-items:center; gap:12px; min-width:0;}
+.setrow .sleft{display:flex; align-items:center; gap:14px; min-width:0;}
+.setrow .sicon{background:none; width:30px; height:30px; color:var(--ink); border-radius:0;}
+.setrow .sicon svg{width:28px; height:28px;}
 .setrow .sval{font-size:14px; color:var(--muted); font-weight:600; display:flex; align-items:center; gap:6px;}
 .setrow .chev2{color:var(--muted); font-size:20px;}
 .setrow.danger{color:var(--red);}
+.setic{width:30px; height:30px; flex:none; display:flex; align-items:center; justify-content:center; color:var(--ink);}
+.setic svg{width:28px; height:28px;}
+.setlbl{flex:1; min-width:0;}
+.setval{font-size:14px; color:var(--muted); font-weight:600; flex:none;}
 .sspace{height:16px;}
 .savatarwrap{position:relative; flex:none;}
 .seditbadge{position:absolute; right:-3px; bottom:-3px; width:30px; height:30px; border-radius:50%; background:var(--card2); border:2px solid var(--card); display:flex; align-items:center; justify-content:center; color:var(--ink); pointer-events:none;}
@@ -1549,7 +1555,7 @@ body.reordering #progOverview{display:none}
   <section class="view" id="view-settings">
     <div class="topbar">
       <button class="tbtn" id="settingsBack" aria-label="Back">‹</button>
-      <h1>Settings</h1>
+      <h1>Profile</h1>
       <button class="tdone" id="settingsDone">Done</button>
     </div>
     <div class="card setprofile">
@@ -1565,6 +1571,11 @@ body.reordering #progOverview{display:none}
     </div>
     <input type="file" id="pPhotoFile" accept="image/*" style="display:none">
     <input type="file" id="progPhotoFile" accept="image/*" style="display:none">
+    <div class="sspace"></div>
+    <button class="setrow" id="energyRow">
+      <span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2.5 5.5 13.5h4.8L10 21.5l7.5-11h-4.8L13 2.5z"/></svg></span>Energy today</span>
+      <span class="sval"><b id="energyRowVal" style="color:var(--ink)"></b></span>
+    </button>
     <div class="sspace"></div>
     <div class="card">
       <div class="flabel" style="margin:2px 0 8px">Theme</div>
@@ -2315,7 +2326,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.04-h";
+const APP_VERSION = "2026.10.04-i";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -7630,7 +7641,9 @@ function renderSettings(){
   const mrv=document.getElementById("medalCaseRowVal"); if(mrv) mrv.textContent=Object.keys(medalCase()).length+"/"+MDEF.length;
   const swv=document.getElementById("schedRowVal"); if(swv) swv.textContent=workDaysSummary();
   const srv=document.getElementById("snapRowVal"); if(srv) srv.textContent=listSnapshots().length+" saved";
+  const erv=document.getElementById("energyRowVal"); if(erv) erv.textContent=document.getElementById("energyLabel").textContent;
 }
+document.getElementById("energyRow").onclick = ()=>{ showView("diary"); var c=document.getElementById("energyCard"); if(c){ c.classList.add("open"); } P.energy=1; save(); };
 document.getElementById("schedRow").onclick = ()=>{ wsSel = new Date().getDay(); showView("worksched"); };
 document.getElementById("wschedBack").onclick = ()=>showView("settings");
 document.getElementById("wschedInfo").onclick = ()=>openInfo("schedule");
