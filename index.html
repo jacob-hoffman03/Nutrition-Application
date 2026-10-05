@@ -7544,13 +7544,16 @@ function paintAutoZone(){
       '</div></div>';
   });
   var feed = a.feed.slice(0, 3);
+  var curIx = -1;
+  for(var cix = 0; cix < feed.length; cix++){ if(feed[cix].t.indexOf("Maintenance ") === 0){ curIx = cix; break; } }
   if(feed.length){
     html += '<div style="margin:10px 0">' +
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">' +
       '<span class="sicon sm">' + AUTO_SVG + '</span><b style="font-size:14px">Autopilot</b>' +
       '<span style="margin-left:auto;font-size:11px;color:var(--muted)">' + esc(a.lastRun || "") + '</span></div>' +
-      feed.map(function(f){
-        return '<div style="font-size:13px;color:var(--muted);padding:6px 0;border-top:1px solid var(--line)">' + esc(f.t) + '</div>';
+      feed.map(function(f, ix){
+        var pill = ix === curIx ? ' <span style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;color:#0b7a4b;background:#e2f4e9;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:1px">CURRENT</span>' : "";
+        return '<div style="font-size:13px;color:var(--muted);padding:6px 0;border-top:1px solid var(--line)">' + esc(f.t) + pill + '</div>';
       }).join("") + '</div>';
   }
   z.innerHTML = html;
