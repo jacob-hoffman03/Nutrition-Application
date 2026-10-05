@@ -123,6 +123,7 @@ button{font-family:inherit;}
 .whead{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
 .whead b{font-size:16px;}
 .whead .wlbl{font-size:14px; color:var(--muted); font-weight:600;}
+#planLabel{font-size:12px; white-space:nowrap; text-align:right;}
 .wtrack{margin:2px 0 12px;}
 .wfill{background:linear-gradient(90deg,#5aa2ff,#2f6df6);}
 .bottlerow{display:flex; gap:8px; flex-wrap:wrap;}
@@ -1113,8 +1114,8 @@ body.reordering #progOverview{display:none}
 
 <div class="card dcard" id="dcard-plan">
       <div class="whead dhead" data-d="plan" role="button" tabindex="0" aria-label="Day plan details"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg></span><b>Day plan</b><button class="ginfo" id="planInfo" aria-label="About the day plan">i</button></span><span style="display:flex;align-items:center;gap:8px"><span class="wlbl" id="planLabel"></span><span class="chev2 dchev">›</span></span></div>
-      <div id="autoZone"></div>
       <div class="ddetail" id="ddetail-plan"><div class="pad">
+      <div id="autoZone"></div>
       <div id="planBody"></div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <button class="bigbtn" id="planBuild" style="flex:1;margin:0">Build my day</button>
@@ -2261,7 +2262,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.04-a";
+const APP_VERSION = "2026.10.04-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -8387,7 +8388,7 @@ function paintPlanCard(){
     return;
   }
   var MEAL_LABEL_L = {breakfast:"Breakfast", lunch:"Lunch", dinner:"Dinner", snacks:"Snacks"};
-  label.textContent = _plan.totCal.toLocaleString()+" of "+Math.round(_plan.goal).toLocaleString()+" kcal · "+Math.round(_plan.totP)+"g protein";
+  label.textContent = _plan.totCal.toLocaleString()+" of "+Math.round(_plan.goal).toLocaleString()+" · "+Math.round(_plan.totP)+"g protein";
   var html = "";
   _plan.openMeals.forEach(function(m){
     var mp = _plan.meals[m];
