@@ -13,26 +13,11 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2714%27%20fill%3D%27white%27%2F%3E%3Cpolygon%20points%3D%278%2C8%2056%2C8%2056%2C17%2029%2C31%2056%2C31%2056%2C40%208%2C40%208%2C31%2035%2C17%208%2C17%27%20fill%3D%27black%27%2F%3E%3Ctext%20x%3D%2732%27%20y%3D%2754%27%20font-family%3D%27Arial%2Csans-serif%27%20font-weight%3D%27900%27%20font-size%3D%278%27%20text-anchor%3D%27middle%27%20fill%3D%27black%27%20textLength%3D%2748%27%20lengthAdjust%3D%27spacingAndGlyphs%27%3ENUTRITION%3C%2Ftext%3E%3C%2Fsvg%3E">
 <style>
 :root{
-  --acc:#5b8def; --acc-rgb:91,141,239; --acc-deep:#3b6fd4; --acc-soft:#1e2c44;
-  --bg:#141416; --card:#232326; --card2:#2c2c31; --ink:#ffffff; --muted:#9c9ca6; --line:#34343b;
-  --carb:#8b8bf5; --pro:#2dd4bf; --fat:#fb7185;
-  --green:#34d399; --orange:#fbbf24; --red:#f87171;
-  --track:#3a3a40; --track2:#4a4a52; --inset:#1e1e22;
-  --barbg:rgba(29,29,32,.92); --topbg:rgba(20,20,22,.94);
-  --warnbg:#2b2118; --warnbd:#6b4a1f; --warntx:#f5b45e;
-  --okbg:#1a2e22; --oktx:#4ade80;
-  --radius:28px; --tabbar-h:70px;
-}
-/* light theme — same design, light surfaces */
-html[data-theme="light"]{
   --acc:#5b5bf0; --acc-rgb:91,91,240; --acc-deep:#4a4ad6; --acc-soft:#eceeff;
-  --bg:#f1f1f8; --card:#ffffff; --card2:#ffffff; --ink:#1b1b1f; --muted:#9a9aa5; --line:#e9e9ef;
+  --bg:#ffffff; --card:#f5f5f7; --ink:#1b1b1f; --muted:#9a9aa5; --line:#e9e9ef;
   --carb:#7e7ef2; --pro:#12cfae; --fat:#fb6f84;
   --green:#2fbf71; --orange:#ff9f43; --red:#ff5c5c;
-  --track:#ececf1; --track2:#dcdce4; --inset:#e9e9f2;
-  --barbg:rgba(255,255,255,.86); --topbg:rgba(255,255,255,.94);
-  --warnbg:#fff7ed; --warnbd:#fed7aa; --warntx:#9a3412;
-  --okbg:#e8f7ee; --oktx:#1d7a3a;
+  --radius:20px; --tabbar-h:70px;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0; padding:0; height:100%;}
@@ -49,20 +34,9 @@ button{font-family:inherit;}
 @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
 .card{background:var(--card); border-radius:var(--radius); padding:16px; margin-bottom:12px;}
 /* top bar */
-.topbar{position:sticky; top:0; z-index:20; background:var(--topbg);
+.topbar{position:sticky; top:0; z-index:20; background:rgba(255,255,255,.94);
   backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
-  display:flex; align-items:center; justify-content:space-between; padding:calc(20px + env(safe-area-inset-top)) 8px 10px;}
-/* diary header: medals left, title truly centered, actions right */
-.diarybar{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin:0 -14px; padding-left:14px; padding-right:14px; background:var(--bg); color:var(--ink);}
-.diarybar .medals{justify-self:start; gap:6px;}
-.medalspill{background:#fff; border:1px solid var(--line); border-radius:99px; padding:8px 14px; display:flex; align-items:center; justify-self:start; box-shadow:0 1px 3px rgba(0,0,0,.06);}
-.medalspill .medals{gap:6px;}
-.medalspill .medal{width:28px; height:28px;}
-.diarybar h1{justify-self:center; color:var(--ink); font-size:20px;}
-.diarybar h1 .ginfo{color:var(--muted); border-color:var(--line);}
-.diarybar .ticons{justify-self:end; display:flex; align-items:center; gap:10px;}
-.diarybar .ticons #calBtn{color:var(--ink);}
-.diarybar .pavatar{box-shadow:0 0 0 3px rgba(91,141,239,.35), 0 0 16px rgba(91,141,239,.3);}
+  display:flex; align-items:center; justify-content:space-between; padding:12px 8px 10px;}
 .topbar .tbtn{background:none; border:none; font-size:26px; line-height:1; color:var(--ink); width:44px; height:36px; display:flex; align-items:center; justify-content:center;}
 .topbar h1{margin:0; font-size:22px; font-weight:800; letter-spacing:-.3px;}
 .topbar .ticons{display:flex; gap:2px;}
@@ -92,10 +66,10 @@ button{font-family:inherit;}
 .wday .wdot.now{background:#ff9f43;}
 /* status bar (added feature) */
 .statusbar{display:flex; align-items:center; gap:10px; padding:14px 4px 4px; cursor:pointer;}
-.sbtrack{position:relative; flex:1; height:12px; border-radius:99px; background:var(--track); box-shadow:inset 0 1px 2px rgba(20,30,40,.08);}
+.sbtrack{position:relative; flex:1; height:12px; border-radius:99px; background:#ececf1; box-shadow:inset 0 1px 2px rgba(20,30,40,.08);}
 .sbfill{position:absolute; left:0; top:0; bottom:0; border-radius:99px; width:0; transition:width .45s ease;}
 .sbmark{position:absolute; top:-3px; bottom:-3px; width:2px; border-radius:2px; background:rgba(28,39,51,.45);}
-.sbinfo{width:26px; height:26px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; background:var(--track); color:#8a8a96;}
+.sbinfo{width:26px; height:26px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; background:#ececf1; color:#8a8a96;}
 .sbinfo svg{width:13px; height:13px;}
 /* summary: ring + macros */
 .sumrow{display:flex; align-items:center; gap:14px;}
@@ -113,7 +87,7 @@ button{font-family:inherit;}
 .macrow .mhead span{font-size:15px; font-weight:700;}
 .macrow .mhead b{font-size:13px; color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums;}
 .macrow .mhead b i{font-style:normal; color:#c2c2cc;}
-.macrow .mbar{height:11px; border-radius:99px; background:var(--track); overflow:hidden;}
+.macrow .mbar{height:11px; border-radius:99px; background:#ececf1; overflow:hidden;}
 .macrow .mbar i{display:block; height:100%; border-radius:99px; width:0; transition:width .4s ease;}
 .analysislink{display:block; margin:10px auto 0; background:none; border:none; color:var(--acc); font-size:16px; font-weight:800; padding:6px 12px;}
 /* search */
@@ -134,11 +108,11 @@ button{font-family:inherit;}
 .logrow{display:flex; align-items:center; gap:8px; padding:8px 0 8px 46px; border-bottom:1px solid var(--line); font-size:13px;}
 .logrow .kc{font-weight:700; font-variant-numeric:tabular-nums;}
 .logrow .lthumb{width:40px; height:40px; border-radius:12px; overflow:hidden; flex:none; background:var(--card);}
-.logrow .nm{display:flex; flex-direction:column; align-items:flex-start; justify-content:center; flex:1; min-width:0; overflow:hidden; color:var(--ink);}
+.logrow .nm{display:flex; flex-direction:column; align-items:flex-start; justify-content:center; flex:1; min-width:0; overflow:hidden; color:#3a3a42;}
 .logrow .nmt{font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;}
 .logrow .nmt .nmsub{color:var(--muted); font-size:11px;}
 .fbadges{display:flex; gap:6px; margin-top:5px;}
-.fb{width:13px; height:13px; border-radius:50%; background:var(--track2); flex:none;}
+.fb{width:13px; height:13px; border-radius:50%; background:#e4e4ea; flex:none;}
 .fb.b-bulk{background:#22c55e;}
 .fb.b-lean{background:#3b82f6;}
 .fb.b-fiber{background:#f59e0b;}
@@ -149,14 +123,13 @@ button{font-family:inherit;}
 .whead{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
 .whead b{font-size:16px;}
 .whead .wlbl{font-size:14px; color:var(--muted); font-weight:600;}
-#planLabel{font-size:12px; white-space:nowrap; text-align:right;}
 .wtrack{margin:2px 0 12px;}
 .wfill{background:linear-gradient(90deg,#5aa2ff,#2f6df6);}
 .bottlerow{display:flex; gap:8px; flex-wrap:wrap;}
-.bottle{border:2px solid #d9d9e2; background:var(--card2); border-radius:14px; padding:8px 14px; display:flex; flex-direction:column; align-items:center; gap:2px; min-width:76px;}
+.bottle{border:2px solid #d9d9e2; background:#fff; border-radius:14px; padding:8px 14px; display:flex; flex-direction:column; align-items:center; gap:2px; min-width:76px;}
 .bottle b{font-size:15px; color:var(--acc);}
 .bottle span{font-size:11px; color:var(--muted); font-weight:600; max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-.bottle:active{border-color:var(--acc); background:var(--acc-soft); transform:scale(.96);}
+.bottle:active{border-color:var(--acc); background:#f2f3ff; transform:scale(.96);}
 .wfoot{display:flex; gap:18px; margin-top:10px;}
 .wlink{border:none; background:none; color:var(--acc); font-weight:700; font-size:13px; padding:4px 0;}
 .botrow{display:flex; align-items:center; gap:10px; padding:10px 2px; border-bottom:1px solid #f0f0f4;}
@@ -165,41 +138,41 @@ button{font-family:inherit;}
 .botrow .bnm span{font-size:12px; color:var(--muted);}
 .botdel{border:none; background:none; color:#ff5c5c; font-size:20px; width:32px; height:32px; flex:none;}
 .bottle img{width:44px; height:44px; border-radius:12px; object-fit:cover;}
-.botrow .bthumb{width:46px; height:46px; border-radius:12px; object-fit:cover; background:var(--card2); flex:none;}
-.bphoto{border:1.5px solid var(--line); background:var(--card2); border-radius:10px; width:36px; height:36px; flex:none; display:flex; align-items:center; justify-content:center;}
+.botrow .bthumb{width:46px; height:46px; border-radius:12px; object-fit:cover; background:#f2f3f7; flex:none;}
+.bphoto{border:1.5px solid #e3e3ea; background:#fff; border-radius:10px; width:36px; height:36px; flex:none; display:flex; align-items:center; justify-content:center;}
 .bphoto svg{width:18px; height:18px;}
 .bphoto.hasimg{border-color:var(--acc);}
 .botform .bimgprev{width:44px; height:44px; border-radius:12px; object-fit:cover;}
 .botform{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
-.botform input{border:2px solid var(--line); border-radius:12px; padding:9px 10px; font:inherit; font-size:14px;}
-.unitseg{display:flex; border:2px solid var(--line); border-radius:12px; overflow:hidden;}
-.unitseg button{border:none; background:var(--card2); padding:9px 12px; font:inherit; font-size:14px; font-weight:600; color:var(--muted);}
+.botform input{border:2px solid #e3e3ea; border-radius:12px; padding:9px 10px; font:inherit; font-size:14px;}
+.unitseg{display:flex; border:2px solid #e3e3ea; border-radius:12px; overflow:hidden;}
+.unitseg button{border:none; background:#fff; padding:9px 12px; font:inherit; font-size:14px; font-weight:600; color:var(--muted);}
 .unitseg button.sel{background:var(--acc); color:#fff;}
 .winfo{flex:1; min-width:0;}
 .winfo b{font-size:16px;}
 .winfo .wlbl{font-size:14px; color:var(--muted); font-weight:600; margin-left:8px;}
 /* pull to refresh */
-#ptr{position:fixed; top:0; left:50%; transform:translate(-50%,-64px); z-index:200; width:46px; height:46px; border-radius:50%; background:var(--card2); box-shadow:0 2px 12px rgba(20,30,60,.18); display:flex; align-items:center; justify-content:center;}
+#ptr{position:fixed; top:0; left:50%; transform:translate(-50%,-64px); z-index:200; width:46px; height:46px; border-radius:50%; background:#fff; box-shadow:0 2px 12px rgba(20,30,60,.18); display:flex; align-items:center; justify-content:center;}
 .ptrspin{width:22px; height:22px; border-radius:50%; border:3px solid #dfe3f5; border-top-color:var(--acc);}
 #ptr.on .ptrspin{animation:ptrspin .7s linear infinite;}
 @keyframes ptrspin{to{transform:rotate(360deg);}}
 .alccard{padding:14px 16px;}
 .arow{display:flex; align-items:center; justify-content:space-between; gap:12px;}
 .astep{display:flex; align-items:center; gap:10px;}
-.astep button{width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:var(--card2); font-size:20px; line-height:1; color:var(--ink); cursor:pointer;}
+.astep button{width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:#fff; font-size:20px; line-height:1; color:var(--ink); cursor:pointer;}
 .astep b{font-size:20px; min-width:30px; text-align:center; font-variant-numeric:tabular-nums;}
 .alcrow{display:flex; align-items:center; justify-content:space-between; padding:7px 2px; border-top:1px solid #f0f0f4;}
 .alcrow .anm b{display:block; font-size:14.5px;}
 .alcrow .anm span{font-size:11.5px; color:var(--muted);}
-.msugg{margin-top:10px; background:var(--card2); border-radius:12px; padding:10px 12px;}
+.msugg{margin-top:10px; background:#f4f4fa; border-radius:12px; padding:10px 12px;}
 .msrow{display:flex; justify-content:space-between; align-items:center; gap:10px;}
 .msrow b{display:block; font-size:13.5px;}
 .msrow span{display:block; font-size:12px; color:var(--muted); margin-top:2px;}
 .alcring{flex:none; width:52px; height:52px;}
 .vapelevels{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
-.vchip{border:1px solid var(--line); background:var(--card2); border-radius:20px; padding:7px 14px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer;}
+.vchip{border:1px solid var(--line); background:#fff; border-radius:20px; padding:7px 14px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer;}
 .vchip.sel{background:var(--acc); border-color:var(--acc); color:#fff;}
-.alcwarn{margin-top:10px; background:var(--warnbg); border:1px solid var(--warnbd); color:var(--warntx); font-size:13px; line-height:1.45; border-radius:12px; padding:10px 12px;}
+.alcwarn{margin-top:10px; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:13px; line-height:1.45; border-radius:12px; padding:10px 12px;}
 /* collapsible goal sections */
 .ghead{display:flex; align-items:center; gap:8px; font-size:21px; font-weight:800; margin:20px 2px 12px; letter-spacing:-.3px; cursor:pointer; user-select:none;}
 .ghead::before{content:""; width:5px; height:20px; border-radius:3px; background:var(--acc); flex:none;}
@@ -211,8 +184,7 @@ button{font-family:inherit;}
 .ginfo{flex:none; width:21px; height:21px; border-radius:50%; border:1.6px solid #b9b9c6; color:#8a8a98;
   font-size:12.5px; font-weight:800; font-style:italic; background:none; display:flex; align-items:center;
   justify-content:center; cursor:pointer; line-height:1; padding:0; font-family:Georgia, serif;}
-.ginfo:active{background:var(--track);}
-.ginfo.mini{width:15px; height:15px; font-size:9.5px; border-width:1.2px;}
+.ginfo:active{background:#f0f0f5;}
 .topbar h1{display:inline-flex; align-items:center; gap:8px;}
 /* information index (2026.09.24): categorized info entries in Settings */
 .icatrow{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:4px;}
@@ -225,7 +197,7 @@ button{font-family:inherit;}
 .irow2:last-child{border-bottom:none;}
 .irow2 .chev2{color:var(--muted);}
 .infttl{font-size:17px; font-weight:800; padding:18px 18px 6px;}
-.infbody{padding:2px 18px 24px; font-size:14.5px; line-height:1.65; color:var(--ink);}
+.infbody{padding:2px 18px 24px; font-size:14.5px; line-height:1.65; color:#3a3a42;}
 .infbody b{color:var(--ink);}
 .infbody .irow{margin-bottom:10px;}
 /* progress insights: tappable rows, theme-matched (no new colors) */
@@ -258,8 +230,6 @@ button{font-family:inherit;}
 .pavatar{width:46px; height:46px; border-radius:50%; object-fit:cover; flex:none; background:var(--acc-soft); color:var(--acc);
   display:flex; align-items:center; justify-content:center; font-weight:800; font-size:19px; border:none; cursor:pointer; overflow:hidden; padding:0;}
 .pavatar img{width:100%; height:100%; object-fit:cover; display:block;}
-/* glowing profile ring — halo follows the theme accent color */
-.avatarglow{ box-shadow:0 0 0 2px var(--acc), 0 0 14px 2px rgba(var(--acc-rgb),.55); }
 .pmeta{flex:1; min-width:0;}
 .pname{font-size:17px; font-weight:800; letter-spacing:-.2px;}
 .psub{font-size:12px; color:var(--muted); font-weight:600;}
@@ -313,7 +283,7 @@ button{font-family:inherit;}
 .mmeta i{display:block; font-style:normal; font-size:11px; font-weight:800; margin:2px 0;}
 .mmeta span{font-size:12px; color:var(--muted); display:block;}
 .mprog{display:flex; align-items:center; gap:8px; margin-top:6px;}
-.mprogbar{flex:1; height:6px; border-radius:3px; background:var(--track); overflow:hidden;}
+.mprogbar{flex:1; height:6px; border-radius:3px; background:#e8eaf0; overflow:hidden;}
 .mprogbar i{display:block; height:100%; background:linear-gradient(90deg,var(--acc),#7c3aed); border-radius:3px;}
 .mprog span{font-size:11px; color:var(--muted); font-weight:700;}
 .mcheck{font-size:20px; color:#059669; font-weight:900; width:24px; text-align:center;}
@@ -324,7 +294,7 @@ button{font-family:inherit;}
 /* medal case */
 .casebar{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); margin-bottom:10px; flex-wrap:wrap;}
 .casebar b{color:var(--ink); font-size:16px;}
-.rdot{font-size:11px; font-weight:800; padding:2px 8px; border-radius:10px; background:var(--card2);}
+.rdot{font-size:11px; font-weight:800; padding:2px 8px; border-radius:10px; background:#eef0f4;}
 .r-common{color:#6b7280;} .r-uncommon{color:#059669;} .r-rare{color:#2563eb;} .r-epic{color:#7c3aed;} .r-legendary{color:#d97706;}
 .casegrid{display:grid; grid-template-columns:repeat(6,1fr); gap:10px;}
 .casegrid .medal{width:100%; height:auto; aspect-ratio:1;}
@@ -339,7 +309,7 @@ button{font-family:inherit;}
 .scorewheel .swnum b{font-size:17px; color:var(--ink); font-weight:800; line-height:1;}
 .scorewheel .swnum i{font-style:normal; font-size:8px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px;}
 .wheels{display:flex; gap:8px; flex:none;}
-.bloatbar{position:relative; height:10px; border-radius:99px; background:var(--track); overflow:hidden; margin-top:6px;}
+.bloatbar{position:relative; height:10px; border-radius:99px; background:#ececf1; overflow:hidden; margin-top:6px;}
 #bloatFill{display:block; height:100%; width:0; border-radius:99px; transition:width .4s;}
 .photostrip{display:flex; gap:10px; overflow-x:auto; padding:2px 2px 8px; -webkit-overflow-scrolling:touch;}
 .photoadd{flex:none; width:76px; height:98px; border-radius:14px; border:1.5px dashed var(--line); background:none; color:var(--muted); font-size:26px; font-weight:600; cursor:pointer;}
@@ -371,12 +341,12 @@ button{font-family:inherit;}
 .aplus{width:44px; height:44px; border-radius:14px; border:none; background:var(--card2); color:var(--acc); font-size:26px; line-height:1; font-weight:600; flex:none; display:flex; align-items:center; justify-content:center;}
 .aplus:active{transform:scale(.93);}
 /* tray bar */
-#trayBar{flex:none; display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--barbg); padding:12px 18px calc(10px + env(safe-area-inset-bottom)); border-top:1px solid var(--line);}
+#trayBar{flex:none; display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; padding:12px 18px calc(10px + env(safe-area-inset-bottom)); border-top:1px solid var(--line);}
 .trayinfo{display:flex; align-items:center; gap:10px; font-size:17px;}
 .trayico{position:relative; font-size:26px;}
 .trayico b{position:absolute; top:-8px; right:-10px; background:#e5484d; color:#fff; font-size:11px; min-width:20px; height:20px; border-radius:10px; display:flex; align-items:center; justify-content:center; padding:0 5px;}
 .trayadd{flex:1; max-width:280px; background:#4a6cf7; color:#fff; border:none; border-radius:16px; padding:15px; font-size:17px; font-weight:800;}
-.trayadd:disabled{background:var(--track2);}
+.trayadd:disabled{background:#dcdce4;}
 /* detail view */
 .dtop{display:flex; align-items:center; gap:14px; margin:6px 0 14px;}
 .dthumb{width:72px; height:72px; border-radius:20px; background:var(--card2); flex:none; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:32px; color:var(--muted);}
@@ -425,10 +395,10 @@ button{font-family:inherit;}
 .segtab.sel{color:var(--ink);}
 .segtab.sel::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:3px; border-radius:3px; background:var(--acc);}
 .diy{display:inline-block; background:var(--acc-soft); color:var(--acc); font-size:10px; font-weight:800; border-radius:6px; padding:2px 6px; margin-right:6px; vertical-align:2px;}
-.verfd{display:inline-block; background:var(--okbg); color:var(--oktx); font-size:10px; font-weight:800; border-radius:6px; padding:2px 6px; margin-right:6px; vertical-align:2px;}
+.verfd{display:inline-block; background:#e8f7ee; color:#1d7a3a; font-size:10px; font-weight:800; border-radius:6px; padding:2px 6px; margin-right:6px; vertical-align:2px;}
 /* energy check-in dots */
 .energydots{display:flex; gap:10px; margin-top:10px;}
-.edot{width:44px; height:44px; border-radius:50%; border:2px solid var(--line); background:var(--card2); font-weight:800; font-size:15px; color:var(--muted);}
+.edot{width:44px; height:44px; border-radius:50%; border:2px solid var(--line); background:#fff; font-weight:800; font-size:15px; color:var(--muted);}
 .edot.on{border-color:var(--acc); background:var(--acc-soft); color:var(--acc);}
 .createbtn{background:var(--acc-soft); color:var(--acc); border:none; border-radius:12px; padding:9px 18px; font-weight:800; font-size:14px;}
 .fhead{display:flex; align-items:center; justify-content:space-between; margin:10px 2px 4px;}
@@ -475,13 +445,13 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 #wStrip .wday{border:0; background:none; padding:10px 2px 8px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:1px; color:var(--muted);}
 #wStrip .wday .wn{font-size:10px; font-weight:700;}
 #wStrip .wday .wl{font-size:21px; font-weight:800; color:var(--ink);}
-#wStrip .wday .wdot{width:7px; height:7px; border-radius:50%; background:var(--track2); margin-top:5px;}
+#wStrip .wday .wdot{width:7px; height:7px; border-radius:50%; background:#dcdce4; margin-top:5px;}
 #wStrip .wday.on .wdot{background:var(--acc);}
-#wStrip .wday.sel{background:var(--card2); box-shadow:0 6px 18px rgba(20,20,40,.14);}
+#wStrip .wday.sel{background:#fff; box-shadow:0 6px 18px rgba(20,20,40,.14);}
 .wdet{display:flex; align-items:center; justify-content:space-between; padding:14px 2px;}
 .wdet .wt{font-size:16px; font-weight:700;}
 .wdet .ws{font-size:13px; color:var(--muted); font-weight:600; margin-top:2px;}
-.wtgl{width:52px; height:32px; border-radius:16px; border:0; background:var(--track); position:relative; transition:background .2s; flex:none;}
+.wtgl{width:52px; height:32px; border-radius:16px; border:0; background:#e3e3ea; position:relative; transition:background .2s; flex:none;}
 .wtgl .knob{position:absolute; top:2px; left:2px; width:28px; height:28px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.18); transition:left .2s;}
 .wtgl.on{background:var(--green);}
 .wtgl.on .knob{left:22px;}
@@ -498,32 +468,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .sicon svg{width:20px;height:20px;display:block;}
 .sicon.red{background:rgba(255,70,70,.13);color:var(--red);}
 .card.slim{padding-top:4px;padding-bottom:4px;}
-/* ---- Settings redesign (2026-10-04): reference-style profile card + pill rows ---- */
-.tdone{background:none; border:none; color:var(--acc); font-size:16px; font-weight:700; padding:8px 4px; min-width:44px; text-align:right; cursor:pointer; font-family:inherit;}
-.setprofile{display:flex; align-items:center; gap:14px;}
-.setprofile .pmeta{flex:1; min-width:0;}
-.setprofile .sname{font-size:19px; font-weight:800; border:none; background:none; color:var(--ink); width:100%; outline:none; padding:0; font-family:inherit; letter-spacing:-.2px;}
-.setprofile .ssub{font-size:13px; color:var(--muted); font-weight:600; margin-top:3px;}
-.setrow{display:flex; align-items:center; gap:14px; width:100%; background:var(--card); border:none; border-radius:30px; padding:20px 18px; font-size:17px; font-weight:600; color:var(--ink); text-align:left; margin:0 0 10px; cursor:pointer; font-family:inherit;}
-.setrow:active{transform:scale(.985);}
-.setrow .sleft{display:flex; align-items:center; gap:14px; min-width:0;}
-.setrow .sicon{background:none; width:30px; height:30px; color:var(--ink); border-radius:0;}
-.setrow .sicon svg{width:28px; height:28px;}
-.setrow .sval{font-size:14px; color:var(--muted); font-weight:600; display:flex; align-items:center; gap:6px;}
-.setrow .chev2{color:var(--muted); font-size:20px;}
-.setrow.danger{color:var(--red);}
-.setic{width:30px; height:30px; flex:none; display:flex; align-items:center; justify-content:center; color:var(--ink);}
-.setic svg{width:28px; height:28px;}
-.setlbl{flex:1; min-width:0;}
-.setval{font-size:14px; color:var(--muted); font-weight:600; flex:none;}
-.sspace{height:16px;}
-.savatarwrap{position:relative; flex:none;}
-.seditbadge{position:absolute; right:-3px; bottom:-3px; width:30px; height:30px; border-radius:50%; background:var(--card2); border:2px solid var(--card); display:flex; align-items:center; justify-content:center; color:var(--ink); pointer-events:none;}
-.profilebar{display:flex; justify-content:space-between; align-items:center;}
-.profilebar .tdone{margin-left:auto;}
-.seditbadge svg{width:14px; height:14px;}
-.schevbtn{width:46px; height:58px; border-radius:23px; background:var(--inset); border:none; color:var(--ink); display:flex; align-items:center; justify-content:center; flex:none; cursor:pointer;}
-.schevbtn svg{width:20px; height:20px;}
 .privline{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;color:var(--muted);margin:12px 16px 0;font-weight:600;text-align:center;}
 .privline svg{width:14px;height:14px;flex:none;}
 /* diary panel refresh — icon tiles on tracker panel headers */
@@ -544,10 +488,10 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .bmibar i{position:absolute; top:50%; width:16px; height:16px; border-radius:50%; background:#fff; border:3px solid #1c1c1e; transform:translate(-50%,-50%); box-shadow:0 1px 3px rgba(0,0,0,.25);}
 .bmilbls{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:4px; font-variant-numeric:tabular-nums;}
 .statgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-.stat2{background:var(--card); border-radius:14px; padding:12px 14px;}
+.stat2{background:#f4f4f7; border-radius:14px; padding:12px 14px;}
 .stat2 b{display:block; font-size:17px; font-weight:800; font-variant-numeric:tabular-nums;}
 .stat2 span{font-size:12px; color:var(--muted); font-weight:600;}
-.wgoalbar{height:8px; border-radius:5px; background:var(--track); overflow:hidden; margin-top:6px;}
+.wgoalbar{height:8px; border-radius:5px; background:#ececf1; overflow:hidden; margin-top:6px;}
 .wgoalbar i{display:block; height:100%; background:linear-gradient(90deg,var(--acc-deep),var(--acc)); border-radius:5px; transition:width .3s;}
 .bars7{display:flex; align-items:flex-end; gap:6px; height:136px; margin-top:8px;}
 .bars7 .bcol{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; justify-content:flex-end; min-width:0;}
@@ -558,17 +502,17 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .bars7 .bl{font-size:10px; color:var(--muted); font-weight:600; line-height:1;}
 .bars7 .bdn{font-size:13px; font-weight:800; color:var(--ink); line-height:1;}
 .bars7 .bcol.today .bdn{color:var(--acc);}
-.bars7 .bdot{width:6px; height:6px; border-radius:50%; background:var(--track2); flex:none;}
+.bars7 .bdot{width:6px; height:6px; border-radius:50%; background:#dcdce4; flex:none;}
 .bars7 .bcol.work .bdot{background:var(--acc);}
 .bars7 .bcol.future{opacity:.38;}
 .wrow{display:flex; align-items:center; justify-content:space-between; padding:9px 2px; border-top:1px solid var(--line); font-size:14px;}
 .wrow b{font-variant-numeric:tabular-nums;}
 .wlogrow{display:flex; gap:8px; margin-top:10px;}
-.wlogrow input{flex:1; border:1.5px solid var(--line); border-radius:12px; padding:11px; font-size:16px; background:var(--bg); outline:none;}
+.wlogrow input{flex:1; border:1.5px solid var(--line); border-radius:12px; padding:11px; font-size:16px; background:#fff; outline:none;}
 .wlogbtn{background:var(--acc); color:#fff; border:none; border-radius:12px; padding:11px 18px; font-weight:800;}
 /* (wrange pill styling lives in the theme section below) */
 .wstatgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
-.wstat{background:var(--card); border-radius:18px; padding:13px 16px;}
+.wstat{background:#f6f6f9; border-radius:18px; padding:13px 16px;}
 .wstat span{display:block; font-size:13px; color:#6d6d78; font-weight:600;}
 .wstat b{display:block; font-size:21px; margin-top:3px; font-variant-numeric:tabular-nums;}
 .wlogrow input{min-width:0;}
@@ -581,9 +525,9 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .subhead{font-size:12.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:14px 0 2px;}
 .bodyhero{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px;}
 .trajblock{width:100%;text-align:center;margin-top:12px;}
-.segctl{display:flex;background:var(--inset);border-radius:12px;padding:3px;margin:10px 0 2px;}
+.segctl{display:flex;background:#e9e9f0;border-radius:12px;padding:3px;margin:10px 0 2px;}
 .segbtn{flex:1;border:0;background:none;padding:8px 0;font-size:13.5px;font-weight:700;color:var(--muted);border-radius:9px;cursor:pointer;font-family:inherit;}
-.segbtn.on{background:var(--card2);color:var(--ink);box-shadow:0 1px 4px rgba(20,20,60,.14);}
+.segbtn.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(20,20,60,.14);}
 .wseg{padding-top:8px;}
 .xrow{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;border-top:1px solid var(--line);padding:13px 2px;cursor:pointer;color:inherit;font:inherit;text-align:left;}
 .xrow-main{flex:1;min-width:0;}
@@ -654,7 +598,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wtd-badge{display:inline-block; font-size:12.5px; font-weight:800; padding:5px 12px; border-radius:99px; margin-top:10px; background:var(--acc-soft); color:var(--acc);}
 .wtd-goal{margin-top:14px;}
 .wtd-secttl{font-size:15px; font-weight:800; margin:18px 2px 0;}
-.wgoaledit{margin-top:10px; background:var(--card2); border-radius:14px; padding:12px;}
+.wgoaledit{margin-top:10px; background:#f4f4fa; border-radius:14px; padding:12px;}
 .wgoaledit .wlogrow{margin-top:8px;}
 .wgoaledit-row{display:flex; gap:10px; margin-top:4px;}
 .wgoaledit-row .ghostbtn{margin-top:8px; padding:10px;}
@@ -671,7 +615,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wtd-status{font-size:14px; color:var(--ink); font-weight:600; margin:7px auto 0; line-height:1.5; max-width:330px;}
 .wtd-log{margin-top:12px;}
 .wtd-log .wlogrow{margin-top:0;}
-.wtseg{display:flex; background:var(--inset); border-radius:99px; padding:4px; margin:14px 0 2px; gap:2px;}
+.wtseg{display:flex; background:#e9e9f2; border-radius:99px; padding:4px; margin:14px 0 2px; gap:2px;}
 .wtseg button{flex:1; border:none; background:none; border-radius:99px; padding:9px 0; font-size:13.5px; font-weight:700; color:var(--muted); font-family:inherit; cursor:pointer;}
 .wtseg button.on{background:var(--acc); color:#fff; box-shadow:0 4px 12px rgba(91,91,240,.35);}
 .wtd-pace{font-size:12.5px; color:var(--muted); font-weight:600; text-align:center; margin-top:9px; line-height:1.5;}
@@ -680,60 +624,29 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
    rounded bottom corners floating above the bottom edge. Stays in flex flow. */
 .tabbar{flex:none; z-index:30;
   margin:2px 0 6px;
-  background:var(--barbg);
+  background:rgba(255,255,255,.86);
   backdrop-filter:blur(22px) saturate(1.5); -webkit-backdrop-filter:blur(22px) saturate(1.5);
-  border-top:1px solid var(--line);
+  border-top:1px solid rgba(20,20,60,.09);
+  border-left:1px solid rgba(255,255,255,.6);
+  border-right:1px solid rgba(255,255,255,.6);
+  border-bottom:1px solid rgba(255,255,255,.6);
   border-radius:0 0 28px 28px;
-  box-shadow:none;
+  box-shadow:0 -6px 24px rgba(70,70,140,.10), 0 10px 26px rgba(70,70,140,.10);
   padding:7px 10px 8px;}
 .tabbar .inner{max-width:430px; margin:0 auto; display:flex; height:62px; align-items:stretch;}
-.tab{flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--muted); font-size:10.5px; font-weight:700; border-radius:22px; transition:color .18s ease;}
+.tab{flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:#a5a5b0; font-size:10.5px; font-weight:700; border-radius:22px; transition:background .18s ease, color .18s ease;}
 .tab svg{width:23px; height:23px;}
-.tab .tpill{display:flex; align-items:center; justify-content:center; width:52px; height:30px; border-radius:99px; transition:background .18s ease;}
-.tab.active{color:#1b1b1f; background:none;}
-.tab.active .tpill{background:#dbeafe;}
-.tab.active .tpill svg{stroke:#1d4ed8;}
-/* ---- UI refresh: Google Health dark theme (2026-10-04) ---- */
-:root{ --bg:#141416; --radius:28px; }
+.tab.active{color:var(--acc); background:rgba(91,91,240,.12);}
+/* ---- UI refresh: reference-style theme (2026-09-19) ---- */
+:root{ --bg:#f1f1f8; --radius:20px; }
 body{ background:var(--bg); }
-.card{ border:none; border-radius:var(--radius); box-shadow:0 1px 3px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.03); background:var(--card); }
+.card{ border:none; border-radius:var(--radius); box-shadow:0 10px 28px rgba(84,84,180,.08); }
 .secttl{ font-size:15px; }
 /* purple progress hero */
 .progcard{ background:linear-gradient(135deg,var(--acc) 0%,var(--acc-deep) 100%); color:#fff; padding:18px 16px 14px; overflow:hidden; position:relative; }
 .progcard::after{ content:""; position:absolute; width:230px; height:230px; border-radius:50%; background:rgba(255,255,255,.07); top:-80px; right:-60px; pointer-events:none; }
-
 .prog-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; position:relative; z-index:1; }
 .prog-label{ font-size:14px; font-weight:700; opacity:.95; }
-.nutrition-title{ font-size:28px; font-weight:800; letter-spacing:-.5px; opacity:1; }
-/* reference-style sections */
-.section-title{font-size:28px; font-weight:800; letter-spacing:-.5px; color:var(--ink); margin:20px 2px 12px;}
-.light-card{ background:#eef2f7 !important; color:#1b1b1f !important; border-radius:28px !important; }
-.light-card .prog-date{ color:#6b7280 !important; }
-.light-card .center .ctitle{ color:#6b7280 !important; }
-.light-card .center b{ color:#111827 !important; }
-.light-card .flagkc{ color:#111827 !important; }
-.light-card .flagsur{ color:#6b7280 !important; }
-.light-card .hwheel .swnum b{ color:#111827 !important; }
-.light-card .hwheel .swnum i{ color:#6b7280 !important; }
-.light-card .prog-pct b{ color:#111827 !important; }
-.light-card .prog-pct span{ color:#6b7280 !important; }
-.light-card .pinlink{ color:#5b8def !important; }
-.light-card .wknav{ color:#6b7280 !important; }
-.light-card .wday .wd{ color:#6b7280 !important; }
-.light-card .wday .wn{ color:#1b1b1f !important; }
-.light-card .wday.istoday .wn{ background:#dbe4f0 !important; color:#1b1b1f !important; }
-.light-card .wday.sel .wn{ background:#5b8def !important; color:#fff !important; }
-.light-card .wday.sel .wd{ color:#1b1b1f !important; }
-.metrics-head{display:flex; align-items:center; justify-content:space-between; margin:20px 2px 12px;}
-.metrics-head .section-title{margin:0;}
-.edit-pill{background:#dbeafe; color:#1d4ed8; border:none; border-radius:99px; padding:8px 16px; font-size:14px; font-weight:700; display:flex; align-items:center; gap:6px; cursor:pointer;}
-.edit-pill svg{width:16px; height:16px;}
-.metric-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0 0 12px;}
-.metric-card{background:#eef2f7; border-radius:28px; padding:18px 16px; min-width:0;}
-.metric-card .m-label{font-size:14px; font-weight:600; color:#374151; margin-bottom:4px;}
-.metric-card .m-value{font-size:32px; font-weight:800; letter-spacing:-1px; color:#111827; font-variant-numeric:tabular-nums;}
-.metric-card .m-value small{font-size:18px; font-weight:700;}
-.metric-card .m-sub{font-size:12px; color:#6b7280; font-weight:600; margin-top:6px;}
 .prog-date{ font-size:12px; opacity:.75; font-weight:600; }
 .prog-main{ display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; z-index:1; }
 .prog-pct b{ font-size:46px; font-weight:800; letter-spacing:-1px; line-height:1; font-variant-numeric:tabular-nums; }
@@ -790,16 +703,16 @@ body{ background:var(--bg); }
 .progcard .sbinfo{ background:rgba(255,255,255,.18); color:#fff; }
 /* macro cards */
 .macro3{ display:flex; gap:10px; margin-top:12px; }
-.mcard{ flex:1; min-width:0; background:var(--card); border-radius:24px; padding:14px 12px; box-shadow:none; }
-.mcard .mlabel{ font-size:12px; color:var(--muted); font-weight:700; white-space:nowrap; display:flex; align-items:center; gap:5px; }
-.mcard .mval{ font-size:16px; font-weight:800; margin:6px 0 9px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.mcard{ flex:1; min-width:0; background:#fff; border-radius:18px; padding:12px 10px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
+.mcard .mlabel{ font-size:12px; color:var(--muted); font-weight:700; white-space:nowrap; }
+.mcard .mval{ font-size:14px; font-weight:800; margin:5px 0 8px; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .mcard .mval i{ font-style:normal; }
 .mcard .mval small{ font-weight:600; color:var(--muted); font-size:11px; }
-.mcard .mbar{ height:7px; border-radius:99px; background:var(--track); overflow:hidden; }
+.mcard .mbar{ height:7px; border-radius:99px; background:#f0f0f6; overflow:hidden; }
 .mcard .mbar i{ display:block; height:100%; border-radius:99px; width:0; transition:width .5s ease; }
-.fiberbar{ display:flex; align-items:center; gap:10px; margin:10px 0 16px; background:var(--card); border-radius:14px; padding:10px 12px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
+.fiberbar{ display:flex; align-items:center; gap:10px; margin:10px 0 16px; background:#fff; border-radius:14px; padding:10px 12px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
 .fiberbar .flabel{ font-size:12px; font-weight:700; color:var(--muted); flex:none; }
-.fiberbar .mbar{ flex:1; height:7px; border-radius:99px; background:var(--track); overflow:hidden; }
+.fiberbar .mbar{ flex:1; height:7px; border-radius:99px; background:#f0f0f6; overflow:hidden; }
 .fiberbar .mbar i{ display:block; height:100%; border-radius:99px; width:0; transition:width .5s ease; }
 .fiberbar .fval{ font-size:12px; font-weight:800; font-variant-numeric:tabular-nums; flex:none; }
 .fiberbar .fval i{ font-style:normal; }
@@ -807,9 +720,9 @@ body{ background:var(--bg); }
 /* progress: mini stat cards */
 .stat{ border:none; border-radius:18px; box-shadow:0 10px 28px rgba(84,84,180,.08); padding:14px 8px; }
 .stat b{ font-size:21px; font-variant-numeric:tabular-nums; }
-.statgrid .tile{ background:var(--card); border:none; border-radius:18px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
+.statgrid .tile{ background:#fff; border:none; border-radius:18px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
 /* progress: segmented range, reference style */
-.wrange{ display:flex; background:var(--inset); border-radius:99px; padding:4px; margin-top:10px; gap:2px; }
+.wrange{ display:flex; background:#e9e9f2; border-radius:99px; padding:4px; margin-top:10px; gap:2px; }
 .wrange button{ flex:1; border:none; background:none; border-radius:99px; padding:8px 0; font-size:13px; font-weight:700; color:var(--muted); font-family:inherit; }
 .wrange button.on{ background:var(--acc); color:#fff; box-shadow:0 4px 12px rgba(91,91,240,.35); }
 .wlegend{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin:8px 0 2px; font-size:11px; color:var(--muted); font-weight:600; }
@@ -819,10 +732,10 @@ body{ background:var(--bg); }
 .wchart-scroll::-webkit-scrollbar{ height:6px; }
 .wchart-scroll::-webkit-scrollbar-thumb{ background:rgba(20,20,40,.16); border-radius:3px; }
 /* 7-day bars: reference style — light bars, purple today */
-.bars7 .bar{ background:var(--track); border-radius:8px; }
+.bars7 .bar{ background:#e3e3f1; border-radius:8px; }
 .tabbar{ border-top:none; }
 /* ---- Reference look: full-app pass (2026-09-19) ---- */
-.topbar{ background:var(--topbg); }
+.topbar{ background:#f3f3f9; }
 .topbar h1{ font-size:20px; font-weight:800; letter-spacing:-.3px; }
 /* analytics card */
 .anacard{ padding:18px 16px 14px; }
@@ -833,7 +746,7 @@ body{ background:var(--bg); }
 .ana-range{ font-size:11px; color:var(--muted); font-weight:600; white-space:nowrap; }
 /* week backtrack navigator */
 .wk-nav{ display:flex; align-items:center; gap:4px; }
-.wk-nav button{ width:38px; height:38px; border-radius:50%; border:0; background:var(--card2); color:var(--ink); font-size:20px; font-weight:700; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0 0 2px; }
+.wk-nav button{ width:38px; height:38px; border-radius:50%; border:0; background:#f1f1f6; color:var(--ink); font-size:20px; font-weight:700; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0 0 2px; }
 .wk-nav button:disabled{ opacity:.28; cursor:default; }
 /* goal days (challenge row) */
 .chal{ margin-top:14px; }
@@ -841,7 +754,7 @@ body{ background:var(--bg); }
 .chal-head svg{ width:20px; height:20px; }
 .chal-row{ display:flex; justify-content:space-between; }
 .chal-day{ display:flex; flex-direction:column; align-items:center; gap:6px; font-size:11px; color:var(--muted); font-weight:600; }
-.chal-dot{ width:30px; height:30px; border-radius:50%; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; background:#fff; color:#fff; }
+.chal-dot{ width:30px; height:30px; border-radius:50%; border:2px solid #e2e2ee; display:flex; align-items:center; justify-content:center; background:#fff; color:#fff; }
 .chal-day.hit .chal-dot{ background:var(--acc); border-color:var(--acc); }
 .chal-day.today .chal-dot{ border-color:var(--acc); }
 /* stacked macro chart */
@@ -850,7 +763,7 @@ body{ background:var(--bg); }
 .mc-head b{ font-size:16px; font-weight:800; }
 .mc-legend{ display:flex; align-items:center; gap:5px; margin-left:auto; font-size:11px; color:var(--muted); font-weight:600; }
 .mc-legend i{ width:10px; height:10px; border-radius:3px; display:inline-block; }
-.mc-week{ font-size:12px; color:var(--muted); font-weight:700; background:var(--card2); border-radius:10px; padding:5px 10px; }
+.mc-week{ font-size:12px; color:var(--muted); font-weight:700; background:#f1f1f6; border-radius:10px; padding:5px 10px; }
 .mstack{ display:flex; align-items:flex-end; gap:8px; height:120px; }
 .mstack .mscol{ flex:1; display:flex; flex-direction:column; justify-content:flex-end; height:100%; }
 .mstack .msbar{ width:100%; max-width:34px; margin:0 auto; border-radius:8px; overflow:hidden; display:flex; flex-direction:column-reverse; }
@@ -859,15 +772,15 @@ body{ background:var(--bg); }
 .mstack-lbls span{ flex:1; text-align:center; font-size:10px; color:var(--muted); font-weight:600; }
 /* mini stat cards */
 .ministats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; margin-bottom:12px; }
-.ministat{ background:var(--card); border-radius:18px; padding:14px; box-shadow:0 10px 28px rgba(84,84,180,.08); display:flex; flex-direction:column; gap:6px; }
+.ministat{ background:#fff; border-radius:18px; padding:14px; box-shadow:0 10px 28px rgba(84,84,180,.08); display:flex; flex-direction:column; gap:6px; }
 .ministat .ms-label{ font-size:12px; color:var(--muted); font-weight:700; }
 .ministat b{ font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.3px; }
 .ministat b small{ font-size:12px; color:var(--muted); font-weight:600; }
 /* meals: reference-style add button */
-.madd{ width:38px; height:38px; border-radius:50%; background:var(--acc-soft); color:var(--acc); font-size:22px; font-weight:700; border:none; display:flex; align-items:center; justify-content:center; flex:none; }
+.madd{ width:38px; height:38px; border-radius:50%; background:#eef0ff; color:var(--acc); font-size:22px; font-weight:700; border:none; display:flex; align-items:center; justify-content:center; flex:none; }
 .madd:active{ transform:scale(.92); }
 /* search bars like reference */
-.searchbtn{ background:var(--card); border-radius:18px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
+.searchbtn{ background:#fff; border-radius:18px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
 /* tab bar: reference style + center button */
 .tab{ color:#a5a5b0; }
 .tabfab{ flex:none; width:54px; height:54px; border-radius:50%; border:none; align-self:center;
@@ -883,30 +796,30 @@ body{ background:var(--bg); }
 .sheet{position:fixed; inset:0; z-index:50; display:none;}
 .sheet.open{display:block;}
 .sheet .scrim{position:absolute; inset:0; background:rgba(20,30,40,.45);}
-.sheet .panel{position:absolute; left:0; right:0; bottom:0; max-width:430px; margin:0 auto; background:var(--card);
+.sheet .panel{position:absolute; left:0; right:0; bottom:0; max-width:430px; margin:0 auto; background:#fff;
   border-radius:24px 24px 0 0; max-height:88vh; display:flex; flex-direction:column; padding-bottom:env(safe-area-inset-bottom);
   animation:up .22s ease;}
 @keyframes up{from{transform:translateY(40px); opacity:.6;} to{transform:none; opacity:1;}}
 .panel .grab{width:40px; height:5px; border-radius:99px; background:var(--line); margin:10px auto 4px;}
 .panel h2{margin:8px 18px 12px; font-size:20px; text-align:center;}
 .panel .body{overflow-y:auto; padding:0 18px 18px; min-height:0; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y;}
-.shead{position:sticky; top:0; z-index:3; background:var(--card); padding:10px 2px 10px; margin:0 -2px;}
-.dact{position:sticky; bottom:0; z-index:3; background:var(--card); padding:10px 2px calc(4px + env(safe-area-inset-bottom)); margin:10px -2px -6px; border-top:1px solid var(--line);}
+.shead{position:sticky; top:0; z-index:3; background:#fff; padding:10px 2px 10px; margin:0 -2px;}
+.dact{position:sticky; bottom:0; z-index:3; background:#fff; padding:10px 2px calc(4px + env(safe-area-inset-bottom)); margin:10px -2px -6px; border-top:1px solid var(--line);}
 .dact .bigbtn{margin-top:0;}
 .xbtn{position:absolute; top:10px; right:12px; width:36px; height:36px; border:none; border-radius:12px; z-index:5;
   background:var(--acc-soft); color:var(--acc-deep); display:flex; align-items:center; justify-content:center;}
 .xbtn svg{width:15px; height:15px; display:block;}
 .qtyrow{display:flex; align-items:center; gap:12px; margin:12px 0;}
-.qtyrow button{width:40px; height:40px; border-radius:12px; border:1.5px solid var(--line); background:var(--card2); font-size:20px; color:var(--acc); font-weight:700;}
+.qtyrow button{width:40px; height:40px; border-radius:12px; border:1.5px solid var(--line); background:#fff; font-size:20px; color:var(--acc); font-weight:700;}
 .chips{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0;}
-.chip{border:1.5px solid var(--line); background:var(--card2); border-radius:99px; padding:8px 14px; font-size:13px; font-weight:600; color:var(--muted);}
+.chip{border:1.5px solid var(--line); background:#fff; border-radius:99px; padding:8px 14px; font-size:13px; font-weight:600; color:var(--muted);}
 .chip.sel{border-color:var(--acc); color:var(--acc); background:var(--acc-soft);}
 .bigbtn{width:100%; background:var(--acc); color:#fff; border:none; border-radius:16px; padding:15px; font-size:16px; font-weight:800; margin-top:12px;}
 .bigbtn:active{background:var(--acc-deep);}
-.ghostbtn{width:100%; background:var(--card2); color:var(--acc); border:1.5px solid var(--acc); border-radius:14px; padding:13px; font-size:15px; font-weight:700; margin-top:10px;}
+.ghostbtn{width:100%; background:#fff; color:var(--acc); border:1.5px solid var(--acc); border-radius:14px; padding:13px; font-size:15px; font-weight:700; margin-top:10px;}
 .label{font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.6px;}
 /* zone sheet */
-.zonenow{background:var(--card2); border-radius:12px; padding:10px 12px; margin-bottom:4px;}
+.zonenow{background:#f4f4f8; border-radius:12px; padding:10px 12px; margin-bottom:4px;}
 .zonenow b{font-size:14px;}
 .zonenow p{margin:4px 0 0; font-size:13px; line-height:1.45;}
 .zonerow{display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); align-items:flex-start;}
@@ -929,10 +842,10 @@ body{ background:var(--bg); }
 #cPhotoPreview{width:72px; height:72px; border-radius:14px; object-fit:cover; flex:none;}
 .cphotobtn{border:1.5px dashed #c9c9d6; background:#fafafa; border-radius:14px; color:var(--acc); font-weight:700; font-size:15px; padding:14px 18px; font-family:inherit;}
 .nutrrow{display:flex; gap:8px; margin:10px 0; align-items:center;}
-.nutrrow input{border:1px solid var(--line); background:var(--bg); border-radius:10px; padding:10px; font-size:14px; font-weight:600; font-family:inherit; outline:none; min-width:0;}
+.nutrrow input{border:1px solid var(--line); background:#fafafc; border-radius:10px; padding:10px; font-size:14px; font-weight:600; font-family:inherit; outline:none; min-width:0;}
 .nutrrow input[type=text]{flex:1;}
 .nutrrow input[type=number]{width:64px; flex:none;}
-.nutrrow select{border:1px solid var(--line); background:var(--bg); border-radius:10px; padding:10px 6px; font-size:14px; font-weight:600; font-family:inherit; flex:none;}
+.nutrrow select{border:1px solid var(--line); background:#fafafc; border-radius:10px; padding:10px 6px; font-size:14px; font-weight:600; font-family:inherit; flex:none;}
 .ndel{border:none; background:none; color:var(--red); font-size:22px; font-weight:700; cursor:pointer; padding:4px 6px; flex:none; line-height:1;}
 .nedit{border:none; background:none; color:var(--acc); cursor:pointer; padding:4px 6px; flex:none; line-height:1; display:flex; align-items:center;}
 .crow{display:flex; gap:12px; align-items:flex-start; font-size:15px; font-weight:700; padding:14px 0; cursor:pointer;}
@@ -945,7 +858,7 @@ body{ background:var(--bg); }
 .nhead b i{font-style:normal;}
 .nhead b i.met{color:#35a45f;}
 .nhead b i.lim{color:var(--red);}
-.nbar{height:6px; background:var(--track); border-radius:4px; margin-top:8px; overflow:hidden;}
+.nbar{height:6px; background:#f0f0f5; border-radius:4px; margin-top:8px; overflow:hidden;}
 .nbar i{display:block; height:100%; background:#9aa1ab; border-radius:4px;}
 .ncat{display:flex; align-items:center; gap:10px; padding:13px 2px 7px; cursor:pointer; user-select:none; -webkit-user-select:none;}
 .ncat .ncat-t{flex:1; font-size:12.5px; font-weight:800; letter-spacing:.9px; text-transform:uppercase; color:var(--muted);}
@@ -991,7 +904,7 @@ body.reordering #progOverview{display:none}
    Left lane = learned eating windows (auto, meal colors); right lane = work /
    gym / custom blocks in any color. Timestamps run 12a-12a with a midday line. */
 .calnav{display:flex;align-items:center;justify-content:space-between;margin:8px 4px;}
-.calarrow{width:44px;height:44px;border-radius:14px;border:1.5px solid var(--line);background:var(--card2);font-size:22px;color:var(--acc);font-weight:800;line-height:1;}
+.calarrow{width:44px;height:44px;border-radius:14px;border:1.5px solid var(--line);background:#fff;font-size:22px;color:var(--acc);font-weight:800;line-height:1;}
 .calnav .cttl{font-size:16px;font-weight:800;}
 .calnav .cwk{font-size:12px;color:var(--muted);font-weight:600;margin-top:2px;}
 .callegend{display:flex;gap:14px;align-items:center;padding:0 6px 8px;font-size:11px;color:var(--muted);font-weight:600;}
@@ -1018,7 +931,7 @@ body.reordering #progOverview{display:none}
 .sleepmoon{position:absolute;left:50%;top:-11px;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:7;box-shadow:0 2px 8px rgba(20,24,40,.25);}
 .sleepmoon svg{width:13px;height:13px;}
 .caltrack .chlab{position:absolute;right:50%;margin-right:9px;transform:translateY(-50%);font-size:8px;font-weight:700;color:#9aa3b2;z-index:3;pointer-events:none;white-space:nowrap;text-align:right;}
-.caltrack .chlab.mid{color:var(--ink);}
+.caltrack .chlab.mid{color:#111;}
 .caltrack .hl{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,.9);}
 .caltrack .hl.mid{background:var(--acc);opacity:.6;height:2px;z-index:4;}
 .eatband{position:absolute;left:2px;right:2px;border-radius:6px;pointer-events:none;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:4;}
@@ -1037,7 +950,7 @@ body.reordering #progOverview{display:none}
 .callabel{width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:12px;padding:12px;font-size:15px;font-weight:600;margin-top:6px;}
 .caltime{display:flex;gap:10px;margin-top:12px;}
 .caltime>div{flex:1;min-width:0;}
-.caltime input[type=time]{width:100%;min-width:0;box-sizing:border-box;border:1.5px solid var(--line);border-radius:12px;padding:11px 6px;font-size:15px;font-weight:700;margin-top:6px;background:var(--bg);text-align:center;}
+.caltime input[type=time]{width:100%;min-width:0;box-sizing:border-box;border:1.5px solid var(--line);border-radius:12px;padding:11px 6px;font-size:15px;font-weight:700;margin-top:6px;background:#fff;text-align:center;}
 .calcolors{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px;align-items:center;}
 .csw{width:36px;height:36px;border-radius:50%;border:none;padding:0;cursor:pointer;flex:none;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6),0 1px 4px rgba(0,0,0,.18);}
 .csw.sel{outline:3px solid var(--ink);outline-offset:2px;}
@@ -1078,13 +991,18 @@ body.reordering #progOverview{display:none}
 
   <!-- DIARY -->
   <section class="view active" id="view-diary">
-    <div class="topbar diarybar">
-      <div class="medalspill"><div class="medals" id="pMedals"></div></div>
+    <div class="topbar">
+      <button class="tbtn" id="dayPrev" aria-label="Previous day">‹</button>
       <h1><span id="dayTitle">Today</span><button class="ginfo" id="diaryInfo" aria-label="Diary information">i</button></h1>
       <div class="ticons">
         <button id="calBtn" aria-label="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10.5h18"/></svg></button>
-        <button class="pavatar avatarglow" id="topAvatar" style="width:44px;height:44px;font-size:18px" aria-label="Profile and settings"></button>
+        <button id="gearBtn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       </div>
+    </div>
+    <div class="pstrip">
+      <button class="pavatar" id="pAvatar" aria-label="Profile"></button>
+      <div class="pmeta"><div class="pname" id="pName">You</div><div class="psub">Today's medals</div></div>
+      <div class="medals" id="pMedals"></div>
     </div>
     <div class="nudge" id="nudgeBar"></div>
     <div class="card dcard" id="energyCard">
@@ -1093,9 +1011,8 @@ body.reordering #progOverview{display:none}
       <div class="energydots" id="energyDots"></div>
       </div></div>
     </div>
-    <h2 class="section-title">Nutrition status</h2>
-    <div class="card progcard light-card">
-      <div class="prog-top"><span class="prog-date" id="daySub"></span></div>
+    <div class="card progcard">
+      <div class="prog-top"><span class="prog-label">Today's Intake</span><span class="prog-date" id="daySub"></span></div>
       <div class="wknavrow pweek">
         <button class="wknav" id="wkPrev" aria-label="Previous week">‹</button>
         <div class="weekstrip" id="weekStrip"></div>
@@ -1105,21 +1022,21 @@ body.reordering #progOverview{display:none}
       <div class="prog-main">
         <div class="hside">
         <button class="scorewheel hwheel" id="tiredWheelH" aria-label="Fatigue details">
-          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="9"/><circle id="tiredArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="tiredArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
           <span class="swnum"><b id="tiredNumH">–</b><i>fatigue</i></span>
         </button>
         <button class="scorewheel hwheel hwheel-sm" id="bloatWheelH" aria-label="Bloat details">
-          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="9"/><circle id="bloatArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="bloatArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
           <span class="swnum"><b id="bloatNumH">–</b><i>bloat</i></span>
         </button>
         </div>
         <div class="ring" style="width:196px;height:196px">
           <svg width="196" height="196" viewBox="0 0 128 128">
-            <circle cx="64" cy="64" r="56" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="11"/>
-            <circle id="ringMaint" cx="64" cy="64" r="56" fill="none" stroke="#5b8def" stroke-width="11"
+            <circle cx="64" cy="64" r="56" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="11"/>
+            <circle id="ringMaint" cx="64" cy="64" r="56" fill="none" stroke="#ffffff" stroke-width="11"
               stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
-            <circle id="ringSurpTrack" cx="64" cy="64" r="46" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="5"/>
-            <circle id="ringSurp" cx="64" cy="64" r="46" fill="none" stroke="#a0b4e8" stroke-width="5"
+            <circle id="ringSurpTrack" cx="64" cy="64" r="46" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="5"/>
+            <circle id="ringSurp" cx="64" cy="64" r="46" fill="none" stroke="#d5d5e0" stroke-width="5"
               stroke-linecap="round" stroke-dasharray="289.03" stroke-dashoffset="289.03"/>
           </svg>
           <div class="center">
@@ -1130,7 +1047,7 @@ body.reordering #progOverview{display:none}
           </div>
         </div>
         <button class="scorewheel hwheel" id="adhWheelH" aria-label="Adherence details">
-          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="9"/><circle id="adhArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="adhArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
           <span class="swnum"><b id="adhNumH">–</b><i>adherence</i></span>
         </button>
       </div>
@@ -1145,36 +1062,12 @@ body.reordering #progOverview{display:none}
 
     </div>
     <div class="daycost" id="dayCost" style="display:none"></div>
-    <div class="metrics-head">
-      <h2 class="section-title">Key metrics</h2>
-      <button class="edit-pill" id="metricsEdit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>Edit</button>
+    <div class="macro3">
+      <div class="mcard"><div class="mlabel">Carbs</div><div class="mval"><i id="valCv">0</i><small> / <span id="valCg">0</span>g</small></div><div class="mbar"><i id="barC" style="background:linear-gradient(90deg,#7e7ef2,#a8a8ff)"></i></div></div>
+      <div class="mcard"><div class="mlabel">Protein</div><div class="mval"><i id="valPv">0</i><small> / <span id="valPg">0</span>g</small></div><div class="mbar"><i id="barP" style="background:linear-gradient(90deg,#12cfae,#54e6c4)"></i></div></div>
+      <div class="mcard"><div class="mlabel">Fat</div><div class="mval"><i id="valFv">0</i><small> / <span id="valFg">0</span>g</small></div><div class="mbar"><i id="barF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></div></div>
     </div>
-    <div class="metric-grid">
-      <div class="metric-card">
-        <div class="m-label">Protein<button class="ginfo mini" id="protInfo" aria-label="About protein">i</button></div>
-        <div class="m-value"><span id="valPv">0</span><small>g</small></div>
-        <div class="m-sub">of <span id="valPg">0</span>g goal</div>
-        <div class="mbar" style="margin-top:10px"><i id="barP" style="background:linear-gradient(90deg,#12cfae,#54e6c4)"></i></div>
-      </div>
-      <div class="metric-card">
-        <div class="m-label">Carbs<button class="ginfo mini" id="carbInfo" aria-label="About carbs">i</button></div>
-        <div class="m-value"><span id="valCv">0</span><small>g</small></div>
-        <div class="m-sub">of <span id="valCg">0</span>g goal</div>
-        <div class="mbar" style="margin-top:10px"><i id="barC" style="background:linear-gradient(90deg,#7e7ef2,#a8a8ff)"></i></div>
-      </div>
-      <div class="metric-card">
-        <div class="m-label">Fat<button class="ginfo mini" id="fatInfo" aria-label="About fat">i</button></div>
-        <div class="m-value"><span id="valFv">0</span><small>g</small></div>
-        <div class="m-sub">of <span id="valFg">0</span>g goal</div>
-        <div class="mbar" style="margin-top:10px"><i id="barF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></div>
-      </div>
-      <div class="metric-card">
-        <div class="m-label">Fiber</div>
-        <div class="m-value"><span id="valFiv">0</span><small>g</small></div>
-        <div class="m-sub">of <span id="valFig">0</span>g goal</div>
-        <div class="mbar" style="margin-top:10px"><i id="barFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div>
-      </div>
-    </div>
+    <div class="fiberbar"><span class="flabel">Fiber</span><div class="mbar"><i id="barFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div><span class="fval"><i id="valFiv">0</i><small> / <span id="valFig">0</span>g</small></span></div>
     <div class="card mealcard" id="meals"></div>
 
 
@@ -1219,8 +1112,8 @@ body.reordering #progOverview{display:none}
 
 <div class="card dcard" id="dcard-plan">
       <div class="whead dhead" data-d="plan" role="button" tabindex="0" aria-label="Day plan details"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg></span><b>Day plan</b><button class="ginfo" id="planInfo" aria-label="About the day plan">i</button></span><span style="display:flex;align-items:center;gap:8px"><span class="wlbl" id="planLabel"></span><span class="chev2 dchev">›</span></span></div>
-      <div class="ddetail" id="ddetail-plan"><div class="pad">
       <div id="autoZone"></div>
+      <div class="ddetail" id="ddetail-plan"><div class="pad">
       <div id="planBody"></div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <button class="bigbtn" id="planBuild" style="flex:1;margin:0">Build my day</button>
@@ -1337,7 +1230,6 @@ body.reordering #progOverview{display:none}
       <div class="chips" id="goalMode">
         <button class="chip" data-m="lean" data-pct="10">Lean Bulk</button>
         <button class="chip" data-m="bulk" data-pct="15">Bulk</button>
-        <button class="chip" data-m="aggro" data-pct="20">Aggressive Bulk</button>
         <button class="chip" data-m="maintain" data-pct="0">Maintain</button>
       </div>
       <input type="range" id="goalSlider" min="1500" max="6000" step="25" value="3000">
@@ -1424,7 +1316,7 @@ body.reordering #progOverview{display:none}
     </div>
     <div class="secttl">Micronutrients</div>
     <div class="card" style="padding:4px 14px">
-      <button class="setrow" id="microRow">
+      <button class="srow" id="microRow">
         <span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h10M18 8h2M4 16h4M12 16h8"/><circle cx="16" cy="8" r="2.2"/><circle cx="10" cy="16" r="2.2"/></svg></span><span><b style="font-size:16px">Micronutrient targets</b><br><span class="ph" id="microSub"></span></span></span>
         <span class="sval"><span class="chev2">›</span></span>
       </button>
@@ -1562,7 +1454,7 @@ body.reordering #progOverview{display:none}
           </svg>
           <div id="muscleOut" style="flex:1; font-size:13.5px; line-height:1.6"></div>
         </div>
-        <button class="setrow" id="muscleGoalBtn" style="margin-top:8px"><span>Muscle goal: <b id="muscleGoalLbl">0 lb</b></span><span class="chev2">›</span></button>
+        <button class="srow" id="muscleGoalBtn" style="margin-top:8px"><span>Muscle goal: <b id="muscleGoalLbl">0 lb</b></span><span class="chev2">›</span></button>
       </div></div>
     </div>
     </div>
@@ -1613,61 +1505,48 @@ body.reordering #progOverview{display:none}
 
   <!-- SETTINGS -->
   <section class="view" id="view-settings">
-    <div class="topbar profilebar">
-      <span></span>
-      <button class="tdone" id="settingsDone">Done</button>
+    <div class="topbar">
+      <button class="tbtn" id="settingsBack" aria-label="Back">‹</button>
+      <h1>Settings</h1>
+      <div style="width:44px"></div>
     </div>
-    <div class="card setprofile">
-      <div class="savatarwrap">
-        <button class="pavatar avatarglow" id="sAvatar" style="width:60px;height:60px;font-size:22px" aria-label="Change profile photo"></button>
-        <span class="seditbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></span>
+    <div class="slabel">Profile</div>
+    <div class="card" style="margin-top:6px">
+      <div class="prow">
+        <button class="pavatar" id="sAvatar" style="width:58px;height:58px;font-size:22px" aria-label="Change profile photo"></button>
+        <div class="pmeta"><input class="sname" id="sName" placeholder="Your name" autocomplete="off"></div>
       </div>
-      <div class="pmeta">
-        <input class="sname" id="sName" placeholder="Your name" autocomplete="off">
-        <div class="ssub" id="sProfileSub"></div>
-      </div>
-      <button class="schevbtn" id="sEditName" aria-label="Edit name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <div class="flabel" style="margin:14px 0 8px">App theme</div>
+      <div class="themerow" id="themeRow"></div>
+      <div class="flabel" style="margin:14px 0 8px">Progress photos</div>
+      <div class="photostrip" id="photoStrip"></div>
     </div>
     <input type="file" id="pPhotoFile" accept="image/*" style="display:none">
     <input type="file" id="progPhotoFile" accept="image/*" style="display:none">
-    <div class="sspace"></div>
-    <button class="setrow" id="energyRow">
-      <span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2.5 5.5 13.5h4.8L10 21.5l7.5-11h-4.8L13 2.5z"/></svg></span>Energy today</span>
-      <span class="sval"><b id="energyRowVal" style="color:var(--ink)"></b></span>
-    </button>
-    <div class="sspace"></div>
-    <div class="card">
-      <div class="flabel" style="margin:2px 0 8px">Accent color</div>
-      <div class="themerow" id="themeRow"></div>
+    <div class="slabel">Schedule</div>
+    <div class="card slim" style="margin-top:6px;">
+      <button class="srow" id="schedRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/><path d="M3.5 12.5h17"/></svg></span>Work schedule</span><span class="sval"><b id="schedRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
     </div>
-    <div class="sspace"></div>
-    <div class="card">
-      <div class="photostrip" id="photoStrip"></div>
+    <div class="slabel">Targets</div>
+    <div class="card slim" style="margin-top:6px;">
+      <button class="srow" id="goalRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></span>Goals</span><span class="sval"><b id="goalRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
+      <button class="srow" id="waterRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3.5c3.2 4.3 5.8 7.7 5.8 10.7a5.8 5.8 0 1 1-11.6 0C6.2 11.2 8.8 7.8 12 3.5z"/></svg></span>Water</span><span class="sval"><b id="waterRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
     </div>
-    <div class="sspace"></div>
-    <div>
-      <button class="setrow" id="schedRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/><path d="M3.5 12.5h17"/></svg></span>Work schedule</span><span class="sval"><b id="schedRowVal" style="color:var(--ink)"></b></span></button>
-    </div>
-    <div class="sspace"></div>
-    <div>
-      <button class="setrow" id="goalRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></span>Goals</span><span class="sval"><b id="goalRowVal" style="color:var(--ink)"></b></span></button>
-      <button class="setrow" id="waterRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3.5c3.2 4.3 5.8 7.7 5.8 10.7a5.8 5.8 0 1 1-11.6 0C6.2 11.2 8.8 7.8 12 3.5z"/></svg></span>Water</span><span class="sval"><b id="waterRowVal" style="color:var(--ink)"></b></span></button>
-    </div>
-    <div class="sspace"></div>
-    <div>
-      <button class="setrow" id="exportBtn"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10.5"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4.5 20h15"/></svg></span>Export data</span></button>
-      <button class="setrow" id="importBtn"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14.5V4"/><path d="m7.5 8.5 4.5-4.5 4.5 4.5"/><path d="M4.5 20h15"/></svg></span>Restore backup</span></button>
-      <button class="setrow" id="snapRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3.5 8.5 4.7-8.5 4.7-8.5-4.7L12 3.5z"/><path d="m4.5 12.5 7.5 4.1 7.5-4.1"/><path d="m4.5 16.5 7.5 4.1 7.5-4.1"/></svg></span>Snapshots</span><span class="sval"><b id="snapRowVal" style="color:var(--ink)"></b></span></button>
+    <div class="slabel">Data</div>
+    <div class="card slim" style="margin-top:6px;">
+      <button class="srow" id="exportBtn"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10.5"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4.5 20h15"/></svg></span>Export data</span><span class="chev2">›</span></button>
+      <button class="srow" id="importBtn"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14.5V4"/><path d="m7.5 8.5 4.5-4.5 4.5 4.5"/><path d="M4.5 20h15"/></svg></span>Restore backup</span><span class="chev2">›</span></button>
+      <button class="srow" id="snapRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3.5 8.5 4.7-8.5 4.7-8.5-4.7L12 3.5z"/><path d="m4.5 12.5 7.5 4.1 7.5-4.1"/><path d="m4.5 16.5 7.5 4.1 7.5-4.1"/></svg></span>Snapshots</span><span class="sval"><b id="snapRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
       <input type="file" id="importFile" accept="application/json,.json" style="display:none">
-      <button class="setrow danger" id="wipeBtn"><span class="sleft"><span class="sicon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 7h15"/><path d="M9.5 7V4.8a.8.8 0 0 1 .8-.8h3.4a.8.8 0 0 1 .8.8V7"/><path d="M6.5 7l.9 13a1 1 0 0 0 1 .9h7.2a1 1 0 0 0 1-.9l.9-13"/><path d="M10 11v5.5M14 11v5.5"/></svg></span>Erase data</span></button>
+      <button class="srow danger" id="wipeBtn"><span class="sleft"><span class="sicon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 7h15"/><path d="M9.5 7V4.8a.8.8 0 0 1 .8-.8h3.4a.8.8 0 0 1 .8.8V7"/><path d="M6.5 7l.9 13a1 1 0 0 0 1 .9h7.2a1 1 0 0 0 1-.9l.9-13"/><path d="M10 11v5.5M14 11v5.5"/></svg></span>Erase data</span><span class="chev2">›</span></button>
     </div>
-    <div class="sspace"></div>
-    <div>
-      <button class="setrow" id="medalCaseRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14.5" r="4.5"/><path d="m9.2 10.8-2.7-7.3h3.6l1.9 4.4 1.9-4.4h3.6l-2.7 7.3"/></svg></span>Medals</span><span class="sval"><b id="medalCaseRowVal" style="color:var(--ink)"></b></span></button>
-      <button class="setrow" id="infoRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>Info</span><span class="sval"></span></button>
+    <div class="slabel">Collection</div>
+    <div class="card slim" style="margin-top:6px;">
+      <button class="srow" id="medalCaseRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14.5" r="4.5"/><path d="m9.2 10.8-2.7-7.3h3.6l1.9 4.4 1.9-4.4h3.6l-2.7 7.3"/></svg></span>Medals</span><span class="sval"><b id="medalCaseRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
+      <button class="srow" id="infoRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>Info</span><span class="sval"><span class="chev2">›</span></span></button>
     </div>
-    <div class="sspace"></div>
-    <div class="stat3">
+    <div class="slabel">About</div>
+    <div class="stat3" style="margin-top:6px;">
       <div class="stat"><b id="dDays">0</b><span>Days logged</span></div>
       <div class="stat"><b id="dFoods">0</b><span>Foods logged</span></div>
       <div class="stat"><b id="dWeigh">0</b><span>Weigh-ins</span></div>
@@ -1767,17 +1646,17 @@ body.reordering #progOverview{display:none}
 
   <nav class="tabbar"><div class="inner">
     <button class="tab active" data-v="diary">
-      <span class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>
       Diary</button>
     <button class="tab" data-v="progress">
-      <span class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>
       Progress</button>
     <button class="tabfab" id="tabFab" aria-label="Log food"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
     <button class="tab" data-v="foods">
-      <span class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       Foods</button>
     <button class="tab" data-v="plan">
-      <span class="tpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4a2 2 0 0 1 6 0" stroke-linecap="round"/><path d="M9 11l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4a2 2 0 0 1 6 0" stroke-linecap="round"/><path d="M9 11l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Plan</button>
   </div></nav>
 </div>
@@ -2380,7 +2259,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.04-o";
+const APP_VERSION = "2026.10.05-a";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2911,34 +2790,6 @@ function setTheme(hex){
   save();
   renderThemePicker();
   renderAll();
-}
-/* ============ COLOR SCHEME (dark / light) ============ */
-/* Settings › Appearance. Dark is the default; persisted in S.scheme.
-   The palette lives in CSS (:root = dark, html[data-theme="light"] = light). */
-function colorScheme(){
-  var s = S.scheme;
-  return (s==="light"||s==="dark") ? s : "dark";
-}
-function applyScheme(scheme){
-  var s = (scheme==="light"||scheme==="dark") ? scheme : "dark";
-  if(s==="dark") document.documentElement.removeAttribute("data-theme");
-  else document.documentElement.setAttribute("data-theme","light");
-  var m = document.querySelector('meta[name="theme-color"]');
-  if(m) m.setAttribute("content", s==="dark" ? "#141416" : "#f1f1f8");
-  renderSchemePicker();
-}
-function setScheme(scheme){
-  S.scheme = (scheme==="light") ? "light" : "dark";
-  save();
-  applyScheme(S.scheme);
-}
-function renderSchemePicker(){
-  var el = document.getElementById("schemeSeg");
-  if(!el) return;
-  var cur = colorScheme();
-  el.querySelectorAll("button").forEach(function(b){
-    b.classList.toggle("on", b.getAttribute("data-scheme")===cur);
-  });
 }
 /* save() is defined up near KEY — quota-aware, trims oldest progress photos when storage is full */
 /* fingerprint of the profile inputs that feed calcMaintenance — if these changed since
@@ -5525,7 +5376,7 @@ function suggestedMilestone(){
   if(dir===0) return null;
   const maint = S.goals.maintenance>0 ? S.goals.maintenance : 0;
   const gap = goalTotal()-maint; /* kcal/day: surplus (+) or deficit (−) */
-  const MODE_LABEL = {lean:"Lean Bulk", bulk:"Bulk", aggro:"Aggressive Bulk", maintain:"Maintain", custom:"Custom"};
+  const MODE_LABEL = {lean:"Lean Bulk", bulk:"Bulk", maintain:"Maintain", custom:"Custom"};
   let lbWk, basis;
   if(dir>0){
     if(gap>0){ lbWk = gap*7/3500; basis = "surplus"; }
@@ -6041,9 +5892,6 @@ document.getElementById("waterInfo").onclick = ()=>openInfo("waterinfo");
 document.getElementById("alcInfo").onclick = ()=>openInfo("alcinfo");
 document.getElementById("vapeInfo").onclick = ()=>openInfo("vapeinfo");
 document.getElementById("nutrInfo").onclick = ()=>openInfo("nutrients");
-document.getElementById("carbInfo").onclick = (e)=>{ e.stopPropagation(); openInfo("macroCarbs"); };
-document.getElementById("protInfo").onclick = (e)=>{ e.stopPropagation(); openInfo("macroProtein"); };
-document.getElementById("fatInfo").onclick = (e)=>{ e.stopPropagation(); openInfo("macroFat"); };
 document.getElementById("bmiInfo").onclick = ()=>openInfo("bmi");
 document.getElementById("calCheckInfo").onclick = ()=>openInfo("calcheck");
 document.getElementById("weightAdd").onclick = ()=>{
@@ -6692,27 +6540,11 @@ function infoContent(k){
   if(k==="calorie") return {t:"Calorie goal", b:
     `<div class="irow"><b>Lean Bulk (+10% over maintenance):</b> a 2023 trial (Helms) found bigger surpluses add fat, not extra muscle — target 0.25–0.5% body weight/week.</div>
      <div class="irow"><b>Bulk (+15% over maintenance):</b> faster scale gains, but much of the extra is fat — target 0.35–0.7% body weight/week.</div>
-     <div class="irow"><b>Aggressive Bulk (+20% over maintenance):</b> the top of the supported range — scale moves fastest, but expect noticeably more fat gain. Best for short pushes when you're behind, not as a permanent setting.</div>
      <div class="irow"><b>Maintain (+0%):</b> eat at maintenance to hold your weight steady.</div>
      <div class="irow">Adjusting the slider changes your surplus on top of maintenance. Surplus presets are % of maintenance — research supports <b>5–20%</b> for lean gains.</div>`};
   if(k==="macros") return {t:"Macros", b:
     `<div class="irow"><b>Protein:</b> muscle gains top out near <b>1.6 g/kg/day</b> (Morton 2018 meta-analysis); up to <b>2.2 g/kg</b> (1 g/lb) is the supported ceiling. No per-meal maximum — large protein meals are still used (Trommelen 2023); spread 0.3–0.4 g/kg across 3–5 meals.</div>
      <div class="irow"><b>Auto:</b> protein 2.2 g/kg of body weight, fat 25% of your calorie goal, carbs fill the rest — re-derived every time your goal changes. Typing a number switches to manual; tap Auto to re-sync.</div>`};
-  if(k==="macroCarbs") return {t:"Carbs — what they do", b:
-    `<div class="irow"><b>What carbs do:</b> your body's preferred fuel, especially for training. They refill muscle glycogen — eating enough keeps protein free to build muscle instead of being burned as energy.</div>
-     <div class="irow"><b>Low (well under target):</b> flat workouts, early fatigue, slower recovery. You miss the training fuel that makes a bulk work.</div>
-     <div class="irow"><b>Mid (near target):</b> fueled training, better pumps, protein spared for muscle — this is the sweet spot.</div>
-     <div class="irow"><b>Max / over:</b> once glycogen is full, the extra mostly stores as fat. One giant carb load also spikes blood sugar and can leave you sleepy and hungry again not long after.</div>`};
-  if(k==="macroProtein") return {t:"Protein — what it does", b:
-    `<div class="irow"><b>What protein does:</b> builds and repairs muscle. Muscle gains top out near <b>1.6 g/kg/day</b> (Morton 2018 meta-analysis); up to <b>2.2 g/kg</b> (1 g/lb) is the supported ceiling.</div>
-     <div class="irow"><b>Low (well under target):</b> slower recovery, weaker training progress, and on a cut you risk losing muscle. You miss the one macro that actually builds tissue.</div>
-     <div class="irow"><b>Mid (near target):</b> recovery and growth covered — spread 0.3–0.4 g/kg across 3–5 meals.</div>
-     <div class="irow"><b>Max / over:</b> beyond ~2.2 g/kg there's no extra muscle benefit — the excess just becomes expensive calories. No per-meal maximum though (Trommelen 2023); big protein meals still count.</div>`};
-  if(k==="macroFat") return {t:"Fat — what it does", b:
-    `<div class="irow"><b>What fat does:</b> keeps hormones running (your body needs dietary fat to make testosterone), absorbs vitamins A, D, E and K, and protects joints and skin.</div>
-     <div class="irow"><b>Low (well under target):</b> under ~0.4 g per lb of bodyweight risks hormone dips, low energy, and poor vitamin absorption. Don't take "low fat" to near-zero.</div>
-     <div class="irow"><b>Mid (near target):</b> hormones steady, vitamins absorbed — the quiet foundation the other macros build on.</div>
-     <div class="irow"><b>Max / over:</b> fat is 9 cal/g, so overshooting blows your calorie budget fast and the excess stores as body fat easily. High-fat meals are also the main reflux trigger category.</div>`};
   if(k==="water"){
     const w = waterCalc();
     if(w.unset) return {t:"Water target", b:
@@ -7387,32 +7219,21 @@ function avatarHTML(pr, px){
 }
 function renderProfileStrip(){
   const pr = S.profile || {name:"", img:""};
-  const pa = document.getElementById("pAvatar");
-  if(pa) pa.innerHTML = avatarHTML(pr);
-  const ta = document.getElementById("topAvatar");
-  if(ta) ta.innerHTML = avatarHTML(pr);
-  const pn = document.getElementById("pName");
-  if(pn) pn.textContent = pr.name || "You";
+  document.getElementById("pAvatar").innerHTML = avatarHTML(pr);
+  document.getElementById("pName").textContent = pr.name || "You";
   const pm = document.getElementById("pMedals");
   pm.innerHTML = medalRowHTML(todayStr());
   wireMedals(pm);
   checkMedals();
 }
-const _pa = document.getElementById("pAvatar");
-if(_pa) _pa.onclick = ()=>showView("settings");
+document.getElementById("pAvatar").onclick = ()=>showView("settings");
 function renderProfileCard(){
   const pr = S.profile || {name:"", img:""};
   document.getElementById("sAvatar").innerHTML = avatarHTML(pr);
   const nm = document.getElementById("sName");
   if(document.activeElement!==nm) nm.value = pr.name || "";
-  try{
-    var gm = {lean:"Lean Bulk", bulk:"Bulk", aggro:"Aggressive Bulk", maintain:"Maintain", custom:"Custom"};
-    var sub = document.getElementById("sProfileSub");
-    if(sub) sub.textContent = (gm[(S.goals&&S.goals.mode)]||"Bulk")+" · "+Math.round(goalTotal()).toLocaleString()+" kcal/day";
-  }catch(e){}
   paintScoreWheel();
   renderThemePicker();
-  renderSchemePicker();
   renderPhotoStrip();
 }
 document.getElementById("sAvatar").onclick = ()=>document.getElementById("pPhotoFile").click();
@@ -7695,9 +7516,7 @@ function renderSettings(){
   const mrv=document.getElementById("medalCaseRowVal"); if(mrv) mrv.textContent=Object.keys(medalCase()).length+"/"+MDEF.length;
   const swv=document.getElementById("schedRowVal"); if(swv) swv.textContent=workDaysSummary();
   const srv=document.getElementById("snapRowVal"); if(srv) srv.textContent=listSnapshots().length+" saved";
-  const erv=document.getElementById("energyRowVal"); if(erv) erv.textContent=document.getElementById("energyLabel").textContent;
 }
-document.getElementById("energyRow").onclick = ()=>{ showView("diary"); var c=document.getElementById("energyCard"); if(c){ c.classList.add("open"); } P.energy=1; save(); };
 document.getElementById("schedRow").onclick = ()=>{ wsSel = new Date().getDay(); showView("worksched"); };
 document.getElementById("wschedBack").onclick = ()=>showView("settings");
 document.getElementById("wschedInfo").onclick = ()=>openInfo("schedule");
@@ -7708,13 +7527,7 @@ document.getElementById("snapRow").onclick = ()=>showView("snaps");
 document.getElementById("snapsBack").onclick = ()=>showView("settings");
 document.getElementById("goalRow").onclick = ()=>{ renderGoals(); showView("goals"); };
 document.getElementById("waterRow").onclick = ()=>{ renderGoals(); showView("goals"); openGsec("Water"); };
-const _sBack = document.getElementById("settingsBack"); if(_sBack) _sBack.onclick = ()=>showView("diary");
-document.getElementById("settingsDone").onclick = ()=>showView("diary");
-document.getElementById("sEditName").onclick = ()=>{ var n=document.getElementById("sName"); if(n) n.focus(); };
-/* appearance: dark / light segmented control */
-document.querySelectorAll("#schemeSeg .segbtn").forEach(function(b){
-  b.onclick = ()=>setScheme(b.getAttribute("data-scheme"));
-});
+document.getElementById("settingsBack").onclick = ()=>showView("diary");
 document.getElementById("exportBtn").onclick = ()=>{
   const blob = new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
   const a = document.createElement("a"); a.href=URL.createObjectURL(blob);
@@ -7909,17 +7722,16 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.v)
 /* Progress sub-tabs were removed in 2026.09.22-a: Progress is a single view whose
    weight circle opens the full-screen #wtDetail sheet. */
 document.getElementById("tabFab").onclick = ()=>openSheet(mealForNow());
+document.getElementById("dayPrev").onclick = ()=>{ dayOffset--; renderDiary(); };
 document.getElementById("todayPill").onclick = ()=>{ dayOffset = 0; weekOff = 0; renderDiary(); };
-document.getElementById("topAvatar").onclick = ()=>showView("settings");
+document.getElementById("gearBtn").onclick = ()=>showView("settings");
 document.getElementById("calBtn").onclick = ()=>showView("calendar");
 document.getElementById("calBack").onclick = ()=>showView("diary");
 document.getElementById("analysisLink").onclick = ()=>showView("analysis");
-document.getElementById("metricsEdit").onclick = ()=>{ renderGoals(); showView("goals"); };
 document.getElementById("analysisBack").onclick = ()=>showView("diary");
 function mealForNow(){ const h = new Date().getHours(); return h<11?"breakfast":h<15?"lunch":h<21?"dinner":"snacks"; }
 document.getElementById("trayIco").insertAdjacentHTML("afterbegin", FOOD_ICON);
 applyTheme(themeColor());
-applyScheme("light"); /* dark mode removed 2026.10.04 */
 /* 2026.09.22-g backup seed: on a fresh boot (no saved state), restore Jay's
    exported backup (seed-data.json) before the first render so his data is the
    default — his logs, goals, foods, and weights survive a reinstall or wipe.
@@ -8554,7 +8366,7 @@ function paintPlanCard(){
     return;
   }
   var MEAL_LABEL_L = {breakfast:"Breakfast", lunch:"Lunch", dinner:"Dinner", snacks:"Snacks"};
-  label.textContent = _plan.totCal.toLocaleString()+" of "+Math.round(_plan.goal).toLocaleString()+" · "+Math.round(_plan.totP)+"g protein";
+  label.textContent = _plan.totCal.toLocaleString()+" of "+Math.round(_plan.goal).toLocaleString()+" kcal · "+Math.round(_plan.totP)+"g protein";
   var html = "";
   _plan.openMeals.forEach(function(m){
     var mp = _plan.meals[m];
@@ -8734,7 +8546,7 @@ function renderPlanGoals(){
     + '<text x="38" y="43" text-anchor="middle" font-size="16" font-weight="800" fill="#1c1c22">'+D.score+'%</text></svg>';
   var rows = D.rows.map(function(g){
     return '<div style="margin:10px 0 0"><div style="display:flex;font-size:12.5px;margin-bottom:4px"><span style="font-weight:700">'+g.k+'</span><span style="margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums">'+Math.round(g.proj).toLocaleString()+' / '+Math.round(g.goal).toLocaleString()+' '+g.unit+'</span></div>'
-      + '<div style="height:8px;border-radius:5px;background:var(--track);overflow:hidden"><div style="height:100%;width:'+g.pct+'%;border-radius:5px;background:'+g.col+'"></div></div></div>';
+      + '<div style="height:8px;border-radius:5px;background:#f0f0f5;overflow:hidden"><div style="height:100%;width:'+g.pct+'%;border-radius:5px;background:'+g.col+'"></div></div></div>';
   }).join("");
   body.innerHTML = '<div class="card" style="border-top:3px solid #ff9f43"><div style="display:flex;gap:14px;align-items:center;margin-bottom:4px">'+ring
     + '<div><b style="font-size:15px">Today\u2019s goals</b><div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:3px">Eaten + planned, against your daily targets.</div></div></div>'
