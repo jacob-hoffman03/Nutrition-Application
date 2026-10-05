@@ -690,13 +690,13 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .tab{flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--muted); font-size:10.5px; font-weight:700; border-radius:22px; transition:color .18s ease;}
 .tab svg{width:23px; height:23px;}
 .tab .tpill{display:flex; align-items:center; justify-content:center; width:52px; height:30px; border-radius:99px; transition:background .18s ease;}
-.tab.active{color:#fff; background:none;}
-.tab.active .tpill{background:var(--acc);}
-.tab.active .tpill svg{stroke:#fff;}
+.tab.active{color:#1b1b1f; background:none;}
+.tab.active .tpill{background:#dbeafe;}
+.tab.active .tpill svg{stroke:#1d4ed8;}
 /* ---- UI refresh: Google Health dark theme (2026-10-04) ---- */
 :root{ --bg:#141416; --radius:28px; }
 body{ background:var(--bg); }
-.card{ border:none; border-radius:var(--radius); box-shadow:none; background:var(--card); }
+.card{ border:none; border-radius:var(--radius); box-shadow:0 1px 3px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.03); background:var(--card); }
 .secttl{ font-size:15px; }
 /* purple progress hero */
 .progcard{ background:linear-gradient(135deg,var(--acc) 0%,var(--acc-deep) 100%); color:#fff; padding:18px 16px 14px; overflow:hidden; position:relative; }
@@ -2380,7 +2380,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.04-n";
+const APP_VERSION = "2026.10.04-o";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
