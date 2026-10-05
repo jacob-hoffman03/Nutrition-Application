@@ -518,9 +518,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .seditbadge{position:absolute; right:-3px; bottom:-3px; width:30px; height:30px; border-radius:50%; background:var(--card2); border:2px solid var(--card); display:flex; align-items:center; justify-content:center; color:var(--ink); pointer-events:none;}
 .profilebar{display:flex; justify-content:space-between; align-items:center;}
 .profilebar .tdone{margin-left:auto;}
-/* reference-style: black pills on dark gray page */
-#view-settings{ --bg:#2b2b2e; --card:#1a1a1d; --card2:#1a1a1d; --inset:#232326; background:#2b2b2e; min-height:100%; }
-#view-settings .topbar{ background:rgba(43,43,46,.94); }
 .seditbadge svg{width:14px; height:14px;}
 .schevbtn{width:46px; height:58px; border-radius:23px; background:var(--inset); border:none; color:var(--ink); display:flex; align-items:center; justify-content:center; flex:none; cursor:pointer;}
 .schevbtn svg{width:20px; height:20px;}
@@ -1582,12 +1579,7 @@ body.reordering #progOverview{display:none}
     </button>
     <div class="sspace"></div>
     <div class="card">
-      <div class="flabel" style="margin:2px 0 8px">Theme</div>
-      <div class="segctl" id="schemeSeg" style="margin:0">
-        <button class="segbtn" data-scheme="dark">Dark</button>
-        <button class="segbtn" data-scheme="light">Light</button>
-      </div>
-      <div class="flabel" style="margin:16px 0 8px">Accent color</div>
+      <div class="flabel" style="margin:2px 0 8px">Accent color</div>
       <div class="themerow" id="themeRow"></div>
     </div>
     <div class="sspace"></div>
@@ -2330,7 +2322,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.04-k";
+const APP_VERSION = "2026.10.04-l";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -7868,7 +7860,7 @@ document.getElementById("analysisBack").onclick = ()=>showView("diary");
 function mealForNow(){ const h = new Date().getHours(); return h<11?"breakfast":h<15?"lunch":h<21?"dinner":"snacks"; }
 document.getElementById("trayIco").insertAdjacentHTML("afterbegin", FOOD_ICON);
 applyTheme(themeColor());
-applyScheme(colorScheme());
+applyScheme("light"); /* dark mode removed 2026.10.04 */
 /* 2026.09.22-g backup seed: on a fresh boot (no saved state), restore Jay's
    exported backup (seed-data.json) before the first render so his data is the
    default — his logs, goals, foods, and weights survive a reinstall or wipe.
