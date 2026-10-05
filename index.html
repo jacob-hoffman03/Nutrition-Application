@@ -53,16 +53,16 @@ button{font-family:inherit;}
   backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
   display:flex; align-items:center; justify-content:space-between; padding:calc(20px + env(safe-area-inset-top)) 8px 10px;}
 /* diary header: medals left, title truly centered, actions right */
-.diarybar{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin:0 -14px; padding-left:14px; padding-right:14px; background:linear-gradient(135deg,var(--acc) 0%,var(--acc-deep) 100%); color:#fff;}
+.diarybar{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin:0 -14px; padding-left:14px; padding-right:14px; background:var(--bg); color:var(--ink);}
 .diarybar .medals{justify-self:start; gap:6px;}
-.medalspill{background:rgba(255,255,255,.18); border-radius:99px; padding:6px 12px; display:flex; align-items:center; justify-self:start; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);}
+.medalspill{background:#fff; border:1px solid var(--line); border-radius:99px; padding:8px 14px; display:flex; align-items:center; justify-self:start; box-shadow:0 1px 3px rgba(0,0,0,.06);}
 .medalspill .medals{gap:6px;}
-.medalspill .medal{width:30px; height:30px;}
-.diarybar h1{justify-self:center; color:#fff;}
-.diarybar h1 .ginfo{color:#fff; border-color:rgba(255,255,255,.4);}
+.medalspill .medal{width:28px; height:28px;}
+.diarybar h1{justify-self:center; color:var(--ink); font-size:20px;}
+.diarybar h1 .ginfo{color:var(--muted); border-color:var(--line);}
 .diarybar .ticons{justify-self:end; display:flex; align-items:center; gap:10px;}
-.diarybar .ticons #calBtn{color:#fff;}
-.diarybar .pavatar{box-shadow:0 0 0 3px rgba(255,255,255,.35), 0 0 18px rgba(255,255,255,.25);}
+.diarybar .ticons #calBtn{color:var(--ink);}
+.diarybar .pavatar{box-shadow:0 0 0 3px rgba(91,141,239,.35), 0 0 16px rgba(91,141,239,.3);}
 .topbar .tbtn{background:none; border:none; font-size:26px; line-height:1; color:var(--ink); width:44px; height:36px; display:flex; align-items:center; justify-content:center;}
 .topbar h1{margin:0; font-size:22px; font-weight:800; letter-spacing:-.3px;}
 .topbar .ticons{display:flex; gap:2px;}
@@ -705,6 +705,35 @@ body{ background:var(--bg); }
 .prog-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; position:relative; z-index:1; }
 .prog-label{ font-size:14px; font-weight:700; opacity:.95; }
 .nutrition-title{ font-size:28px; font-weight:800; letter-spacing:-.5px; opacity:1; }
+/* reference-style sections */
+.section-title{font-size:28px; font-weight:800; letter-spacing:-.5px; color:var(--ink); margin:20px 2px 12px;}
+.light-card{ background:#eef2f7 !important; color:#1b1b1f !important; border-radius:28px !important; }
+.light-card .prog-date{ color:#6b7280 !important; }
+.light-card .center .ctitle{ color:#6b7280 !important; }
+.light-card .center b{ color:#111827 !important; }
+.light-card .flagkc{ color:#111827 !important; }
+.light-card .flagsur{ color:#6b7280 !important; }
+.light-card .hwheel .swnum b{ color:#111827 !important; }
+.light-card .hwheel .swnum i{ color:#6b7280 !important; }
+.light-card .prog-pct b{ color:#111827 !important; }
+.light-card .prog-pct span{ color:#6b7280 !important; }
+.light-card .pinlink{ color:#5b8def !important; }
+.light-card .wknav{ color:#6b7280 !important; }
+.light-card .wday .wd{ color:#6b7280 !important; }
+.light-card .wday .wn{ color:#1b1b1f !important; }
+.light-card .wday.istoday .wn{ background:#dbe4f0 !important; color:#1b1b1f !important; }
+.light-card .wday.sel .wn{ background:#5b8def !important; color:#fff !important; }
+.light-card .wday.sel .wd{ color:#1b1b1f !important; }
+.metrics-head{display:flex; align-items:center; justify-content:space-between; margin:20px 2px 12px;}
+.metrics-head .section-title{margin:0;}
+.edit-pill{background:#dbeafe; color:#1d4ed8; border:none; border-radius:99px; padding:8px 16px; font-size:14px; font-weight:700; display:flex; align-items:center; gap:6px; cursor:pointer;}
+.edit-pill svg{width:16px; height:16px;}
+.metric-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0 0 12px;}
+.metric-card{background:#eef2f7; border-radius:28px; padding:18px 16px; min-width:0;}
+.metric-card .m-label{font-size:14px; font-weight:600; color:#374151; margin-bottom:4px;}
+.metric-card .m-value{font-size:32px; font-weight:800; letter-spacing:-1px; color:#111827; font-variant-numeric:tabular-nums;}
+.metric-card .m-value small{font-size:18px; font-weight:700;}
+.metric-card .m-sub{font-size:12px; color:#6b7280; font-weight:600; margin-top:6px;}
 .prog-date{ font-size:12px; opacity:.75; font-weight:600; }
 .prog-main{ display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; z-index:1; }
 .prog-pct b{ font-size:46px; font-weight:800; letter-spacing:-1px; line-height:1; font-variant-numeric:tabular-nums; }
@@ -1064,8 +1093,9 @@ body.reordering #progOverview{display:none}
       <div class="energydots" id="energyDots"></div>
       </div></div>
     </div>
-    <div class="card progcard">
-      <div class="prog-top"><span class="prog-label nutrition-title">Nutrition status</span><span class="prog-date" id="daySub"></span></div>
+    <h2 class="section-title">Nutrition status</h2>
+    <div class="card progcard light-card">
+      <div class="prog-top"><span class="prog-date" id="daySub"></span></div>
       <div class="wknavrow pweek">
         <button class="wknav" id="wkPrev" aria-label="Previous week">‹</button>
         <div class="weekstrip" id="weekStrip"></div>
@@ -1075,21 +1105,21 @@ body.reordering #progOverview{display:none}
       <div class="prog-main">
         <div class="hside">
         <button class="scorewheel hwheel" id="tiredWheelH" aria-label="Fatigue details">
-          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="tiredArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="9"/><circle id="tiredArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
           <span class="swnum"><b id="tiredNumH">–</b><i>fatigue</i></span>
         </button>
         <button class="scorewheel hwheel hwheel-sm" id="bloatWheelH" aria-label="Bloat details">
-          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="bloatArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="9"/><circle id="bloatArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
           <span class="swnum"><b id="bloatNumH">–</b><i>bloat</i></span>
         </button>
         </div>
         <div class="ring" style="width:196px;height:196px">
           <svg width="196" height="196" viewBox="0 0 128 128">
-            <circle cx="64" cy="64" r="56" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="11"/>
-            <circle id="ringMaint" cx="64" cy="64" r="56" fill="none" stroke="#ffffff" stroke-width="11"
+            <circle cx="64" cy="64" r="56" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="11"/>
+            <circle id="ringMaint" cx="64" cy="64" r="56" fill="none" stroke="#5b8def" stroke-width="11"
               stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
-            <circle id="ringSurpTrack" cx="64" cy="64" r="46" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="5"/>
-            <circle id="ringSurp" cx="64" cy="64" r="46" fill="none" stroke="#d5d5e0" stroke-width="5"
+            <circle id="ringSurpTrack" cx="64" cy="64" r="46" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="5"/>
+            <circle id="ringSurp" cx="64" cy="64" r="46" fill="none" stroke="#a0b4e8" stroke-width="5"
               stroke-linecap="round" stroke-dasharray="289.03" stroke-dashoffset="289.03"/>
           </svg>
           <div class="center">
@@ -1100,7 +1130,7 @@ body.reordering #progOverview{display:none}
           </div>
         </div>
         <button class="scorewheel hwheel" id="adhWheelH" aria-label="Adherence details">
-          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="adhArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="9"/><circle id="adhArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
           <span class="swnum"><b id="adhNumH">–</b><i>adherence</i></span>
         </button>
       </div>
@@ -1115,12 +1145,36 @@ body.reordering #progOverview{display:none}
 
     </div>
     <div class="daycost" id="dayCost" style="display:none"></div>
-    <div class="macro3">
-      <div class="mcard"><div class="mlabel">Carbs<button class="ginfo mini" id="carbInfo" aria-label="About carbs">i</button></div><div class="mval"><i id="valCv">0</i><small> / <span id="valCg">0</span>g</small></div><div class="mbar"><i id="barC" style="background:linear-gradient(90deg,#7e7ef2,#a8a8ff)"></i></div></div>
-      <div class="mcard"><div class="mlabel">Protein<button class="ginfo mini" id="protInfo" aria-label="About protein">i</button></div><div class="mval"><i id="valPv">0</i><small> / <span id="valPg">0</span>g</small></div><div class="mbar"><i id="barP" style="background:linear-gradient(90deg,#12cfae,#54e6c4)"></i></div></div>
-      <div class="mcard"><div class="mlabel">Fat<button class="ginfo mini" id="fatInfo" aria-label="About fat">i</button></div><div class="mval"><i id="valFv">0</i><small> / <span id="valFg">0</span>g</small></div><div class="mbar"><i id="barF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></div></div>
+    <div class="metrics-head">
+      <h2 class="section-title">Key metrics</h2>
+      <button class="edit-pill" id="metricsEdit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>Edit</button>
     </div>
-    <div class="fiberbar"><span class="flabel">Fiber</span><div class="mbar"><i id="barFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div><span class="fval"><i id="valFiv">0</i><small> / <span id="valFig">0</span>g</small></span></div>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="m-label">Protein<button class="ginfo mini" id="protInfo" aria-label="About protein">i</button></div>
+        <div class="m-value"><span id="valPv">0</span><small>g</small></div>
+        <div class="m-sub">of <span id="valPg">0</span>g goal</div>
+        <div class="mbar" style="margin-top:10px"><i id="barP" style="background:linear-gradient(90deg,#12cfae,#54e6c4)"></i></div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">Carbs<button class="ginfo mini" id="carbInfo" aria-label="About carbs">i</button></div>
+        <div class="m-value"><span id="valCv">0</span><small>g</small></div>
+        <div class="m-sub">of <span id="valCg">0</span>g goal</div>
+        <div class="mbar" style="margin-top:10px"><i id="barC" style="background:linear-gradient(90deg,#7e7ef2,#a8a8ff)"></i></div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">Fat<button class="ginfo mini" id="fatInfo" aria-label="About fat">i</button></div>
+        <div class="m-value"><span id="valFv">0</span><small>g</small></div>
+        <div class="m-sub">of <span id="valFg">0</span>g goal</div>
+        <div class="mbar" style="margin-top:10px"><i id="barF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">Fiber</div>
+        <div class="m-value"><span id="valFiv">0</span><small>g</small></div>
+        <div class="m-sub">of <span id="valFig">0</span>g goal</div>
+        <div class="mbar" style="margin-top:10px"><i id="barFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div>
+      </div>
+    </div>
     <div class="card mealcard" id="meals"></div>
 
 
@@ -2326,7 +2380,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.04-m";
+const APP_VERSION = "2026.10.04-n";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -7860,6 +7914,7 @@ document.getElementById("topAvatar").onclick = ()=>showView("settings");
 document.getElementById("calBtn").onclick = ()=>showView("calendar");
 document.getElementById("calBack").onclick = ()=>showView("diary");
 document.getElementById("analysisLink").onclick = ()=>showView("analysis");
+document.getElementById("metricsEdit").onclick = ()=>{ renderGoals(); showView("goals"); };
 document.getElementById("analysisBack").onclick = ()=>showView("diary");
 function mealForNow(){ const h = new Date().getHours(); return h<11?"breakfast":h<15?"lunch":h<21?"dinner":"snacks"; }
 document.getElementById("trayIco").insertAdjacentHTML("afterbegin", FOOD_ICON);
