@@ -2104,7 +2104,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.05-c";
+const APP_VERSION = "2026.10.05-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -3123,9 +3123,10 @@ function openCloseSheet(){
     const kk = addDays(k, -i), dd = S.days[kk];
     if(dd && MEALS.some(m=>(dd.meals[m]||[]).length)){ sum += totals(kk).cal; n++; }
   }
-  let hi;
+  let hi, avg = 0;
   if(n>=2 && tCal>0){
-    const avg = Math.round(sum/n), diff = avg - Math.round(tCal);
+    avg = Math.round(sum/n);
+    const diff = avg - Math.round(tCal);
     hi = "Averaging <b>"+avg.toLocaleString()+" kcal</b> over your last "+n+" logged days — "+
       (diff===0 ? "right on" : diff>0 ? "<b>"+diff.toLocaleString()+" over</b>" : "<b>"+(-diff).toLocaleString()+" under</b>")+
       " your "+Math.round(tCal).toLocaleString()+" target.";
@@ -3133,13 +3134,19 @@ function openCloseSheet(){
   const stat = (v,tg)=> v>=tg ? ["Met","met"] : v>=tg*0.9 ? ["Close","close"] : ["Short",""];
   const cs = tCal>0 ? stat(t.cal, tCal) : ["—",""];
   const ps = pT>0 ? stat(t.p, pT) : ["—",""];
-  /* 5-week pace projection at today's intake */
+  /* 5-week pace: your measured weight trend first, else your recent eating average.
+     Never today's partial log — an empty morning once projected −25 lb. */
   let proj = "";
-  if(mCal>0){
-    const sur = Math.round(t.cal - mCal), lb5 = sur*35/3500;
-    const sgn = sur>=0 ? "+" : "−";
-    proj = '<div class="closerow"><span>5-week pace at today\'s intake</span><b>'+sgn+Math.abs(r1(lb5))+' lb</b></div>'+
-      '<div class="rangenote">If every day looked like today ('+sgn+Math.abs(sur).toLocaleString()+' vs maintenance), that\'s about '+sgn+Math.abs(r1(lb5))+' lb in 5 weeks.</div>';
+  const ad = g.adaptive;
+  if(ad && ad.ok && !ad.stale && typeof ad.rateWk === "number"){
+    const lb5 = ad.rateWk*5, sgn = lb5>=0 ? "+" : "−";
+    const disp = Math.abs(lb5) < 0.05 ? "~0" : sgn+Math.abs(r1(lb5));
+    proj = '<div class="closerow"><span>5-week pace (your trend)</span><b>'+disp+' lb</b></div>'+
+      '<div class="rangenote">From your actual weigh-ins — you\'re running '+sgn+Math.abs(r1(ad.rateWk))+' lb/week lately.</div>';
+  } else if(mCal>0 && n>=2){
+    const sur = Math.round(avg - mCal), lb5 = sur*35/3500, sgn = sur>=0 ? "+" : "−";
+    proj = '<div class="closerow"><span>5-week pace (recent eating)</span><b>'+sgn+Math.abs(r1(lb5))+' lb</b></div>'+
+      '<div class="rangenote">If every day looked like your recent average ('+sgn+Math.abs(sur).toLocaleString()+' vs maintenance), that\'s about '+sgn+Math.abs(r1(lb5))+' lb in 5 weeks.</div>';
   }
   document.getElementById("closeBody").innerHTML =
     '<div class="closehi">'+hi+'</div>'+
