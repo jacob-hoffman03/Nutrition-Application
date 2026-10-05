@@ -42,6 +42,8 @@ button{font-family:inherit;}
 .topbar .ticons{display:flex; gap:2px;}
 .topbar .ticons button{background:none; border:none; width:42px; height:36px; color:var(--ink); display:flex; align-items:center; justify-content:center;}
 .topbar .ticons svg{width:23px; height:23px;}
+/* 2026-10-05: diary topbar removed per Jay */
+#view-diary .topbar{display:none;}
 /* section titles like "❚ Calories" */
 .secttl{display:flex; align-items:center; gap:8px; font-size:21px; font-weight:800; margin:20px 2px 12px; letter-spacing:-.3px;}
 .secttl::before{content:""; width:5px; height:20px; border-radius:3px; background:var(--acc);}
@@ -2104,7 +2106,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.05-f";
+const APP_VERSION = "2026.10.05-g";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
