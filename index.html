@@ -185,6 +185,7 @@ button{font-family:inherit;}
   font-size:12.5px; font-weight:800; font-style:italic; background:none; display:flex; align-items:center;
   justify-content:center; cursor:pointer; line-height:1; padding:0; font-family:Georgia, serif;}
 .ginfo:active{background:#f0f0f5;}
+.ginfo.mini{width:15px; height:15px; font-size:9.5px; border-width:1.2px;}
 .topbar h1{display:inline-flex; align-items:center; gap:8px;}
 /* information index (2026.09.24): categorized info entries in Settings */
 .icatrow{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:4px;}
@@ -704,7 +705,7 @@ body{ background:var(--bg); }
 /* macro cards */
 .macro3{ display:flex; gap:10px; margin-top:12px; }
 .mcard{ flex:1; min-width:0; background:#fff; border-radius:18px; padding:12px 10px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
-.mcard .mlabel{ font-size:12px; color:var(--muted); font-weight:700; white-space:nowrap; }
+.mcard .mlabel{ font-size:12px; color:var(--muted); font-weight:700; white-space:nowrap; display:flex; align-items:center; gap:5px; }
 .mcard .mval{ font-size:14px; font-weight:800; margin:5px 0 8px; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .mcard .mval i{ font-style:normal; }
 .mcard .mval small{ font-weight:600; color:var(--muted); font-size:11px; }
@@ -1063,9 +1064,9 @@ body.reordering #progOverview{display:none}
     </div>
     <div class="daycost" id="dayCost" style="display:none"></div>
     <div class="macro3">
-      <div class="mcard"><div class="mlabel">Carbs</div><div class="mval"><i id="valCv">0</i><small> / <span id="valCg">0</span>g</small></div><div class="mbar"><i id="barC" style="background:linear-gradient(90deg,#7e7ef2,#a8a8ff)"></i></div></div>
-      <div class="mcard"><div class="mlabel">Protein</div><div class="mval"><i id="valPv">0</i><small> / <span id="valPg">0</span>g</small></div><div class="mbar"><i id="barP" style="background:linear-gradient(90deg,#12cfae,#54e6c4)"></i></div></div>
-      <div class="mcard"><div class="mlabel">Fat</div><div class="mval"><i id="valFv">0</i><small> / <span id="valFg">0</span>g</small></div><div class="mbar"><i id="barF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></div></div>
+      <div class="mcard"><div class="mlabel">Carbs<button class="ginfo mini" id="carbInfo" aria-label="About carbs">i</button></div><div class="mval"><i id="valCv">0</i><small> / <span id="valCg">0</span>g</small></div><div class="mbar"><i id="barC" style="background:linear-gradient(90deg,#7e7ef2,#a8a8ff)"></i></div></div>
+      <div class="mcard"><div class="mlabel">Protein<button class="ginfo mini" id="protInfo" aria-label="About protein">i</button></div><div class="mval"><i id="valPv">0</i><small> / <span id="valPg">0</span>g</small></div><div class="mbar"><i id="barP" style="background:linear-gradient(90deg,#12cfae,#54e6c4)"></i></div></div>
+      <div class="mcard"><div class="mlabel">Fat<button class="ginfo mini" id="fatInfo" aria-label="About fat">i</button></div><div class="mval"><i id="valFv">0</i><small> / <span id="valFg">0</span>g</small></div><div class="mbar"><i id="barF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></div></div>
     </div>
     <div class="fiberbar"><span class="flabel">Fiber</span><div class="mbar"><i id="barFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div><span class="fval"><i id="valFiv">0</i><small> / <span id="valFig">0</span>g</small></span></div>
     <div class="card mealcard" id="meals"></div>
@@ -1230,6 +1231,7 @@ body.reordering #progOverview{display:none}
       <div class="chips" id="goalMode">
         <button class="chip" data-m="lean" data-pct="10">Lean Bulk</button>
         <button class="chip" data-m="bulk" data-pct="15">Bulk</button>
+        <button class="chip" data-m="aggro" data-pct="20">Aggressive Bulk</button>
         <button class="chip" data-m="maintain" data-pct="0">Maintain</button>
       </div>
       <input type="range" id="goalSlider" min="1500" max="6000" step="25" value="3000">
@@ -2259,7 +2261,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.02-r";
+const APP_VERSION = "2026.10.04-a";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -5376,7 +5378,7 @@ function suggestedMilestone(){
   if(dir===0) return null;
   const maint = S.goals.maintenance>0 ? S.goals.maintenance : 0;
   const gap = goalTotal()-maint; /* kcal/day: surplus (+) or deficit (−) */
-  const MODE_LABEL = {lean:"Lean Bulk", bulk:"Bulk", maintain:"Maintain", custom:"Custom"};
+  const MODE_LABEL = {lean:"Lean Bulk", bulk:"Bulk", aggro:"Aggressive Bulk", maintain:"Maintain", custom:"Custom"};
   let lbWk, basis;
   if(dir>0){
     if(gap>0){ lbWk = gap*7/3500; basis = "surplus"; }
@@ -5892,6 +5894,9 @@ document.getElementById("waterInfo").onclick = ()=>openInfo("waterinfo");
 document.getElementById("alcInfo").onclick = ()=>openInfo("alcinfo");
 document.getElementById("vapeInfo").onclick = ()=>openInfo("vapeinfo");
 document.getElementById("nutrInfo").onclick = ()=>openInfo("nutrients");
+document.getElementById("carbInfo").onclick = (e)=>{ e.stopPropagation(); openInfo("macroCarbs"); };
+document.getElementById("protInfo").onclick = (e)=>{ e.stopPropagation(); openInfo("macroProtein"); };
+document.getElementById("fatInfo").onclick = (e)=>{ e.stopPropagation(); openInfo("macroFat"); };
 document.getElementById("bmiInfo").onclick = ()=>openInfo("bmi");
 document.getElementById("calCheckInfo").onclick = ()=>openInfo("calcheck");
 document.getElementById("weightAdd").onclick = ()=>{
@@ -6540,11 +6545,27 @@ function infoContent(k){
   if(k==="calorie") return {t:"Calorie goal", b:
     `<div class="irow"><b>Lean Bulk (+10% over maintenance):</b> a 2023 trial (Helms) found bigger surpluses add fat, not extra muscle — target 0.25–0.5% body weight/week.</div>
      <div class="irow"><b>Bulk (+15% over maintenance):</b> faster scale gains, but much of the extra is fat — target 0.35–0.7% body weight/week.</div>
+     <div class="irow"><b>Aggressive Bulk (+20% over maintenance):</b> the top of the supported range — scale moves fastest, but expect noticeably more fat gain. Best for short pushes when you're behind, not as a permanent setting.</div>
      <div class="irow"><b>Maintain (+0%):</b> eat at maintenance to hold your weight steady.</div>
      <div class="irow">Adjusting the slider changes your surplus on top of maintenance. Surplus presets are % of maintenance — research supports <b>5–20%</b> for lean gains.</div>`};
   if(k==="macros") return {t:"Macros", b:
     `<div class="irow"><b>Protein:</b> muscle gains top out near <b>1.6 g/kg/day</b> (Morton 2018 meta-analysis); up to <b>2.2 g/kg</b> (1 g/lb) is the supported ceiling. No per-meal maximum — large protein meals are still used (Trommelen 2023); spread 0.3–0.4 g/kg across 3–5 meals.</div>
      <div class="irow"><b>Auto:</b> protein 2.2 g/kg of body weight, fat 25% of your calorie goal, carbs fill the rest — re-derived every time your goal changes. Typing a number switches to manual; tap Auto to re-sync.</div>`};
+  if(k==="macroCarbs") return {t:"Carbs — what they do", b:
+    `<div class="irow"><b>What carbs do:</b> your body's preferred fuel, especially for training. They refill muscle glycogen — eating enough keeps protein free to build muscle instead of being burned as energy.</div>
+     <div class="irow"><b>Low (well under target):</b> flat workouts, early fatigue, slower recovery. You miss the training fuel that makes a bulk work.</div>
+     <div class="irow"><b>Mid (near target):</b> fueled training, better pumps, protein spared for muscle — this is the sweet spot.</div>
+     <div class="irow"><b>Max / over:</b> once glycogen is full, the extra mostly stores as fat. One giant carb load also spikes blood sugar and can leave you sleepy and hungry again not long after.</div>`};
+  if(k==="macroProtein") return {t:"Protein — what it does", b:
+    `<div class="irow"><b>What protein does:</b> builds and repairs muscle. Muscle gains top out near <b>1.6 g/kg/day</b> (Morton 2018 meta-analysis); up to <b>2.2 g/kg</b> (1 g/lb) is the supported ceiling.</div>
+     <div class="irow"><b>Low (well under target):</b> slower recovery, weaker training progress, and on a cut you risk losing muscle. You miss the one macro that actually builds tissue.</div>
+     <div class="irow"><b>Mid (near target):</b> recovery and growth covered — spread 0.3–0.4 g/kg across 3–5 meals.</div>
+     <div class="irow"><b>Max / over:</b> beyond ~2.2 g/kg there's no extra muscle benefit — the excess just becomes expensive calories. No per-meal maximum though (Trommelen 2023); big protein meals still count.</div>`};
+  if(k==="macroFat") return {t:"Fat — what it does", b:
+    `<div class="irow"><b>What fat does:</b> keeps hormones running (your body needs dietary fat to make testosterone), absorbs vitamins A, D, E and K, and protects joints and skin.</div>
+     <div class="irow"><b>Low (well under target):</b> under ~0.4 g per lb of bodyweight risks hormone dips, low energy, and poor vitamin absorption. Don't take "low fat" to near-zero.</div>
+     <div class="irow"><b>Mid (near target):</b> hormones steady, vitamins absorbed — the quiet foundation the other macros build on.</div>
+     <div class="irow"><b>Max / over:</b> fat is 9 cal/g, so overshooting blows your calorie budget fast and the excess stores as body fat easily. High-fat meals are also the main reflux trigger category.</div>`};
   if(k==="water"){
     const w = waterCalc();
     if(w.unset) return {t:"Water target", b:
