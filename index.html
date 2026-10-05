@@ -22,7 +22,7 @@
   --warnbg:#2b2118; --warnbd:#6b4a1f; --warntx:#f5b45e;
   --okbg:#1a2e22; --oktx:#4ade80;
   --radius:28px; --tabbar-h:70px;
- --ringtrack:rgba(255,255,255,.12);}
+}
 /* light theme — same design, light surfaces */
 html[data-theme="light"]{
   --acc:#5b5bf0; --acc-rgb:91,91,240; --acc-deep:#4a4ad6; --acc-soft:#eceeff;
@@ -33,7 +33,7 @@ html[data-theme="light"]{
   --barbg:rgba(255,255,255,.86); --topbg:rgba(255,255,255,.94);
   --warnbg:#fff7ed; --warnbd:#fed7aa; --warntx:#9a3412;
   --okbg:#e8f7ee; --oktx:#1d7a3a;
- --ringtrack:rgba(0,0,0,.08);}
+}
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0; padding:0; height:100%;}
 body{
@@ -442,14 +442,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .rangelabels{display:flex; justify-content:space-between; font-size:13px; color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums;}
 .rangenote{font-size:12px; color:var(--muted); margin-top:8px;}
 .linkbtn{background:none; border:none; padding:0; color:var(--acc); font:inherit; font-weight:700; cursor:pointer; text-decoration:underline;}
-.macro2{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:12px 0 0;}
-.mcard.tile{display:flex; align-items:center; gap:12px; padding:14px; flex-wrap:wrap;}
-.tile-ic{width:42px; height:42px; border-radius:50%; background:var(--inset); display:flex; align-items:center; justify-content:center; flex:none;}
-.tile-ic svg{width:22px; height:22px;}
-.tile-tx{display:flex; flex-direction:column; gap:2px; min-width:0;}
-.tile-tx .mlabel{font-size:11.5px;}
-.tile-tx .mval{font-size:22px;}
-.mcard.tile .mbar{flex:1 1 100%; margin-top:2px;}
 .macro3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:12px;}
 .mslider{width:100%;margin:8px 0 2px;accent-color:var(--acc);}
 .daycost{text-align:center; font-size:12.5px; color:var(--muted); font-weight:600; margin:-2px 0 10px;}
@@ -696,34 +688,20 @@ body{ background:var(--bg); }
 .card{ border:none; border-radius:var(--radius); box-shadow:none; background:var(--card); }
 .secttl{ font-size:15px; }
 /* purple progress hero */
-.progcard{ background:var(--card); color:var(--ink); padding:18px 16px 14px; overflow:hidden; position:relative; }
+.progcard{ background:linear-gradient(135deg,var(--acc) 0%,var(--acc-deep) 100%); color:#fff; padding:18px 16px 14px; overflow:hidden; position:relative; }
+.progcard::after{ content:""; position:absolute; width:230px; height:230px; border-radius:50%; background:rgba(255,255,255,.07); top:-80px; right:-60px; pointer-events:none; }
 
 .prog-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; position:relative; z-index:1; }
 .prog-label{ font-size:14px; font-weight:700; opacity:.95; }
 .prog-date{ font-size:12px; opacity:.75; font-weight:600; }
 .prog-main{ display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; z-index:1; }
-/* ===== reference-style hero: two ring cards ===== */
-.herorings{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:8px 0 4px; position:relative; z-index:1;}
-.hrcard{background:var(--card2); border-radius:24px; padding:14px 8px 12px; display:flex; flex-direction:column; align-items:center; text-align:center; min-width:0;}
-.rc-title{font-size:13px; font-weight:700; color:var(--muted); margin-bottom:6px; display:flex; align-items:center; gap:6px;}
-.bigring{position:relative; width:148px; height:148px; max-width:100%;}
-.bigring svg{width:100%; height:100%; display:block;}
-.rc-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;}
-.rc-center b{font-size:31px; font-weight:800; letter-spacing:-1px; font-variant-numeric:tabular-nums; line-height:1; color:var(--ink);}
-.rc-center b small{font-size:15px; font-weight:700; margin-left:1px;}
-.rc-of{font-size:11.5px; color:var(--muted); font-weight:600; margin-top:5px;}
-.rc-flag{font-size:11px; color:var(--muted); font-weight:700; margin-top:8px; display:flex; gap:6px; align-items:center; min-height:15px;}
-.rc-flag .on{color:var(--green);}
-.rc-dot{opacity:.5;}
-.satrow{display:flex; justify-content:center; gap:20px; margin:12px 0 6px; position:relative; z-index:1;}
-@media (max-width:360px){ .bigring{width:128px; height:128px;} .rc-center b{font-size:26px;} }
 .prog-pct b{ font-size:46px; font-weight:800; letter-spacing:-1px; line-height:1; font-variant-numeric:tabular-nums; }
 .prog-pct span{ display:block; font-size:12.5px; opacity:.8; font-weight:600; margin-top:6px; }
 /* hero mini wheels flanking the calorie ring */
 .hwheel{ width:56px; height:56px; }
 .hwheel svg{ width:56px; height:56px; }
-.hwheel .swnum b{ color:var(--ink); font-size:14px; }
-.hwheel .swnum i{ color:var(--muted); font-size:7px; }
+.hwheel .swnum b{ color:#fff; font-size:14px; }
+.hwheel .swnum i{ color:rgba(255,255,255,.72); font-size:7px; }
 /* stacked mini column: fatigue wheel with tiny bloat wheel beneath, centered */
 .hside{ display:flex; flex-direction:column; align-items:center; gap:8px; }
 .hwheel.hwheel-sm{ width:40px; height:40px; }
@@ -743,23 +721,23 @@ body{ background:var(--bg); }
 .progcard .ring .center .ctitle{ color:rgba(255,255,255,.78); }
 .progcard .ring .center{ gap:3px; }
 .progcard .ring .center b{ color:#fff; }
-.progcard .flagkc{ color:var(--ink) !important; }
+.progcard .flagkc{ color:#fff !important; }
 .progcard .flagsur{ color:rgba(255,255,255,.72) !important; }
 .progcard .flagsur.on{ color:#2fbf71 !important; } /* +SUR text matches the green surplus ring 2026.09.21-i */
 /* week strip blended into the intake hero */
 .progcard .pweek{ margin:6px 0 2px; position:relative; z-index:1; }
 .progcard .ptodayrow{ display:flex; justify-content:center; margin:0 0 8px; position:relative; z-index:1; }
-.progcard .wknav{ color:var(--muted); }
-.progcard .wday .wd{ color:var(--muted); }
-.progcard .wday .wn{ color:var(--ink); }
-.progcard .wday.istoday .wn{ background:var(--acc-soft); color:var(--acc); }
-.progcard .wday.sel .wn{ background:var(--acc); color:#fff; }
-.progcard .wday.sel .wd{ color:var(--ink); }
+.progcard .wknav{ color:rgba(255,255,255,.85); }
+.progcard .wday .wd{ color:rgba(255,255,255,.62); }
+.progcard .wday .wn{ color:#fff; }
+.progcard .wday.istoday .wn{ background:rgba(255,255,255,.28); }
+.progcard .wday.sel .wn{ background:#fff; color:var(--acc); }
+.progcard .wday.sel .wd{ color:#fff; }
 .progcard .wday:disabled{ opacity:.45; }
-.progcard .wday .wdot.log{ background:var(--muted); }
-.progcard .wday .wdot.now{ background:var(--acc); }
-.progcard .todaypill{ background:var(--inset); color:var(--ink); }
-.progcard .pinlink{ color:var(--acc); margin:12px auto 2px; position:relative; z-index:1; }
+.progcard .wday .wdot.log{ background:rgba(255,255,255,.55); }
+.progcard .wday .wdot.now{ background:#fff; }
+.progcard .todaypill{ background:rgba(255,255,255,.16); color:#fff; }
+.progcard .pinlink{ color:#fff; margin:12px auto 2px; position:relative; z-index:1; }
 /* keep the hero ring fitting on narrow phones */
 .progcard .ring svg{ width:100%; height:100%; }
 @media (max-width:360px){
@@ -1082,52 +1060,35 @@ body.reordering #progOverview{display:none}
         <button class="wknav" id="wkNext" aria-label="Next week">›</button>
       </div>
       <div class="ptodayrow" style="display:none"><button id="todayPill" class="todaypill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg><span>Today</span></button></div>
-      <div class="herorings">
-        <div class="hrcard">
-          <div class="rc-title">Calories</div>
-          <div class="bigring">
-            <svg width="148" height="148" viewBox="0 0 128 128">
-              <circle cx="64" cy="64" r="56" fill="none" stroke="var(--ringtrack)" stroke-width="11"/>
-              <circle id="ringMaint" cx="64" cy="64" r="56" fill="none" stroke="#2dd4bf" stroke-width="11"
-                stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
-              <circle id="ringSurpTrack" cx="64" cy="64" r="46" fill="none" stroke="var(--ringtrack)" stroke-width="5"/>
-              <circle id="ringSurp" cx="64" cy="64" r="46" fill="none" stroke="#d5d5e0" stroke-width="5"
-                stroke-linecap="round" stroke-dasharray="289.03" stroke-dashoffset="289.03"/>
-            </svg>
-            <div class="rc-center">
-              <b id="calEaten">0</b>
-              <span class="rc-of">of <span id="rcGoal">0</span> kcal</span>
-            </div>
-          </div>
-          <div class="rc-flag"><span class="flagkc" id="flagKcal"></span><span class="rc-dot">·</span><span class="flagsur" id="flagSur"></span></div>
-        </div>
-        <div class="hrcard">
-          <div class="rc-title">Protein<button class="ginfo mini" id="protInfo" aria-label="About protein">i</button></div>
-          <div class="bigring">
-            <svg width="148" height="148" viewBox="0 0 128 128">
-              <circle cx="64" cy="64" r="56" fill="none" stroke="var(--ringtrack)" stroke-width="11"/>
-              <circle id="ringProt" cx="64" cy="64" r="56" fill="none" stroke="#2dd4bf" stroke-width="11"
-                stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
-            </svg>
-            <div class="rc-center">
-              <b><span id="valPv">0</span><small>g</small></b>
-              <span class="rc-of">of <span id="valPg">0</span>g</span>
-            </div>
-          </div>
-          <div class="rc-flag" id="protFlag"></div>
-        </div>
-      </div>
-      <div class="satrow">
+      <div class="prog-main">
+        <div class="hside">
         <button class="scorewheel hwheel" id="tiredWheelH" aria-label="Fatigue details">
-          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="var(--ringtrack)" stroke-width="9"/><circle id="tiredArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="tiredArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
           <span class="swnum"><b id="tiredNumH">–</b><i>fatigue</i></span>
         </button>
         <button class="scorewheel hwheel hwheel-sm" id="bloatWheelH" aria-label="Bloat details">
-          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="var(--ringtrack)" stroke-width="9"/><circle id="bloatArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="bloatArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
           <span class="swnum"><b id="bloatNumH">–</b><i>bloat</i></span>
         </button>
+        </div>
+        <div class="ring" style="width:196px;height:196px">
+          <svg width="196" height="196" viewBox="0 0 128 128">
+            <circle cx="64" cy="64" r="56" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="11"/>
+            <circle id="ringMaint" cx="64" cy="64" r="56" fill="none" stroke="#ffffff" stroke-width="11"
+              stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
+            <circle id="ringSurpTrack" cx="64" cy="64" r="46" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="5"/>
+            <circle id="ringSurp" cx="64" cy="64" r="46" fill="none" stroke="#d5d5e0" stroke-width="5"
+              stroke-linecap="round" stroke-dasharray="289.03" stroke-dashoffset="289.03"/>
+          </svg>
+          <div class="center">
+            <span class="ctitle">Eaten</span>
+            <b id="calEaten">0</b>
+            <span class="flagkc" id="flagKcal"></span>
+            <span class="flagsur" id="flagSur"></span>
+          </div>
+        </div>
         <button class="scorewheel hwheel" id="adhWheelH" aria-label="Adherence details">
-          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="var(--ringtrack)" stroke-width="9"/><circle id="adhArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+          <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle id="adhArcH" cx="42" cy="42" r="36" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
           <span class="swnum"><b id="adhNumH">–</b><i>adherence</i></span>
         </button>
       </div>
@@ -1142,17 +1103,10 @@ body.reordering #progOverview{display:none}
 
     </div>
     <div class="daycost" id="dayCost" style="display:none"></div>
-    <div class="macro2">
-      <div class="mcard tile">
-        <span class="tile-ic" style="color:#a8a8ff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18"/><path d="M12 8c-2.5 0-4.5-1.6-4.5-3.5C9.5 3.6 12 5 12 5s2.5-1.4 4.5-.5C18.5 6.4 16.5 8 14 8"/><path d="M12 13c-2.5 0-4.5-1.6-4.5-3.5C9.5 8.6 12 10 12 10s2.5-1.4 4.5-.5c2 1.9 0 3.5-2.5 3.5"/><path d="M12 18c-2.5 0-4.5-1.6-4.5-3.5 2-0.9 4.5.5 4.5.5s2.5-1.4 4.5-.5c2 1.9 0 3.5-2.5 3.5"/></svg></span>
-        <span class="tile-tx"><span class="mlabel">Carbs<button class="ginfo mini" id="carbInfo" aria-label="About carbs">i</button></span><span class="mval"><i id="valCv">0</i><small>/<span id="valCg">0</span>g</small></span></span>
-        <span class="mbar"><i id="barC" style="background:linear-gradient(90deg,#7e7ef2,#a8a8ff)"></i></span>
-      </div>
-      <div class="mcard tile">
-        <span class="tile-ic" style="color:#ff9eb0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5c3.2 4.3 5.8 7.7 5.8 10.7a5.8 5.8 0 1 1-11.6 0C6.2 11.2 8.8 7.8 12 3.5z"/></svg></span>
-        <span class="tile-tx"><span class="mlabel">Fat<button class="ginfo mini" id="fatInfo" aria-label="About fat">i</button></span><span class="mval"><i id="valFv">0</i><small>/<span id="valFg">0</span>g</small></span></span>
-        <span class="mbar"><i id="barF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></span>
-      </div>
+    <div class="macro3">
+      <div class="mcard"><div class="mlabel">Carbs<button class="ginfo mini" id="carbInfo" aria-label="About carbs">i</button></div><div class="mval"><i id="valCv">0</i><small> / <span id="valCg">0</span>g</small></div><div class="mbar"><i id="barC" style="background:linear-gradient(90deg,#7e7ef2,#a8a8ff)"></i></div></div>
+      <div class="mcard"><div class="mlabel">Protein<button class="ginfo mini" id="protInfo" aria-label="About protein">i</button></div><div class="mval"><i id="valPv">0</i><small> / <span id="valPg">0</span>g</small></div><div class="mbar"><i id="barP" style="background:linear-gradient(90deg,#12cfae,#54e6c4)"></i></div></div>
+      <div class="mcard"><div class="mlabel">Fat<button class="ginfo mini" id="fatInfo" aria-label="About fat">i</button></div><div class="mval"><i id="valFv">0</i><small> / <span id="valFg">0</span>g</small></div><div class="mbar"><i id="barF" style="background:linear-gradient(90deg,#fb6f84,#ff9eb0)"></i></div></div>
     </div>
     <div class="fiberbar"><span class="flabel">Fiber</span><div class="mbar"><i id="barFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div><span class="fval"><i id="valFiv">0</i><small> / <span id="valFig">0</span>g</small></span></div>
     <div class="card mealcard" id="meals"></div>
@@ -2361,7 +2315,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.04-g";
+const APP_VERSION = "2026.10.04-h";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -3390,14 +3344,6 @@ function renderDiary(){
   const left = tCal - t.cal, eCal = t.cal;
   $("progPct").textContent = (tCal>0 ? Math.round(t.cal/tCal*100) : 0)+"%";
   ringPaint(eCal,mCal,tCal);
-  $("rcGoal").textContent = Math.round(tCal).toLocaleString();
-  /* protein hero ring */
-  (function(){
-    var C = 2*Math.PI*56, el = $("ringProt");
-    if(el){ el.style.strokeDasharray = C; el.style.strokeDashoffset = C*(1-(g.protein>0 ? Math.min(t.p/g.protein,1) : 0)); }
-    var pf = $("protFlag"), rem = g.protein - t.p;
-    if(pf){ pf.textContent = rem > 0.5 ? Math.round(rem)+"g to go" : "Goal hit"; pf.classList.toggle("on", rem <= 0.5); }
-  })();
   $("flagKcal").textContent = left >= 0 ? Math.round(left).toLocaleString()+" kcal" : Math.round(-left).toLocaleString()+" over";
   const fsur = $("flagSur");
   if(eCal > mCal){ fsur.textContent = "+"+Math.round(eCal-mCal).toLocaleString()+" SUR"; fsur.classList.add("on"); }
@@ -3413,6 +3359,7 @@ function renderDiary(){
   fill.style.background = st.grad;
   $("spMark").style.left = "calc("+(st.tCal>0 ? st.mCal/st.tCal*100 : 0)+"% - 1px)";
   $("barC").style.width = barW(t.c,g.carbs);
+  $("barP").style.width = barW(t.p,g.protein);
   $("barF").style.width = barW(t.f,g.fat);
   const fib = fiberTotal(k);
   $("barFi").style.width = barW(fib,fiberTarget()); $("valFig").textContent = r1(fiberTarget());
