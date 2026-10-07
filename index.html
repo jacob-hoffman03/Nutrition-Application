@@ -174,7 +174,7 @@ button{font-family:inherit;}
 .alcring{flex:none; width:52px; height:52px;}
 /* streaks (2026.10.06-a): one panel, two rows, tappable color-coded circles */
 .streakcard{padding:14px 16px 8px;}
-.shead{display:flex;align-items:center;margin-bottom:2px;}
+.streakhead{display:flex;align-items:center;margin-bottom:2px;}
 .shead b{font-size:17px;}
 .streakrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);}
 .streaktxt{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0;}
@@ -199,17 +199,17 @@ button{font-family:inherit;}
 .streakttl{display:flex;align-items:center;gap:6px;}
 .ginfo.sm{width:17px;height:17px;font-size:10.5px;border-width:1.4px;}
 .phaselbl{font-size:12px;font-weight:700;line-height:1.3;}
-.prow{display:flex;gap:10px;align-items:flex-start;}
+.phrow{display:flex;gap:10px;align-items:flex-start;}
 .pdot{flex:none;width:12px;height:12px;border-radius:50%;margin-top:3px;}
-.prow b{display:block;font-size:14px;}
-.prow span{display:block;font-size:13px;color:var(--muted);margin-top:1px;line-height:1.45;}
+.phrow b{display:block;font-size:14px;}
+.phrow span{display:block;font-size:13px;color:var(--muted);margin-top:1px;line-height:1.45;}
 /* streak date picker (2026.10.06-c) */
 .calhead{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 8px;}
 .calhead b{font-size:16.5px;}
-.calnav{width:38px;height:38px;border-radius:12px;border:1.5px solid var(--line);background:#fff;font-size:22px;color:var(--ink);cursor:pointer;font-family:inherit;line-height:1;}
-.calnav.dis{opacity:.25;pointer-events:none;}
-.calnav:active{transform:scale(.94);}
-.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.skcalnav{width:38px;height:38px;border-radius:12px;border:1.5px solid var(--line);background:#fff;font-size:22px;color:var(--ink);cursor:pointer;font-family:inherit;line-height:1;}
+.skcalnav.dis{opacity:.25;pointer-events:none;}
+.skcalnav:active{transform:scale(.94);}
+.skcalgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
 .calwd{text-align:center;font-size:11.5px;font-weight:800;color:var(--muted);padding:4px 0;}
 .calday{aspect-ratio:1;border:none;background:none;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;min-height:38px;border-radius:50%;padding:0;}
 .calday.today{box-shadow:inset 0 0 0 1.5px var(--acc);}
@@ -1059,7 +1059,7 @@ body.reordering #progOverview{display:none}
     </div>
 
     <div class="card streakcard" id="dcard-streaks">
-      <div class="shead"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><b>Streaks</b><button class="ginfo" id="streakInfo" aria-label="About streaks">i</button></span></div>
+      <div class="streakhead"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><b>Streaks</b><button class="ginfo" id="streakInfo" aria-label="About streaks">i</button></span></div>
       <div class="streakrow">
         <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M10.5 7v13a1.5 1.5 0 0 0 3 0V7"/></svg></span>
         <span class="streaktxt"><span class="streakttl"><b>Nicotine</b><button class="ginfo sm" id="nicPhaseInfo" aria-label="About nicotine phases">i</button></span><span class="wlbl" id="nicDays"></span><span class="phaselbl" id="nicPhase"></span></span>
@@ -1635,8 +1635,8 @@ body.reordering #progOverview{display:none}
     <div class="grab"></div>
     <h2 id="calSheetTitle">Last day you vaped</h2>
     <div class="body">
-      <div class="calhead"><button class="calnav" id="calPrev" aria-label="Previous month">‹</button><b id="calTitle"></b><button class="calnav" id="calNext" aria-label="Next month">›</button></div>
-      <div class="calgrid" id="calGrid"></div>
+      <div class="calhead"><button class="skcalnav" id="calPrev" aria-label="Previous month">‹</button><b id="calTitle"></b><button class="skcalnav" id="calNext" aria-label="Next month">›</button></div>
+      <div class="skcalgrid" id="calGrid"></div>
       <div class="calfoot"><button class="calbtn ghost" id="calCancel">Cancel</button><button class="calbtn" id="calSet">Set date</button></div>
     </div>
   </div>
@@ -2157,7 +2157,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.06-c";
+const APP_VERSION = "2026.10.06-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6266,15 +6266,15 @@ function infoContent(k){
      <div class="slipline"><b>Nicotine</b><button class="slipbtn" data-slip="nicotine">Log a slip</button></div>
      <div class="slipline"><b>Alcohol</b><button class="slipbtn" data-slip="alcohol">Log a slip</button></div>`};
   if(k==="nicphase") return {t:"Nicotine phases", b:
-    `<div class="irow prow"><span class="pdot" style="background:#ef4444"></span><span><b>The first 3 days · Peak withdrawal</b><span>Nicotine fully leaves your body (~72h). Cravings hit hardest around day 2–3 — the worst of it, and the shortest part (Cleveland Clinic; NCI).</span></span></div>
-     <div class="irow prow"><span class="pdot" style="background:#f97316"></span><span><b>Days 4–14 · Easing off</b><span>Physical symptoms fade over 1–2 weeks. Cravings still come in waves, but each one passes in minutes whether you act on it or not.</span></span></div>
-     <div class="irow prow"><span class="pdot" style="background:#eab308"></span><span><b>Days 15–30 · Rewiring</b><span>Most symptoms gone. Your brain is relearning routines — coffee, breaks, stress — without nicotine.</span></span></div>
-     <div class="irow prow"><span class="pdot" style="background:#22c55e"></span><span><b>Day 31+ · New normal</b><span>Cravings rare and brief. Sleep looks like a never-smoker's again. Typical timeline — everyone differs.</span></span></div>`};
+    `<div class="irow phrow"><span class="pdot" style="background:#ef4444"></span><span><b>The first 3 days · Peak withdrawal</b><span>Nicotine fully leaves your body (~72h). Cravings hit hardest around day 2–3 — the worst of it, and the shortest part (Cleveland Clinic; NCI).</span></span></div>
+     <div class="irow phrow"><span class="pdot" style="background:#f97316"></span><span><b>Days 4–14 · Easing off</b><span>Physical symptoms fade over 1–2 weeks. Cravings still come in waves, but each one passes in minutes whether you act on it or not.</span></span></div>
+     <div class="irow phrow"><span class="pdot" style="background:#eab308"></span><span><b>Days 15–30 · Rewiring</b><span>Most symptoms gone. Your brain is relearning routines — coffee, breaks, stress — without nicotine.</span></span></div>
+     <div class="irow phrow"><span class="pdot" style="background:#22c55e"></span><span><b>Day 31+ · New normal</b><span>Cravings rare and brief. Sleep looks like a never-smoker's again. Typical timeline — everyone differs.</span></span></div>`};
   if(k==="alcphase") return {t:"Alcohol phases", b:
-    `<div class="irow prow"><span class="pdot" style="background:#ef4444"></span><span><b>The first 2 days · Clearing out</b><span>Hangover fades as your body clears the alcohol and rehydrates. Rough, but it's short.</span></span></div>
-     <div class="irow prow"><span class="pdot" style="background:#f97316"></span><span><b>Days 3–7 · Recalibrating</b><span>Sleep architecture resets — vivid dreams are normal (REM rebound). Digestion and hydration settle.</span></span></div>
-     <div class="irow prow"><span class="pdot" style="background:#eab308"></span><span><b>Days 8–30 · Repairing</b><span>Sleep quality climbs, liver fat drops, skin clears, energy steadies. Mornings start feeling different.</span></span></div>
-     <div class="irow prow"><span class="pdot" style="background:#22c55e"></span><span><b>Day 31+ · Thriving</b><span>Blood pressure eases down. Clear mornings become the baseline, not the exception. Typical timeline — everyone differs.</span></span></div>`};
+    `<div class="irow phrow"><span class="pdot" style="background:#ef4444"></span><span><b>The first 2 days · Clearing out</b><span>Hangover fades as your body clears the alcohol and rehydrates. Rough, but it's short.</span></span></div>
+     <div class="irow phrow"><span class="pdot" style="background:#f97316"></span><span><b>Days 3–7 · Recalibrating</b><span>Sleep architecture resets — vivid dreams are normal (REM rebound). Digestion and hydration settle.</span></span></div>
+     <div class="irow phrow"><span class="pdot" style="background:#eab308"></span><span><b>Days 8–30 · Repairing</b><span>Sleep quality climbs, liver fat drops, skin clears, energy steadies. Mornings start feeling different.</span></span></div>
+     <div class="irow phrow"><span class="pdot" style="background:#22c55e"></span><span><b>Day 31+ · Thriving</b><span>Blood pressure eases down. Clear mornings become the baseline, not the exception. Typical timeline — everyone differs.</span></span></div>`};
   if(k==="nutrients") return {t:"Nutrient targets", b:
     `<div class="irow">Combined from everything logged today. Tap a nutrient to set your own daily target.</div>
      <div class="irow">Every target defaults to the <b>FDA Daily Value</b>. Where the recommendation depends on you — iron, zinc, calcium, magnesium, vitamins A/C/D/K, phosphorus — it <b>automatically switches to your age/sex-based RDA or AI</b> once your profile (Settings) has your sex and age. Until then, everyone gets the standard Daily Value.</div>
