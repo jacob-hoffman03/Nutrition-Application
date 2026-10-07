@@ -190,10 +190,6 @@ button{font-family:inherit;}
 .streakcircle.ph-orange{border-color:#f97316;background:#fff7ed;box-shadow:0 0 0 5px rgba(249,115,22,.08);}
 .streakcircle.ph-yellow{border-color:#eab308;background:#fefce8;box-shadow:0 0 0 5px rgba(234,179,8,.10);}
 .streakcircle.ph-green{border-color:#22c55e;background:#f0fdf4;box-shadow:0 0 0 5px rgba(34,197,94,.10);}
-.streakcircle.done::after{content:"✓";position:absolute;right:-3px;top:-3px;width:20px;height:20px;border-radius:50%;
-  background:var(--acc);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;}
-@keyframes streakpop{0%{transform:scale(1);}35%{transform:scale(1.14);}100%{transform:scale(1);}}
-.streakcircle.pop{animation:streakpop .28s ease;}
 .slipline{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line);}
 .slipline:last-child{border-bottom:none;}
 .slipline b{font-size:15px;}
@@ -207,6 +203,23 @@ button{font-family:inherit;}
 .pdot{flex:none;width:12px;height:12px;border-radius:50%;margin-top:3px;}
 .prow b{display:block;font-size:14px;}
 .prow span{display:block;font-size:13px;color:var(--muted);margin-top:1px;line-height:1.45;}
+/* streak date picker (2026.10.06-c) */
+.calhead{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 8px;}
+.calhead b{font-size:16.5px;}
+.calnav{width:38px;height:38px;border-radius:12px;border:1.5px solid var(--line);background:#fff;font-size:22px;color:var(--ink);cursor:pointer;font-family:inherit;line-height:1;}
+.calnav.dis{opacity:.25;pointer-events:none;}
+.calnav:active{transform:scale(.94);}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.calwd{text-align:center;font-size:11.5px;font-weight:800;color:var(--muted);padding:4px 0;}
+.calday{aspect-ratio:1;border:none;background:none;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;min-height:38px;border-radius:50%;padding:0;}
+.calday.today{box-shadow:inset 0 0 0 1.5px var(--acc);}
+.calday.sel{background:var(--acc);color:#fff;font-weight:800;}
+.calday.dis{opacity:.25;}
+span.calday{cursor:default;}
+.calfoot{display:flex;gap:10px;margin-top:14px;}
+.calbtn{flex:1;border:none;border-radius:16px;padding:13px;font-size:15.5px;font-weight:800;cursor:pointer;font-family:inherit;background:var(--acc);color:#fff;}
+.calbtn.ghost{background:var(--acc-soft);color:var(--acc-deep);}
+.calbtn:active{transform:scale(.97);}
 .vapelevels{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
 .vchip{border:1px solid var(--line); background:#fff; border-radius:20px; padding:7px 14px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer;}
 .vchip.sel{background:var(--acc); border-color:var(--acc); color:#fff;}
@@ -1615,6 +1628,20 @@ body.reordering #progOverview{display:none}
   </div>
 </div>
 
+<!-- STREAK DATE PICKER (2026.10.06-c): tap a streak circle to set the last day you vaped/drank -->
+<div class="sheet" id="calSheet" role="dialog" aria-label="Pick a date">
+  <div class="scrim" id="calScrim"></div>
+  <div class="panel">
+    <div class="grab"></div>
+    <h2 id="calSheetTitle">Last day you vaped</h2>
+    <div class="body">
+      <div class="calhead"><button class="calnav" id="calPrev" aria-label="Previous month">‹</button><b id="calTitle"></b><button class="calnav" id="calNext" aria-label="Next month">›</button></div>
+      <div class="calgrid" id="calGrid"></div>
+      <div class="calfoot"><button class="calbtn ghost" id="calCancel">Cancel</button><button class="calbtn" id="calSet">Set date</button></div>
+    </div>
+  </div>
+</div>
+
 <!-- WEIGHT DETAIL (full-screen, opened by tapping the Progress weight circle) -->
 <div class="sheet" id="wtDetail" role="dialog" aria-label="Weight details">
   <div class="wtd-scroll">
@@ -2130,7 +2157,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.06-b";
+const APP_VERSION = "2026.10.06-c";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2186,13 +2213,13 @@ else { if(!/^#[0-9a-fA-F]{6}$/.test(s.profile.theme)) s.profile.theme = DEFAULT_
   return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:DEFAULT_PROFILE.name, img:DEFAULT_PROFILE.img, theme:DEFAULT_PROFILE.theme, photos:DEFAULT_PHOTOS.map(p=>({d:p.d,img:p.img}))}, bottles:DEFAULT_BOTTLES.map(b=>({id:b.id, name:b.name, oz:b.oz, img:b.img})), waterV2:1, recipes:[], mealTimes:{breakfast:[], lunch:[], dinner:[], snacks:[]}};
 }
 let S = load();
-/* 2026.10.06-a: seed streaks once — nicotine quit 2026-10-05 (day 1 logged, Jay's actual quit date);
+/* 2026.10.06-c: seed streaks once — nicotine last vaped 2026-10-05 (Jay's actual last day);
    alcohol starts fresh. Additive only; never overwrites an existing streak. */
 (function(){
   try{
     if(!S.streaks) S.streaks = {};
-    if(!S.streaks.nicotine) S.streaks.nicotine = { start:"2026-10-05", checkins:["2026-10-05"] };
-    if(!S.streaks.alcohol) S.streaks.alcohol = { start:null, checkins:[] };
+    if(!S.streaks.nicotine) S.streaks.nicotine = { lastUse:"2026-10-05" };
+    if(!S.streaks.alcohol) S.streaks.alcohol = { lastUse:null };
   }catch(e){}
 })();
 /* 2026.09.23-e: meal-time learning. Every food log records minutes-since-midnight
@@ -3007,38 +3034,41 @@ function bacPct(stdDrinks){
   const r = ((S.goals.profile||{}).sex==="f") ? 0.55 : 0.68; /* 2026.09.25-d: Widmark r is 0.68 male / 0.55 female — the old code used 0.68 for everyone, understating BAC ~19% for women */
   return stdDrinks*0.6*5.14/(w*r); /* ignores metabolism (~0.015%/hr) */
 }
-/* ============ STREAKS (2026.10.06-a): days-clean counters replacing the alcohol/vape logging panels.
-   One panel, two rows — tap the circle to log a clean day. The color phase is computed from the real
-   date: red = rough patch (nicotine: first 3 days; alcohol: the hungover window), then orange, yellow,
-   green as the streak builds. Stored additively under S.streaks — historical alc/vape day logs are untouched. */
+/* ============ STREAKS (2026.10.06-c): days-since-last-use counters.
+   Tap a circle -> calendar sheet to set the LAST DAY you vaped/drank; the count is full days
+   since that date (exclusive), computed from the real calendar. Color phase per research-grounded
+   thresholds (see streakPhase). Stored additively under S.streaks[key].lastUse ("YYYY-MM-DD" or null).
+   Migrates the 2026.10.06-a/b {start, checkins} shape: start was the last-use day, carried over. */
 function streaks(){ if(!S.streaks) S.streaks = {}; return S.streaks; }
 function streakGet(key){
   const st = streaks();
-  if(!st[key] || typeof st[key] !== "object") st[key] = { start:null, checkins:[] };
-  if(!Array.isArray(st[key].checkins)) st[key].checkins = [];
-  return st[key];
+  let s = st[key];
+  if(!s || typeof s !== "object") s = st[key] = { lastUse:null };
+  if(s.lastUse === undefined){
+    s.lastUse = s.start || null; /* old shape: start was the last-use day */
+    delete s.start; delete s.checkins;
+  }
+  return s;
 }
-/* inclusive clean-day count from the start date, driven by the real calendar */
+function parseYMD(ymd){ const p = ymd.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+/* full days since last use (exclusive): used yesterday -> 1 */
 function streakDays(key){
   const s = streakGet(key);
-  if(!s.start) return 0;
-  const a = new Date(s.start+"T12:00:00"), n = new Date();
+  if(!s.lastUse) return 0;
+  const a = parseYMD(s.lastUse), n = new Date();
   const d0 = new Date(a.getFullYear(),a.getMonth(),a.getDate());
   const d1 = new Date(n.getFullYear(),n.getMonth(),n.getDate());
-  return Math.max(0, Math.round((d1-d0)/864e5)+1);
+  return Math.max(0, Math.round((d1-d0)/864e5));
 }
-/* Phase system (2026.10.06-b, research-grounded):
-   NICOTINE — red days 1-3: peak withdrawal, nicotine fully leaves the body ~72h, cravings worst around
-     day 2-3 (Cleveland Clinic; NCI). Orange days 4-14: physical symptoms fade over 1-2 weeks; cravings
-     come in waves and pass in minutes. Yellow days 15-30: most symptoms gone, brain rewiring routines.
-     Green day 31+: cravings rare and brief; sleep matches never-smokers again.
-   ALCOHOL — red day 1: hangover clearing, body flushing alcohol, rehydrating. Orange days 2-7: sleep
-     architecture resets (vivid dreams = REM rebound), digestion settles. Yellow days 8-30: sleep quality
-     climbs, liver fat drops, skin clears, energy steadies. Green day 31+: blood pressure eases down,
-     clear mornings become the baseline. Timelines are typical, not medical advice — everyone differs. */
-function streakPhase(key, days){
+/* Research-grounded phases (2026.10.06-b research):
+   NICOTINE red 0-3: peak withdrawal, nicotine out ~72h, cravings worst day 2-3 (Cleveland Clinic; NCI).
+     orange 4-14: symptoms fade over 1-2 weeks, cravings pass in minutes. yellow 15-30: rewiring.
+     green 31+: cravings rare/brief, sleep like a never-smoker.
+   ALCOHOL red 0-1: hangover clearing, rehydrating. orange 2-7: sleep resets (REM rebound), digestion
+     settles. yellow 8-30: sleep/liver/skin/energy repair. green 31+: clear mornings are baseline. */
+function streakPhase(key, days, started){
+  if(!started || days<0) return "none";
   const lim = key==="nicotine" ? [3,14,30] : [1,7,30];
-  if(days<=0) return "none";
   if(days<=lim[0]) return "red";
   if(days<=lim[1]) return "orange";
   if(days<=lim[2]) return "yellow";
@@ -3049,33 +3079,76 @@ const PHASE_NAME = {
   nicotine:{red:"Peak withdrawal", orange:"Easing off", yellow:"Rewiring", green:"New normal"},
   alcohol:{red:"Clearing out", orange:"Recalibrating", yellow:"Repairing", green:"Thriving"}
 };
-function streakTap(key){
-  const t = todayStr(), s = streakGet(key);
-  if(!s.start){ s.start = t; s.checkins = [t]; }
-  else if(s.checkins.indexOf(t)<0) s.checkins.push(t);
-  save(); renderStreaks();
-  const btn = $(key==="nicotine" ? "nicTap" : "alcTap");
-  if(btn){ btn.classList.remove("pop"); void btn.offsetWidth; btn.classList.add("pop"); }
-}
 function streakSlip(key){
-  const s = streakGet(key);
-  s.start = null; s.checkins = [];
+  streakGet(key).lastUse = todayStr();
   save(); renderStreaks(); closeInfoSheet();
 }
 function renderStreaks(){
   [["nicotine","nicDays","nicNum","nicTap","nicPhase"],["alcohol","alcDays","alcNum","alcTap","alcPhase"]].forEach(function(c){
-    const key=c[0], days=streakDays(key), s=streakGet(key), logged=s.checkins.indexOf(todayStr())>=0;
-    $(c[1]).textContent = !s.start ? "tap the circle to start" : (days+" day"+(days===1?"":"s")+" clean");
+    const key=c[0], s=streakGet(key), days=streakDays(key), started=!!s.lastUse;
+    $(c[1]).textContent = !started ? "tap the circle to set your last day"
+      : (days===0 ? "fresh start · day 0" : (days+" day"+(days===1?"":"s")+" clean"));
     $(c[2]).textContent = days;
-    const btn=$(c[3]), ph=streakPhase(key,days);
+    const btn=$(c[3]), ph=streakPhase(key,days,started);
     btn.classList.remove("ph-red","ph-orange","ph-yellow","ph-green");
     if(ph!=="none") btn.classList.add("ph-"+ph);
-    btn.classList.toggle("done", logged);
     const pl=$(c[4]);
-    if(!s.start || ph==="none"){ pl.textContent=""; }
+    if(!started){ pl.textContent=""; }
     else { pl.textContent=PHASE_NAME[key][ph]; pl.style.color=PHASE_COLOR[ph]; }
   });
 }
+/* ---- date picker sheet ---- */
+let calKey=null, calSel=null;
+let calView = new Date(); calView = new Date(calView.getFullYear(), calView.getMonth(), 1);
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+function openCal(key){
+  calKey = key;
+  calSel = streakGet(key).lastUse || todayStr();
+  const d = parseYMD(calSel);
+  calView = new Date(d.getFullYear(), d.getMonth(), 1);
+  document.getElementById("calSheetTitle").textContent = key==="nicotine" ? "Last day you vaped" : "Last day you drank";
+  paintCal();
+  document.getElementById("calSheet").classList.add("open");
+}
+function closeCal(){ document.getElementById("calSheet").classList.remove("open"); calKey=null; }
+function paintCal(){
+  const y = calView.getFullYear(), m = calView.getMonth();
+  document.getElementById("calTitle").textContent = MONTHS[m] + " " + y;
+  const now = new Date(), tY=now.getFullYear(), tM=now.getMonth(), tD=now.getDate();
+  const first = new Date(y, m, 1).getDay();
+  const dim = new Date(y, m+1, 0).getDate();
+  let h = "";
+  ["S","M","T","W","T","F","S"].forEach(function(wd){ h += '<span class="calwd">'+wd+'</span>'; });
+  for(let i=0;i<first;i++) h += "<span></span>";
+  for(let dd=1; dd<=dim; dd++){
+    const isFuture = (y>tY) || (y===tY && m>tM) || (y===tY && m===tM && dd>tD);
+    const ds = y+"-"+String(m+1).padStart(2,"0")+"-"+String(dd).padStart(2,"0");
+    const cls = "calday"+(isFuture?" dis":"")+(ds===calSel?" sel":"")+(!isFuture&&y===tY&&m===tM&&dd===tD?" today":"");
+    h += isFuture
+      ? '<span class="'+cls+'">'+dd+"</span>"
+      : '<button class="'+cls+'" data-d="'+ds+'" aria-label="'+ds+'">'+dd+"</button>";
+  }
+  document.getElementById("calGrid").innerHTML = h;
+  document.getElementById("calNext").classList.toggle("dis", y===tY && m===tM);
+}
+document.getElementById("calGrid").addEventListener("click", function(e){
+  const b = e.target.closest("button.calday"); if(!b) return;
+  calSel = b.getAttribute("data-d");
+  paintCal();
+});
+document.getElementById("calPrev").onclick = function(){ calView = new Date(calView.getFullYear(), calView.getMonth()-1, 1); paintCal(); };
+document.getElementById("calNext").onclick = function(){
+  const n = new Date(), cap = new Date(n.getFullYear(), n.getMonth(), 1);
+  const v = new Date(calView.getFullYear(), calView.getMonth()+1, 1);
+  if(v <= cap){ calView = v; paintCal(); }
+};
+document.getElementById("calCancel").onclick = closeCal;
+document.getElementById("calScrim").onclick = closeCal;
+document.getElementById("calSet").onclick = function(){
+  if(!calKey || !calSel) return;
+  streakGet(calKey).lastUse = calSel;
+  save(); renderStreaks(); closeCal();
+};
 /* slip buttons live inside the streak info sheet */
 (function(){
   const ib = document.getElementById("infoBody");
@@ -5490,8 +5563,8 @@ document.getElementById("waterInfo").onclick = ()=>openInfo("waterinfo");
 document.getElementById("streakInfo").onclick = ()=>openInfo("streakinfo");
 document.getElementById("nicPhaseInfo").onclick = ()=>openInfo("nicphase");
 document.getElementById("alcPhaseInfo").onclick = ()=>openInfo("alcphase");
-document.getElementById("nicTap").onclick = ()=>streakTap("nicotine");
-document.getElementById("alcTap").onclick = ()=>streakTap("alcohol");
+document.getElementById("nicTap").onclick = ()=>openCal("nicotine");
+document.getElementById("alcTap").onclick = ()=>openCal("alcohol");
 document.getElementById("nutrInfo").onclick = ()=>openInfo("nutrients");
 document.getElementById("bmiInfo").onclick = ()=>openInfo("bmi");
 document.getElementById("calCheckInfo").onclick = ()=>openInfo("calcheck");
@@ -6187,19 +6260,19 @@ function infoContent(k){
     `<div class="irow"><b>Auto</b> builds your target from maintenance + activity (<b>IOM 1.0–1.5 mL/kcal</b>) — that's the glasses count next to the title. Tap a bottle to log it.</div>
      <div class="irow">A supplement you flag <b>"needs extra water"</b> adds 16 oz — creatine needs no extra water (ISSN 2017). Set a manual target any time in Goals › Water.</div>`};
   if(k==="streakinfo") return {t:"Streaks", b:
-    `<div class="irow">Tap a circle to log a clean day. The count is <b>days since you started</b>, computed from the real date — no math needed from you.</div>
+    `<div class="irow">Tap a circle to set the <b>last day</b> you vaped or drank — the count is full days since that date, figured from the real calendar.</div>
      <div class="irow">The ring color shows the phase: <b style="color:#ef4444">red</b> = rough patch (nicotine: the first 3 days; alcohol: the hungover window), then <b style="color:#f97316">orange</b>, <b style="color:#eab308">yellow</b>, <b style="color:#22c55e">green</b> as the streak builds.</div>
      <div class="irow">Slipped? Reset that streak below — the count just restarts.</div>
      <div class="slipline"><b>Nicotine</b><button class="slipbtn" data-slip="nicotine">Log a slip</button></div>
      <div class="slipline"><b>Alcohol</b><button class="slipbtn" data-slip="alcohol">Log a slip</button></div>`};
   if(k==="nicphase") return {t:"Nicotine phases", b:
-    `<div class="irow prow"><span class="pdot" style="background:#ef4444"></span><span><b>Days 1–3 · Peak withdrawal</b><span>Nicotine fully leaves your body (~72h). Cravings hit hardest around day 2–3 — you're in the worst of it right now, and it's the shortest part (Cleveland Clinic; NCI).</span></span></div>
+    `<div class="irow prow"><span class="pdot" style="background:#ef4444"></span><span><b>The first 3 days · Peak withdrawal</b><span>Nicotine fully leaves your body (~72h). Cravings hit hardest around day 2–3 — the worst of it, and the shortest part (Cleveland Clinic; NCI).</span></span></div>
      <div class="irow prow"><span class="pdot" style="background:#f97316"></span><span><b>Days 4–14 · Easing off</b><span>Physical symptoms fade over 1–2 weeks. Cravings still come in waves, but each one passes in minutes whether you act on it or not.</span></span></div>
      <div class="irow prow"><span class="pdot" style="background:#eab308"></span><span><b>Days 15–30 · Rewiring</b><span>Most symptoms gone. Your brain is relearning routines — coffee, breaks, stress — without nicotine.</span></span></div>
      <div class="irow prow"><span class="pdot" style="background:#22c55e"></span><span><b>Day 31+ · New normal</b><span>Cravings rare and brief. Sleep looks like a never-smoker's again. Typical timeline — everyone differs.</span></span></div>`};
   if(k==="alcphase") return {t:"Alcohol phases", b:
-    `<div class="irow prow"><span class="pdot" style="background:#ef4444"></span><span><b>Day 1 · Clearing out</b><span>Hangover fades as your body clears the alcohol and rehydrates. Rough, but it's one day.</span></span></div>
-     <div class="irow prow"><span class="pdot" style="background:#f97316"></span><span><b>Days 2–7 · Recalibrating</b><span>Sleep architecture resets — vivid dreams are normal (REM rebound). Digestion and hydration settle.</span></span></div>
+    `<div class="irow prow"><span class="pdot" style="background:#ef4444"></span><span><b>The first 2 days · Clearing out</b><span>Hangover fades as your body clears the alcohol and rehydrates. Rough, but it's short.</span></span></div>
+     <div class="irow prow"><span class="pdot" style="background:#f97316"></span><span><b>Days 3–7 · Recalibrating</b><span>Sleep architecture resets — vivid dreams are normal (REM rebound). Digestion and hydration settle.</span></span></div>
      <div class="irow prow"><span class="pdot" style="background:#eab308"></span><span><b>Days 8–30 · Repairing</b><span>Sleep quality climbs, liver fat drops, skin clears, energy steadies. Mornings start feeling different.</span></span></div>
      <div class="irow prow"><span class="pdot" style="background:#22c55e"></span><span><b>Day 31+ · Thriving</b><span>Blood pressure eases down. Clear mornings become the baseline, not the exception. Typical timeline — everyone differs.</span></span></div>`};
   if(k==="nutrients") return {t:"Nutrient targets", b:
