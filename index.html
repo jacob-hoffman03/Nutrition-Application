@@ -2157,7 +2157,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.06-d";
+const APP_VERSION = "2026.10.06-e";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2530,9 +2530,10 @@ function renderWeek(){
     const dd = S.days[ks];
     const logged = dd && MEALS.some(m=>(dd.meals[m]||[]).length);
     const dotCls = ks===todayStr() ? "now" : (logged ? "log" : "");
-    const hadAlc = dd && alcData(dd).std>0;
-    const dotsHtml = '<span class="wdot '+dotCls+'"></span>' + (hadAlc ? '<span class="wdot" style="background:#b00020"></span>' : "");
-    b.innerHTML = '<span class="wd">'+names[i]+'</span><span class="wn">'+d.getDate()+'</span><span class="wdots" style="'+((dotCls||hadAlc)?"":"opacity:0")+'">'+dotsHtml+'</span>';
+    /* 2026.10.06: red alcohol dot removed — alcohol logging panels were replaced by the
+       Streaks panel, so the second dot no longer means anything. One status dot per day. */
+    const dotsHtml = '<span class="wdot '+dotCls+'"></span>';
+    b.innerHTML = '<span class="wd">'+names[i]+'</span><span class="wn">'+d.getDate()+'</span><span class="wdots" style="'+(dotCls?"":"opacity:0")+'">'+dotsHtml+'</span>';
     b.onclick = ()=>{ const t2 = new Date(); t2.setHours(12,0,0,0); const dd2 = new Date(d); dd2.setHours(12,0,0,0); dayOffset = Math.round((dd2-t2)/864e5); renderDiary(); };
     strip.appendChild(b);
   }
