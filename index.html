@@ -67,6 +67,12 @@ button{font-family:inherit;}
 .wday .wdots{display:flex; gap:4px; align-items:center; justify-content:center;}
 .wday .wdot.log{background:#b9b9f5;}
 .wday .wdot.now{background:#ff9f43;}
+/* 2026.10.08-f: locked-day X overlay on the week strip — two thin diagonal bars on the date number */
+.wday .wn{position:relative;}
+.lk-x{position:absolute; inset:0; pointer-events:none;}
+.lk-x::before,.lk-x::after{content:""; position:absolute; left:50%; top:50%; width:20px; height:2px; border-radius:2px; background:rgba(255,95,95,.95);}
+.lk-x::before{transform:translate(-50%,-50%) rotate(45deg);}
+.lk-x::after{transform:translate(-50%,-50%) rotate(-45deg);}
 /* status bar (added feature) */
 .statusbar{display:flex; align-items:center; gap:10px; padding:14px 4px 4px; cursor:pointer;}
 .sbtrack{position:relative; flex:1; height:12px; border-radius:99px; background:#ececf1; box-shadow:inset 0 1px 2px rgba(20,30,40,.08);}
@@ -2157,7 +2163,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.06-e";
+const APP_VERSION = "2026.10.08-g";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2445,6 +2451,28 @@ const dstr = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"
 const todayStr = () => dstr(new Date());
 let dayOffset = 0;
 const viewDate = () => { const d = new Date(); d.setDate(d.getDate()+dayOffset); return dstr(d); };
+/* ============ LOCKED DAYS (2026.10.08-f) ============
+   "Too lazy to log" days: the day keeps its data, but it is excluded from every
+   aggregate — averages, trends, adherence, fatigue/bloat loops — and is a neutral
+   skip for streaks (neither extends nor breaks). Stored under its own key so
+   fuel.v1 is never touched. */
+const LOCK_KEY = "fuel.lockedDays.v1";
+let _lkCache = null;
+function getLocked(){
+  if(_lkCache) return _lkCache;
+  try{ const a = JSON.parse(localStorage.getItem(LOCK_KEY)||"[]");
+    _lkCache = Array.isArray(a) ? a.filter(x=>typeof x==="string") : [];
+  }catch(e){ _lkCache = []; }
+  return _lkCache;
+}
+function isLocked(ds){ return getLocked().indexOf(ds)>=0; }
+function setLocked(ds, on){
+  const a = getLocked().slice(), i = a.indexOf(ds);
+  if(on && i<0) a.push(ds);
+  if(!on && i>=0) a.splice(i,1);
+  try{ localStorage.setItem(LOCK_KEY, JSON.stringify(a)); }catch(e){}
+  _lkCache = a;
+}
 function emptyDay(){ return {meals:{breakfast:[],lunch:[],dinner:[],snacks:[],supplements:[]}, waterOz:0}; }
 function day(){ const k = viewDate(); if(!S.days[k]) S.days[k] = emptyDay(); return S.days[k]; }
 /* 2026.09.22-h: day() auto-creates an empty record for any viewed date, so "has data"
@@ -2533,8 +2561,14 @@ function renderWeek(){
     /* 2026.10.06: red alcohol dot removed — alcohol logging panels were replaced by the
        Streaks panel, so the second dot no longer means anything. One status dot per day. */
     const dotsHtml = '<span class="wdot '+dotCls+'"></span>';
-    b.innerHTML = '<span class="wd">'+names[i]+'</span><span class="wn">'+d.getDate()+'</span><span class="wdots" style="'+(dotCls?"":"opacity:0")+'">'+dotsHtml+'</span>';
-    b.onclick = ()=>{ const t2 = new Date(); t2.setHours(12,0,0,0); const dd2 = new Date(d); dd2.setHours(12,0,0,0); dayOffset = Math.round((dd2-t2)/864e5); renderDiary(); };
+    /* 2026.10.08-f: locked days get the X overlay on the date number */
+    const locked = isLocked(ks);
+    b.innerHTML = '<span class="wd">'+names[i]+'</span><span class="wn">'+d.getDate()+(locked?'<span class="lk-x" aria-hidden="true"></span>':'')+'</span><span class="wdots" style="'+(dotCls?"":"opacity:0")+'">'+dotsHtml+'</span>';
+    b.onclick = ()=>lockTap(b, ks, ()=>{
+      const t2 = new Date(); t2.setHours(12,0,0,0);
+      const dd2 = new Date(ks+"T12:00:00"); dd2.setHours(12,0,0,0);
+      dayOffset = Math.round((dd2-t2)/864e5); renderDiary();
+    });
     strip.appendChild(b);
   }
   const tpRow = $("todayPill").closest(".ptodayrow"); if(tpRow) tpRow.style.display = viewDate()===todayStr() ? "none" : "flex";
@@ -2542,6 +2576,21 @@ function renderWeek(){
 }
 $("wkPrev").onclick = ()=>{ weekOff--; renderDiary(); };
 $("wkNext").onclick = ()=>{ if(weekOff<0){ weekOff++; renderDiary(); } };
+
+/* ============ LOCK DAY (2026.10.08-f/g) ============
+   Single tap = view the day (existing behavior). Double-tap = toggle lock
+   directly, no sheet. A 300ms timer disambiguates: the second tap inside the
+   window cancels the pending single-tap navigation and toggles instead. */
+function lockTap(b, ks, onSingle){
+  const now = Date.now();
+  if(now - (b._lkT||0) < 300){
+    clearTimeout(b._lkTO); b._lkT = 0;
+    setLocked(ks, !isLocked(ks)); haptic(); renderAll();
+  }else{
+    b._lkT = now;
+    b._lkTO = setTimeout(()=>{ b._lkT = 0; onSingle(); }, 300);
+  }
+}
 
 /* ============ STATUS / ZONES ============ */
 function statusInfo(){
@@ -3560,7 +3609,8 @@ function bloatScore(ds){
   if(pot>=3500 && sodium>=2300){ pts-=8; why.push("Good potassium ("+Math.round(pot).toLocaleString()+"mg) helps flush sodium — blunting the bloat."); }
   let fsum=0, fn=0;
   for(let i=1;i<=7;i++){
-    const dd = S.days[addDays(todayStr(),-i)]; if(!dd) continue;
+    const ds=addDays(todayStr(),-i); if(isLocked(ds)) continue; /* 2026.10.08-f */
+    const dd = S.days[ds]; if(!dd) continue;
     let f=0;
     MEALS.forEach(m=>(dd.meals[m]||[]).forEach(e=>(e.nutrs||[]).forEach(x=>{
       if(canonNutr(x.n)==="Fiber"){ const u=String(x.u||"").toLowerCase(); f += u==="g"?x.amt : u==="mg"?x.amt/1000 : u==="mcg"?x.amt/1e6 : x.amt; }
@@ -4718,7 +4768,7 @@ function weekDays(off){
   const t = new Date(); t.setHours(12,0,0,0);
   const mon = new Date(t); mon.setDate(t.getDate()-((t.getDay()+6)%7)-off*7);
   for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); const k=dstr(d);
-    out.push({k, label:d.toLocaleDateString(undefined,{weekday:"narrow"}), future:k>todayStr(), ...totals(k), logged:dayHasData(S.days[k])}); }
+    out.push({k, label:d.toLocaleDateString(undefined,{weekday:"narrow"}), future:k>todayStr(), locked:isLocked(k), ...totals(k), logged:dayHasData(S.days[k])}); }
   return out;
 }
 function weekLabel(days){
@@ -4729,6 +4779,7 @@ function weekLabel(days){
 function streak(){
   let s=0; const d=new Date();
   for(let i=0;i<365;i++){ const k=dstr(d);
+    if(isLocked(k)){ d.setDate(d.getDate()-1); continue; } /* 2026.10.08-f: locked day = neutral skip */
     const dd=S.days[k];
     const has = dayHasData(dd);
     if(has) s++; else if(i>0 || k!==todayStr()) break;
@@ -4815,7 +4866,7 @@ function dayHit(ds){
 /* Last n days, newest last: [{ds, ...dayTotals fields, hit}]. */
 function adherenceSeries(n){
   const out = [], m = n||14;
-  for(let i=m-1;i>=0;i--){ const ds = addDays(todayStr(),-i); const t = dayTotals(ds); t.hit = dayHit(ds); out.push(t); }
+  for(let i=m-1;i>=0;i--){ const ds = addDays(todayStr(),-i); if(isLocked(ds)) continue; const t = dayTotals(ds); t.hit = dayHit(ds); out.push(t); }
   return out;
 }
 /* Rolling average over the last `days` calendar days. Honest rule: the denominator
@@ -4823,7 +4874,7 @@ function adherenceSeries(n){
    no logged days. */
 function rollingAvg(nutrient, days){
   const vals = [];
-  for(let i=days-1;i>=0;i--){ const t = dayTotals(addDays(todayStr(),-i)); if(t.foodLogged) vals.push(t[nutrient]||0); }
+  for(let i=days-1;i>=0;i--){ const ds=addDays(todayStr(),-i); if(isLocked(ds)) continue; const t = dayTotals(ds); if(t.foodLogged) vals.push(t[nutrient]||0); }
   if(!vals.length) return null;
   return {avg: vals.reduce((a,v)=>a+v,0)/vals.length, n: vals.length, span: days};
 }
@@ -4840,7 +4891,7 @@ function proteinConsistency(n){
 /* Last n days of water: [{ds, oz, ratio|null}]. */
 function waterSeries(n){
   const out = [];
-  for(let i=(n||7)-1;i>=0;i--){ const ds = addDays(todayStr(),-i); const t = dayTotals(ds); out.push({ds, oz:t.waterOz, ratio:t.waterRatio}); }
+  for(let i=(n||7)-1;i>=0;i--){ const ds = addDays(todayStr(),-i); if(isLocked(ds)) continue; const t = dayTotals(ds); out.push({ds, oz:t.waterOz, ratio:t.waterRatio}); }
   return out;
 }
 /* Weight trend state: direction, vs the weight goal, and confidence. Rates come from
@@ -5009,6 +5060,7 @@ function insightSodiumVsBloat(){
 function goalStreak(){
   let s=0;
   for(let i=0;i<365;i++){ const ds = addDays(todayStr(),-i);
+    if(isLocked(ds)) continue; /* 2026.10.08-f: locked day = neutral skip */
     if(dayHit(ds)) s++; else if(i>0 || ds!==todayStr()) break; }
   return s;
 }
@@ -5450,10 +5502,11 @@ function renderProgress(){
     ["sum","cal","mac"].forEach(function(k){ var el=document.getElementById("wseg-"+k); if(el) el.hidden = k!==s; });
   })();
   const days = weekDays(weekOffset);
-  const logged = days.filter(x=>x.logged);
+  const logged = days.filter(x=>x.logged && !x.locked);
   /* 2026.09.27-a: one window (last 7 days incl. today) and one rule (days with
-     food logged) for every average on this page, so they can never disagree */
-  const lg = days.filter(x=>x.cal>0);
+     food logged) for every average on this page, so they can never disagree.
+     2026.10.08-f: locked days are excluded from every average. */
+  const lg = days.filter(x=>x.cal>0 && !x.locked);
   document.getElementById("stStreak").textContent = streak();
   document.getElementById("stAvgCal").textContent = lg.length ? Math.round(lg.reduce((a,x)=>a+x.cal,0)/lg.length).toLocaleString() : 0;
   document.getElementById("stAvgP").textContent = (lg.length ? Math.round(lg.reduce((a,x)=>a+x.p,0)/lg.length) : 0)+"g";
@@ -5475,7 +5528,7 @@ function renderProgress(){
   });
   const w = S.weights.slice().sort((a,b)=>a.d<b.d?-1:1);
   /* analytics header: 7-day total */
-  const wkTotal = days.reduce((a,x)=>a+x.cal,0);
+  const wkTotal = days.filter(x=>!x.locked).reduce((a,x)=>a+x.cal,0);
   $("anaTotal").textContent = Math.round(wkTotal).toLocaleString();
   /* 2026.09.27-a: average over logged days (not ÷7), with the count shown —
      matches the weekly review and the ministat below */
@@ -5601,7 +5654,7 @@ function weeklyReviewData(){
      including today — so "Avg intake" can never disagree with it or the
      Avg kcal/7d ministat again. (The old i=7..1 loop silently excluded today.) */
   const days = weekDays(0);
-  const logged = days.filter(x=>x.cal>0);
+  const logged = days.filter(x=>x.cal>0 && !x.locked); /* 2026.10.08-f: locked days excluded */
   if(logged.length < 3) return {ok:false};
   const goal = goalTotal(), pGoal = S.goals.protein||0;
   const avgCal = logged.reduce((a,x)=>a+x.cal,0)/logged.length;
@@ -6035,7 +6088,7 @@ function maybeAutoTune(suggest){
    ≥ 60% of your own median day. Today is always excluded — unfinished by definition. */
 function completeDayCals(){
   const WIN=21, raw=[];
-  for(let i=WIN-1;i>=1;i--){ const t=dayTotals(addDays(todayStr(),-i)); if(t.foodLogged) raw.push(t.cal); }
+  for(let i=WIN-1;i>=1;i--){ const ds=addDays(todayStr(),-i); if(isLocked(ds)) continue; const t=dayTotals(ds); if(t.foodLogged) raw.push(t.cal); }
   const srt=raw.slice().sort((a,b)=>a-b), med=srt.length?srt[Math.floor(srt.length/2)]:0;
   const maint=calcMaintenance().maint||S.goals.maintenance||0;
   const cals=[]; let partial=0;
@@ -6526,10 +6579,16 @@ function mNutrG(ds, canon){ /* grams of a nutrient for the day */
   return v;
 }
 function mCalPct(ds){ const g=goalTotal(); return g>0 ? totals(ds).cal/g*100 : 0; }
-function mStreak(pred){ /* consecutive days; today may still be in progress */
-  let ds=todayStr(), n=0;
-  if(!pred(ds)) ds=addDays(ds,-1);
-  while(pred(ds)){ n++; ds=addDays(ds,-1); if(n>1200) break; }
+function mStreak(pred){ /* consecutive days; today may still be in progress.
+   2026.10.08-f: locked days are neutral skips — neither counted nor breaking. */
+  let ds=todayStr(), n=0, guard=0;
+  if(!pred(ds) && !isLocked(ds)) ds=addDays(ds,-1);
+  for(;;){
+    if(isLocked(ds)) ds=addDays(ds,-1);
+    else if(pred(ds)){ n++; ds=addDays(ds,-1); }
+    else break;
+    if(++guard>1300) break;
+  }
   return n;
 }
 function mWeekKey(ds){ const dt=new Date(ds+"T12:00:00"); const dow=(dt.getDay()+6)%7; const mon=new Date(dt); mon.setDate(dt.getDate()-dow); return mon.getFullYear()+"-"+String(mon.getMonth()+1).padStart(2,"0")+"-"+String(mon.getDate()).padStart(2,"0"); }
@@ -6541,7 +6600,7 @@ function mWeighWeekStreak(){
   return n;
 }
 function mAllTime(){ let cal=0,p=0,woz=0,days=0,foods=new Set();
-  for(const k in (S.days||{})){ const dd=S.days[k]; if(!dd) continue; const t=totals(k); cal+=t.cal; p+=t.p; woz+=(dd.waterOz||0);
+  for(const k in (S.days||{})){ if(isLocked(k)) continue; const dd=S.days[k]; if(!dd) continue; const t=totals(k); cal+=t.cal; p+=t.p; woz+=(dd.waterOz||0);
     if(mDayHasLog(k)) days++;
     FOOD_MEALS.forEach(m=>((dd.meals||{})[m]||[]).forEach(e=>foods.add((e.n||"").toLowerCase()))); }
   return {cal,p,woz,days,foods:foods.size};
@@ -6554,7 +6613,7 @@ function mPhotoCount(ds){ const d=S.days[ds]; let n=0; if(!d) return 0;
   FOOD_MEALS.forEach(m=>((d.meals||{})[m]||[]).forEach(e=>{ if(entryImg(e)) n++; })); return n; }
 function mHasSupps(ds){ const d=S.days[ds]; return !!(d && ((d.meals||{}).supplements||[]).length>0); }
 function mWaterPct(ds){ const t=waterTarget(ds)*8; return t>0 ? (S.days[ds]||{waterOz:0}).waterOz/t*100 : 0; }
-function mLoggedDays(){ let n=0; for(const k in (S.days||{})) if(mDayHasLog(k)) n++; return n; }
+function mLoggedDays(){ let n=0; for(const k in (S.days||{})) if(!isLocked(k) && mDayHasLog(k)) n++; return n; }
 function fmtBig(n){ if(n>=1e6) return (n/1e6).toFixed(n%1e6?1:0)+"M"; if(n>=1e3) return (n/1e3).toFixed(n%1e3?1:0)+"k"; return String(Math.round(n)); }
 
 /* ---------- catalog ---------- */
@@ -6723,7 +6782,7 @@ defMedal({id:"sodium-1", name:"Salt Smart", goal:"3-day low sodium", cat:"streak
   test:()=>mStreak(ds=>mDayHasLog(ds)&&mNutrG(ds,"Sodium")<=2.3)>=3});
 defMedal({id:"proweek-1", name:"Protein Week", goal:"7-day protein avg", cat:"protein", icon:"bolt", rarity:"rare", kind:"life",
   desc:"Average your protein target or better over 7 days.",
-  test:()=>{ const t=S.goals.protein; if(!(t>0)) return false; let s=0,n=0; for(let i=0;i<7;i++){ const ds=addDays(todayStr(),-i); if(mDayHasLog(ds)){ s+=totals(ds).p; n++; } } return n>=5&&s/n>=t; }});
+  test:()=>{ const t=S.goals.protein; if(!(t>0)) return false; let s=0,n=0; for(let i=0;i<7;i++){ const ds=addDays(todayStr(),-i); if(isLocked(ds)) continue; if(mDayHasLog(ds)){ s+=totals(ds).p; n++; } } return n>=5&&s/n>=t; }});
 defMedal({id:"supp-1", name:"Stacked", goal:"7-day supp streak", cat:"streak", icon:"plus", rarity:"uncommon", kind:"life",
   desc:"Log supplements 7 days in a row.", test:()=>mStreak(mHasSupps)>=7, prog:()=>({v:mStreak(mHasSupps), t:7})});
 /* ===== special: the daily crown + legacy ===== */
@@ -7192,7 +7251,7 @@ function renderSettings(){
   renderProfileCard();
   document.getElementById("goalRowVal").textContent = Math.round(goalTotal()).toLocaleString()+" kcal";
   document.getElementById("waterRowVal").textContent = g.water>0 ? (g.water*8)+" oz" : (waterTarget()>0 ? "Auto ("+(waterTarget()*8)+" oz)" : "Auto (set maintenance first)");
-  document.getElementById("dDays").textContent = Object.keys(S.days).filter(k=>dayHasData(S.days[k])).length;
+  document.getElementById("dDays").textContent = Object.keys(S.days).filter(k=>!isLocked(k)&&dayHasData(S.days[k])).length;
   document.getElementById("appVer").textContent = "Fuel " + APP_VERSION;
   document.getElementById("dFoods").textContent = Object.values(S.days).reduce((a,d)=>a+MEALS.filter(m=>m!=="supplements").reduce((x,m)=>x+(d.meals[m]||[]).length,0),0); /* supplements aren't food (2026.09.24-x) */
   document.getElementById("dWeigh").textContent = (S.weights||[]).length;
