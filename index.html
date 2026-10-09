@@ -209,6 +209,49 @@ button{font-family:inherit;}
 .pdot{flex:none;width:12px;height:12px;border-radius:50%;margin-top:3px;}
 .phrow b{display:block;font-size:14px;}
 .phrow span{display:block;font-size:13px;color:var(--muted);margin-top:1px;line-height:1.45;}
+/* quit tracker (2026.10.09-a) */
+.qt-open{margin-left:auto;background:none;border:none;color:#5b5bf0;font-size:13.5px;font-weight:800;cursor:pointer;padding:6px 2px;font-family:inherit;}
+.qt-open:active{opacity:.6;}
+.qt-tracker{margin-bottom:14px;}
+.qt-head{display:flex;align-items:flex-end;gap:8px;}
+.qt-title{font-size:17px;font-weight:800;letter-spacing:-.2px;}
+.qt-day{margin-left:auto;text-align:right;}
+.qt-daynum{font-size:36px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;}
+.qt-daylbl{font-size:10.5px;font-weight:800;color:var(--muted);letter-spacing:.6px;}
+.qt-sub{font-size:12.5px;color:var(--muted);margin:3px 0 2px;}
+.qt-tl{display:flex;gap:3px;margin:12px 0 2px;}
+.qt-seg{height:32px;border-radius:9px;cursor:pointer;border:2px solid transparent;padding:0;min-width:0;font-family:inherit;}
+.qt-seg.qt-cur{border-color:currentColor;animation:qtpulse 1.8s ease-in-out infinite;}
+@keyframes qtpulse{0%,100%{box-shadow:0 0 0 0 rgba(0,0,0,0);}50%{box-shadow:0 0 0 5px rgba(0,0,0,.10);}}
+.qt-seg.qt-sel{outline:2.5px solid var(--ink);outline-offset:1px;}
+.qt-seglbls{display:flex;gap:3px;margin-bottom:2px;}
+.qt-seglbl{font-size:9px;font-weight:800;color:var(--muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;letter-spacing:.2px;}
+.qt-mtrack{position:relative;height:16px;margin:0 4px;}
+.qt-mtrack:before{content:"";position:absolute;left:0;right:0;top:7px;height:2px;background:var(--line);border-radius:2px;}
+.qt-mdot{position:absolute;top:3px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid #c7c7cc;transform:translateX(-50%);}
+.qt-mdot.done{background:#16a34a;border-color:#16a34a;}
+.qt-card{border-top:4px solid #ccc;}
+.qt-phname{font-size:16px;font-weight:800;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.qt-phrange{font-size:12px;font-weight:700;color:var(--muted);}
+.qt-phsec{margin-top:10px;}
+.qt-phsec>b{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+.qt-phsec p{margin:4px 0 0;font-size:13.5px;line-height:1.5;}
+.qt-phsec ul{margin:4px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;}
+.qt-phsec li{margin:2px 0;}
+.qt-danger{margin-top:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5;color:#7f1d1d;}
+.qt-danger b{display:block;margin-bottom:2px;}
+.qt-mrow{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:13px;}
+.qt-mrow:first-of-type{border-top:none;}
+.qt-mdot2{flex:none;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid #c7c7cc;}
+.qt-mdot2.done{background:#16a34a;border-color:#16a34a;}
+.qt-mwhen{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--muted);white-space:nowrap;}
+.qt-editrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.qt-editrow input{font-family:inherit;font-size:14px;padding:9px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);}
+.qt-save{font-family:inherit;font-size:14px;font-weight:800;color:#fff;background:#5b5bf0;border:none;border-radius:10px;padding:10px 16px;cursor:pointer;}
+.qt-save:active{transform:scale(.96);}
+.qt-reset{background:none;border:none;color:var(--muted);font-size:12.5px;font-weight:700;cursor:pointer;padding:10px 0 0;font-family:inherit;text-decoration:underline;}
+.qt-start{font-family:inherit;font-size:15px;font-weight:800;color:#fff;background:#14b8a6;border:none;border-radius:12px;padding:12px 18px;cursor:pointer;}
+.qt-start:active{transform:scale(.98);}
 /* streak date picker (2026.10.06-c) */
 .calhead{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 8px;}
 .calhead b{font-size:16.5px;}
@@ -1065,7 +1108,7 @@ body.reordering #progOverview{display:none}
     </div>
 
     <div class="card streakcard" id="dcard-streaks">
-      <div class="streakhead"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><b>Streaks</b><button class="ginfo" id="streakInfo" aria-label="About streaks">i</button></span></div>
+      <div class="streakhead"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><b>Streaks</b><button class="ginfo" id="streakInfo" aria-label="About streaks">i</button></span><button class="qt-open" id="quitOpen">Timeline ›</button></div>
       <div class="streakrow">
         <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M10.5 7v13a1.5 1.5 0 0 0 3 0V7"/></svg></span>
         <span class="streaktxt"><span class="streakttl"><b>Nicotine</b><button class="ginfo sm" id="nicPhaseInfo" aria-label="About nicotine phases">i</button></span><span class="wlbl" id="nicDays"></span><span class="phaselbl" id="nicPhase"></span></span>
@@ -1563,6 +1606,18 @@ body.reordering #progOverview{display:none}
       </div>
     </div>
     <div class="hint" style="padding:0 20px">Meal times are learned separately for work days and days off. Past meal times keep the schedule they were learned under.</div>
+  </section>
+
+  <!-- QUIT TRACKER (2026.10.09-a): research-grounded nicotine + alcohol-free phase timelines -->
+  <section class="view" id="view-quit">
+    <div class="topbar">
+      <button class="tbtn" id="quitBack" aria-label="Back">‹</button>
+      <h1>Quit tracker</h1>
+      <div style="width:44px"></div>
+    </div>
+    <div id="qtNic"></div>
+    <div id="qtAlc" style="margin-top:4px"></div>
+    <div class="hint" style="padding:0 6px 10px">Timelines show typical patterns from cessation research — everyone differs. Not medical advice.</div>
   </section>
 
   <!-- NUTRITION CALENDAR (2026.09.27-i) -->
@@ -2163,7 +2218,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.08-g";
+const APP_VERSION = "2026.10.09-a";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6329,6 +6384,18 @@ function infoContent(k){
      <div class="irow phrow"><span class="pdot" style="background:#f97316"></span><span><b>Days 3–7 · Recalibrating</b><span>Sleep architecture resets — vivid dreams are normal (REM rebound). Digestion and hydration settle.</span></span></div>
      <div class="irow phrow"><span class="pdot" style="background:#eab308"></span><span><b>Days 8–30 · Repairing</b><span>Sleep quality climbs, liver fat drops, skin clears, energy steadies. Mornings start feeling different.</span></span></div>
      <div class="irow phrow"><span class="pdot" style="background:#22c55e"></span><span><b>Day 31+ · Thriving</b><span>Blood pressure eases down. Clear mornings become the baseline, not the exception. Typical timeline — everyone differs.</span></span></div>`};
+  if(k==="quitnic") return {t:"Nicotine phases", b:
+    `<div class="irow phrow"><span class="pdot" style="background:#ef4444"></span><span><b>First 24 hours · Onset</b><span>Blood nicotine halves in ~2 hours; heart rate and blood pressure begin settling. First urges within 1–2 hours.</span></span></div>
+     <div class="irow phrow"><span class="pdot" style="background:#f97316"></span><span><b>Days 2–3 · The Peak</b><span>Strongest cravings; nicotine fully clears by ~72h. Day 3 is widely the single hardest day.</span></span></div>
+     <div class="irow phrow"><span class="pdot" style="background:#eab308"></span><span><b>Days 4–7 · Wind-down</b><span>Cravings shorter and less frequent. Watch the day 7–8 overconfidence trap (“just one”).</span></span></div>
+     <div class="irow phrow"><span class="pdot" style="background:#3b82f6"></span><span><b>Weeks 2–4 · Easing</b><span>Physical symptoms mostly gone; circulation matches a nonsmoker by 2 weeks. Week 3 is the thought-trigger danger zone.</span></span></div>
+     <div class="irow phrow"><span class="pdot" style="background:#22c55e"></span><span><b>Days 30–90 · Consolidation</b><span>Rare, brief cue-triggered cravings. Dopamine function normalizes by ~3 months. Month-3 “blahs” can ambush.</span></span></div>
+     <div class="irow">Full detail per phase lives in <b>Quit tracker › Timeline</b>.</div>`};
+  if(k==="quitalc") return {t:"Alcohol-free phases", b:
+    `<div class="irow phrow"><span class="pdot" style="background:#14b8a6"></span><span><b>Days 1–7 · Reset</b><span>Liver inflammation drops within 24h; body rehydrates. Sleep briefly unsettled, then better mornings.</span></span></div>
+     <div class="irow phrow"><span class="pdot" style="background:#10b981"></span><span><b>Days 8–30 · Visible repair</b><span>REM sleep normalizes; liver enzymes normalize ~2 weeks; sharper thinking ~18 days. One month off: weight −1.5%, insulin resistance −25.9% (Mehta 2018).</span></span></div>
+     <div class="irow phrow"><span class="pdot" style="background:#15803d"></span><span><b>Days 31–90 · Deep healing</b><span>Deeper sleep, steadier energy, dopamine systems recover, fatty liver keeps reversing.</span></span></div>
+     <div class="irow">Full detail per phase lives in <b>Quit tracker › Timeline</b>.</div>`};
   if(k==="nutrients") return {t:"Nutrient targets", b:
     `<div class="irow">Combined from everything logged today. Tap a nutrient to set your own daily target.</div>
      <div class="irow">Every target defaults to the <b>FDA Daily Value</b>. Where the recommendation depends on you — iron, zinc, calcium, magnesium, vitamins A/C/D/K, phosphorus — it <b>automatically switches to your age/sex-based RDA or AI</b> once your profile (Settings) has your sex and age. Until then, everyone gets the standard Daily Value.</div>
@@ -7334,11 +7401,12 @@ function showView(v){
   curView = v;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active", x.id==="view-"+v));
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",
-    t.dataset.v===v || ((v==="analysis"||v==="calendar"||v==="settings"||v==="goals"||v==="medals"||v==="snaps"||v==="worksched"||v==="info")&&t.dataset.v==="diary")));
+    t.dataset.v===v || ((v==="analysis"||v==="calendar"||v==="settings"||v==="goals"||v==="medals"||v==="snaps"||v==="worksched"||v==="quit"||v==="info")&&t.dataset.v==="diary")));
   if(v==="progress"){ weekOffset = 0; renderProgress(); } /* always open on the current 7 days 2026.09.21-j */
   if(v==="settings") renderSettings();
   if(v==="medals") renderMedalsPage();
   if(v==="worksched") renderWorkSched();
+  if(v==="quit") renderQuit();
   if(v==="snaps") renderSnaps();
   if(v==="info") renderInfo();
   if(v==="foods") renderFoods();
@@ -7797,6 +7865,205 @@ function autoPilot(){
   }
   paintAutoZone();
 }
+
+/* ============ QUIT TRACKER (2026.10.09-a) ============
+   Research-grounded phase timelines (cessation research, report 2026-10-09).
+   Start dates live under their own keys (fuel.quit.<nicotine|alcohol>.v1) —
+   fuel.v1 is never touched here. */
+var QT_NIC = [
+ {id:"onset",name:"Onset",range:"First 24 hours",color:"#ef4444",d1:0,
+  happening:"Blood nicotine halves within ~2 hours. Heart rate and blood pressure begin settling toward baseline, and the brain\u2019s nicotine receptors go quiet as withdrawal begins.",
+  expect:["First urges within 1\u20132 hours, building through the day \u2014 each lasts only minutes","Restlessness","Appetite starts rising","Edgy, low mood, hard to focus, mild anxiety"],
+  tips:["Pre-plan distractions for the 2-hour craving waves","Stay hydrated","Avoid pairing routines (coffee, alcohol) that cue use"],
+  danger:null},
+ {id:"peak",name:"The Peak",range:"Days 2\u20133",color:"#f97316",d1:2,
+  happening:"Nicotine fully clears by ~72 hours. Receptors are at their sharpest point of recalibration and dopamine production hits a low point.",
+  expect:["Strongest, most frequent cravings \u2014 each still lasts minutes","Headaches as nicotine leaves the system","Poor sleep / insomnia","Fatigue and possible quitters\u2019 cough","Peak irritability, anxiety, restlessness, trouble concentrating","Constipation can begin"],
+  tips:["Expect one genuinely hard day \u2014 treat everything after as downhill","Eat 5 small meals a day to separate hunger from cravings","Lots of water; limit caffeine near bedtime","Short walks; a long evening walk helps insomnia","Breathe through cravings; nap or go to bed early"],
+  danger:"Day 3 is widely reported as the single hardest day."},
+ {id:"winddown",name:"Wind-down",range:"Days 4\u20137",color:"#eab308",d1:6,
+  happening:"Taste and smell nerve endings begin regenerating \u2014 breathing gets easier. Receptor density starts declining and sleep architecture normalizes.",
+  expect:["Cravings still frequent but shorter and arriving less often","Headaches mostly resolving","Sleep starting to settle; fatigue common","Anxiety and restlessness persist but the constant background discomfort eases"],
+  tips:["Keep routines; light exercise; consistent bedtime","Give yourself concentration breaks \u2014 brain fog is temporary","Celebrate the 1-week mark: reaching it predicts long-term success"],
+  danger:"Overconfidence trap (~days 7\u20138): feeling \u201ccured\u201d and rationalizing \u201cjust one.\u201d Most relapses happen after physical withdrawal passes, not during it."},
+ {id:"easing",name:"Easing",range:"Weeks 2\u20134",color:"#3b82f6",d1:29,
+  happening:"Circulation (gums/teeth) matches a nonsmoker by 2 weeks and lung function is improving. Dopamine production climbs back; natural reward function stabilizes.",
+  expect:["Cravings much less frequent \u2014 mostly cue-triggered, 2\u201310 minutes each","Most physical symptoms gone; insomnia eased","Appetite still elevated","Withdrawal irritability/anxiety largely gone by ~2 weeks \u2014 but thought-triggered cravings can feel like square one"],
+  tips:["Map your top-3 triggers and pre-decide replacements (walk, water, 2-minute game)","Use H.A.L.T.: hungry, angry, lonely, tired","Keep a written reasons-to-quit list and revisit it","Redirect romanticized thoughts; lean on support"],
+  danger:"Week 3 (\u201cicky three #2\u201d): motivation wears off and cravings return through thought triggers. Stress and social situations are classic cues."},
+ {id:"consol",name:"Consolidation",range:"Days 30\u201390",color:"#22c55e",d1:90,
+  happening:"Receptors keep normalizing. PET research shows dopamine-production deficits return to normal after ~3 months \u2014 matching never-smokers. Lung function measurably improved; heart-attack risk dropping.",
+  expect:["Cravings rare and brief, tied to old cues \u2014 each one survived weakens the habit loop","Appetite settling","Cough and shortness of breath decreasing","Mood generally stable; occasional \u201cblahs\u201d"],
+  tips:["Use the five Ds: delay, distract, drink water, deep breathing, discuss","Plan ahead for surprise cravings at month 3 rather than being ambushed","Positive self-talk: feelings are temporary","Celebrate milestones"],
+  danger:"Month 3 (\u201cicky three #3\u201d): the \u201cblahs\u201d \u2014 \u201cis that all there is?\u201d \u2014 plus \u201ccelebration\u201d or \u201cone to prove it\u201d thoughts."}
+];
+var QT_NIC_MILES = [
+ {d:3,label:"Nicotine fully cleared (~72h)"},
+ {d:7,label:"1 week \u2014 cravings shorter; predicts long-term success"},
+ {d:14,label:"2 weeks \u2014 circulation like a nonsmoker"},
+ {d:30,label:"1 month \u2014 entering consolidation"},
+ {d:90,label:"3 months \u2014 dopamine back to normal (Rademacher 2016)"}
+];
+var QT_ALC = [
+ {id:"reset",name:"Reset",range:"Days 1\u20137",color:"#14b8a6",d1:6,
+  happening:"The liver starts reducing inflammation within 24 hours and clears the toxin backlog. The body rehydrates as alcohol\u2019s diuretic effect ends.",
+  expect:["Sleep briefly unsettled, then improving \u2014 better mornings by week\u2019s end","Mild grumpiness for a day or two (habit interruption, not withdrawal)","Digestion improving within days","Reduced facial puffiness may begin"],
+  tips:["Hydrate deliberately","Keep sleep routines","Plan social situations: alternate drinks, mocktails","The first-days\u2019 irritability is temporary"],
+  danger:null},
+ {id:"repair",name:"Visible repair",range:"Days 8\u201330",color:"#10b981",d1:29,
+  happening:"REM sleep normalizes. Liver enzymes (ALT/AST) typically normalize around 2 weeks; liver fat drops up to ~20% by 1 month. In a controlled study of regular drinkers (Mehta et al. 2018, BMJ Open), one month off meant weight \u22121.5%, insulin resistance \u221225.9%, systolic BP \u22126.6%.",
+  expect:["Sleep quality improves dramatically","Skin: less puffiness, more even tone, redness fading","Weight loss often begins as empty alcohol calories disappear","Sharper thinking (~18 days); mood evens out","Sugar cravings in weeks 2\u20133, then fade","Gut symptoms resolve within 4 weeks"],
+  tips:["Have low-calorie snacks ready for the sugar cravings","Exercise to support mood and weight","Track weight and sleep to make the gains visible","Plan for weekend and social triggers"],
+  danger:"Social occasions, weekends, celebrations (\u201cI\u2019ve earned one\u201d) and habit cues like after-work drinks are the classic trip points."},
+ {id:"healing",name:"Deep healing",range:"Days 31\u201390",color:"#15803d",d1:90,
+  happening:"Sleep becomes deeper and more consistent. Dopamine systems blunted by regular drinking recover. Fatty liver keeps reversing, cardiovascular risk trends down, and immune response strengthens.",
+  expect:["Steadier daytime energy, fewer afternoon slumps","Anxiety and low mood tied to drinking ease","Continued gradual weight loss; leaner appearance","Stronger hair and nails with better nutrient absorption","Any urges are social/habit cues \u2014 easier to ride out than week 1"],
+  tips:["Rebuild social rituals that don\u2019t center on alcohol","Keep tracking to lock in the habit","Benefits compound \u2014 long-term research finds former drinkers\u2019 health comparable to lifetime abstainers"],
+  danger:null}
+];
+var QT_ALC_MILES = [
+ {d:7,label:"1 week \u2014 first genuinely good sleep"},
+ {d:14,label:"2 weeks \u2014 liver enzymes normalizing"},
+ {d:30,label:"1 month \u2014 BP down, insulin sensitivity up (Mehta 2018)"},
+ {d:90,label:"3 months \u2014 sustained energy, liver substantially repaired"}
+];
+var QT_DEF = {
+ nicotine:{title:"Nicotine-free",phases:QT_NIC,miles:QT_NIC_MILES,seedTime:"T14:00:00",info:"quitnic"},
+ alcohol:{title:"Alcohol-free",phases:QT_ALC,miles:QT_ALC_MILES,seedTime:"T00:00:00",info:"quitalc"}
+};
+function qtKey(key){ return "fuel.quit."+key+".v1"; }
+function qtGet(key){
+  try{ var v = JSON.parse(localStorage.getItem(qtKey(key))); if(v && typeof v==="object") return v; }catch(e){}
+  return null;
+}
+function qtSet(key, obj){ try{ localStorage.setItem(qtKey(key), JSON.stringify(obj)); }catch(e){} }
+/* Seed once: nicotine from the diary streak's last-use date (Jay's actual quit
+   2026-10-05 14:00); alcohol starts empty until he taps Start. Additive only. */
+function qtSeed(){
+  ["nicotine","alcohol"].forEach(function(key){
+    if(qtGet(key)) return;
+    var iso = null;
+    if(key==="nicotine"){
+      var lu = null;
+      try{ lu = S.streaks && S.streaks.nicotine && S.streaks.nicotine.lastUse; }catch(e){}
+      iso = (lu || "2026-10-05") + QT_DEF[key].seedTime;
+    }
+    qtSet(key, {start:iso});
+  });
+}
+function qtHours(key, nowMs){
+  var s = qtGet(key); if(!s || !s.start) return null;
+  var t = new Date(s.start).getTime(); if(isNaN(t)) return null;
+  return Math.max(0, ((nowMs==null?Date.now():nowMs) - t)/36e5);
+}
+function qtDayNum(h){ return Math.floor(h/24)+1; }
+function qtPhaseIdx(phases, h){
+  var d = Math.floor(h/24);
+  for(var i=0;i<phases.length;i++){ if(d<=phases[i].d1) return i; }
+  return phases.length; /* past day 90: complete */
+}
+var qtSelIdx = {nicotine:-1, alcohol:-1};
+function qtEsc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+function qtRenderTracker(key){
+  var def = QT_DEF[key];
+  var el = document.getElementById(key==="nicotine"?"qtNic":"qtAlc");
+  if(!el) return;
+  qtSeed();
+  var st = qtGet(key), startISO = st && st.start;
+  var h = startISO ? qtHours(key) : null;
+  var html = '<div class="card qt-tracker">';
+  html += '<div class="qt-head"><span class="qt-title">'+def.title+'</span>'
+    + '<button class="ginfo sm" data-qtinfo="'+def.info+'" aria-label="About '+def.title+' phases">i</button>'
+    + (h==null ? '' : '<span class="qt-day"><span class="qt-daynum">'+qtDayNum(h)+'</span><br><span class="qt-daylbl">DAY</span></span>')
+    + '</div>';
+  if(h==null){
+    var n0 = new Date();
+    var dv = n0.getFullYear()+"-"+String(n0.getMonth()+1).padStart(2,"0")+"-"+String(n0.getDate()).padStart(2,"0");
+    html += '<div class="qt-sub">Not started yet \u2014 set your last day and tap start.</div>'
+      + '<div class="qt-editrow"><input type="date" id="qt-'+key+'-date" value="'+dv+'" max="'+dv+'" aria-label="Last day">'
+      + '<button class="qt-start" id="qt-'+key+'-start" style="width:auto;flex:1">Start counter</button></div>'
+      + '<div class="qt-note">For a social drinker there is no withdrawal here \u2014 this timeline tracks sleep, hydration, liver, mood, weight and skin recovery.</div>';
+  } else {
+    var pi = qtPhaseIdx(def.phases, h);
+    var done = pi>=def.phases.length;
+    var shown = qtSelIdx[key]>=0 ? qtSelIdx[key] : Math.min(pi, def.phases.length-1);
+    var cur = def.phases[Math.min(pi, def.phases.length-1)];
+    var dNow = Math.floor(h/24);
+    html += '<div class="qt-sub">'+(done
+      ? "90+ days \u2014 past the timeline. This is just life now."
+      : ("Day "+qtDayNum(h)+" \u00b7 "+cur.name+" ("+cur.range+")"))+'</div>';
+    var segs="", lbls="";
+    def.phases.forEach(function(p,i){
+      var prev = i===0?0:def.phases[i-1].d1+1, dur = p.d1-prev+1, fg = Math.sqrt(dur).toFixed(2);
+      var cls = "qt-seg"+((i===pi&&!done)?" qt-cur":"")+(i===shown?" qt-sel":"");
+      segs += '<button class="'+cls+'" data-qtkey="'+key+'" data-qti="'+i+'" title="'+qtEsc(p.name+" \u00b7 "+p.range)+'" aria-label="'+qtEsc(p.name+", "+p.range)+'" style="flex:'+fg+' 1 0%;background:'+p.color+'59;color:'+p.color+'"></button>';
+      lbls += '<span class="qt-seglbl" style="flex:'+fg+' 1 0%">'+p.name+'</span>';
+    });
+    html += '<div class="qt-tl">'+segs+'</div><div class="qt-seglbls">'+lbls+'</div>';
+    html += '<div class="qt-mtrack">'+def.miles.map(function(m){
+      var pct = Math.min(100, m.d/91*100).toFixed(1);
+      return '<span class="qt-mdot'+(dNow>=m.d?" done":"")+'" style="left:'+pct+'%" title="'+qtEsc(m.label)+'"></span>';
+    }).join("")+'</div>';
+    var p = def.phases[shown];
+    html += '<div class="card qt-card" style="border-top-color:'+p.color+';margin:10px 0 0">'
+      + '<div class="qt-phname">'+p.name+' <span class="qt-phrange">'+p.range+'</span></div>'
+      + '<div class="qt-phsec"><b>What\u2019s happening</b><p>'+p.happening+'</p></div>'
+      + '<div class="qt-phsec"><b>Expect</b><ul>'+p.expect.map(function(x){return '<li>'+x+'</li>';}).join("")+'</ul></div>'
+      + '<div class="qt-phsec"><b>Try this</b><ul>'+p.tips.map(function(x){return '<li>'+x+'</li>';}).join("")+'</ul></div>'
+      + (p.danger?'<div class="qt-danger"><b>\u26a0 Watch out</b>'+p.danger+'</div>':'')
+      + '</div>';
+    html += '<div class="card" style="margin:10px 0 0"><div class="flabel" style="margin-bottom:2px">Milestones</div>'
+      + def.miles.map(function(m){
+        var reached = dNow>=m.d;
+        return '<div class="qt-mrow"><span class="qt-mdot2'+(reached?" done":"")+'"></span><span>'+m.label+'</span><span class="qt-mwhen">'+(reached?"done":"day "+m.d)+'</span></div>';
+      }).join("")+'</div>';
+    html += '<div class="card" style="margin:10px 0 0"><div class="flabel" style="margin-bottom:8px">Quit start</div>'
+      + '<div class="qt-editrow"><input type="date" id="qt-'+key+'-date" value="'+startISO.slice(0,10)+'" aria-label="Start date">'
+      + '<input type="time" id="qt-'+key+'-time" value="'+startISO.slice(11,16)+'" aria-label="Start time">'
+      + '<button class="qt-save" id="qt-'+key+'-save">Save</button></div>'
+      + '<button class="qt-reset" id="qt-'+key+'-reset">Restart counter from now</button></div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+  el.querySelectorAll(".qt-seg").forEach(function(b){
+    b.onclick = function(){
+      var k = b.getAttribute("data-qtkey"), i = +b.getAttribute("data-qti");
+      qtSelIdx[k] = (qtSelIdx[k]===i ? -1 : i);
+      renderQuit();
+    };
+  });
+  var ib = el.querySelector("[data-qtinfo]");
+  if(ib) ib.onclick = function(){ openInfo(ib.getAttribute("data-qtinfo")); };
+  var sv = document.getElementById("qt-"+key+"-save") || document.getElementById("qt-"+key+"-start");
+  if(sv) sv.onclick = function(){
+    var dEl = document.getElementById("qt-"+key+"-date");
+    var tEl = document.getElementById("qt-"+key+"-time");
+    var d = dEl && dEl.value; if(!d) return;
+    var t = (tEl && tEl.value) || "00:00";
+    var iso = d+"T"+t+":00";
+    if(isNaN(new Date(iso).getTime())) return;
+    qtSet(key, {start:iso}); qtSelIdx[key] = -1; renderQuit();
+  };
+  var rs = document.getElementById("qt-"+key+"-reset");
+  if(rs) rs.onclick = function(){
+    if(!confirm("Restart the "+def.title.toLowerCase()+" counter from right now?")) return;
+    var n = new Date();
+    var iso = n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0")
+      +"T"+String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0")+":00";
+    qtSet(key, {start:iso}); qtSelIdx[key] = -1; renderQuit();
+  };
+}
+function renderQuit(){
+  qtSeed();
+  qtRenderTracker("nicotine");
+  qtRenderTracker("alcohol");
+}
+(function(){
+  var qo = document.getElementById("quitOpen");
+  if(qo) qo.onclick = function(){ showView("quit"); };
+  var qb = document.getElementById("quitBack");
+  if(qb) qb.onclick = function(){ showView("diary"); };
+})();
 </script>
 <script>
 /* ---- wiring (runs once; elements are static HTML above the scripts) ---- */
