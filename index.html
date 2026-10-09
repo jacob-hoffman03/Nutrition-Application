@@ -219,17 +219,17 @@ button{font-family:inherit;}
 .qt-daynum{font-size:36px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;}
 .qt-daylbl{font-size:10.5px;font-weight:800;color:var(--muted);letter-spacing:.6px;}
 .qt-sub{font-size:12.5px;color:var(--muted);margin:3px 0 2px;}
-.qt-tl{display:flex;gap:3px;margin:12px 0 2px;}
-.qt-seg{height:32px;border-radius:9px;cursor:pointer;border:2px solid transparent;padding:0;min-width:0;font-family:inherit;}
-.qt-seg.qt-cur{border-color:currentColor;animation:qtpulse 1.8s ease-in-out infinite;}
-@keyframes qtpulse{0%,100%{box-shadow:0 0 0 0 rgba(0,0,0,0);}50%{box-shadow:0 0 0 5px rgba(0,0,0,.10);}}
-.qt-seg.qt-sel{outline:2.5px solid var(--ink);outline-offset:1px;}
-.qt-seglbls{display:flex;gap:3px;margin-bottom:2px;}
-.qt-seglbl{font-size:9px;font-weight:800;color:var(--muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;letter-spacing:.2px;}
-.qt-mtrack{position:relative;height:16px;margin:0 4px;}
-.qt-mtrack:before{content:"";position:absolute;left:0;right:0;top:7px;height:2px;background:var(--line);border-radius:2px;}
-.qt-mdot{position:absolute;top:3px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid #c7c7cc;transform:translateX(-50%);}
-.qt-mdot.done{background:#16a34a;border-color:#16a34a;}
+.qt-vwrap{display:flex;gap:12px;align-items:stretch;}
+.qt-vmain{flex:1;min-width:0;}
+.qt-vbar{position:relative;flex:none;width:16px;border-radius:9px;min-height:150px;margin:4px 0 2px;}
+.qt-vtrack{position:absolute;left:0;right:0;top:0;bottom:0;border-radius:9px;}
+.qt-vfill{position:absolute;left:0;right:0;bottom:0;border-radius:9px;animation:qtvpulse 2.2s ease-in-out infinite;}
+@keyframes qtvpulse{0%,100%{box-shadow:0 0 0 0 rgba(0,0,0,0);}50%{box-shadow:0 0 0 6px rgba(0,0,0,.08);}}
+.qt-vdiv{position:absolute;left:0;right:0;height:2px;background:rgba(255,255,255,.65);border-radius:1px;transform:translateY(50%);z-index:1;}
+.qt-vseg{position:absolute;left:-7px;right:-7px;background:none;border:none;padding:0;cursor:pointer;font-family:inherit;z-index:2;}
+.qt-vseg.qt-sel{outline:2.5px solid var(--ink);outline-offset:1px;border-radius:10px;}
+.qt-vdot{position:absolute;right:-5px;width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #c7c7cc;transform:translateY(50%);z-index:3;}
+.qt-vdot.done{background:#16a34a;border-color:#16a34a;}
 .qt-card{border-top:4px solid #ccc;}
 .qt-phname{font-size:16px;font-weight:800;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
 .qt-phrange{font-size:12px;font-weight:700;color:var(--muted);}
@@ -2218,7 +2218,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.09-a";
+const APP_VERSION = "2026.10.09-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -7964,6 +7964,13 @@ function qtPhaseIdx(phases, h){
 }
 var qtSelIdx = {nicotine:-1, alcohol:-1};
 function qtEsc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+/* pastel tint of a #rrggbb phase color for the unfilled track */
+function qtPastel(hex){
+  var m = /^#?([0-9a-f]{6})$/i.exec(hex||""); if(!m) return "#eef1f6";
+  var n = parseInt(m[1],16), t = 0.85, r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+  r=Math.round(r+(255-r)*t); g=Math.round(g+(255-g)*t); b=Math.round(b+(255-b)*t);
+  return "#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
 function qtRenderTracker(key){
   var def = QT_DEF[key];
   var el = document.getElementById(key==="nicotine"?"qtNic":"qtAlc");
@@ -7972,11 +7979,12 @@ function qtRenderTracker(key){
   var st = qtGet(key), startISO = st && st.start;
   var h = startISO ? qtHours(key) : null;
   var html = '<div class="card qt-tracker">';
-  html += '<div class="qt-head"><span class="qt-title">'+def.title+'</span>'
+  var headHtml = '<div class="qt-head"><span class="qt-title">'+def.title+'</span>'
     + '<button class="ginfo sm" data-qtinfo="'+def.info+'" aria-label="About '+def.title+' phases">i</button>'
     + (h==null ? '' : '<span class="qt-day"><span class="qt-daynum">'+qtDayNum(h)+'</span><br><span class="qt-daylbl">DAY</span></span>')
     + '</div>';
   if(h==null){
+    html += headHtml;
     var n0 = new Date();
     var dv = n0.getFullYear()+"-"+String(n0.getMonth()+1).padStart(2,"0")+"-"+String(n0.getDate()).padStart(2,"0");
     html += '<div class="qt-sub">Not started yet \u2014 set your last day and tap start.</div>'
@@ -7992,18 +8000,26 @@ function qtRenderTracker(key){
     html += '<div class="qt-sub">'+(done
       ? "90+ days \u2014 past the timeline. This is just life now."
       : ("Day "+qtDayNum(h)+" \u00b7 "+cur.name+" ("+cur.range+")"))+'</div>';
-    var segs="", lbls="";
+    var curColor = done ? def.phases[def.phases.length-1].color : cur.color;
+    var fillPct = Math.min(100, h/(91*24)*100).toFixed(2);
+    var vbar = '<div class="qt-vbar" role="group" aria-label="'+qtEsc(def.title)+' progress">'
+      + '<div class="qt-vtrack" style="background:'+qtPastel(curColor)+'"></div>'
+      + '<div class="qt-vfill" style="height:'+fillPct+'%;background:'+curColor+'"></div>';
+    var prevPct = 0;
     def.phases.forEach(function(p,i){
-      var prev = i===0?0:def.phases[i-1].d1+1, dur = p.d1-prev+1, fg = Math.sqrt(dur).toFixed(2);
-      var cls = "qt-seg"+((i===pi&&!done)?" qt-cur":"")+(i===shown?" qt-sel":"");
-      segs += '<button class="'+cls+'" data-qtkey="'+key+'" data-qti="'+i+'" title="'+qtEsc(p.name+" \u00b7 "+p.range)+'" aria-label="'+qtEsc(p.name+", "+p.range)+'" style="flex:'+fg+' 1 0%;background:'+p.color+'59;color:'+p.color+'"></button>';
-      lbls += '<span class="qt-seglbl" style="flex:'+fg+' 1 0%">'+p.name+'</span>';
+      var pct = Math.min(100, (p.d1+1)/91*100);
+      if(i<def.phases.length-1) vbar += '<div class="qt-vdiv" style="bottom:'+pct.toFixed(2)+'%"></div>';
+      vbar += '<button class="qt-vseg'+(i===shown?' qt-sel':'')+'" data-qtkey="'+key+'" data-qti="'+i+'"'
+        + ' title="'+qtEsc(p.name+" \u00b7 "+p.range)+'" aria-label="'+qtEsc(p.name+", "+p.range)+'"'
+        + ' style="bottom:'+prevPct.toFixed(2)+'%;height:'+Math.max(0,pct-prevPct).toFixed(2)+'%"></button>';
+      prevPct = pct;
     });
-    html += '<div class="qt-tl">'+segs+'</div><div class="qt-seglbls">'+lbls+'</div>';
-    html += '<div class="qt-mtrack">'+def.miles.map(function(m){
-      var pct = Math.min(100, m.d/91*100).toFixed(1);
-      return '<span class="qt-mdot'+(dNow>=m.d?" done":"")+'" style="left:'+pct+'%" title="'+qtEsc(m.label)+'"></span>';
-    }).join("")+'</div>';
+    def.miles.forEach(function(m){
+      var mpct = Math.min(100, m.d/91*100).toFixed(2);
+      vbar += '<span class="qt-vdot'+(dNow>=m.d?' done':'')+'" style="bottom:'+mpct+'%" title="'+qtEsc(m.label)+'"></span>';
+    });
+    vbar += '</div>';
+    html += '<div class="qt-vwrap">'+vbar+'<div class="qt-vmain">'+headHtml;
     var p = def.phases[shown];
     html += '<div class="card qt-card" style="border-top-color:'+p.color+';margin:10px 0 0">'
       + '<div class="qt-phname">'+p.name+' <span class="qt-phrange">'+p.range+'</span></div>'
@@ -8012,6 +8028,7 @@ function qtRenderTracker(key){
       + '<div class="qt-phsec"><b>Try this</b><ul>'+p.tips.map(function(x){return '<li>'+x+'</li>';}).join("")+'</ul></div>'
       + (p.danger?'<div class="qt-danger"><b>\u26a0 Watch out</b>'+p.danger+'</div>':'')
       + '</div>';
+    html += '</div></div>'; /* close qt-vmain + qt-vwrap */
     html += '<div class="card" style="margin:10px 0 0"><div class="flabel" style="margin-bottom:2px">Milestones</div>'
       + def.miles.map(function(m){
         var reached = dNow>=m.d;
@@ -8025,7 +8042,7 @@ function qtRenderTracker(key){
   }
   html += '</div>';
   el.innerHTML = html;
-  el.querySelectorAll(".qt-seg").forEach(function(b){
+  el.querySelectorAll(".qt-vseg").forEach(function(b){
     b.onclick = function(){
       var k = b.getAttribute("data-qtkey"), i = +b.getAttribute("data-qti");
       qtSelIdx[k] = (qtSelIdx[k]===i ? -1 : i);
