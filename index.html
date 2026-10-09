@@ -186,16 +186,21 @@ button{font-family:inherit;}
 .streaktxt{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0;}
 .streaktxt b{font-size:15.5px;}
 .streakcircle{position:relative;flex:none;width:58px;height:58px;border-radius:50%;cursor:pointer;font-family:inherit;color:var(--ink);
-  background:#fff;border:2.5px solid var(--line);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  transition:transform .12s ease, border-color .2s, background .2s, box-shadow .2s;}
+  background:#fff;border:none;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .12s ease, background .2s, box-shadow .2s;}
 .streakcircle:active{transform:scale(.93);}
 .streakcircle .scnum{font-size:19px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums;}
 .streakcircle .sclbl{font-size:9.5px;font-weight:700;color:var(--muted);}
-.streakcircle.ph-red{border-color:#ef4444;background:#fef2f2;box-shadow:0 0 0 5px rgba(239,68,68,.08);}
-.streakcircle.ph-orange{border-color:#f97316;background:#fff7ed;box-shadow:0 0 0 5px rgba(249,115,22,.08);}
-.streakcircle.ph-yellow{border-color:#eab308;background:#fefce8;box-shadow:0 0 0 5px rgba(234,179,8,.10);}
-.streakcircle.ph-green{border-color:#22c55e;background:#f0fdf4;box-shadow:0 0 0 5px rgba(34,197,94,.10);}
+.streakcircle.ph-red{background:#fef2f2;box-shadow:0 0 0 5px rgba(239,68,68,.08);}
+.streakcircle.ph-orange{background:#fff7ed;box-shadow:0 0 0 5px rgba(249,115,22,.08);}
+.streakcircle.ph-yellow{background:#fefce8;box-shadow:0 0 0 5px rgba(234,179,8,.10);}
+.streakcircle.ph-green{background:#f0fdf4;box-shadow:0 0 0 5px rgba(34,197,94,.10);}
+/* streak progress ring (2026.10.09-d): SVG ring fills toward 30 days, color lerps through phase colors */
+.scring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none;}
+.sctrack{fill:none;stroke:#e9e9ee;stroke-width:4;}
+.scfill{fill:none;stroke:#d7d7de;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .6s ease,stroke .4s ease;}
+.sctext{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .slipline{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line);}
 .slipline:last-child{border-bottom:none;}
 .slipline b{font-size:15px;}
@@ -209,7 +214,7 @@ button{font-family:inherit;}
 .pdot{flex:none;width:12px;height:12px;border-radius:50%;margin-top:3px;}
 .phrow b{display:block;font-size:14px;}
 .phrow span{display:block;font-size:13px;color:var(--muted);margin-top:1px;line-height:1.45;}
-/* quit tracker (2026.10.09-c) */
+/* quit tracker (2026.10.09-d) */
 .qt-open{margin-left:auto;background:none;border:none;color:#5b5bf0;font-size:13.5px;font-weight:800;cursor:pointer;padding:6px 2px;font-family:inherit;}
 .qt-open:active{opacity:.6;}
 .qt-tracker{margin-bottom:14px;}
@@ -1112,12 +1117,12 @@ body.reordering #progOverview{display:none}
       <div class="streakrow">
         <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M10.5 7v13a1.5 1.5 0 0 0 3 0V7"/></svg></span>
         <span class="streaktxt"><span class="streakttl"><b>Nicotine</b><button class="ginfo sm" id="nicPhaseInfo" aria-label="About nicotine phases">i</button></span><span class="wlbl" id="nicDays"></span><span class="phaselbl" id="nicPhase"></span></span>
-        <button class="streakcircle" id="nicTap" aria-label="Log a clean day without nicotine"><span class="scnum" id="nicNum">0</span><span class="sclbl">days</span></button>
+        <button class="streakcircle" id="nicTap" aria-label="Log a clean day without nicotine"><svg class="scring" viewBox="0 0 64 64" aria-hidden="true"><circle class="sctrack" cx="32" cy="32" r="28"/><circle class="scfill" id="nicRing" cx="32" cy="32" r="28"/></svg><span class="sctext"><span class="scnum" id="nicNum">0</span><span class="sclbl">days</span></span></button>
       </div>
       <div class="streakrow">
         <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4.5 4.5h15L12 12.5 4.5 4.5z"/><path d="M12 12.5V19" stroke-linecap="round"/><path d="M8.5 21h7" stroke-linecap="round"/></svg></span>
         <span class="streaktxt"><span class="streakttl"><b>Alcohol</b><button class="ginfo sm" id="alcPhaseInfo" aria-label="About alcohol phases">i</button></span><span class="wlbl" id="alcDays"></span><span class="phaselbl" id="alcPhase"></span></span>
-        <button class="streakcircle" id="alcTap" aria-label="Log a clean day without alcohol"><span class="scnum" id="alcNum">0</span><span class="sclbl">days</span></button>
+        <button class="streakcircle" id="alcTap" aria-label="Log a clean day without alcohol"><svg class="scring" viewBox="0 0 64 64" aria-hidden="true"><circle class="sctrack" cx="32" cy="32" r="28"/><circle class="scfill" id="alcRing" cx="32" cy="32" r="28"/></svg><span class="sctext"><span class="scnum" id="alcNum">0</span><span class="sclbl">days</span></span></button>
       </div>
     </div>
 
@@ -1608,7 +1613,7 @@ body.reordering #progOverview{display:none}
     <div class="hint" style="padding:0 20px">Meal times are learned separately for work days and days off. Past meal times keep the schedule they were learned under.</div>
   </section>
 
-  <!-- QUIT TRACKER (2026.10.09-c): research-grounded nicotine + alcohol-free phase timelines -->
+  <!-- QUIT TRACKER (2026.10.09-d): research-grounded nicotine + alcohol-free phase timelines -->
   <section class="view" id="view-quit">
     <div class="topbar">
       <button class="tbtn" id="quitBack" aria-label="Back">‹</button>
@@ -2218,7 +2223,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.09-c";
+const APP_VERSION = "2026.10.09-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -3188,6 +3193,32 @@ function streakSlip(key){
   streakGet(key).lastUse = todayStr();
   save(); renderStreaks(); closeInfoSheet();
 }
+/* streak progress ring (2026.10.09-d): ring fills toward 30 days clean (fill = min(days/30,1));
+   color lerps smoothly through the quit tracker's phase colors as the ring grows. */
+const SC_R = 28, SC_CIRC = 2*Math.PI*SC_R;
+function scHexRGB(h){ h=h.replace("#",""); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+function scLerpColor(stops, t){
+  t=Math.max(0,Math.min(1,t));
+  if(!stops.length) return "#d7d7de";
+  if(stops.length===1) return stops[0];
+  const x=t*(stops.length-1), i=Math.min(stops.length-2,Math.floor(x)), f=x-i;
+  const a=scHexRGB(stops[i]), b=scHexRGB(stops[i+1]);
+  const m=a.map(function(v,k){ return Math.round(v+(b[k]-v)*f); });
+  return "#"+m.map(function(v){ return v.toString(16).padStart(2,"0"); }).join("");
+}
+function scPaintRing(key, days, started){
+  const ring=document.getElementById(key==="nicotine" ? "nicRing" : "alcRing");
+  if(!ring) return;
+  const frac = started ? Math.min(days/30, 1) : 0;
+  /* phase colors mirror the quit tracker's QT_NIC/QT_ALC arrays (declared in a later
+     script block, so literals here keep first paint correct) */
+  const stops = key==="nicotine"
+    ? ["#ef4444","#f97316","#eab308","#3b82f6","#22c55e"]
+    : ["#14b8a6","#10b981","#15803d"];
+  ring.style.strokeDasharray = SC_CIRC.toFixed(2);
+  ring.style.strokeDashoffset = (SC_CIRC*(1-frac)).toFixed(2);
+  ring.style.stroke = started ? scLerpColor(stops, frac) : "#d7d7de";
+}
 function renderStreaks(){
   [["nicotine","nicDays","nicNum","nicTap","nicPhase"],["alcohol","alcDays","alcNum","alcTap","alcPhase"]].forEach(function(c){
     const key=c[0], s=streakGet(key), days=streakDays(key), started=!!s.lastUse;
@@ -3197,6 +3228,7 @@ function renderStreaks(){
     const btn=$(c[3]), ph=streakPhase(key,days,started);
     btn.classList.remove("ph-red","ph-orange","ph-yellow","ph-green");
     if(ph!=="none") btn.classList.add("ph-"+ph);
+    scPaintRing(key, days, started);
     const pl=$(c[4]);
     if(!started){ pl.textContent=""; }
     else { pl.textContent=PHASE_NAME[key][ph]; pl.style.color=PHASE_COLOR[ph]; }
@@ -6370,7 +6402,7 @@ function infoContent(k){
      <div class="irow">A supplement you flag <b>"needs extra water"</b> adds 16 oz — creatine needs no extra water (ISSN 2017). Set a manual target any time in Goals › Water.</div>`};
   if(k==="streakinfo") return {t:"Streaks", b:
     `<div class="irow">Tap a circle to set the <b>last day</b> you vaped or drank — the count is full days since that date, figured from the real calendar.</div>
-     <div class="irow">The ring color shows the phase: <b style="color:#ef4444">red</b> = rough patch (nicotine: the first 3 days; alcohol: the hungover window), then <b style="color:#f97316">orange</b>, <b style="color:#eab308">yellow</b>, <b style="color:#22c55e">green</b> as the streak builds.</div>
+     <div class="irow">The ring <b>fills toward 30 days clean</b> — its color blends smoothly through the phases as you build the streak: <b style="color:#ef4444">red</b> → <b style="color:#f97316">orange</b> → <b style="color:#eab308">yellow</b> → <b style="color:#3b82f6">blue</b> → <b style="color:#22c55e">green</b> (nicotine) or <b style="color:#14b8a6">teal</b> → <b style="color:#10b981">emerald</b> → <b style="color:#15803d">deep green</b> (alcohol).</div>
      <div class="irow">Slipped? Reset that streak below — the count just restarts.</div>
      <div class="slipline"><b>Nicotine</b><button class="slipbtn" data-slip="nicotine">Log a slip</button></div>
      <div class="slipline"><b>Alcohol</b><button class="slipbtn" data-slip="alcohol">Log a slip</button></div>`};
@@ -7866,7 +7898,7 @@ function autoPilot(){
   paintAutoZone();
 }
 
-/* ============ QUIT TRACKER (2026.10.09-c) ============
+/* ============ QUIT TRACKER (2026.10.09-d) ============
    Research-grounded phase timelines (cessation research, report 2026-10-09).
    Start dates live under their own keys (fuel.quit.<nicotine|alcohol>.v1) —
    fuel.v1 is never touched here. */
