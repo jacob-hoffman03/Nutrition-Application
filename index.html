@@ -182,7 +182,7 @@ button{font-family:inherit;}
 .streakcard{padding:14px 16px 8px;}
 .streakhead{display:flex;align-items:center;margin-bottom:2px;}
 .shead b{font-size:17px;}
-.streakrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);}
+.streakrow{display:flex;align-items:center;gap:10px;padding:10px 2px 20px 0;border-top:1px solid var(--line);}
 .streaktxt{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0;}
 .streaktxt b{font-size:15.5px;}
 .streakcircle{position:relative;flex:none;width:58px;height:58px;border-radius:50%;cursor:pointer;font-family:inherit;color:var(--ink);
@@ -196,18 +196,18 @@ button{font-family:inherit;}
 .streakcircle.ph-orange{background:#fff7ed;box-shadow:0 0 0 5px rgba(249,115,22,.08);}
 .streakcircle.ph-yellow{background:#fefce8;box-shadow:0 0 0 5px rgba(234,179,8,.10);}
 .streakcircle.ph-green{background:#f0fdf4;box-shadow:0 0 0 5px rgba(34,197,94,.10);}
-/* streak progress ring (2026.10.09-e): SVG ring fills toward 30 days, color lerps through phase colors */
+/* streak progress ring (2026.10.09-f): SVG ring fills toward 30 days, color lerps through phase colors */
 .scring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none;}
 .sctrack{fill:none;stroke:#e9e9ee;stroke-width:4;}
 .scfill{fill:none;stroke:#d7d7de;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .6s ease,stroke .4s ease;}
 .sctext{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-/* organ healing satellite (2026.10.09-e): small circle attached lower-right of each streak circle */
-.oh-sat{position:absolute;right:-8px;bottom:-8px;width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid var(--line);box-shadow:0 1px 5px rgba(0,0,0,.16);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+/* organ healing satellite (2026.10.09-f): small circle attached lower-right of each streak circle */
+.oh-sat{position:absolute;right:-4px;bottom:-6px;width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid var(--line);box-shadow:0 1px 5px rgba(0,0,0,.16);display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .oh-ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none;}
 .oh-track{fill:none;stroke:#eeeef2;stroke-width:3.5;}
 .oh-fill{fill:none;stroke:#d7d7de;stroke-width:3.5;stroke-linecap:round;transition:stroke-dashoffset .6s ease,stroke .4s ease;}
 .oh-pct{position:relative;font-size:7px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1;}
-.oh-lbl{position:absolute;right:-47px;bottom:-23px;width:52px;text-align:center;font-size:8px;font-weight:700;color:var(--muted);pointer-events:none;white-space:nowrap;}
+.oh-lbl{position:absolute;top:calc(100% + 1px);left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;color:var(--muted);pointer-events:none;white-space:nowrap;line-height:1;}
 .slipline{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line);}
 .slipline:last-child{border-bottom:none;}
 .slipline b{font-size:15px;}
@@ -221,7 +221,7 @@ button{font-family:inherit;}
 .pdot{flex:none;width:12px;height:12px;border-radius:50%;margin-top:3px;}
 .phrow b{display:block;font-size:14px;}
 .phrow span{display:block;font-size:13px;color:var(--muted);margin-top:1px;line-height:1.45;}
-/* quit tracker (2026.10.09-e) */
+/* quit tracker (2026.10.09-f) */
 .qt-open{margin-left:auto;background:none;border:none;color:#5b5bf0;font-size:13.5px;font-weight:800;cursor:pointer;padding:6px 2px;font-family:inherit;}
 .qt-open:active{opacity:.6;}
 .qt-tracker{margin-bottom:14px;}
@@ -1124,12 +1124,12 @@ body.reordering #progOverview{display:none}
       <div class="streakrow">
         <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M10.5 7v13a1.5 1.5 0 0 0 3 0V7"/></svg></span>
         <span class="streaktxt"><span class="streakttl"><b>Nicotine</b><button class="ginfo sm" id="nicPhaseInfo" aria-label="About nicotine phases">i</button></span><span class="wlbl" id="nicDays"></span><span class="phaselbl" id="nicPhase"></span></span>
-        <button class="streakcircle" id="nicTap" aria-label="Log a clean day without nicotine"><svg class="scring" viewBox="0 0 64 64" aria-hidden="true"><circle class="sctrack" cx="32" cy="32" r="28"/><circle class="scfill" id="nicRing" cx="32" cy="32" r="28"/></svg><span class="sctext"><span class="scnum" id="nicNum">0</span><span class="sclbl">days</span></span><span class="oh-sat" id="nicHeal" role="button" tabindex="0" aria-label="Lung healing progress"><svg class="oh-ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="oh-track" cx="18" cy="18" r="15.5"/><circle class="oh-fill" id="nicHealRing" cx="18" cy="18" r="15.5"/></svg><span class="oh-pct" id="nicHealPct"></span></span><span class="oh-lbl">Lungs</span></button>
+        <button class="streakcircle" id="nicTap" aria-label="Log a clean day without nicotine"><svg class="scring" viewBox="0 0 64 64" aria-hidden="true"><circle class="sctrack" cx="32" cy="32" r="28"/><circle class="scfill" id="nicRing" cx="32" cy="32" r="28"/></svg><span class="sctext"><span class="scnum" id="nicNum">0</span><span class="sclbl">days</span></span><span class="oh-sat" id="nicHeal" role="button" tabindex="0" aria-label="Lung healing progress"><svg class="oh-ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="oh-track" cx="18" cy="18" r="15.5"/><circle class="oh-fill" id="nicHealRing" cx="18" cy="18" r="15.5"/></svg><span class="oh-pct" id="nicHealPct"></span><span class="oh-lbl">Lungs</span></span></button>
       </div>
       <div class="streakrow">
         <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4.5 4.5h15L12 12.5 4.5 4.5z"/><path d="M12 12.5V19" stroke-linecap="round"/><path d="M8.5 21h7" stroke-linecap="round"/></svg></span>
         <span class="streaktxt"><span class="streakttl"><b>Alcohol</b><button class="ginfo sm" id="alcPhaseInfo" aria-label="About alcohol phases">i</button></span><span class="wlbl" id="alcDays"></span><span class="phaselbl" id="alcPhase"></span></span>
-        <button class="streakcircle" id="alcTap" aria-label="Log a clean day without alcohol"><svg class="scring" viewBox="0 0 64 64" aria-hidden="true"><circle class="sctrack" cx="32" cy="32" r="28"/><circle class="scfill" id="alcRing" cx="32" cy="32" r="28"/></svg><span class="sctext"><span class="scnum" id="alcNum">0</span><span class="sclbl">days</span></span><span class="oh-sat" id="alcHeal" role="button" tabindex="0" aria-label="Liver healing progress"><svg class="oh-ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="oh-track" cx="18" cy="18" r="15.5"/><circle class="oh-fill" id="alcHealRing" cx="18" cy="18" r="15.5"/></svg><span class="oh-pct" id="alcHealPct"></span></span><span class="oh-lbl">Liver</span></button>
+        <button class="streakcircle" id="alcTap" aria-label="Log a clean day without alcohol"><svg class="scring" viewBox="0 0 64 64" aria-hidden="true"><circle class="sctrack" cx="32" cy="32" r="28"/><circle class="scfill" id="alcRing" cx="32" cy="32" r="28"/></svg><span class="sctext"><span class="scnum" id="alcNum">0</span><span class="sclbl">days</span></span><span class="oh-sat" id="alcHeal" role="button" tabindex="0" aria-label="Liver healing progress"><svg class="oh-ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="oh-track" cx="18" cy="18" r="15.5"/><circle class="oh-fill" id="alcHealRing" cx="18" cy="18" r="15.5"/></svg><span class="oh-pct" id="alcHealPct"></span><span class="oh-lbl">Liver</span></span></button>
       </div>
     </div>
 
@@ -1620,7 +1620,7 @@ body.reordering #progOverview{display:none}
     <div class="hint" style="padding:0 20px">Meal times are learned separately for work days and days off. Past meal times keep the schedule they were learned under.</div>
   </section>
 
-  <!-- QUIT TRACKER (2026.10.09-e): research-grounded nicotine + alcohol-free phase timelines -->
+  <!-- QUIT TRACKER (2026.10.09-f): research-grounded nicotine + alcohol-free phase timelines -->
   <section class="view" id="view-quit">
     <div class="topbar">
       <button class="tbtn" id="quitBack" aria-label="Back">‹</button>
@@ -2230,7 +2230,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.09-e";
+const APP_VERSION = "2026.10.09-f";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -3052,9 +3052,11 @@ function renderDiary(){
     const mp = items.reduce((a,e)=>a+(e.p||0),0); /* per-meal protein subtotal (2026.09.24-u) */
     let html = `<div class="mrow${mi===MEALS.length-1 && !items.length ? "" : " noborder"}"><span class="mico" style="background:${MEAL_TINT[m]}">${MEAL_ICON[m]}</span><span class="mname">${MEAL_LABEL[m]}</span><span class="mkcal">${Math.round(mc)} kcal${mp>0.5 ? " · "+Math.round(mp)+"g P" : ""}</span><button class="mcopy" data-copy="${m}" aria-label="Copy ${MEAL_LABEL[m]} from another day">⧉</button><button class="madd" data-add="${m}" aria-label="Add to ${MEAL_LABEL[m]}">+</button></div>`;
     html += items.length ? items.map(e=>{ const im = entryImg(e);
+      const eqty = (e.qty==null||isNaN(e.qty)) ? 1 : e.qty; /* 2026.10.09-f: old/seed entries may lack qty/s */
+      const eserv = e.s || "1 serving";
       const sub = (e.nutrs && e.nutrs.length)
-        ? `${esc(e.s)}${e.qty>1?` × ${e.qty}`:""} · ${e.nutrs.map(x=>`${r1(x.amt)} ${esc(x.u)}`).join(" + ")}`
-        : `${e.qty} × ${esc(e.s)}`;
+        ? `${esc(eserv)}${eqty>1?` × ${eqty}`:""} · ${e.nutrs.map(x=>`${r1(x.amt)} ${esc(x.u)}`).join(" + ")}`
+        : `${eqty} × ${esc(eserv)}`;
       return `<div class="logrow">${im?`<span class="lthumb"><img src="${im}" alt=""></span>`:""}<span class="nm"><span class="nmt">${esc(e.n)} <span class="nmsub">${sub}</span></span>${foodBadgeHTML(findFood(e.n)||e)}</span><span class="kc">${Math.round(e.cal)}</span><button class="logdel" data-m="${m}" data-id="${e.id}">×</button></div>`;
     }).join("") : "";
     const wrap = document.createElement("div");
@@ -3200,7 +3202,7 @@ function streakSlip(key){
   streakGet(key).lastUse = todayStr();
   save(); renderStreaks(); closeInfoSheet();
 }
-/* streak progress ring (2026.10.09-e): ring fills toward 30 days clean (fill = min(days/30,1));
+/* streak progress ring (2026.10.09-f): ring fills toward 30 days clean (fill = min(days/30,1));
    color lerps smoothly through the quit tracker's phase colors as the ring grows. */
 const SC_R = 28, SC_CIRC = 2*Math.PI*SC_R;
 function scHexRGB(h){ h=h.replace("#",""); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
@@ -3226,7 +3228,7 @@ function scPaintRing(key, days, started){
   ring.style.strokeDashoffset = (SC_CIRC*(1-frac)).toFixed(2);
   ring.style.stroke = started ? scLerpColor(stops, frac) : "#d7d7de";
 }
-/* organ healing satellites (2026.10.09-e): milestone-weighted progress toward full healing.
+/* organ healing satellites (2026.10.09-f): milestone-weighted progress toward full healing.
    Lungs: 100% = 90 days (lung function substantially recovered, cilia restored). Liver: 100% = 90 days (social drinker). */
 const OH_LUNGS=[[12,10],[72,20],[336,40],[720,60],[1008,75],[1440,88],[2160,100]]; /* [hours,pct] */
 const OH_LIVER=[[1,10],[7,25],[14,45],[30,65],[42,80],[90,100]]; /* [days,pct] */
@@ -3241,20 +3243,20 @@ function ohProgress(miles,x){
   }
   return 100;
 }
-/* quit start in ms: reads fuel.quit.<key>.v1 directly — this block runs before the
-   quit-tracker block that defines qtHours(), so no cross-block call. Nicotine falls back
-   to the diary streak's last-use (same seed rule as the Timeline view). */
+/* quit start in ms — canonical resolver shared by the big streak ring and the
+   organ-healing satellites (2026.10.09-f): prefer the Timeline view's stored
+   start (fuel.quit.<key>.v1); fall back to the diary streak calendar's last-use
+   with the Timeline view's seed rule (QT_DEF seedTime — literal here because
+   this block runs before the quit-tracker block declares QT_DEF). */
 function ohStartMs(key){
   try{
     var v=JSON.parse(localStorage.getItem("fuel.quit."+key+".v1"));
     if(v&&v.start){ var t=new Date(v.start).getTime(); if(!isNaN(t)) return t; }
   }catch(e){}
-  if(key==="nicotine"){
-    try{
-      var lu=streakGet("nicotine").lastUse;
-      if(lu){ var t2=new Date(lu+"T14:00:00").getTime(); if(!isNaN(t2)) return t2; }
-    }catch(e){}
-  }
+  try{
+    var lu=streakGet(key).lastUse;
+    if(lu){ var t2=new Date(lu+(key==="nicotine"?"T14:00:00":"T00:00:00")).getTime(); if(!isNaN(t2)) return t2; }
+  }catch(e){}
   return null;
 }
 function ohPaint(key){
@@ -7974,7 +7976,7 @@ function autoPilot(){
   paintAutoZone();
 }
 
-/* ============ QUIT TRACKER (2026.10.09-e) ============
+/* ============ QUIT TRACKER (2026.10.09-f) ============
    Research-grounded phase timelines (cessation research, report 2026-10-09).
    Start dates live under their own keys (fuel.quit.<nicotine|alcohol>.v1) —
    fuel.v1 is never touched here. */
