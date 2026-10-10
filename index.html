@@ -712,7 +712,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
   border-bottom:1px solid rgba(255,255,255,.6);
   border-radius:0 0 28px 28px;
   box-shadow:0 -6px 24px rgba(70,70,140,.10), 0 10px 26px rgba(70,70,140,.10);
-  padding:7px 10px 8px;}
+  padding:7px 10px calc(8px + env(safe-area-inset-bottom));} /* 2026.10.09-h: was crowding the home indicator */
 .tabbar .inner{max-width:430px; margin:0 auto; display:flex; height:62px; align-items:stretch;}
 .tab{flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:#a5a5b0; font-size:10.5px; font-weight:700; border-radius:22px; transition:background .18s ease, color .18s ease;}
 .tab svg{width:23px; height:23px;}
@@ -2083,11 +2083,17 @@ const FLAG_KEY = "fuel.flags.v1"; /* tiny key for one-time flags: a full-storage
    localStorage, drop the oldest photos until the state fits so food/weight/training logs survive */
 function isQuotaErr(e){ return !!e && (e.code===22 || e.code===1014 || e.name==="QuotaExceededError" || e.name==="NS_ERROR_DOM_QUOTA_REACHED"); }
 function flagGet(){ try{ return JSON.parse(localStorage.getItem(FLAG_KEY)||"{}"); }catch(e){ return {}; } }
-function flagSet(k,v){ try{ const f=flagGet(); f[k]=v; localStorage.setItem(FLAG_KEY, JSON.stringify(f)); }catch(e){} }
-function showSaveWarn(msg){ const b=document.getElementById("saveWarn"); if(b){ b.textContent=msg; b.hidden=false; } }
-function hideSaveWarn(){ const b=document.getElementById("saveWarn"); if(b) b.hidden=true; }
+let flagPending = null; /* 2026.10.09-h: flags that could not persist (quota-full boot) retry on the next save */
+function flagSet(k,v){ try{ const f=flagGet(); f[k]=v; localStorage.setItem(FLAG_KEY, JSON.stringify(f)); }
+  catch(e){ if(isQuotaErr(e)){ (flagPending||(flagPending={}))[k]=v; } } }
+function flagFlush(){ if(!flagPending) return; const p=flagPending; flagPending=null;
+  try{ const f=flagGet(); for(const k in p) f[k]=p[k]; localStorage.setItem(FLAG_KEY, JSON.stringify(f)); }
+  catch(e){ flagPending=p; } }
+let warnLock = false; /* 2026.10.09-h: locked warnings (e.g. corruption restore) stay until tapped */
+function showSaveWarn(msg, lock){ const b=document.getElementById("saveWarn"); if(b){ b.textContent=msg; b.hidden=false; b.onclick=()=>{ warnLock=false; hideSaveWarn(); }; if(lock) warnLock=true; } }
+function hideSaveWarn(){ if(warnLock) return; const b=document.getElementById("saveWarn"); if(b) b.hidden=true; }
 function save(){
-  try{ localStorage.setItem(KEY, JSON.stringify(S)); hideSaveWarn(); takeSnapshot(); return true; }
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); hideSaveWarn(); flagFlush(); takeSnapshot(); return true; }
   catch(e){ return isQuotaErr(e) ? saveTrimPhotos() : (showSaveWarn("Couldn't save — storage error."), false); }
 }
 /* ============ AUTOMATIC SNAPSHOTS (2026.09.24-e) ============
@@ -2147,9 +2153,18 @@ function renderSnaps(){
     location.reload();
   });
 }
+function dropOldestMealPhoto(){
+  const keys = Object.keys(S.days||{}).sort(); /* ISO dates sort oldest-first */
+  for(const k of keys){
+    const dd = S.days[k]; if(!dd || !dd.meals) continue;
+    for(const m of MEALS){ const arr = dd.meals[m]||[];
+      for(const e of arr){ if(e && e.img){ e.img = null; return true; } } }
+  }
+  return false;
+}
 function saveTrimPhotos(){
   const photos = (S.profile && S.profile.photos) || [];
-  let dropped = 0, snapsDropped = 0;
+  let dropped = 0, snapsDropped = 0, mealDropped = 0;
   for(;;){
     try{ localStorage.setItem(KEY, JSON.stringify(S)); hideSaveWarn(); break; }
     catch(e){
@@ -2160,7 +2175,10 @@ function saveTrimPhotos(){
         photos.splice(oldest,1); dropped++;
         continue;
       }
-      /* No progress photos left: snapshots are expendable backups sharing the same
+      /* No progress photos left: meal-entry photos are next (oldest day first) —
+         2026.10.09-h: these were unbounded and the trimmer never touched them. */
+      if(dropOldestMealPhoto()){ mealDropped++; continue; }
+      /* No meal photos left either: snapshots are expendable backups sharing the same
          ~5MB origin quota, so drop the oldest one and retry before giving up. */
       const snaps = listSnapshots(); /* newest first */
       if(!snaps.length){ showSaveWarn("Fuel is out of storage space — delete old food photos, then reopen Fuel."); return false; }
@@ -2168,15 +2186,16 @@ function saveTrimPhotos(){
       snapsDropped++;
     }
   }
-  if(dropped>0 || snapsDropped>0){
+  if(dropped>0 || snapsDropped>0 || mealDropped>0){
     const bits = [];
     if(dropped>0) bits.push("removed "+dropped+" oldest progress photo"+(dropped>1?"s":""));
+    if(mealDropped>0) bits.push("removed "+mealDropped+" oldest meal photo"+(mealDropped>1?"s":""));
     if(snapsDropped>0) bits.push("removed "+snapsDropped+" old backup snapshot"+(snapsDropped>1?"s":""));
     showSaveWarn("Storage was full — "+bits.join(" and ")+" to protect your logs. Your food, weight and training data is safe.");
   }
   return true;
 }
-const APP_VERSION = "2026.10.09-g";
+const APP_VERSION = "2026.10.09-h";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2187,8 +2206,11 @@ const defGoals = () => ({maintenance:0, surplus:0, protein:0, carbs:0, fat:0, wa
    install / cleared storage) — the boot code then restores seed-data.json (Jay's
    exported backup) so his logs, goals, foods and weights are never lost. */
 let freshBoot = false;
+let corruptBoot = false, corruptRaw = ""; /* 2026.10.09-h: fuel.v1 existed but would not parse */
 function load(){
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.goals) {
+  let raw = null;
+  try{ raw = localStorage.getItem(KEY); }catch(e){}
+  try { const s = JSON.parse(raw); if (s && s.goals) {
 /* 2026.09.18-ak blank-slate reset: Jay asked for every goal, nutrient target, and profile/setting
    at zero like a new app. Runs once — his logged days, custom foods, weights, and training stay.
    The "ran once" flag lives in FLAG_KEY (not inside the state) so a full-storage save failure
@@ -2226,7 +2248,7 @@ else { if(!/^#[0-9a-fA-F]{6}$/.test(s.profile.theme)) s.profile.theme = DEFAULT_
      interrupted write can leave holes, and a single hole crashed boot-time
      totals/tired-model loops that read e.t / e.cal unguarded. */
   Object.values(s.days||{}).forEach(function(d){ if(!d||!d.meals) return; MEALS.forEach(function(m){ if(Array.isArray(d.meals[m])) d.meals[m] = d.meals[m].filter(function(e){ return !!e; }); }); });
-  return s; } } catch(e){}
+  return s; } } catch(e){ corruptBoot = (raw!==null && raw!==""); corruptRaw = raw||""; }
   flagSet("zeroReset",1); /* fresh boot / unreadable state: nothing to reset, mark it done */
   freshBoot = true; /* boot code below will try restoring seed-data.json */
   return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:DEFAULT_PROFILE.name, img:DEFAULT_PROFILE.img, theme:DEFAULT_PROFILE.theme, photos:DEFAULT_PHOTOS.map(p=>({d:p.d,img:p.img}))}, bottles:DEFAULT_BOTTLES.map(b=>({id:b.id, name:b.name, oz:b.oz, img:b.img})), waterV2:1, recipes:[], mealTimes:{breakfast:[], lunch:[], dinner:[], snacks:[]}};
@@ -2545,7 +2567,7 @@ function toggleFav(name){ const i=S.favorites.indexOf(name); if(i>=0) S.favorite
 function totals(k){
   const d = S.days[k] || emptyDay();
   const t = {cal:0,p:0,c:0,f:0};
-  MEALS.forEach(m => (d.meals[m]||[]).forEach(e=>{ t.cal+=e.cal; t.p+=e.p; t.c+=e.c; t.f+=e.f; }));
+  MEALS.forEach(m => (d.meals[m]||[]).forEach(e=>{ if(!e) return; t.cal+=+e.cal||0; t.p+=+e.p||0; t.c+=+e.c||0; t.f+=+e.f||0; })); /* 2026.10.09-h: NaN guard — one bad entry must not poison a whole day */
   return t;
 }
 const mealCals = k => { const d = S.days[k] || emptyDay(); const o={}; MEALS.forEach(m=>o[m]=(d.meals[m]||[]).reduce((a,e)=>a+e.cal,0)); return o; };
@@ -3642,7 +3664,7 @@ function tiredLevel(ds){
      established (Ebrahim et al. 2013 meta-analysis; Roehrs & Roth 2001;
      Penning et al. 2012) — 3 std drinks now move it ~15 pts instead of 9. */
   const yd = addDays(ds,-1);
-  const yStd = alcData(S.days[yd]||{}).std, tStd = alcData(d).std;
+  const yStd = isLocked(yd) ? 0 : alcData(S.days[yd]||{}).std, tStd = alcData(d).std; /* 2026.10.09-h: locked days are neutral — skip their alcohol */
   const yalc = Math.max(yStd, hr<12 ? tStd : 0);
   if(yalc>0){
     const p = Math.min(18, Math.round(yalc*5));
@@ -5847,6 +5869,7 @@ function correlationInsights(){
       const xs=[], ys=[];
       for(let i=N;i>=1;i--){
         const ds=addDays(todayStr(),-i);
+        if(isLocked(ds) || isLocked(addDays(ds,1))) continue; /* 2026.10.09-h: locked days teach the model nothing */
         const x=f.get(ds), y=o.get(ds);
         if(x!=null&&y!=null){ xs.push(x); ys.push(y); }
       }
@@ -6454,6 +6477,7 @@ function infoContent(k){
 }
 function openInfo(k){
   const c = infoContent(k); if(!c) return;
+  document.querySelectorAll(".sheet.open").forEach(x=>x.classList.remove("open")); /* 2026.10.09-h: never open under another sheet */
   document.getElementById("infoTitle").textContent = c.t;
   document.getElementById("infoBody").innerHTML = c.b;
   document.getElementById("infoSheet").classList.add("open");
@@ -7416,7 +7440,18 @@ document.getElementById("wipeBtn").onclick = ()=>{
   /* 2026.09.22-h: explicit erase marks this session so a reload does NOT resurrect
      seed-data.json — erase means erase. A true fresh install (new session) still
      restores the seed backup. */
-  if(confirm("Erase ALL logged data? This cannot be undone.")){ localStorage.removeItem(KEY); try{ sessionStorage.setItem("fuel.erased","1"); }catch(e){} S=load(); dayOffset=0; renderAll(); showView("diary"); }
+  if(confirm("Erase ALL logged data? This cannot be undone.")){
+    /* 2026.10.09-h: erase means erase — snapshots, flags, lock-days and quit data go too,
+       and the marker lives in localStorage so a new tab can never resurrect the seed. */
+    try{
+      const gone = [];
+      for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k && k.indexOf("fuel.")===0) gone.push(k); }
+      gone.forEach(k=>{ try{ localStorage.removeItem(k); }catch(_){} });
+      ["fuel_ncat_collapsed","fuel_goals_secs"].forEach(k=>{ try{ localStorage.removeItem(k); }catch(_){} });
+      localStorage.setItem("fuel.erased","1");
+    }catch(e){}
+    S=load(); dayOffset=0; renderAll(); showView("diary");
+  }
 };
 
 /* ============ NAV ============ */
@@ -7615,12 +7650,38 @@ applyTheme(themeColor());
 /* 2026.09.22-h: explicit-erase marker (same session only) — an erase followed by a
    reload stays blank; a true fresh install still restores the seed backup. */
 let eraseBlocked = false;
-try{ eraseBlocked = sessionStorage.getItem("fuel.erased")==="1"; }catch(e){}
+try{ eraseBlocked = localStorage.getItem("fuel.erased")==="1"; }catch(e){} /* 2026.10.09-h: was sessionStorage — erase must hold across tabs/sessions */
+let bootNote = "";
 if(freshBoot && !eraseBlocked && typeof fetch==="function"){
-  fetch("seed-data.json",{cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(seed){
-    if(seed && seed.goals){ S = seed; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
-  }).catch(function(){}).then(function(){ renderAll(); });
+  if(corruptBoot){
+    /* 2026.10.09-h: fuel.v1 existed but would not parse — never silently swap in the
+       stale Sept-22 seed. Stash the damaged bytes, try daily snapshots newest-first. */
+    try{ localStorage.setItem("fuel.corrupt."+Date.now(), String(corruptRaw).slice(0,300000)); }catch(e){}
+    let restored = false;
+    listSnapshots().forEach(function(k){
+      if(restored) return;
+      try{ const st = JSON.parse(localStorage.getItem(k));
+        if(st && st.goals){ S = st; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
+          bootNote = "Your saved data was damaged — restored from the "+k.slice(SNAP_PRE.length)+" backup. If anything looks off, check Settings → Snapshots.";
+          restored = true; } }catch(e){}
+    });
+    if(restored){ renderAll(); showSaveWarn(bootNote, true); }
+    else{
+      fetch("seed-data.json",{cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(seed){
+        if(seed && seed.goals){ S = seed; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
+          bootNote = "Your saved data was damaged and no backup was found — restored from the Sept 22 export. Recent entries may be missing."; }
+      }).catch(function(){}).then(function(){ renderAll(); if(bootNote) showSaveWarn(bootNote, true); });
+    }
+  }else{
+    fetch("seed-data.json",{cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(seed){
+      if(seed && seed.goals){ S = seed; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+    }).catch(function(){}).then(function(){ renderAll(); });
+  }
 }else renderAll();
+/* 2026.10.09-h: cross-tab guard — two tabs silently overwrite each other (last-writer-wins). Warn instead. */
+window.addEventListener("storage", function(e){
+  if(e && e.key===KEY) showSaveWarn("Fuel is open in another tab — use one tab so you don't lose changes.", true);
+});
 </script>
 <script>
 /* ============ PULL TO REFRESH ============ */
@@ -8022,7 +8083,7 @@ function qtRenderTracker(key){
     var dNow = Math.floor(h/24);
     html += '<div class="qt-sub">'+(done
       ? "90+ days \u2014 past the timeline. This is just life now."
-      : ("Day "+qtDayNum(h)+" \u00b7 "+cur.name+" ("+cur.range+")"))+'</div>';
+      : ("Day "+Math.min(qtDayNum(h),90)+" \u00b7 "+cur.name+" ("+cur.range+")"))+'</div>'; /* 2026.10.09-h: was "Day 91 · …(Days 30–90)" on the last phase day */
     var segs="", lbls="";
     def.phases.forEach(function(p,i){
       var prev = i===0?0:def.phases[i-1].d1+1, dur = p.d1-prev+1, fg = Math.sqrt(dur).toFixed(2);
@@ -8105,7 +8166,7 @@ function renderQuit(){
     qpb.onclick = function(){ qpf.click(); };
     qpf.onchange = function(){
       var f = qpf.files && qpf.files[0]; if(!f) return;
-      downscalePhoto(f, 640, function(url){
+      downscalePhoto(f, 480, function(url){ /* 2026.10.09-h: was 640 — meal thumbs do not need the bytes */
         window.__qPhoto = url;
         var img = document.getElementById("qPhotoImg"), pv = document.getElementById("qPhotoPrev");
         if(img) img.src = url;
