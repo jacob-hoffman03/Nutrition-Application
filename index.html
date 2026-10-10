@@ -47,8 +47,6 @@ button{font-family:inherit;}
 /* section titles like "❚ Calories" */
 .secttl{display:flex; align-items:center; gap:8px; font-size:21px; font-weight:800; margin:20px 2px 12px; letter-spacing:-.3px;}
 .secttl::before{content:""; width:5px; height:20px; border-radius:3px; background:var(--acc);}
-/* week strip */
-.wkrow{display:flex; align-items:center; justify-content:space-between; margin-bottom:2px;}
 .todaypill{background:var(--acc-soft); color:var(--acc); border:none; border-radius:99px; padding:8px 14px; font-weight:800; font-size:13px; white-space:nowrap; display:inline-flex; align-items:center; gap:6px;}
 .todaypill svg{ width:15px; height:15px; flex:none; }
 .weekstrip{display:flex;}
@@ -80,8 +78,6 @@ button{font-family:inherit;}
 .sbmark{position:absolute; top:-3px; bottom:-3px; width:2px; border-radius:2px; background:rgba(28,39,51,.45);}
 .sbinfo{width:26px; height:26px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; background:#ececf1; color:#8a8a96;}
 .sbinfo svg{width:13px; height:13px;}
-/* summary: ring + macros */
-.sumrow{display:flex; align-items:center; gap:14px;}
 .ring{position:relative; flex:none;}
 .ring svg{transform:rotate(-90deg); display:block;}
 .ring .center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;}
@@ -101,7 +97,6 @@ button{font-family:inherit;}
 .analysislink{display:block; margin:10px auto 0; background:none; border:none; color:var(--acc); font-size:16px; font-weight:800; padding:6px 12px;}
 /* search */
 .searchrow{display:flex; gap:10px; margin-bottom:12px;}
-.searchbtn{flex:1; display:flex; align-items:center; gap:10px; background:var(--card); border:none; border-radius:16px; padding:15px 16px; font-size:16px; color:#a5a5b0; font-weight:600;}
 .searchinput{flex:1; background:var(--card); border:none; border-radius:16px; padding:15px 16px; font-size:16px; font-weight:600; color:var(--ink); outline:none;}
 .searchinput::placeholder{color:#a5a5b0;}
 /* meals */
@@ -157,27 +152,16 @@ button{font-family:inherit;}
 .unitseg{display:flex; border:2px solid #e3e3ea; border-radius:12px; overflow:hidden;}
 .unitseg button{border:none; background:#fff; padding:9px 12px; font:inherit; font-size:14px; font-weight:600; color:var(--muted);}
 .unitseg button.sel{background:var(--acc); color:#fff;}
-.winfo{flex:1; min-width:0;}
-.winfo b{font-size:16px;}
-.winfo .wlbl{font-size:14px; color:var(--muted); font-weight:600; margin-left:8px;}
 /* pull to refresh */
 #ptr{position:fixed; top:0; left:50%; transform:translate(-50%,-64px); z-index:200; width:46px; height:46px; border-radius:50%; background:#fff; box-shadow:0 2px 12px rgba(20,30,60,.18); display:flex; align-items:center; justify-content:center;}
 .ptrspin{width:22px; height:22px; border-radius:50%; border:3px solid #dfe3f5; border-top-color:var(--acc);}
 #ptr.on .ptrspin{animation:ptrspin .7s linear infinite;}
 @keyframes ptrspin{to{transform:rotate(360deg);}}
-.alccard{padding:14px 16px;}
 .arow{display:flex; align-items:center; justify-content:space-between; gap:12px;}
-.astep{display:flex; align-items:center; gap:10px;}
-.astep button{width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:#fff; font-size:20px; line-height:1; color:var(--ink); cursor:pointer;}
-.astep b{font-size:20px; min-width:30px; text-align:center; font-variant-numeric:tabular-nums;}
-.alcrow{display:flex; align-items:center; justify-content:space-between; padding:7px 2px; border-top:1px solid #f0f0f4;}
-.alcrow .anm b{display:block; font-size:14.5px;}
-.alcrow .anm span{font-size:11.5px; color:var(--muted);}
 .msugg{margin-top:10px; background:#f4f4fa; border-radius:12px; padding:10px 12px;}
 .msrow{display:flex; justify-content:space-between; align-items:center; gap:10px;}
 .msrow b{display:block; font-size:13.5px;}
 .msrow span{display:block; font-size:12px; color:var(--muted); margin-top:2px;}
-.alcring{flex:none; width:52px; height:52px;}
 /* streaks (2026.10.06-a): one panel, two rows, tappable color-coded circles */
 .streakcard{padding:14px 16px 8px;}
 .streakhead{display:flex;align-items:center;margin-bottom:2px;}
@@ -281,10 +265,6 @@ span.calday{cursor:default;}
 .calbtn{flex:1;border:none;border-radius:16px;padding:13px;font-size:15.5px;font-weight:800;cursor:pointer;font-family:inherit;background:var(--acc);color:#fff;}
 .calbtn.ghost{background:var(--acc-soft);color:var(--acc-deep);}
 .calbtn:active{transform:scale(.97);}
-.vapelevels{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
-.vchip{border:1px solid var(--line); background:#fff; border-radius:20px; padding:7px 14px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer;}
-.vchip.sel{background:var(--acc); border-color:var(--acc); color:#fff;}
-.alcwarn{margin-top:10px; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:13px; line-height:1.45; border-radius:12px; padding:10px 12px;}
 /* collapsible goal sections */
 .ghead{display:flex; align-items:center; gap:8px; font-size:21px; font-weight:800; margin:20px 2px 12px; letter-spacing:-.3px; cursor:pointer; user-select:none;}
 .ghead::before{content:""; width:5px; height:20px; border-radius:3px; background:var(--acc); flex:none;}
@@ -420,8 +400,6 @@ span.calday{cursor:default;}
 .scorewheel .swnum{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;}
 .scorewheel .swnum b{font-size:17px; color:var(--ink); font-weight:800; line-height:1;}
 .scorewheel .swnum i{font-style:normal; font-size:8px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px;}
-.wheels{display:flex; gap:8px; flex:none;}
-.bloatbar{position:relative; height:10px; border-radius:99px; background:#ececf1; overflow:hidden; margin-top:6px;}
 #bloatFill{display:block; height:100%; width:0; border-radius:99px; transition:width .4s;}
 .photostrip{display:flex; gap:10px; overflow-x:auto; padding:2px 2px 8px; -webkit-overflow-scrolling:touch;}
 .photoadd{flex:none; width:76px; height:98px; border-radius:14px; border:1.5px dashed var(--line); background:none; color:var(--muted); font-size:26px; font-weight:600; cursor:pointer;}
@@ -512,7 +490,6 @@ span.calday{cursor:default;}
 .energydots{display:flex; gap:10px; margin-top:10px;}
 .edot{width:44px; height:44px; border-radius:50%; border:2px solid var(--line); background:#fff; font-weight:800; font-size:15px; color:var(--muted);}
 .edot.on{border-color:var(--acc); background:var(--acc-soft); color:var(--acc);}
-.createbtn{background:var(--acc-soft); color:var(--acc); border:none; border-radius:12px; padding:9px 18px; font-weight:800; font-size:14px;}
 .fhead{display:flex; align-items:center; justify-content:space-between; margin:10px 2px 4px;}
 .fhead .flabel{font-size:14px; color:var(--muted); font-weight:600;}
 /* goals */
@@ -685,7 +662,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .closerow .cstat.met{color:#0f9d6c;}
 .closerow .cstat.close{color:#b97f0b;}
 .closehi{font-size:14.5px;line-height:1.55;color:var(--ink);background:rgba(125,125,160,.08);border-radius:12px;padding:12px 14px;margin-bottom:8px;}
-.wtcard{display:flex; justify-content:center; padding:30px 16px 26px;}
 .wtcircle{position:relative; width:212px; height:212px; border-radius:50%; border:none; cursor:pointer; font-family:inherit; color:var(--ink);
   background:radial-gradient(circle at 50% 40%, #ffffff 0%, var(--acc-soft) 62%, var(--acc-soft) 100%);
   box-shadow:0 0 0 12px rgba(var(--acc-rgb),.06), 0 0 52px rgba(var(--acc-rgb),.30), 0 14px 30px rgba(30,30,80,.10);
@@ -704,21 +680,13 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wtd-back:active{opacity:.6;}
 .wtd-title{font-size:17px; font-weight:800;}
 .wtd-body{padding:2px 16px 48px;}
-.wtd-big{text-align:center; padding:6px 0 2px;}
-.wtd-big b{font-size:54px; font-weight:800; letter-spacing:-1.5px; font-variant-numeric:tabular-nums;}
 .wtd-sub{font-size:13px; color:var(--muted); font-weight:600; margin-top:2px;}
-.wtd-badge{display:inline-block; font-size:12.5px; font-weight:800; padding:5px 12px; border-radius:99px; margin-top:10px; background:var(--acc-soft); color:var(--acc);}
 .wtd-goal{margin-top:14px;}
-.wtd-secttl{font-size:15px; font-weight:800; margin:18px 2px 0;}
 .wgoaledit{margin-top:10px; background:#f4f4fa; border-radius:14px; padding:12px;}
 .wgoaledit .wlogrow{margin-top:8px;}
 .wgoaledit-row{display:flex; gap:10px; margin-top:4px;}
 .wgoaledit-row .ghostbtn{margin-top:8px; padding:10px;}
 .wgoaledit-cancel{border:none; background:none; color:var(--muted); font-weight:700; font-size:14px; font-family:inherit; padding:10px 14px; margin-top:8px; cursor:pointer;}
-.wtd-goalstats{display:flex; justify-content:space-between; margin-top:10px;}
-.wtd-goalstats div{text-align:center; flex:1;}
-.wtd-goalstats span{display:block; font-size:11.5px; color:var(--muted); font-weight:600;}
-.wtd-goalstats b{font-size:16px; font-variant-numeric:tabular-nums;}
 /* ---- Weight screen redesign (2026.09.22-f): trend hero + segmented views ---- */
 .wtd-hero{text-align:center; padding:10px 0 2px;}
 .wtd-eyebrow{font-size:11px; font-weight:800; letter-spacing:1.6px; color:var(--muted); margin-bottom:2px;}
@@ -832,7 +800,6 @@ body{ background:var(--bg); }
 /* progress: mini stat cards */
 .stat{ border:none; border-radius:18px; box-shadow:0 10px 28px rgba(84,84,180,.08); padding:14px 8px; }
 .stat b{ font-size:21px; font-variant-numeric:tabular-nums; }
-.statgrid .tile{ background:#fff; border:none; border-radius:18px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
 /* progress: segmented range, reference style */
 .wrange{ display:flex; background:#e9e9f2; border-radius:99px; padding:4px; margin-top:10px; gap:2px; }
 .wrange button{ flex:1; border:none; background:none; border-radius:99px; padding:8px 0; font-size:13px; font-weight:700; color:var(--muted); font-family:inherit; }
@@ -849,8 +816,6 @@ body{ background:var(--bg); }
 /* ---- Reference look: full-app pass (2026-09-19) ---- */
 .topbar{ background:#f3f3f9; }
 .topbar h1{ font-size:20px; font-weight:800; letter-spacing:-.3px; }
-/* analytics card */
-.anacard{ padding:18px 16px 14px; }
 .ana-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
 .ana-top b{ font-size:30px; font-weight:800; letter-spacing:-.5px; font-variant-numeric:tabular-nums; }
 .ana-unit{ font-size:14px; color:var(--muted); font-weight:600; margin-left:4px; }
@@ -869,8 +834,6 @@ body{ background:var(--bg); }
 .chal-dot{ width:30px; height:30px; border-radius:50%; border:2px solid #e2e2ee; display:flex; align-items:center; justify-content:center; background:#fff; color:#fff; }
 .chal-day.hit .chal-dot{ background:var(--acc); border-color:var(--acc); }
 .chal-day.today .chal-dot{ border-color:var(--acc); }
-/* stacked macro chart */
-.macrocard{ padding:16px; margin-top:12px; }
 .mc-head{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
 .mc-head b{ font-size:16px; font-weight:800; }
 .mc-legend{ display:flex; align-items:center; gap:5px; margin-left:auto; font-size:11px; color:var(--muted); font-weight:600; }
@@ -891,8 +854,6 @@ body{ background:var(--bg); }
 /* meals: reference-style add button */
 .madd{ width:38px; height:38px; border-radius:50%; background:#eef0ff; color:var(--acc); font-size:22px; font-weight:700; border:none; display:flex; align-items:center; justify-content:center; flex:none; }
 .madd:active{ transform:scale(.92); }
-/* search bars like reference */
-.searchbtn{ background:#fff; border-radius:18px; box-shadow:0 10px 28px rgba(84,84,180,.08); }
 /* tab bar: reference style + center button */
 .tab{ color:#a5a5b0; }
 .tabfab{ flex:none; width:54px; height:54px; border-radius:50%; border:none; align-self:center;
@@ -960,8 +921,6 @@ body{ background:var(--bg); }
 .nutrrow select{border:1px solid var(--line); background:#fafafc; border-radius:10px; padding:10px 6px; font-size:14px; font-weight:600; font-family:inherit; flex:none;}
 .ndel{border:none; background:none; color:var(--red); font-size:22px; font-weight:700; cursor:pointer; padding:4px 6px; flex:none; line-height:1;}
 .nedit{border:none; background:none; color:var(--acc); cursor:pointer; padding:4px 6px; flex:none; line-height:1; display:flex; align-items:center;}
-.crow{display:flex; gap:12px; align-items:flex-start; font-size:15px; font-weight:700; padding:14px 0; cursor:pointer;}
-.crow input{width:22px; height:22px; margin-top:1px; accent-color:var(--acc); flex:none;}
 .chint{display:block; font-weight:400; color:var(--muted); font-size:12px; margin-top:3px; line-height:1.45;}
 .nrow{padding:12px 0; border-bottom:1px solid var(--line);}
 .nrow:last-child{border-bottom:none;}
@@ -994,8 +953,6 @@ body{ background:var(--bg); }
 .wdel{border:none; background:none; color:#c9c9d2; font-size:22px; line-height:1; width:36px; height:36px; flex:none;
   display:flex; align-items:center; justify-content:center; cursor:pointer;}
 .wdel:active{color:var(--red); transform:scale(1.15);}
-/* delta chip next to body weight */
-.wdelta{font-size:12.5px; color:var(--muted); font-weight:700; white-space:nowrap;}
 /* info button inside rows (never nested-button) */
 .srow .ginfo{margin:0;}
 
@@ -1012,17 +969,6 @@ body.reordering #progOverview{display:none}
 .pr-handle{width:56px;height:58px;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab;flex:none}
 .pr-handle svg{width:24px;height:24px;stroke:var(--muted);fill:none;stroke-width:2.4;stroke-linecap:round}
 .pr-row.dragging{box-shadow:0 16px 34px rgba(60,60,120,.28);opacity:.97;position:relative;z-index:60}
-/* ---- Nutrition calendar (2026.09.27-i): week of vertical 24h gray tracks.
-   Left lane = learned eating windows (auto, meal colors); right lane = work /
-   gym / custom blocks in any color. Timestamps run 12a-12a with a midday line. */
-.calnav{display:flex;align-items:center;justify-content:space-between;margin:8px 4px;}
-.calarrow{width:44px;height:44px;border-radius:14px;border:1.5px solid var(--line);background:#fff;font-size:22px;color:var(--acc);font-weight:800;line-height:1;}
-.calnav .cttl{font-size:16px;font-weight:800;}
-.calnav .cwk{font-size:12px;color:var(--muted);font-weight:600;margin-top:2px;}
-.callegend{display:flex;gap:14px;align-items:center;padding:0 6px 8px;font-size:11px;color:var(--muted);font-weight:600;}
-.callegend .dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px;}
-.calwrap{background:var(--card);border-radius:var(--radius);box-shadow:0 10px 28px rgba(84,84,180,.08);padding:12px 6px 14px 2px;margin:0 12px;}
-.calgrid{display:flex;align-items:flex-start;}
 
 </style>
 </head>
@@ -1046,7 +992,7 @@ body.reordering #progOverview{display:none}
     <div class="nudge" id="nudgeBar"></div>
     <div class="card dcard" id="energyCard">
       <div class="whead dhead" data-d="energy" role="button" tabindex="0" aria-label="Energy details"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2.5 5.5 13.5h4.8L10 21.5l7.5-11h-4.8L13 2.5z"/></svg></span><b>Energy today</b><button class="ginfo" id="energyInfo" aria-label="About energy check-ins">i</button></span><span style="display:flex;align-items:center;gap:8px"><span class="wlbl" id="energyLabel"></span><span class="chev2 dchev">›</span></span></div>
-      <div class="ddetail" id="ddetail-energy"><div class="pad">
+      <div class="ddetail"><div class="pad">
       <div class="energydots" id="energyDots"></div>
       </div></div>
     </div>
@@ -1090,7 +1036,7 @@ body.reordering #progOverview{display:none}
           <span class="swnum"><b id="adhNumH">–</b><i>adherence</i></span>
         </button>
       </div>
-      <div class="prog-pct prog-pct-row"><b id="progPct">0%</b> <span id="progSub">of daily goal</span></div>
+      <div class="prog-pct prog-pct-row"><b id="progPct">0%</b> <span>of daily goal</span></div>
 
       <div class="statusbar" id="statusPill" role="button" tabindex="0" aria-label="Intake details">
         <div class="sbtrack"><div class="sbfill" id="spFill"></div><div class="sbmark" id="spMark"></div></div>
@@ -1109,9 +1055,9 @@ body.reordering #progOverview{display:none}
     <div class="fiberbar"><span class="flabel">Fiber</span><div class="mbar"><i id="barFi" style="background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></i></div><span class="fval"><i id="valFiv">0</i><small> / <span id="valFig">0</span>g</small></span></div>
     <div class="card mealcard" id="meals"></div>
 
-    <div class="card watercard dcard" id="dcard-water">
+    <div class="card watercard dcard">
       <div class="whead dhead" data-d="water" role="button" tabindex="0" aria-label="Water details"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3.5c3.2 4.3 5.8 7.7 5.8 10.7a5.8 5.8 0 1 1-11.6 0C6.2 11.2 8.8 7.8 12 3.5z"/></svg></span><b>Water</b><button class="ginfo" id="waterInfo" aria-label="About your water target">i</button></span><span style="display:flex;align-items:center;gap:8px"><span class="wlbl" id="waterLabel"></span><span class="chev2 dchev">›</span></span></div>
-      <div class="ddetail" id="ddetail-water"><div class="pad">
+      <div class="ddetail"><div class="pad">
       <div class="sbtrack wtrack"><div class="sbfill wfill" id="waterFill"></div></div>
       <div class="bottlerow" id="bottleRow"></div>
       <div class="wfoot"><button class="wlink" id="bottleMgr">My bottles</button><button class="wlink" id="waterUndo" style="display:none">Undo</button></div>
@@ -1119,7 +1065,7 @@ body.reordering #progOverview{display:none}
       </div></div>
     </div>
 
-    <div class="card streakcard" id="dcard-streaks">
+    <div class="card streakcard">
       <div class="streakhead"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><b>Streaks</b><button class="ginfo" id="streakInfo" aria-label="About streaks">i</button></span><button class="qt-open" id="quitOpen">Timeline ›</button></div>
       <div class="streakrow">
         <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M10.5 7v13a1.5 1.5 0 0 0 3 0V7"/></svg></span>
@@ -1291,7 +1237,7 @@ body.reordering #progOverview{display:none}
       <div class="cfrow"><span><b>Fiber</b> <span class="ph" id="fiberAutoTag"></span></span><span><b id="gmFip" style="margin-right:8px">–</b><input id="gmFi" type="number" inputmode="numeric" style="width:64px"> g</span></div>
       <div class="cfrow" style="margin-top:6px"><span class="ph" id="fiberNote"></span><button class="chip" id="fiberAutoBtn" style="display:none">Use auto</button></div>
     </div>
-    <div class="segbar" id="macroSeg"><i id="segC" style="background:#7e7ef2"></i><i id="segP" style="background:#12cfae"></i><i id="segF" style="background:#fb6f84"></i></div>
+    <div class="segbar"><i id="segC" style="background:#7e7ef2"></i><i id="segP" style="background:#12cfae"></i><i id="segF" style="background:#fb6f84"></i></div>
     <div class="rangenote" id="macroAnalysis"></div>
     <div class="gsec" id="gsecWater">
       <div class="ghead"><span>Water</span><b class="gval" id="waterHeadVal"></b><span class="gchev">›</span></div>
@@ -1437,7 +1383,7 @@ body.reordering #progOverview{display:none}
       <div class="xdetail" id="xdetail-muscle"><div class="pad">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="ginfo" id="muscleInfo" aria-label="How this is estimated">i</button><span class="rangenote">How the estimate works</span></div>
         <div style="display:flex; gap:16px; align-items:center;">
-          <svg id="muscleRing" width="104" height="104" viewBox="0 0 120 120" style="flex:none">
+          <svg width="104" height="104" viewBox="0 0 120 120" style="flex:none">
             <circle cx="60" cy="60" r="52" fill="none" stroke="#ececf1" stroke-width="11"/>
             <circle id="muscleArc" cx="60" cy="60" r="52" fill="none" style="stroke:var(--acc)" stroke-width="11" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="0 327"/>
             <text id="muscleNum" x="60" y="58" text-anchor="middle" font-size="21" font-weight="800" fill="#1c1c1e">–</text>
@@ -1458,7 +1404,7 @@ body.reordering #progOverview{display:none}
     </div>
     <div class="punit" data-pid="week">
 <div class="card weekcard">
-      <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="m10.5 14.5 2 2 3.5-4"/></svg></span><b>This week</b><span class="pill" id="insPill" style="display:none"></span></div>
+      <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="m10.5 14.5 2 2 3.5-4"/></svg></span><b>This week</b></div>
       <div class="segctl" id="weekSeg" role="tablist" aria-label="Week views">
         <button class="segbtn on" data-seg="cal" role="tab">Calories</button>
         <button class="segbtn" data-seg="mac" role="tab">Macros</button>
@@ -1467,7 +1413,7 @@ body.reordering #progOverview{display:none}
       <div class="wseg" id="wseg-sum" hidden>
         <div id="insCard">
           <div id="insRows"></div>
-          <div class="rangenote" id="insNote" style="margin-top:8px">Estimates from your log — not medical advice.</div>
+          <div class="rangenote" style="margin-top:8px">Estimates from your log — not medical advice.</div>
         </div>
         <div id="wkrevCard" style="display:none">
           <div class="subhead">Weekly review</div>
@@ -2230,7 +2176,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.09-f";
+const APP_VERSION = "2026.10.09-g";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2799,7 +2745,6 @@ function dcXY(frac){ /* point on the arc: frac 0 = 5am (left) → 1 = 11pm (righ
   const th = Math.PI*(1-frac);
   return [150+120*Math.cos(th), 150-120*Math.sin(th)];
 }
-function fmtClockC(t){ t=((Math.round(t)%1440)+1440)%1440; const h24=Math.floor(t/60), m=t%60, ap=h24<12?"a":"p", h=h24%12||12; return h+(m?":"+String(m).padStart(2,"0"):"")+ap; }
 function fmtClockS(mins){
   mins = ((Math.round(mins)%1440)+1440)%1440;
   let h = Math.floor(mins/60); const ap = h>=12?"p":"a"; h = h%12; if(h===0) h=12;
@@ -3147,11 +3092,6 @@ function alcData(d){
   const std = a.shot*1 + a.beer*1 + a.cocktail*1.5;
   const kcal = a.shot*97 + a.beer*150 + a.cocktail*200;
   return {a, std, kcal};
-}
-function bacPct(stdDrinks){
-  const w = curBodyWeight()>0 ? curBodyWeight() : 120;
-  const r = ((S.goals.profile||{}).sex==="f") ? 0.55 : 0.68; /* 2026.09.25-d: Widmark r is 0.68 male / 0.55 female — the old code used 0.68 for everyone, understating BAC ~19% for women */
-  return stdDrinks*0.6*5.14/(w*r); /* ignores metabolism (~0.015%/hr) */
 }
 /* ============ STREAKS (2026.10.06-c): days-since-last-use counters.
    Tap a circle -> calendar sheet to set the LAST DAY you vaped/drank; the count is full days
@@ -5031,11 +4971,6 @@ function proteinConsistency(n){
   return {pct: food.length ? Math.round(hit/food.length*100) : null, hit, n, nLogged: food.length};
 }
 /* Last n days of water: [{ds, oz, ratio|null}]. */
-function waterSeries(n){
-  const out = [];
-  for(let i=(n||7)-1;i>=0;i--){ const ds = addDays(todayStr(),-i); if(isLocked(ds)) continue; const t = dayTotals(ds); out.push({ds, oz:t.waterOz, ratio:t.waterRatio}); }
-  return out;
-}
 /* Weight trend state: direction, vs the weight goal, and confidence. Rates come from
    the same trend-MA weightTrend() every surface uses. "sparse" below the Calorie
    Check gates (4+ weigh-ins, 14+ day span); flat inside a ±0.1 lb/wk noise floor. */
@@ -5199,20 +5134,6 @@ function insightSodiumVsBloat(){
     ev:"Today's bloat score: "+b.score+"/100 ("+b.label+"), predicted from sodium, fiber, sugar, meal size, water, and alcohol. In a randomized trial, high-sodium diets raised bloating risk 27% and high-fiber diets 41% (Peng et al., Am J Gastroenterol 2019)."};
 }
 /* ======== streaks: logging streak exists as streak(); goal + weigh-in streaks added ======== */
-function goalStreak(){
-  let s=0;
-  for(let i=0;i<365;i++){ const ds = addDays(todayStr(),-i);
-    if(isLocked(ds)) continue; /* 2026.10.08-f: locked day = neutral skip */
-    if(dayHit(ds)) s++; else if(i>0 || ds!==todayStr()) break; }
-  return s;
-}
-function weighStreak(){
-  const have = {}; sortedWeights().forEach(p=>{ have[p.d]=1; });
-  let s=0;
-  for(let i=0;i<365;i++){ const ds = addDays(todayStr(),-i);
-    if(have[ds]) s++; else if(i>0 || ds!==todayStr()) break; }
-  return s;
-}
 /* ============ 1-MONTH MILESTONE (research 2026-09-18) ============
    Suggests a weight goal one month out, anchored to the profile update date
    (S.goals.profile.updatedAt, stamped by commitGoalsInputs). The rate comes
