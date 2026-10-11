@@ -2222,7 +2222,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.11-f";
+const APP_VERSION = "2026.10.11-g";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6093,10 +6093,29 @@ function calcMaintenance(){
     bmr = 370 + 21.6*(kg*(1-p.bodyFat/100));
     formula = "Katch-McArdle";
   } else {
-    bmr = 10*kg + 6.25*cm - 5*p.age + (p.sex==="f" ? -161 : 5);
-    formula = "Mifflin-St Jeor";
+    /* 2026.10.11-g: Ten-Haaf (2014) — validated on athletes, 80% within ±10% of
+       measured RMR vs ~53% for Mifflin. Runs ~170-190 kcal higher for very active
+       users; Mifflin systematically underestimates athletic BMR. */
+    bmr = 29.279 + 11.936*kg + 587.728*(cm/100) - 8.129*p.age + 191.027*(p.sex==="f"?0:1);
+    formula = "Ten-Haaf (athlete)";
   }
   return {bmr: Math.round(bmr), maint: Math.round(bmr*actPAL(p)), formula};
+}
+/* Day-type maintenance (2026.10.11-g): research shows the ~1000 kcal work/rest
+   swing is almost entirely NEAT. Work days run PAL ~1.8, rest days ~1.2.
+   Surplus stays constant; intake scales with the day's TDEE. */
+function dayMaintenance(kstr){
+  var cm = calcMaintenance();
+  if(!(cm.bmr>0)) return 0;
+  var isWork = (typeof dayType==="function") ? dayType(kstr||todayStr())==="work" : true;
+  var pal = isWork ? Math.max(1.8, actPAL(S.goals.profile)) : 1.2;
+  return Math.round(cm.bmr * pal);
+}
+function dayCalGoal(kstr){
+  var m = dayMaintenance(kstr);
+  if(!(m>0)) return 0;
+  var sur = (S.goals.surplus>0) ? S.goals.surplus : 0;
+  return m + sur;
 }
 /* keep a preset mode's surplus glued to its % of maintenance */
 function applyModePct(){
