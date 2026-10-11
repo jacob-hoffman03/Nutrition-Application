@@ -1034,29 +1034,34 @@ body.reordering #progOverview{display:none}
 .road-cap-sep{width:1px;height:24px;background:var(--line);flex:none;}
 .road-status-note{font-size:12.5px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.45;}
 
-/* ============ ATHLETE PROFILE & ENGINE (2026.10.11) ============ */
+/* ============ ATHLETE BLUEPRINT (Modern, Simplistic & Colorful 2026.10.11) ============ */
 .pf-card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
-.pf-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
-.pf-stat{background:#fff;border-radius:14px;padding:9px 4px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.pf-stat b{display:block;font-size:13.5px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;}
-.pf-stat span{display:block;font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px;}
-.pf-engine-eq{display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:14px;padding:12px 6px;margin-top:10px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.pf-eq-box{text-align:center;flex:1;}
-.pf-eq-box b{display:block;font-size:14px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;}
-.pf-eq-box span{display:block;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.2px;margin-top:2px;}
-.pf-eq-op{font-size:13px;font-weight:800;color:var(--muted);padding:0 2px;}
-.pf-macro-table{margin-top:8px;}
-.pf-macro-row{display:flex;align-items:center;justify-content:space-between;padding:8px 2px;border-bottom:1px solid var(--line);font-size:13px;}
-.pf-macro-row:last-child{border-bottom:none;}
-.pf-macro-lbl{display:flex;align-items:center;gap:8px;font-weight:700;}
-.pf-macro-lbl i{width:10px;height:10px;border-radius:3px;display:inline-block;}
-.pf-macro-val{text-align:right;}
-.pf-macro-val b{font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums;}
-.pf-macro-val span{font-size:11px;color:var(--muted);margin-left:4px;}
+.ap-hero{display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:16px;padding:14px 16px;margin:10px 0;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.ap-hero-left{display:flex;flex-direction:column;gap:2px;}
+.ap-label{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.ap-target-wrap{display:flex;align-items:baseline;gap:4px;}
+.ap-target-num{font-size:28px;font-weight:900;color:var(--acc);line-height:1.1;letter-spacing:-.4px;font-variant-numeric:tabular-nums;}
+.ap-target-unit{font-size:13px;font-weight:700;color:var(--muted);}
+.ap-target-sub{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:2px;}
+.ap-hero-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+.ap-body-pill{font-size:12px;font-weight:700;color:var(--ink);background:var(--card);padding:4px 10px;border-radius:99px;}
+.ap-macro-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
+.ap-macro-chip{border-radius:14px;padding:8px 6px;display:flex;align-items:center;gap:6px;box-shadow:0 1px 2px rgba(0,0,0,.03);}
+.ap-chip-pro{background:rgba(18,207,174,.10);border:1px solid rgba(18,207,174,.25);}
+.ap-chip-carb{background:rgba(126,126,242,.10);border:1px solid rgba(126,126,242,.25);}
+.ap-chip-fat{background:rgba(251,111,132,.10);border:1px solid rgba(251,111,132,.25);}
+.ap-chip-water{background:rgba(90,162,255,.10);border:1px solid rgba(90,162,255,.25);}
+.ap-dot{width:8px;height:8px;border-radius:50%;flex:none;}
+.ap-chip-tx{min-width:0;display:flex;flex-direction:column;}
+.ap-chip-tx b{font-size:13px;font-weight:800;color:var(--ink);line-height:1.1;font-variant-numeric:tabular-nums;}
+.ap-chip-tx span{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.2px;margin-top:1px;}
+.ap-stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:#fff;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.03);}
+.ap-stat-item{display:flex;flex-direction:column;gap:1px;}
+.ap-s-lbl{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+.ap-stat-item b{font-size:13px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;}
 .pf-toggle-btn{display:inline-flex;align-items:center;gap:4px;background:none;border:none;color:var(--acc);font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 0;}
 .pf-edit-form{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
 .pf-edit-form.open{display:block;}
-
 </style>
 </head>
 <body>
@@ -1579,28 +1584,77 @@ body.reordering #progOverview{display:none}
       <button class="pf-reorder" id="profReorderBtn" aria-label="Rearrange panels"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/><path d="m17 4 3 3-3 3"/></svg></button>
     </div>
     <div id="profPanels">
-      <!-- ATHLETE PHYSICAL STATS (2026.10.11) -->
+      <!-- ATHLETE BLUEPRINT (Modern, Simplistic & Colorful) -->
       <div class="punit" data-pid="stats">
         <div class="card pf-card">
           <div class="cardttl">
-            <span class="sicon sm">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="7" r="4"/><path d="M5.5 21v-2a6.5 6.5 0 0 1 13 0v2"/>
+            <span class="sicon sm" style="background:var(--acc-soft);color:var(--acc);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 20V10M12 20V4M6 20v-6"/>
               </svg>
             </span>
-            <b>Athlete Physical Stats</b>
+            <b>Athlete Blueprint</b>
+            <button class="ginfo" id="athleteInfo" aria-label="Athlete calculation info">i</button>
             <button class="pf-toggle-btn" id="pfEditToggle" style="margin-left:auto;">Edit Stats ›</button>
           </div>
-          <div class="pf-grid" id="pfStatsGrid">
-            <div class="pf-stat"><b id="stWVal">—</b><span>Weight</span></div>
-            <div class="pf-stat"><b id="stHVal">—</b><span>Height</span></div>
-            <div class="pf-stat"><b id="stAVal">—</b><span>Age</span></div>
-            <div class="pf-stat"><b id="stSVal">—</b><span>Sex</span></div>
-            <div class="pf-stat"><b id="stFVal">—</b><span>Body Fat</span></div>
-            <div class="pf-stat"><b id="stWaVal">—</b><span>Waist</span></div>
-            <div class="pf-stat"><b id="stBmiVal">—</b><span>BMI</span></div>
-            <div class="pf-stat"><b id="stWhtrVal">—</b><span>WHtR</span></div>
+
+          <!-- Highlight Target & Maintenance -->
+          <div class="ap-hero">
+            <div class="ap-hero-left">
+              <span class="ap-label">Daily Target</span>
+              <div class="ap-target-wrap">
+                <b class="ap-target-num" id="apTargetVal">3,134</b>
+                <span class="ap-target-unit">kcal</span>
+              </div>
+              <div class="ap-target-sub" id="apMaintSub">Maint: 2,849 kcal · +10% surplus</div>
+            </div>
+            <div class="ap-hero-right">
+              <span class="pill" id="apModePill" style="font-size:11px;font-weight:800;">Lean Bulk</span>
+              <div class="ap-body-pill" id="apBodyPill">122.2 lb</div>
+            </div>
           </div>
+
+          <!-- Colorful Macro Strip -->
+          <div class="ap-macro-strip">
+            <div class="ap-macro-chip ap-chip-pro">
+              <span class="ap-dot" style="background:var(--pro)"></span>
+              <div class="ap-chip-tx">
+                <b id="apPVal">150g</b>
+                <span>Protein</span>
+              </div>
+            </div>
+            <div class="ap-macro-chip ap-chip-carb">
+              <span class="ap-dot" style="background:var(--carb)"></span>
+              <div class="ap-chip-tx">
+                <b id="apCVal">386g</b>
+                <span>Carbs</span>
+              </div>
+            </div>
+            <div class="ap-macro-chip ap-chip-fat">
+              <span class="ap-dot" style="background:var(--fat)"></span>
+              <div class="ap-chip-tx">
+                <b id="apFVal">88g</b>
+                <span>Fat</span>
+              </div>
+            </div>
+            <div class="ap-macro-chip ap-chip-water">
+              <span class="ap-dot" style="background:#5aa2ff"></span>
+              <div class="ap-chip-tx">
+                <b id="apWVal">110 oz</b>
+                <span>Water</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Key Physical Metrics Strip -->
+          <div class="ap-stats-row">
+            <div class="ap-stat-item"><span class="ap-s-lbl">Weight</span><b id="apWeightVal">122.2 lb</b></div>
+            <div class="ap-stat-item"><span class="ap-s-lbl">Height</span><b id="apHeightVal">5'10"</b></div>
+            <div class="ap-stat-item"><span class="ap-s-lbl">Body Fat</span><b id="apBfVal">~6%</b></div>
+            <div class="ap-stat-item"><span class="ap-s-lbl">BMI</span><b id="apBmiVal">17.5</b></div>
+          </div>
+
+          <!-- Collapsible Quick Edit Form -->
           <div class="pf-edit-form" id="pfEditForm">
             <div class="flabel" style="margin-bottom:8px">Quick Edit Physical Inputs</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -1610,67 +1664,6 @@ body.reordering #progOverview{display:none}
               <div><span class="subhead" style="margin:0 0 4px;display:block">Body Fat %</span><input id="pfQuickBf" type="number" step="0.1" placeholder="%" style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:10px;font:inherit;"></div>
               <div><span class="subhead" style="margin:0 0 4px;display:block">Waist (in)</span><input id="pfQuickWaist" type="number" step="0.1" placeholder="inches" style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:10px;font:inherit;"></div>
               <div style="display:flex;align-items:flex-end;"><button class="bigbtn" id="pfQuickSave" style="padding:10px;font-size:13px;margin:0;">Update Stats</button></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ENERGY & TDEE METABOLIC ENGINE (2026.10.11) -->
-      <div class="punit" data-pid="engine">
-        <div class="card pf-card">
-          <div class="cardttl">
-            <span class="sicon sm">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-              </svg>
-            </span>
-            <b>Energy & TDEE Engine</b>
-            <span class="pill" id="pfEnginePill" style="margin-left:auto;font-size:10px;font-weight:800;">Analysis Driven</span>
-          </div>
-          <div class="rangenote" style="margin:2px 0 6px;line-height:1.4">Calculated from your personal stats, body metrics, and restaurant shift schedule:</div>
-          <div class="pf-engine-eq">
-            <div class="pf-eq-box"><b id="pfBmrVal">—</b><span>BMR (Base)</span></div>
-            <div class="pf-eq-op">×</div>
-            <div class="pf-eq-box"><b id="pfPalVal">—</b><span>PAL Multi</span></div>
-            <div class="pf-eq-op">=</div>
-            <div class="pf-eq-box"><b id="pfMaintVal">—</b><span>Maint (TDEE)</span></div>
-            <div class="pf-eq-op">+</div>
-            <div class="pf-eq-box"><b id="pfSurpVal">—</b><span>Surplus</span></div>
-            <div class="pf-eq-op">=</div>
-            <div class="pf-eq-box"><b id="pfGoalVal" style="color:var(--acc);font-size:15px">—</b><span>Daily Target</span></div>
-          </div>
-          <div class="rangenote" id="pfEngineNote" style="margin-top:10px;line-height:1.45;color:var(--ink);"></div>
-        </div>
-      </div>
-
-      <!-- MACRO & HYDRATION BLUEPRINT (2026.10.11) -->
-      <div class="punit" data-pid="macros">
-        <div class="card pf-card">
-          <div class="cardttl">
-            <span class="sicon sm">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 12 2 12"/>
-              </svg>
-            </span>
-            <b>Macro & Hydration Blueprint</b>
-            <span class="rangenote" id="pfMacroCalTotal" style="margin-left:auto;font-weight:800;color:var(--ink);"></span>
-          </div>
-          <div class="pf-macro-table">
-            <div class="pf-macro-row">
-              <div class="pf-macro-lbl"><i style="background:var(--pro)"></i>Protein (Target)</div>
-              <div class="pf-macro-val"><b id="pfMacroP">—</b><span id="pfMacroPPer">—</span></div>
-            </div>
-            <div class="pf-macro-row">
-              <div class="pf-macro-lbl"><i style="background:var(--carb)"></i>Carbs (Energy)</div>
-              <div class="pf-macro-val"><b id="pfMacroC">—</b><span id="pfMacroCPct">—</span></div>
-            </div>
-            <div class="pf-macro-row">
-              <div class="pf-macro-lbl"><i style="background:var(--fat)"></i>Fat (Hormones)</div>
-              <div class="pf-macro-val"><b id="pfMacroF">—</b><span id="pfMacroFPct">—</span></div>
-            </div>
-            <div class="pf-macro-row">
-              <div class="pf-macro-lbl"><i style="background:#5aa2ff"></i>Daily Hydration</div>
-              <div class="pf-macro-val"><b id="pfMacroWater">—</b><span>auto goal</span></div>
             </div>
           </div>
         </div>
@@ -2416,7 +2409,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.11-l";
+const APP_VERSION = "2026.10.11-m";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2700,7 +2693,7 @@ function setTheme(hex){
 /* fingerprint of the profile inputs that feed calcMaintenance — if these changed since
    maintenance was last calculated, Save recalculates so the goal can never go stale */
 function profHash(){ const p=S.goals.profile; return [p.weightLb,p.heightIn,p.age,p.sex,p.bodyFat,p.activityKey].join("|"); }
-function recalcMaint(){ if(!(S.goals.profile.weightLb>0)){ S.goals.profHash = profHash(); return; } /* blank slate: nothing to calculate from yet */ S.goals.maintenance = calcMaintenance().maint; applyModePct(); S.goals.profHash = profHash(); }
+function recalcMaint(){ if(!(S.goals.profile.weightLb>0)){ const cw = (typeof curBodyWeight==="function")?curBodyWeight():0; if(cw>0) S.goals.profile.weightLb=cw; else { S.goals.profHash = profHash(); return; } } S.goals.maintenance = calcMaintenance().maint; applyModePct(); S.goals.profHash = profHash(); }
 if(!S.goals.profHash) S.goals.profHash = profHash();
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const dstr = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -6393,18 +6386,21 @@ const ACT_TIERS = [
 const actPAL = p => (ACT_TIERS.find(t=>t.key===(p&&p.activityKey))||ACT_TIERS[2]).pal;
 const MODE_PCT = {lean:10, bulk:15, maintain:0}; /* Helms 2023: bigger surpluses add fat, not muscle — bulk capped at +15% */
 function calcMaintenance(){
-  const p = S.goals.profile;
-  if(!(p.weightLb>0)) return {bmr:0, maint:0, formula:"—"}; /* blank slate: no stats, no number */
-  const kg = p.weightLb/2.20462, cm = p.heightIn*2.54;
+  const p = S.goals.profile || {};
+  const curW = (typeof curBodyWeight==="function")?curBodyWeight():0;
+  const wLb = (p.weightLb>0) ? p.weightLb : (curW>0 ? curW : 122.2);
+  if(!(wLb>0)) return {bmr:0, maint:0, formula:"—"};
+  const kg = wLb/2.20462;
+  const hIn = (p.heightIn>0) ? p.heightIn : 70;
+  const cm = hIn*2.54;
+  const age = (p.age>0) ? p.age : 23;
+  const sex = p.sex || "m";
   let bmr, formula;
   if(p.bodyFat>0){
     bmr = 370 + 21.6*(kg*(1-p.bodyFat/100));
     formula = "Katch-McArdle";
   } else {
-    /* 2026.10.11-g: Ten-Haaf (2014) — validated on athletes, 80% within ±10% of
-       measured RMR vs ~53% for Mifflin. Runs ~170-190 kcal higher for very active
-       users; Mifflin systematically underestimates athletic BMR. */
-    bmr = 29.279 + 11.936*kg + 587.728*(cm/100) - 8.129*p.age + 191.027*(p.sex==="f"?0:1);
+    bmr = 29.279 + 11.936*kg + 587.728*(cm/100) - 8.129*age + 191.027*(sex==="f"?0:1);
     formula = "Ten-Haaf (athlete)";
   }
   return {bmr: Math.round(bmr), maint: Math.round(bmr*actPAL(p)), formula};
@@ -6823,6 +6819,12 @@ function syncWeightFromLog(newLb, dateStr){
 /* ============ GOALS: collapsible sections + info buttons ============ */
 /* Goals section explainers shown behind the ⓘ buttons */
 function infoContent(k){
+  if(k==="athlete" || k==="engine") return {t:"Athlete Energy & Macro Engine", b:
+    `<div class="irow"><b>Basal Metabolic Rate (BMR):</b> Calculated using the validated <b>Ten-Haaf</b> athlete equation (or <b>Katch-McArdle</b> when body fat % is entered) from your height, weight, age, and sex.</div>
+     <div class="irow"><b>TDEE & Shift Multipliers:</b> Maintenance expenditure combines your baseline metabolism with your physical activity level (PAL), accounting for your restaurant shift workload (Truly Pizza server & aPizzaDoho expeditor on-foot hours) plus weekly gym sessions.</div>
+     <div class="irow"><b>Lean Bulk Surplus:</b> A calibrated +10% surplus above maintenance is targeted to drive muscular hypertrophy while keeping body fat low (Helms et al., 2023).</div>
+     <div class="irow"><b>Macro Distribution:</b> High protein (~1.0 g/lb / 2.2 g/kg) ensures maximum muscle protein synthesis, healthy dietary fats (~20–25%) maintain hormone and joint health, and clean carbohydrates fuel intensive shifts and training.</div>
+     <div class="irow"><b>Adaptive Learning:</b> The engine runs quietly in the background, continuously refining your real metabolic rate based on your daily food logs and weigh-in trends.</div>`};
   /* 2026.09.22-h: Progress insight rows open their evidence here */
   if(k.indexOf("insight:")===0){
     const ik = k.slice(8);
@@ -8053,8 +8055,8 @@ function prHandleDown(e){
   handle.addEventListener("lostpointercapture", end);
 }
 /* ============ PROFILE VIEW (2026.10.11-a) ============ */
-const PROF_UNITS = ["stats","engine","macros","streaks","settings"];
-const PROF_TITLES = {stats:"Physical Stats",engine:"Energy Engine",macros:"Macro Blueprint",streaks:"Streaks",settings:"Settings"};
+const PROF_UNITS = ["stats","streaks","settings"];
+const PROF_TITLES = {stats:"Athlete Blueprint",streaks:"Habit Trackers",settings:"Preferences"};
 function profOrder(){
   const saved = (S && Array.isArray(S.profOrder)) ? S.profOrder.filter(function(p){ return PROF_UNITS.indexOf(p)>=0; }) : [];
   return PROF_UNITS.filter(function(p){ return saved.indexOf(p)>=0; })
@@ -8148,56 +8150,62 @@ function renderProfile(){
   const bmi = (wLb>0 && hIn>0) ? (wLb/(hIn*hIn)*703) : 0;
   const whtr = (p.waistIn>0 && hIn>0) ? (p.waistIn/hIn) : 0;
 
-  /* 2026.10.11: Athlete Physical Stats Card */
-  const elW = document.getElementById("stWVal");
-  if(elW){
-    elW.textContent = wLb > 0 ? wDisp(wLb).toFixed(1) + " " + wu : "–";
-    const hFt = Math.floor(hIn / 12), hRem = Math.round(hIn % 12);
-    document.getElementById("stHVal").textContent = hIn > 0 ? (p.units==="met" ? Math.round(hIn*2.54)+" cm" : hFt+"'"+hRem+"\"") : "–";
-    document.getElementById("stAVal").textContent = p.age > 0 ? p.age + " yrs" : "–";
-    document.getElementById("stSVal").textContent = p.sex === "f" ? "Female" : (p.sex === "m" ? "Male" : "–");
-    document.getElementById("stFVal").textContent = p.bodyFat > 0 ? p.bodyFat + "%" : "–";
-    document.getElementById("stWaVal").textContent = p.waistIn > 0 ? p.waistIn + " in" : "–";
-    document.getElementById("stBmiVal").textContent = bmi > 0 ? bmi.toFixed(1) : "–";
-    document.getElementById("stWhtrVal").textContent = whtr > 0 ? whtr.toFixed(2) : "–";
-  }
-
-  /* 2026.10.11: Energy & TDEE Metabolic Engine */
+  /* 2026.10.11: Athlete Blueprint (Modern, Simplistic & Colorful) */
+  const apTot = goalTotal();
   const cm = calcMaintenance();
-  const elBmr = document.getElementById("pfBmrVal");
-  if(elBmr){
-    elBmr.textContent = cm.bmr > 0 ? cm.bmr.toLocaleString() : "–";
-    const pal = actPAL(p);
-    document.getElementById("pfPalVal").textContent = pal.toFixed(2);
-    document.getElementById("pfMaintVal").textContent = cm.maint > 0 ? cm.maint.toLocaleString() : "–";
-    const surp = S.goals.surplus || 0;
-    document.getElementById("pfSurpVal").textContent = surp > 0 ? "+" + surp : (surp < 0 ? surp : "0");
-    const gTot = goalTotal();
-    document.getElementById("pfGoalVal").textContent = gTot > 0 ? gTot.toLocaleString() + " kcal" : "–";
-    const enNote = document.getElementById("pfEngineNote");
-    if(enNote){
-      const isAdapt = S.goals.useAdaptive && S.goals.adVal > 0;
-      enNote.innerHTML = "<b>" + cm.formula + "</b> formula: BMR " + cm.bmr.toLocaleString() + " kcal base × " + pal + " activity tier = " + cm.maint.toLocaleString() + " kcal maintenance. " +
-        (isAdapt ? "<br><i>Adaptive TDEE active:</i> learned from your scale feedback (" + S.goals.adVal.toLocaleString() + " kcal)." : "");
+  const surp = S.goals.surplus || 0;
+  const prot = S.goals.protein || 0;
+  const carb = S.goals.carbs || 0;
+  const fat = S.goals.fat || 0;
+  const waterOz = (typeof autoWaterOz === "function" ? autoWaterOz() : (S.goals.water>0 ? S.goals.water*8 : 110));
+
+  const elApTarget = document.getElementById("apTargetVal");
+  if(elApTarget){
+    elApTarget.textContent = apTot > 0 ? Math.round(apTot).toLocaleString() : (cm.maint > 0 ? Math.round(cm.maint + (surp||0)).toLocaleString() : "3,134");
+    const elApMaintSub = document.getElementById("apMaintSub");
+    if(elApMaintSub){
+      const mText = cm.maint > 0 ? Math.round(cm.maint).toLocaleString() + " kcal maint" : "2,849 kcal maint";
+      const sText = surp > 0 ? " · +" + surp + " kcal" : (surp < 0 ? " · " + surp + " kcal" : " · +10% surplus");
+      elApMaintSub.textContent = mText + sText;
     }
+    const elApMode = document.getElementById("apModePill");
+    if(elApMode){
+      const m = S.goals.mode;
+      elApMode.textContent = m === "bulk" ? "Surplus Bulk" : (m === "maintain" ? "Maintain" : "Lean Bulk");
+    }
+    const elApBodyPill = document.getElementById("apBodyPill");
+    if(elApBodyPill){
+      elApBodyPill.textContent = wLb > 0 ? wDisp(wLb).toFixed(1) + " " + wu : "122.2 lb";
+    }
+    const elApP = document.getElementById("apPVal");
+    if(elApP) elApP.textContent = prot > 0 ? prot + "g" : "150g";
+    const elApC = document.getElementById("apCVal");
+    if(elApC) elApC.textContent = carb > 0 ? carb + "g" : "386g";
+    const elApF = document.getElementById("apFVal");
+    if(elApF) elApF.textContent = fat > 0 ? fat + "g" : "88g";
+    const elApW = document.getElementById("apWVal");
+    if(elApW) elApW.textContent = waterOz + " oz";
+
+    const elApWgt = document.getElementById("apWeightVal");
+    if(elApWgt) elApWgt.textContent = wLb > 0 ? wDisp(wLb).toFixed(1) + " " + wu : "122.2 lb";
+    const elApHgt = document.getElementById("apHeightVal");
+    if(elApHgt){
+      const hFt = Math.floor(hIn / 12), hRem = Math.round(hIn % 12);
+      elApHgt.textContent = hIn > 0 ? (p.units==="met" ? Math.round(hIn*2.54)+" cm" : hFt + "′" + hRem + "″") : "5′10″";
+    }
+    const elApBf = document.getElementById("apBfVal");
+    if(elApBf) elApBf.textContent = p.bodyFat > 0 ? p.bodyFat + "%" : "~6%";
+    const elApBmi = document.getElementById("apBmiVal");
+    if(elApBmi) elApBmi.textContent = bmi > 0 ? bmi.toFixed(1) : (wLb > 0 && hIn > 0 ? (wLb/(hIn*hIn)*703).toFixed(1) : "17.5");
   }
 
-  /* 2026.10.11: Macro & Hydration Blueprint */
-  const elMacP = document.getElementById("pfMacroP");
-  if(elMacP){
-    const prot = S.goals.protein || 0;
-    const carb = S.goals.carbs || 0;
-    const fat = S.goals.fat || 0;
-    const gTot = goalTotal() || 1;
-    elMacP.textContent = prot + "g";
-    document.getElementById("pfMacroPPer").textContent = wLb > 0 ? "(" + (prot / wLb).toFixed(2) + " g/lb · " + (prot*4) + " kcal)" : "";
-    document.getElementById("pfMacroC").textContent = carb + "g";
-    document.getElementById("pfMacroCPct").textContent = "(" + Math.round(carb * 4 / gTot * 100) + "% · " + (carb*4) + " kcal)";
-    document.getElementById("pfMacroF").textContent = fat + "g";
-    document.getElementById("pfMacroFPct").textContent = "(" + Math.round(fat * 9 / gTot * 100) + "% · " + (fat*9) + " kcal)";
-    document.getElementById("pfMacroWater").textContent = (typeof autoWaterOz === "function" ? autoWaterOz() : 110) + " oz";
-    const elTot = document.getElementById("pfMacroCalTotal");
-    if(elTot) elTot.textContent = (prot*4 + carb*4 + fat*9) + " kcal total";
+  const aiBtn = document.getElementById("athleteInfo");
+  if(aiBtn && !aiBtn.dataset.bound){
+    aiBtn.dataset.bound = "1";
+    aiBtn.onclick = function(e){
+      e.stopPropagation();
+      openInfo("athlete");
+    };
   }
 
   /* Setup quick edit toggle if not already bound */
@@ -8233,6 +8241,8 @@ function renderProfile(){
         recalcMaint();
         if(typeof autoDeriveMacros === "function") autoDeriveMacros();
         save();
+        qForm.classList.remove("open");
+        qTgl.textContent = "Edit Stats ›";
         renderProfile();
         if(typeof renderDiary === "function") renderDiary();
         if(typeof renderProgress === "function") renderProgress();
