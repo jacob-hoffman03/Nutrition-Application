@@ -1220,16 +1220,10 @@ body.reordering #progOverview{display:none}
           <div class="gsub" id="adSub"></div>
           <svg id="adChart" viewBox="0 0 300 84" style="width:100%;height:84px;margin-top:8px;display:none" role="img" aria-label="Adaptive TDEE history"></svg>
         </div>
-        <div class="card">
-          <div class="cfrow"><span>Formula estimate</span><b id="adFormula">–</b></div>
-          <div class="cfrow" style="margin-top:6px"><span>Learned adjustment</span><b id="adAdj">–</b></div>
-          <div class="cfrow" style="margin-top:6px"><span>Confidence</span><b id="adConf">–</b></div>
-        </div>
-        <div class="rangenote" id="adSuggest" style="display:none;font-weight:700"></div>
         <div class="rangenote" id="adNote"></div>
         <div class="card slim">
           <div class="wdet">
-            <div><div class="wt">Use as my maintenance</div><div class="ws">Learns from your last 3 weeks</div></div>
+            <div><div class="wt">Use as my maintenance</div><div class="ws">Learns from your last 2 weeks</div></div>
             <button class="wtgl" id="adToggle" role="switch" aria-checked="false" aria-label="Use adaptive TDEE as maintenance"><span class="knob"></span></button>
           </div>
           <div class="wdet" style="border-top:1px solid var(--line)">
@@ -2237,7 +2231,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.11-j";
+const APP_VERSION = "2026.10.11-k";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6390,8 +6384,8 @@ function maybeAutoTune(suggest){
 /* Complete-day gating: partial days must not teach the model. A day counts only
    with real food AND all three bars cleared: ≥800 kcal, ≥ half of maintenance,
    ≥ 60% of your own median day. Today is always excluded — unfinished by definition. */
-function completeDayCals(){
-  const WIN=28, raw=[]; /* research: 28-day intake window on complete days only */
+function completeDayCals(WIN){
+  WIN=WIN||28; const raw=[]; /* compact model passes 14; legacy callers keep 28 */
   for(let i=WIN-1;i>=1;i--){ const ds=addDays(todayStr(),-i); if(isLocked(ds)) continue; const t=dayTotals(ds); if(t.foodLogged) raw.push(t.cal); }
   const srt=raw.slice().sort((a,b)=>a-b), med=srt.length?srt[Math.floor(srt.length/2)]:0;
   const maint=calcMaintenance().maint||S.goals.maintenance||0;
@@ -6410,30 +6404,25 @@ function avgCompleteIntake(){ const r=completeDayCals(); return r.cals.length?r.
    blends toward the formula estimate while data is thin, and weekly moves are
    capped so one noisy week can't yank the target. */
 function adaptiveCalc(){
-  const WIN=28, MIN_DAYS=7, MIN_SPAN=7;
+  /* COMPACT MODEL (2026.10.11-g): one learned number. TDEE = avg intake − (lb/wk ÷ 7 × 3500).
+     No formula blending, no confidence %. Formula is bootstrap-only when data is thin. */
+  const WIN=14, MIN_DAYS=7, MIN_SPAN=7;
   if(!(S.goals.profile.weightLb>0)) return {ok:false, reason:"profile"};
-  const comp=completeDayCals(), cals=comp.cals, partial=comp.partial;
+  const comp=completeDayCals(WIN), cals=comp.cals, partial=comp.partial;
   const ws=sortedWeights(), T=p=>new Date(p.d+"T12:00:00").getTime();
   const cutoff=new Date(todayStr()+"T12:00:00").getTime()-WIN*86400000;
-  /* EWMA trend (research) instead of 7-day MA: less lag, robust to gaps */
+  /* EWMA smoothing before differencing: water weight must not whipsaw the number */
   const wpts=ewmaTrend(ws).filter(p=>T(p)>=cutoff);
   const spanD=wpts.length>=2?(T(wpts[wpts.length-1])-T(wpts[0]))/86400000:0;
-  const weighIns=ws.filter(p=>T(p)>=cutoff).length;
   if(cals.length<MIN_DAYS||wpts.length<2||spanD<MIN_SPAN)
     return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD), partial};
   const rateWk=halvesRate(wpts);
   if(rateWk==null) return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD), partial};
-  const formula=calcMaintenance().maint;
-  if(!(formula>0)) return {ok:false, reason:"profile"};
   const avg=cals.reduce((a,v)=>a+v,0)/cals.length;
   const learned=avg-rateWk/7*3500; /* energy balance: surplus (gain) subtracts, deficit (loss) adds back */
-  /* confidence: complete-days ramp x weigh-in density (research recipe) */
-  const conf=Math.min(1,cals.length/21)*Math.min(1,weighIns/8);
-  let v=formula+(learned-formula)*conf;
-  v=formula+Math.max(-400,Math.min(400,v-formula)); /* sanity: never trust the math more than ±400 from the formula */
   return {ok:true, days:cals.length, span:Math.round(spanD), avg:Math.round(avg),
           rateWk:Math.round(rateWk*100)/100, learned:Math.round(learned),
-          formula, conf:Math.round(conf*100)/100, value:Math.round(v), partial, weighIns};
+          value:Math.round(learned), partial};
 }
 /* Bulk analytics dashboard (2026.10.11-f, research-backed):
    - Trend rate vs 0.25-0.5 lb/week evidence band
@@ -6506,8 +6495,8 @@ function applyAdaptive(){
   const prev=g.adaptive&&g.adaptive.value>0?g.adaptive.value:null;
   if(prev!=null) v=prev+Math.max(-150,Math.min(150,v-prev)); /* weekly moves capped, same spirit as auto-tune */
   v=Math.round(v);
-  g.adaptive={ok:true, stale:false, value:v, formula:r.formula, learned:r.learned, avg:r.avg,
-    rateWk:r.rateWk, adj:v-r.formula, conf:r.conf, days:r.days, span:r.span, partial:r.partial||0, updated:todayStr()};
+  g.adaptive={ok:true, stale:false, value:v, learned:r.learned, avg:r.avg,
+    rateWk:r.rateWk, days:r.days, span:r.span, partial:r.partial||0, updated:todayStr()};
   g.adaptiveHist=g.adaptiveHist||[];
   const last=g.adaptiveHist[g.adaptiveHist.length-1];
   if(!last||last.d!==todayStr()) g.adaptiveHist.push({d:todayStr(), v});
@@ -6523,32 +6512,23 @@ function paintAdaptive(){
   const tg=$("adToggle");
   tg.classList.toggle("on", !!g.useAdaptive);
   tg.setAttribute("aria-checked", !!g.useAdaptive);
-  const sg=$("adSuggest");
-  if(a&&a.ok&&!g.useAdaptive){
-    sg.style.display="";
-    sg.textContent="Suggested maintenance "+a.value.toLocaleString()+" kcal ("+(a.adj>=0?"+":"−")+Math.abs(a.adj).toLocaleString()+" vs your formula estimate) — tap Apply to use it.";
-  } else sg.style.display="none";
-  const explainer="Compares what you ate against your weight trend over the last 3 weeks: TDEE = avg intake − (weight change × 3,500 kcal/lb). Needs 7+ logged days and weigh-ins spread across a week.";
+  const explainer="Compares what you ate against your weight trend over the last 2 weeks: TDEE = avg intake − (weight change × 3,500 kcal/lb). Needs 7+ logged days and weigh-ins spread across a week.";
   const chart=$("adChart");
   if(!a){
     $("adVal").textContent="–"; $("adSub").textContent="Tap Recalculate to learn your TDEE from your log.";
-    $("adFormula").textContent="–"; $("adAdj").textContent="–"; $("adConf").textContent="–";
+    
     chart.style.display="none"; $("adNote").textContent=explainer; $("adTuneNote").textContent=g.adTuneNote||""; return;
   }
   if(!a.ok){
     $("adVal").textContent="–";
     $("adSub").textContent=a.reason==="profile"
-      ? "Add your profile above first — the formula estimate anchors the math."
+      ? "Add your profile above first."
       : "Not enough data yet — "+a.days+" of 7 logged days"+(a.span<7?"; weigh-ins span "+a.span+" of 7 days":"")+".";
-    $("adFormula").textContent="–"; $("adAdj").textContent="–"; $("adConf").textContent="–";
+    
     chart.style.display="none"; $("adNote").textContent=explainer; $("adTuneNote").textContent=g.adTuneNote||""; return;
   }
   $("adVal").textContent=a.value.toLocaleString();
   $("adSub").textContent="updated "+a.updated+" · "+a.days+" logged days"+(a.partial?" · "+a.partial+" partial skipped":"")+(a.stale?" · stale — log more days":"");
-  $("adFormula").textContent=a.formula.toLocaleString()+" kcal";
-  const adj=$("adAdj");
-  adj.textContent=(a.adj>=0?"+":"−")+Math.abs(a.adj).toLocaleString()+" kcal"; /* explicit − branch: never drop the sign */
-  $("adConf").textContent=(a.conf>=0.85?"High":a.conf>=0.5?"Medium":"Building")+" · "+a.days+" days";
   const hist=(g.adaptiveHist||[]).slice(-8);
   if(hist.length>=2){
     const W=300,H=84,P=10, vs=hist.map(h=>h.v), mn=Math.min.apply(null,vs), mx=Math.max.apply(null,vs), rg=Math.max(1,mx-mn);
@@ -6561,7 +6541,7 @@ function paintAdaptive(){
     chart.innerHTML=s; chart.style.display="";
   } else chart.style.display="none";
   $("adNote").textContent="Learned "+a.learned.toLocaleString()+" kcal from "+a.avg.toLocaleString()+" kcal/day avg intake and a "+
-    (a.rateWk>=0?"+":"−")+Math.abs(a.rateWk).toFixed(2)+" lb/wk trend — blended toward the formula at "+Math.round(a.conf*100)+"% confidence.";
+    (a.rateWk>=0?"+":"−")+Math.abs(a.rateWk).toFixed(2)+" lb/wk trend.";
   $("adTuneNote").textContent=g.adTuneNote||"";
 }
 /* True metrics (2026.09.24-c): live readouts from accumulated stored data — no tap
@@ -6570,7 +6550,7 @@ function paintAdaptive(){
    otherwise the calculator.net formula). */
 function paintTrueMetrics(){
   const $=id=>document.getElementById(id);
-  const comp=completeDayCals(), cals=comp.cals;
+  const comp=completeDayCals(14), cals=comp.cals;
   $("tmIntake").textContent = cals.length ? Math.round(cals.reduce((a,v)=>a+v,0)/cals.length).toLocaleString()+" kcal" : "–";
   const ws=sortedWeights();
   let trend=null;
@@ -6584,7 +6564,7 @@ function paintTrueMetrics(){
   if(r.ok) m.textContent=r.value.toLocaleString()+" kcal · learned";
   else { const f=calcMaintenance(); m.textContent = f.maint>0 ? f.maint.toLocaleString()+" kcal · formula" : "–"; }
   const wspan = ws.length>=2 ? Math.round((new Date(ws[ws.length-1].d+"T12:00:00")-new Date(ws[0].d+"T12:00:00"))/86400000) : 0;
-  $("tmNote").textContent = cals.length+" complete day"+(cals.length===1?"":"s")+" in the last 3 weeks"+(comp.partial?" · "+comp.partial+" partial skipped":"")+" · weigh-ins span "+wspan+" day"+(wspan===1?"":"s")+
+  $("tmNote").textContent = cals.length+" complete day"+(cals.length===1?"":"s")+" in the last 2 weeks"+(comp.partial?" · "+comp.partial+" partial skipped":"")+" · weigh-ins span "+wspan+" day"+(wspan===1?"":"s")+
     " — updates live as you log. The learned value needs 7+ complete days and a 7-day weigh-in span.";
 }
 /* The scale is the single source of truth for body weight: every weigh-in updates the
@@ -8354,8 +8334,8 @@ function autoPilot(){
       var v = r.value;
       if(prev != null) v = prev + Math.max(-150, Math.min(150, v - prev));
       v = Math.round(v);
-      g.adaptive = {ok: true, stale: false, value: v, formula: r.formula, learned: r.learned, avg: r.avg,
-        rateWk: r.rateWk, adj: v - r.formula, conf: r.conf, days: r.days, span: r.span, partial: r.partial || 0, updated: today};
+      g.adaptive = {ok: true, stale: false, value: v, learned: r.learned, avg: r.avg,
+        rateWk: r.rateWk, days: r.days, span: r.span, partial: r.partial || 0, updated: today};
       g.adaptiveHist = g.adaptiveHist || [];
       var last = g.adaptiveHist[g.adaptiveHist.length - 1];
       if(!last || last.d !== today) g.adaptiveHist.push({d: today, v: v});
