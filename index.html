@@ -714,6 +714,33 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
   box-shadow:0 -6px 24px rgba(70,70,140,.10), 0 10px 26px rgba(70,70,140,.10);
   padding:7px 10px calc(8px + env(safe-area-inset-bottom));} /* 2026.10.09-h: was crowding the home indicator */
 .tabbar .inner{max-width:430px; margin:0 auto; display:flex; height:62px; align-items:stretch;}
+/* ============ PROFILE VIEW (2026.10.11-a) ============ */
+.pf-head{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 14px;}
+.pf-id{display:flex;align-items:center;gap:12px;min-width:0;}
+.pf-avatar{width:58px;height:58px;border-radius:50%;border:none;padding:0;overflow:hidden;background:var(--acc-soft);color:var(--acc);font-weight:800;font-size:22px;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;}
+.pf-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+.pf-idtx{min-width:0;}
+.pf-id b{font-size:22px;font-weight:800;letter-spacing:-.3px;display:block;}
+.pf-sub{font-size:13px;color:var(--muted);font-weight:600;}
+.pf-reorder{width:42px;height:42px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;}
+.pf-reorder svg{width:22px;height:22px;}
+.pf-reorder.on{background:var(--acc);border-color:var(--acc);color:#fff;}
+.pf-streaks{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.pf-streak{border:none;border-radius:20px;padding:14px 14px 12px;color:#fff;text-align:left;cursor:pointer;background:linear-gradient(135deg,var(--acc),var(--acc-deep));position:relative;overflow:hidden;font-family:inherit;}
+.pf-streak::after{content:"";position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);top:-40px;right:-30px;pointer-events:none;}
+.pf-streak b{font-size:34px;font-weight:800;display:block;line-height:1;position:relative;z-index:1;font-variant-numeric:tabular-nums;}
+.pf-streak>span{font-size:12.5px;font-weight:700;opacity:.92;position:relative;z-index:1;display:block;margin-top:4px;}
+.pf-streak .pf-go{font-size:12px;font-weight:700;opacity:.75;margin-top:8px;}
+.pf-cal{margin-bottom:12px;}
+.pf-calbar{height:10px;border-radius:6px;background:rgba(255,255,255,.25);overflow:hidden;min-width:110px;flex:1;}
+.pf-calbar i{display:block;height:100%;border-radius:6px;background:#fff;}
+.pf-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:4px;}
+.pf-met{background:var(--card);border-radius:18px;padding:12px 10px;}
+.pf-met b{font-size:18px;font-weight:800;display:block;letter-spacing:-.3px;font-variant-numeric:tabular-nums;}
+.pf-met span{font-size:11.5px;color:var(--muted);font-weight:700;}
+.pf-rrow{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:16px;padding:10px 10px 10px 16px;margin-bottom:8px;}
+.pf-rrow b{flex:1;font-size:16px;font-weight:700;}
+.pf-rrow button{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:18px;line-height:1;color:var(--ink);cursor:pointer;}
 .tab{flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:#a5a5b0; font-size:10.5px; font-weight:700; border-radius:22px; transition:background .18s ease, color .18s ease;}
 .tab svg{width:23px; height:23px;}
 .tab.active{color:var(--acc); background:rgba(91,91,240,.12);}
@@ -1448,11 +1475,20 @@ body.reordering #progOverview{display:none}
   </section>
 
   <!-- SETTINGS -->
-  <section class="view" id="view-settings">
-    <div class="topbar">
-      <button class="tbtn" id="settingsBack" aria-label="Back">‹</button>
-      <h1>Settings</h1>
-      <div style="width:44px"></div>
+    <section class="view" id="view-profile">
+    <div class="pf-head">
+      <div class="pf-id">
+        <button class="pf-avatar" id="pfAvatar" aria-label="Change profile photo"></button>
+        <div class="pf-idtx"><b id="pfName">\u2013</b><span class="pf-sub" id="pfSub"></span></div>
+      </div>
+      <button class="pf-reorder" id="profReorderBtn" aria-label="Rearrange panels"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/><path d="m17 4 3 3-3 3"/></svg></button>
+    </div>
+    <div id="profPanels">
+      <div class="punit" data-pid="streaks"><div class="pf-streaks" id="pfStreaks"></div></div>
+      <div class="punit" data-pid="cal"><div class="card progcard pf-cal" id="pfCal"></div></div>
+      <div class="punit" data-pid="metrics"><div class="pf-metrics" id="pfMetrics"></div></div>
+      <div class="punit" data-pid="settings"><div id="profSettings">
+    
     </div>
     <div class="slabel">Profile</div>
     <div class="card" style="margin-top:6px">
@@ -1497,6 +1533,9 @@ body.reordering #progOverview{display:none}
     </div>
     <div class="privline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 1 1 7 0v2.5"/></svg>Private to this phone · nothing leaves your device</div>
     <div class="ver" id="appVer"></div>
+  </section></div></div>
+    </div>
+    <div id="profReorder" hidden></div>
   </section>
 
   <section class="view" id="view-medals">
@@ -1591,6 +1630,9 @@ body.reordering #progOverview{display:none}
     <button class="tab" data-v="foods">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       Foods</button>
+    <button class="tab" data-v="profile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+      Profile</button>
   </div></nav>
 </div>
 
@@ -2195,7 +2237,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.09-h";
+const APP_VERSION = "2026.10.11-a";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6538,7 +6580,7 @@ function renderInfo(cat){
 /* ⓘ next to a main title guides here, at the matching category */
 function gotoInfoCat(cat){ infoCat = cat; showView("info"); }
 document.getElementById("infoRow").onclick = ()=>gotoInfoCat("diary");
-document.getElementById("infoBack").onclick = ()=>showView("settings");
+document.getElementById("infoBack").onclick = ()=>showView("profile");
 document.getElementById("diaryInfo").onclick = ()=>gotoInfoCat("diary");
 document.getElementById("analysisInfo").onclick = ()=>gotoInfoCat("diary");
 document.getElementById("progressInfo").onclick = ()=>gotoInfoCat("progress");
@@ -7090,7 +7132,7 @@ function renderProfileStrip(){
   wireMedals(pm);
   checkMedals();
 }
-document.getElementById("pAvatar").onclick = ()=>showView("settings");
+document.getElementById("pAvatar").onclick = ()=>showView("profile");
 function renderProfileCard(){
   const pr = S.profile || {name:"", img:""};
   document.getElementById("sAvatar").innerHTML = avatarHTML(pr);
@@ -7104,7 +7146,7 @@ document.getElementById("sAvatar").onclick = ()=>document.getElementById("pPhoto
 document.getElementById("sName").addEventListener("change", e=>{
   if(!S.profile) S.profile = {};
   S.profile.name = e.target.value.trim() || "";
-  save(); renderProfileStrip(); renderProfileCard();
+  save(); renderProfileStrip(); renderProfileCard(); if(curView==="profile") renderProfile();
 });
 document.getElementById("pPhotoFile").onchange = e=>{
   const file = e.target.files[0];
@@ -7119,7 +7161,7 @@ document.getElementById("pPhotoFile").onchange = e=>{
       cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
       if(!S.profile) S.profile = {};
       S.profile.img = cv.toDataURL("image/jpeg", 0.85);
-      save(); renderProfileCard(); renderProfileStrip();
+      save(); renderProfileCard(); renderProfileStrip(); if(curView==="profile") renderProfile();
     }catch(err){ alert("Couldn't use that photo."); }
     URL.revokeObjectURL(url);
   };
@@ -7359,13 +7401,13 @@ document.getElementById("goalsDone").onclick = ()=>{
     if(S.goals.useAdaptive) applyAdaptive(); /* adaptive owns maintenance now — re-learn with the new profile */
     else { recalcMaint(); autoDeriveMacros(); }
   } /* profile changed → goal can never go stale */
-  save(); showView("settings"); renderDiary();
+  save(); showView("profile"); renderDiary();
 };
 /* Typed values commit on every field change (blur/return), so nothing the user
    typed can ever be lost or silently reverted — Save changes just finalizes. */
 ["gmC","gmP","gmF","gmFi"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); updateMacroSplit(); }));
 ["pfAge","pfHtFt","pfHtIn","pfHtCm","pfWeight","pfFat"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); paintMaintNote(); }));
-document.getElementById("goalsBack").onclick = ()=>{ commitGoalsInputs(); save(); showView("settings"); };
+document.getElementById("goalsBack").onclick = ()=>{ commitGoalsInputs(); save(); showView("profile"); };
 
 /* ============ SETTINGS ============ */
 function renderSettings(){
@@ -7382,16 +7424,15 @@ function renderSettings(){
   const srv=document.getElementById("snapRowVal"); if(srv) srv.textContent=listSnapshots().length+" saved";
 }
 document.getElementById("schedRow").onclick = ()=>{ wsSel = new Date().getDay(); showView("worksched"); };
-document.getElementById("wschedBack").onclick = ()=>showView("settings");
+document.getElementById("wschedBack").onclick = ()=>showView("profile");
 document.getElementById("wschedInfo").onclick = ()=>openInfo("schedule");
 document.getElementById("wDetTgl").onclick = ()=>setWorkDay(wsSel, workDays().indexOf(wsSel)<0);
 document.getElementById("medalCaseRow").onclick = ()=>showView("medals");
-document.getElementById("medalsBack").onclick = ()=>showView("settings");
+document.getElementById("medalsBack").onclick = ()=>showView("profile");
 document.getElementById("snapRow").onclick = ()=>showView("snaps");
-document.getElementById("snapsBack").onclick = ()=>showView("settings");
+document.getElementById("snapsBack").onclick = ()=>showView("profile");
 document.getElementById("goalRow").onclick = ()=>{ renderGoals(); showView("goals"); };
 document.getElementById("waterRow").onclick = ()=>{ renderGoals(); showView("goals"); openGsec("Water"); };
-document.getElementById("settingsBack").onclick = ()=>showView("diary");
 document.getElementById("exportBtn").onclick = ()=>{
   const blob = new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
   const a = document.createElement("a"); a.href=URL.createObjectURL(blob);
@@ -7467,9 +7508,9 @@ function showView(v){
   curView = v;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active", x.id==="view-"+v));
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",
-    t.dataset.v===v || ((v==="analysis"||v==="calendar"||v==="settings"||v==="goals"||v==="medals"||v==="snaps"||v==="worksched"||v==="quit"||v==="info")&&t.dataset.v==="diary")));
+    t.dataset.v===v || ((v==="analysis"||v==="calendar"||v==="goals"||v==="medals"||v==="snaps"||v==="worksched"||v==="quit"||v==="info")&&t.dataset.v==="diary")));
   if(v==="progress"){ weekOffset = 0; renderProgress(); } /* always open on the current 7 days 2026.09.21-j */
-  if(v==="settings") renderSettings();
+  if(v==="profile") renderProfile();
   if(v==="medals") renderMedalsPage();
   if(v==="worksched") renderWorkSched();
   if(v==="quit") renderQuit();
@@ -7570,6 +7611,99 @@ function prHandleDown(e){
   handle.addEventListener("pointercancel", end);
   handle.addEventListener("lostpointercapture", end);
 }
+/* ============ PROFILE VIEW (2026.10.11-a) ============ */
+const PROF_UNITS = ["streaks","cal","metrics","settings"];
+const PROF_TITLES = {streaks:"Streaks",cal:"Calorie",metrics:"Metrics",settings:"Settings"};
+function profOrder(){
+  const saved = (S && Array.isArray(S.profOrder)) ? S.profOrder.filter(function(p){ return PROF_UNITS.indexOf(p)>=0; }) : [];
+  return saved.concat(PROF_UNITS.filter(function(p){ return saved.indexOf(p)<0; }));
+}
+function applyProfLayout(){
+  const box = document.getElementById("profPanels"); if(!box) return;
+  const map = {};
+  box.querySelectorAll(".punit").forEach(function(u){ map[u.getAttribute("data-pid")] = u; });
+  profOrder().forEach(function(pid){ if(map[pid]) box.appendChild(map[pid]); });
+}
+function qtDays(key){
+  try{ const h = qtHours(key); return h==null ? null : Math.floor(h/24)+1; }catch(e){ return null; }
+}
+function renderProfile(){
+  renderSettings();
+  const pr = S.profile || {};
+  const av = document.getElementById("pfAvatar");
+  if(av) av.innerHTML = avatarHTML(pr);
+  const nm = document.getElementById("pfName");
+  if(nm) nm.textContent = pr.name || "Jay";
+  const ws = sortedWeights(), lw = ws.length ? ws[ws.length-1] : null;
+  const ndays = Object.keys(S.days||{}).filter(function(k){ return !isLocked(k)&&dayHasData(S.days[k]); }).length;
+  const sub = document.getElementById("pfSub");
+  if(sub) sub.textContent = ndays+" day"+(ndays===1?"":"s")+" logged"+(lw ? " \u00b7 "+wDisp(lw.w).toFixed(1)+" "+wUnit() : "");
+  const st = document.getElementById("pfStreaks");
+  if(st){
+    const nd = qtDays("nicotine"), ad = qtDays("alcohol");
+    const card = function(days, label){
+      return '<button class="pf-streak"><b>'+(days==null?"\u2013":days)+'</b><span>'+label+'</span><span class="pf-go">'+(days==null?"Start counter":"Timeline")+' \u203a</span></button>';
+    };
+    st.innerHTML = card(nd, "days nicotine-free") + card(ad, "days alcohol-free");
+    st.querySelectorAll(".pf-streak").forEach(function(b){ b.onclick = function(){ showView("quit"); }; });
+  }
+  const cal = document.getElementById("pfCal");
+  if(cal){
+    const t = totals(viewDate()), g = goalTotal();
+    const pct = g>0 ? Math.min(100, Math.round(t.cal/g*100)) : 0;
+    cal.innerHTML =
+      '<div class="prog-top"><span class="prog-label">Today\u2019s calories</span><span class="prog-date">'+esc(new Date().toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"}))+'</span></div>'+
+      '<div class="prog-main"><div class="prog-pct"><b>'+Math.round(t.cal).toLocaleString()+'</b><span>'+(g>0 ? "of "+Math.round(g).toLocaleString()+" kcal goal" : "set your goal")+'</span></div>'+
+      '<div class="pf-calbar"><i style="width:'+pct+'%"></i></div></div>';
+  }
+  const mx = document.getElementById("pfMetrics");
+  if(mx){
+    const hIn = (S.goals.profile||{}).heightIn||0;
+    const wLb = lw ? lw.w : 0;
+    const bmi = (wLb>0 && hIn>0) ? (wLb/(hIn*hIn)*703) : 0;
+    const maint = S.goals.maintenance>0 ? Math.round(S.goals.maintenance) : 0;
+    const tile = function(v,l){ return '<div class="pf-met"><b>'+v+'</b><span>'+l+'</span></div>'; };
+    mx.innerHTML =
+      tile(wLb>0 ? wDisp(wLb).toFixed(1)+" "+wUnit() : "\u2013", "Weight") +
+      tile(bmi>0 ? bmi.toFixed(1) : "\u2013", "BMI") +
+      tile(maint>0 ? maint.toLocaleString()+" kcal" : "\u2013", "Maintenance") +
+      tile(streak(), "Day streak") +
+      tile(ndays, "Days logged") +
+      tile(ws.length, "Weigh-ins");
+  }
+  applyProfLayout();
+}
+let profEditing = false;
+function setProfEdit(on){
+  profEditing = on;
+  const btn = document.getElementById("profReorderBtn"), box = document.getElementById("profPanels"), list = document.getElementById("profReorder");
+  if(!btn || !box || !list) return;
+  btn.classList.toggle("on", on);
+  btn.setAttribute("aria-label", on?"Done rearranging":"Rearrange panels");
+  if(on){
+    list.innerHTML = "";
+    profOrder().forEach(function(pid){
+      const row = document.createElement("div"); row.className = "pf-rrow"; row.setAttribute("data-pid", pid);
+      const t = document.createElement("b"); t.textContent = PROF_TITLES[pid]||pid; row.appendChild(t);
+      const up = document.createElement("button"); up.textContent = "\u2191"; up.setAttribute("aria-label","Move up");
+      const dn = document.createElement("button"); dn.textContent = "\u2193"; dn.setAttribute("aria-label","Move down");
+      up.onclick = function(){ profMove(pid,-1); }; dn.onclick = function(){ profMove(pid,1); };
+      row.appendChild(up); row.appendChild(dn); list.appendChild(row);
+    });
+    box.style.display = "none"; list.hidden = false;
+  }else{
+    box.style.display = ""; list.hidden = true; list.innerHTML = "";
+    applyProfLayout();
+  }
+}
+function profMove(pid, dir){
+  const o = profOrder(), i = o.indexOf(pid), j = i+dir;
+  if(i<0 || j<0 || j>=o.length) return;
+  const t = o[i]; o[i] = o[j]; o[j] = t;
+  S.profOrder = o; save(); setProfEdit(true); applyProfLayout();
+}
+document.getElementById("profReorderBtn").onclick = function(){ setProfEdit(!profEditing); };
+document.getElementById("pfAvatar").onclick = function(){ const f=document.getElementById("pPhotoFile"); if(f) f.click(); };
 document.getElementById("progEditBtn").onclick = function(){
   if(document.body.classList.contains("reordering")){
     const list = document.getElementById("progReorder");
@@ -7637,7 +7771,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.v)
 document.getElementById("tabFab").onclick = ()=>openSheet(mealForNow());
 document.getElementById("dayPrev").onclick = ()=>{ dayOffset--; renderDiary(); };
 document.getElementById("todayPill").onclick = ()=>{ dayOffset = 0; weekOff = 0; renderDiary(); };
-document.getElementById("gearBtn").onclick = ()=>showView("settings");
+document.getElementById("gearBtn").onclick = ()=>showView("profile");
 document.getElementById("analysisLink").onclick = ()=>showView("analysis");
 document.getElementById("analysisBack").onclick = ()=>showView("diary");
 function mealForNow(){ const h = new Date().getHours(); return h<11?"breakfast":h<15?"lunch":h<21?"dinner":"snacks"; }
