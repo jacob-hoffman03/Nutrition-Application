@@ -739,6 +739,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .pf-organ{font-size:10.5px;font-weight:700;color:#fff;opacity:.8;position:relative;z-index:1;}
 .pf-streak>span{font-size:12.5px;font-weight:700;opacity:.92;position:relative;z-index:1;display:block;}
 .pf-streak .pf-go{font-size:12px;font-weight:700;opacity:.75;margin-top:6px;}
+.pf-stage{font-size:13px;font-weight:800;color:#fff;position:relative;z-index:1;margin-top:2px;}
 .pf-cal{margin-bottom:12px;}
 .pf-calbar{height:10px;border-radius:6px;background:rgba(255,255,255,.25);overflow:hidden;min-width:110px;flex:1;}
 .pf-calbar i{display:block;height:100%;border-radius:6px;background:#fff;}
@@ -2234,7 +2235,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.11-c";
+const APP_VERSION = "2026.10.11-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6577,7 +6578,7 @@ function renderInfo(cat){
 /* ⓘ next to a main title guides here, at the matching category */
 function gotoInfoCat(cat){ infoCat = cat; showView("info"); }
 document.getElementById("infoRow").onclick = ()=>gotoInfoCat("diary");
-document.getElementById("infoBack").onclick = ()=>showView("profile");
+document.getElementById("infoBack").onclick = ()=>showView(viewReturn);
 document.getElementById("diaryInfo").onclick = ()=>gotoInfoCat("diary");
 document.getElementById("analysisInfo").onclick = ()=>gotoInfoCat("diary");
 document.getElementById("progressInfo").onclick = ()=>gotoInfoCat("progress");
@@ -7404,7 +7405,7 @@ document.getElementById("goalsDone").onclick = ()=>{
    typed can ever be lost or silently reverted — Save changes just finalizes. */
 ["gmC","gmP","gmF","gmFi"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); updateMacroSplit(); }));
 ["pfAge","pfHtFt","pfHtIn","pfHtCm","pfWeight","pfFat"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); paintMaintNote(); }));
-document.getElementById("goalsBack").onclick = ()=>{ commitGoalsInputs(); save(); showView("profile"); };
+document.getElementById("goalsBack").onclick = ()=>{ commitGoalsInputs(); save(); showView(viewReturn); };
 
 /* ============ SETTINGS ============ */
 function renderSettings(){
@@ -7418,13 +7419,13 @@ function renderSettings(){
   const srv=document.getElementById("snapRowVal"); if(srv) srv.textContent=listSnapshots().length+" saved";
 }
 document.getElementById("schedRow").onclick = ()=>{ wsSel = new Date().getDay(); showView("worksched"); };
-document.getElementById("wschedBack").onclick = ()=>showView("profile");
+document.getElementById("wschedBack").onclick = ()=>showView(viewReturn);
 document.getElementById("wschedInfo").onclick = ()=>openInfo("schedule");
 document.getElementById("wDetTgl").onclick = ()=>setWorkDay(wsSel, workDays().indexOf(wsSel)<0);
 document.getElementById("medalCaseRow").onclick = ()=>showView("medals");
-document.getElementById("medalsBack").onclick = ()=>showView("profile");
+document.getElementById("medalsBack").onclick = ()=>showView(viewReturn);
 document.getElementById("snapRow").onclick = ()=>showView("snaps");
-document.getElementById("snapsBack").onclick = ()=>showView("profile");
+document.getElementById("snapsBack").onclick = ()=>showView(viewReturn);
 document.getElementById("goalRow").onclick = ()=>{ renderGoals(); showView("goals"); };
 document.getElementById("waterRow").onclick = ()=>{ renderGoals(); showView("goals"); openGsec("Water"); };
 document.getElementById("exportBtn").onclick = ()=>{
@@ -7491,6 +7492,9 @@ document.getElementById("wipeBtn").onclick = ()=>{
 
 /* ============ NAV ============ */
 let curView = "diary";
+let viewReturn = "diary"; /* 2026.10.11-d: subview backs return to the tab you came from */
+const MAIN_TABS = ["diary","progress","foods","profile"];
+const SUB_VIEWS = ["quit","medals","info","goals","snaps","worksched","analysis","calendar"];
 /* 2026.09.22-o: body no longer scrolls — the active .view owns the scroll, so
    scroll helpers target it instead of window. */
 function activeViewEl(){ return document.querySelector(".view.active"); }
@@ -7499,6 +7503,7 @@ function showView(v){
   /* leaving the Goals page by any path (tab bar, back arrow, Done) commits typed
      values first — a tap can never silently wipe an edit */
   if(curView==="goals" && v!=="goals"){ commitGoalsInputs(); save(); }
+  if(curView!==v && MAIN_TABS.indexOf(curView)>=0 && SUB_VIEWS.indexOf(v)>=0){ viewReturn = curView; }
   curView = v;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active", x.id==="view-"+v));
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",
@@ -7637,6 +7642,9 @@ function renderProfile(){
     /* double-circle like the diary Streaks card: big day-count ring + organ-healing satellite */
     const dbl = function(key, label, organ){
       const days = streakDays(key), started = ohStartMs(key)!=null;
+      const ph = started ? streakPhase(key, days, started) : "none";
+      const ringCol = ph==="none" ? "rgba(255,255,255,.45)" : PHASE_COLOR[ph];
+      const stageName = ph==="none" ? "Not started" : PHASE_NAME[key][ph];
       const BC = 2*Math.PI*28, boff = BC*(1-(started?Math.min(days,30)/30:0));
       const isNic = key==="nicotine";
       let pct = 0;
@@ -7648,13 +7656,13 @@ function renderProfile(){
       const num = started ? days : "\u2013";
       return '<button class="pf-streak"><span class="pf-dbl">'
         + '<svg class="pf-bigring" viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="5"/>'
-        + '<circle cx="32" cy="32" r="28" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-dasharray="'+BC.toFixed(1)+'" stroke-dashoffset="'+boff.toFixed(1)+'" transform="rotate(-90 32 32)"/></svg>'
+        + '<circle cx="32" cy="32" r="28" fill="none" stroke="'+ringCol+'" stroke-width="5" stroke-linecap="round" stroke-dasharray="'+BC.toFixed(1)+'" stroke-dashoffset="'+boff.toFixed(1)+'" transform="rotate(-90 32 32)"/></svg>'
         + '<span class="pf-bignum"><b>'+num+'</b><span>days</span></span>'
         + '<span class="pf-sat"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(255,255,255,.30)" stroke-width="4"/>'
         + '<circle cx="18" cy="18" r="15.5" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+SC.toFixed(1)+'" stroke-dashoffset="'+soff.toFixed(1)+'" transform="rotate(-90 18 18)"/></svg>'
         + '<span class="pf-satpct">'+Math.round(pct)+'%</span></span></span>'
         + '<span class="pf-organ">'+organ+'</span>'
-        + '<span>'+label+'</span><span class="pf-go">'+(started?"Timeline":"Start counter")+' \u203a</span></button>';
+        + '<span>'+label+'</span><span class="pf-stage">'+stageName+'</span></button>';
     };
     st.innerHTML = dbl("nicotine", "days nicotine-free", "Lungs") + dbl("alcohol", "days alcohol-free", "Liver");
     st.querySelectorAll(".pf-streak").forEach(function(b){ b.onclick = function(){ showView("quit"); }; });
@@ -8090,8 +8098,14 @@ function autoPilot(){
       if(!last || last.d !== today) g.adaptiveHist.push({d: today, v: v});
       if(g.adaptiveHist.length > 26) g.adaptiveHist = g.adaptiveHist.slice(-26);
       if(prev == null || v !== prev){
-        g.maintenance = v; applyModePct(); autoDeriveMacros(); changed = true;
-        autoLog("Maintenance → " + v.toLocaleString() + " kcal, learned from your last " + r.days + " days of eating + weigh-ins.");
+        /* 2026.10.11-d: only auto-apply when the adaptive toggle is on — otherwise
+           the Goals numbers would "randomly" move every day. Learned value is still
+           recorded and shown as a tap-to-apply suggestion. */
+        if(g.useAdaptive){
+          g.maintenance = v; applyModePct(); autoDeriveMacros();
+          autoLog("Maintenance → " + v.toLocaleString() + " kcal, learned from your last " + r.days + " days of eating + weigh-ins.");
+        }
+        changed = true;
       }
     } else if(g.adaptive && g.adaptive.ok){
       g.adaptive.stale = true; /* thin data: keep the last good value, flag it */
@@ -8300,7 +8314,7 @@ function renderQuit(){
   var qo = document.getElementById("quitOpen");
   if(qo) qo.onclick = function(){ showView("quit"); };
   var qb = document.getElementById("quitBack");
-  if(qb) qb.onclick = function(){ showView("diary"); };
+  if(qb) qb.onclick = function(){ showView(viewReturn); }; /* 2026.10.11-d: back to where you came from */
 })();
 </script>
 <script>
