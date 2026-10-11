@@ -740,6 +740,10 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .pf-streak>span{font-size:12.5px;font-weight:700;opacity:.92;position:relative;z-index:1;display:block;}
 .pf-streak .pf-go{font-size:12px;font-weight:700;opacity:.75;margin-top:6px;}
 .pf-stage{font-size:13px;font-weight:800;color:#fff;position:relative;z-index:1;margin-top:2px;}
+.pf-ibtn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.22);color:#fff;font-size:11px;font-weight:800;font-style:normal;margin-left:6px;vertical-align:1px;cursor:pointer;}
+.pf-streak{cursor:pointer;}
+.pf-dbl{cursor:pointer;}
+.pf-sat{cursor:pointer;}
 .pf-cal{margin-bottom:12px;}
 .pf-calbar{height:10px;border-radius:6px;background:rgba(255,255,255,.25);overflow:hidden;min-width:110px;flex:1;}
 .pf-calbar i{display:block;height:100%;border-radius:6px;background:#fff;}
@@ -1100,21 +1104,6 @@ body.reordering #progOverview{display:none}
       <div class="whint" id="waterNote" style="margin-top:6px"></div>
       </div></div>
     </div>
-
-    <div class="card streakcard">
-      <div class="streakhead"><span style="display:flex;align-items:center;gap:8px"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><b>Streaks</b><button class="ginfo" id="streakInfo" aria-label="About streaks">i</button></span><button class="qt-open" id="quitOpen">Timeline ›</button></div>
-      <div class="streakrow">
-        <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M10.5 7v13a1.5 1.5 0 0 0 3 0V7"/></svg></span>
-        <span class="streaktxt"><span class="streakttl"><b>Nicotine</b><button class="ginfo sm" id="nicPhaseInfo" aria-label="About nicotine phases">i</button></span><span class="wlbl" id="nicDays"></span><span class="phaselbl" id="nicPhase"></span></span>
-        <button class="streakcircle" id="nicTap" aria-label="Log a clean day without nicotine"><svg class="scring" viewBox="0 0 64 64" aria-hidden="true"><circle class="sctrack" cx="32" cy="32" r="28"/><circle class="scfill" id="nicRing" cx="32" cy="32" r="28"/></svg><span class="sctext"><span class="scnum" id="nicNum">0</span><span class="sclbl">days</span></span><span class="oh-sat" id="nicHeal" role="button" tabindex="0" aria-label="Lung healing progress"><svg class="oh-ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="oh-track" cx="18" cy="18" r="15.5"/><circle class="oh-fill" id="nicHealRing" cx="18" cy="18" r="15.5"/></svg><span class="oh-pct" id="nicHealPct"></span><span class="oh-lbl">Lungs</span></span></button>
-      </div>
-      <div class="streakrow">
-        <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4.5 4.5h15L12 12.5 4.5 4.5z"/><path d="M12 12.5V19" stroke-linecap="round"/><path d="M8.5 21h7" stroke-linecap="round"/></svg></span>
-        <span class="streaktxt"><span class="streakttl"><b>Alcohol</b><button class="ginfo sm" id="alcPhaseInfo" aria-label="About alcohol phases">i</button></span><span class="wlbl" id="alcDays"></span><span class="phaselbl" id="alcPhase"></span></span>
-        <button class="streakcircle" id="alcTap" aria-label="Log a clean day without alcohol"><svg class="scring" viewBox="0 0 64 64" aria-hidden="true"><circle class="sctrack" cx="32" cy="32" r="28"/><circle class="scfill" id="alcRing" cx="32" cy="32" r="28"/></svg><span class="sctext"><span class="scnum" id="alcNum">0</span><span class="sclbl">days</span></span><span class="oh-sat" id="alcHeal" role="button" tabindex="0" aria-label="Liver healing progress"><svg class="oh-ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="oh-track" cx="18" cy="18" r="15.5"/><circle class="oh-fill" id="alcHealRing" cx="18" cy="18" r="15.5"/></svg><span class="oh-pct" id="alcHealPct"></span><span class="oh-lbl">Liver</span></span></button>
-      </div>
-    </div>
-
 
     <button class="closedaybtn" id="closeDayBtn">Close day →</button>
   </section>
@@ -1526,9 +1515,7 @@ body.reordering #progOverview{display:none}
       <button class="srow" id="infoRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>Info</span><span class="sval"><span class="chev2">›</span></span></button>
       <button class="srow danger" id="wipeBtn"><span class="sleft"><span class="sicon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 7h15"/><path d="M9.5 7V4.8a.8.8 0 0 1 .8-.8h3.4a.8.8 0 0 1 .8.8V7"/><path d="M6.5 7l.9 13a1 1 0 0 0 1 .9h7.2a1 1 0 0 0 1-.9l.9-13"/><path d="M10 11v5.5M14 11v5.5"/></svg></span>Erase data</span><span class="chev2">›</span></button>
     </div>
-    >
     <div class="slabel">About</div>
-    >
     <div class="privline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 1 1 7 0v2.5"/></svg>Private to this phone · nothing leaves your device</div>
     <div class="ver" id="appVer"></div>
   </div></div>
@@ -2235,7 +2222,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.11-d";
+const APP_VERSION = "2026.10.11-e";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -3276,6 +3263,7 @@ function ohPaint(key){
   if(lbl) lbl.textContent=Math.round(pct)+"%";
 }
 function renderStreaks(){
+  if(!document.getElementById("nicTap")) return; /* diary card removed 2026.10.11-e; profile has its own painter */
   [["nicotine","nicDays","nicNum","nicTap","nicPhase"],["alcohol","alcDays","alcNum","alcTap","alcPhase"]].forEach(function(c){
     const key=c[0], s=streakGet(key), days=streakDays(key), started=!!s.lastUse;
     $(c[1]).textContent = !started ? "tap the circle to set your last day"
@@ -3341,7 +3329,9 @@ document.getElementById("calScrim").onclick = closeCal;
 document.getElementById("calSet").onclick = function(){
   if(!calKey || !calSel) return;
   streakGet(calKey).lastUse = calSel;
-  save(); renderStreaks(); closeCal();
+  /* 2026.10.11-e: keep the Quit Timeline on the same date — one source of truth */
+  try{ qtSet(calKey, {start:calSel + QT_DEF[calKey].seedTime}); }catch(e){}
+  save(); renderStreaks(); paintPfStreaks(); closeCal();
 };
 /* slip buttons live inside the streak info sheet */
 (function(){
@@ -5739,11 +5729,11 @@ const wToLb = v => wIsMet() ? v*2.20462 : v;
 document.getElementById("wtGoalRow").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); document.getElementById("wtGoalRow").click(); } });
 document.getElementById("wtGoalInfo").onclick = (e)=>{ e.stopPropagation(); openInfo("wtgoal"); };
 document.getElementById("waterInfo").onclick = ()=>openInfo("waterinfo");
-document.getElementById("streakInfo").onclick = ()=>openInfo("streakinfo");
-document.getElementById("nicPhaseInfo").onclick = ()=>openInfo("nicphase");
-document.getElementById("alcPhaseInfo").onclick = ()=>openInfo("alcphase");
-document.getElementById("nicTap").onclick = ()=>openCal("nicotine");
-document.getElementById("alcTap").onclick = ()=>openCal("alcohol");
+var _si=document.getElementById("streakInfo"); if(_si) _si.onclick = ()=>openInfo("streakinfo");
+var _npi=document.getElementById("nicPhaseInfo"); if(_npi) _npi.onclick = ()=>openInfo("nicphase");
+var _api=document.getElementById("alcPhaseInfo"); if(_api) _api.onclick = ()=>openInfo("alcphase");
+var _nt=document.getElementById("nicTap"); if(_nt) _nt.onclick = ()=>openCal("nicotine");
+var _at=document.getElementById("alcTap"); if(_at) _at.onclick = ()=>openCal("alcohol");
 /* organ healing satellites: tap opens milestone sheet; stopPropagation keeps the big circle's calendar closed */
 [["nicHeal","quitlung"],["alcHeal","quitliver"]].forEach(function(p){
   var el=document.getElementById(p[0]); if(!el) return;
@@ -6173,7 +6163,7 @@ function commitGoalsInputs(){
   readProfile();
   S.goals.profile.updatedAt = todayStr(); /* anchors the 1-month milestone suggestion */
 }
-function renderProfile(){
+function renderGoalsProfile(){
   const p = S.goals.profile, met = p.units==="met";
   document.querySelectorAll("#pfUnits .chip").forEach(c=>c.classList.toggle("sel", c.dataset.u===p.units));
   document.querySelectorAll("#pfSex .chip").forEach(c=>c.classList.toggle("sel", c.dataset.x===p.sex));
@@ -7208,7 +7198,7 @@ function renderGoals(){
   const fct = (g.nutrTargets||{}).Fiber;
   document.getElementById("gmFi").value = fct ? fct.val : "";
   document.getElementById("gmFi").placeholder = "auto";
-  renderProfile();
+  renderGoalsProfile();
   paintAdaptive(); paintTrueMetrics();
   document.querySelectorAll("#goalMode .chip").forEach(c=>c.classList.toggle("sel", c.dataset.m===g.mode));
   document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", g.maintenance>0 && +c.dataset.p === Math.round(g.surplus/g.maintenance*100)));
@@ -7313,7 +7303,7 @@ document.querySelectorAll("#pfAct .chip").forEach(c=>c.onclick=()=>{
 document.querySelectorAll("#pfUnits .chip").forEach(c=>c.onclick=()=>{
   commitGoalsInputs();
   S.goals.profile.units = c.dataset.u;
-  save(); renderProfile();
+  save(); renderGoalsProfile();
 });
 document.querySelectorAll("#pfSex .chip").forEach(c=>c.onclick=()=>{
   commitGoalsInputs();
@@ -7325,13 +7315,13 @@ document.querySelectorAll("#pfSex .chip").forEach(c=>c.onclick=()=>{
 document.getElementById("pfAuto").onclick = ()=>{
   commitGoalsInputs();
   S.goals.profile.auto = !S.goals.profile.auto;
-  save(); renderProfile();
+  save(); renderGoalsProfile();
 };
 document.getElementById("pfTune").onclick = ()=>{
   commitGoalsInputs();
   S.goals.autoTune = !S.goals.autoTune;
   if(S.goals.autoTune && S.goals.useAdaptive){ S.goals.useAdaptive=false; S.goals.adTuneNote=""; } /* the two tuners never fight */
-  save(); renderProfile();
+  save(); renderGoalsProfile();
 };
 document.getElementById("adToggle").onclick = ()=>{
   commitGoalsInputs();
@@ -7626,6 +7616,64 @@ function applyProfLayout(){
 function qtDays(key){
   try{ const h = qtHours(key); return h==null ? null : Math.floor(h/24)+1; }catch(e){ return null; }
 }
+/* Profile streak panels (2026.10.11-e): full diary-Streaks feature parity —
+   tap circle = date picker, tap satellite = healing info, tap i = phase info,
+   tap panel body = Quit Tracker. */
+function pfStreakHTML(key){
+  var isNic = key==="nicotine";
+  var label = isNic ? "days nicotine-free" : "days alcohol-free";
+  var organ = isNic ? "Lungs" : "Liver";
+  var days = streakDays(key), started = ohStartMs(key)!=null;
+  var ph = started ? streakPhase(key, days, started) : "none";
+  var ringCol = ph==="none" ? "rgba(255,255,255,.45)" : PHASE_COLOR[ph];
+  var stageName = ph==="none" ? "Not started" : PHASE_NAME[key][ph];
+  var BC = 2*Math.PI*28, boff = BC*(1-(started?Math.min(days,30)/30:0));
+  var pct = 0;
+  if(started){
+    var x = ((Date.now()-ohStartMs(key))/36e5)/(isNic?1:24);
+    pct = ohProgress(isNic?OH_LUNGS:OH_LIVER, x);
+  }
+  var SC = 2*Math.PI*15.5, soff = SC*(1-pct/100);
+  var num = started ? days : "\u2013";
+  return '<div class="pf-streak" data-key="'+key+'" role="button" tabindex="0" aria-label="'+label+', '+num+' days, '+stageName+'">'
+    + '<span class="pf-dbl" data-act="cal" role="button" tabindex="0" aria-label="Set last day">'
+    + '<svg class="pf-bigring" viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="5"/>'
+    + '<circle cx="32" cy="32" r="28" fill="none" stroke="'+ringCol+'" stroke-width="5" stroke-linecap="round" stroke-dasharray="'+BC.toFixed(1)+'" stroke-dashoffset="'+boff.toFixed(1)+'" transform="rotate(-90 32 32)"/></svg>'
+    + '<span class="pf-bignum"><b>'+num+'</b><span>days</span></span>'
+    + '<span class="pf-sat" data-act="heal" role="button" tabindex="0" aria-label="'+organ+' healing info"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(255,255,255,.30)" stroke-width="4"/>'
+    + '<circle cx="18" cy="18" r="15.5" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+SC.toFixed(1)+'" stroke-dashoffset="'+soff.toFixed(1)+'" transform="rotate(-90 18 18)"/></svg>'
+    + '<span class="pf-satpct">'+Math.round(pct)+'%</span></span></span>'
+    + '<span class="pf-organ">'+organ+'</span>'
+    + '<span>'+label+'</span>'
+    + '<span class="pf-stage">'+stageName+'<span class="pf-ibtn" data-act="phase" role="button" tabindex="0" aria-label="About phases">i</span></span></div>';
+}
+function paintPfStreaks(){
+  var st = document.getElementById("pfStreaks");
+  if(st) st.innerHTML = pfStreakHTML("nicotine") + pfStreakHTML("alcohol");
+}
+/* one delegated listener for the profile streak panels (survives re-renders) */
+(function(){
+  var wrap = document.getElementById("pfStreaks");
+  if(!wrap) return;
+  function go(key, a){
+    if(a==="cal") openCal(key);
+    else if(a==="heal") openInfo(key==="nicotine"?"quitlung":"quitliver");
+    else if(a==="phase") openInfo(key==="nicotine"?"nicphase":"alcphase");
+    else showView("quit");
+  }
+  wrap.addEventListener("click", function(e){
+    var p = e.target.closest(".pf-streak"); if(!p) return;
+    var t = e.target.closest("[data-act]");
+    go(p.getAttribute("data-key"), t ? t.getAttribute("data-act") : null);
+  });
+  wrap.addEventListener("keydown", function(e){
+    if(e.key!=="Enter" && e.key!==" ") return;
+    var p = e.target.closest(".pf-streak"); if(!p) return;
+    e.preventDefault();
+    var t = e.target.closest("[data-act]");
+    go(p.getAttribute("data-key"), (t && e.target!==p) ? t.getAttribute("data-act") : null);
+  });
+})();
 function renderProfile(){
   renderSettings();
   const pr = S.profile || {};
@@ -7637,36 +7685,7 @@ function renderProfile(){
   const ndays = Object.keys(S.days||{}).filter(function(k){ return !isLocked(k)&&dayHasData(S.days[k]); }).length;
   const sub = document.getElementById("pfSub");
   if(sub) sub.textContent = ndays+" day"+(ndays===1?"":"s")+" logged"+(lw ? " \u00b7 "+wDisp(lw.w).toFixed(1)+" "+wUnit() : "");
-  const st = document.getElementById("pfStreaks");
-  if(st){
-    /* double-circle like the diary Streaks card: big day-count ring + organ-healing satellite */
-    const dbl = function(key, label, organ){
-      const days = streakDays(key), started = ohStartMs(key)!=null;
-      const ph = started ? streakPhase(key, days, started) : "none";
-      const ringCol = ph==="none" ? "rgba(255,255,255,.45)" : PHASE_COLOR[ph];
-      const stageName = ph==="none" ? "Not started" : PHASE_NAME[key][ph];
-      const BC = 2*Math.PI*28, boff = BC*(1-(started?Math.min(days,30)/30:0));
-      const isNic = key==="nicotine";
-      let pct = 0;
-      if(started){
-        const x = ((Date.now()-ohStartMs(key))/36e5)/(isNic?1:24);
-        pct = ohProgress(isNic?OH_LUNGS:OH_LIVER, x);
-      }
-      const SC = 2*Math.PI*15.5, soff = SC*(1-pct/100);
-      const num = started ? days : "\u2013";
-      return '<button class="pf-streak"><span class="pf-dbl">'
-        + '<svg class="pf-bigring" viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="5"/>'
-        + '<circle cx="32" cy="32" r="28" fill="none" stroke="'+ringCol+'" stroke-width="5" stroke-linecap="round" stroke-dasharray="'+BC.toFixed(1)+'" stroke-dashoffset="'+boff.toFixed(1)+'" transform="rotate(-90 32 32)"/></svg>'
-        + '<span class="pf-bignum"><b>'+num+'</b><span>days</span></span>'
-        + '<span class="pf-sat"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(255,255,255,.30)" stroke-width="4"/>'
-        + '<circle cx="18" cy="18" r="15.5" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+SC.toFixed(1)+'" stroke-dashoffset="'+soff.toFixed(1)+'" transform="rotate(-90 18 18)"/></svg>'
-        + '<span class="pf-satpct">'+Math.round(pct)+'%</span></span></span>'
-        + '<span class="pf-organ">'+organ+'</span>'
-        + '<span>'+label+'</span><span class="pf-stage">'+stageName+'</span></button>';
-    };
-    st.innerHTML = dbl("nicotine", "days nicotine-free", "Lungs") + dbl("alcohol", "days alcohol-free", "Liver");
-    st.querySelectorAll(".pf-streak").forEach(function(b){ b.onclick = function(){ showView("quit"); }; });
-  }
+    paintPfStreaks();
   const cal = document.getElementById("pfCal");
   if(cal){
     const t = totals(viewDate()), g = goalTotal();
@@ -8193,14 +8212,19 @@ function qtSet(key, obj){ try{ localStorage.setItem(qtKey(key), JSON.stringify(o
    2026-10-05 14:00); alcohol starts empty until he taps Start. Additive only. */
 function qtSeed(){
   ["nicotine","alcohol"].forEach(function(key){
-    if(qtGet(key)) return;
-    var iso = null;
+    var cur = qtGet(key);
+    var lu = null;
+    try{ lu = S.streaks && S.streaks[key] && S.streaks[key].lastUse; }catch(e){}
     if(key==="nicotine"){
-      var lu = null;
-      try{ lu = S.streaks && S.streaks.nicotine && S.streaks.nicotine.lastUse; }catch(e){}
-      iso = (lu || "2026-10-05") + QT_DEF[key].seedTime;
+      if(cur) return;
+      qtSet(key, {start:(lu || "2026-10-05") + QT_DEF[key].seedTime});
+    }else{
+      /* 2026.10.11-e: alcohol adopts the diary streak when the Timeline has no
+         start yet — fixes "input data" showing while a streak is going */
+      if(cur && cur.start) return;
+      if(lu) qtSet(key, {start:lu + QT_DEF[key].seedTime});
+      else if(!cur) qtSet(key, {start:null});
     }
-    qtSet(key, {start:iso});
   });
 }
 function qtHours(key, nowMs){
