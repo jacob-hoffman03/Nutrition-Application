@@ -1469,6 +1469,20 @@ body.reordering #progOverview{display:none}
       </div>
     </div>
     </div>
+    <div class="punit" data-pid="steps">
+<div class="card">
+      <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3a2 2 0 0 0 2-2V6a2 2 0 0 1 2-2h3"/><path d="M13 20h3a2 2 0 0 0 2-2v-3"/><circle cx="8.5" cy="11" r="1.5"/><circle cx="15.5" cy="15" r="1.5"/></svg></span><b>Steps</b><span style="margin-left:auto;font-size:11px;color:var(--muted)" id="stepsKcalLbl"></span></div>
+      <div style="display:flex;gap:8px;align-items:center;margin:8px 0;">
+        <input id="stepsInput" type="number" inputmode="numeric" placeholder="Today's steps" style="flex:1;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;font-family:inherit;">
+        <button class="wlogbtn" id="stepsAdd">Log</button>
+      </div>
+      <div id="stepsBars" style="display:flex;align-items:flex-end;gap:4px;height:64px;margin-top:4px;"></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px;">
+        <span id="stepsWorkAvg"></span><span id="stepsRestAvg"></span>
+      </div>
+      <div id="tomorrowPred" style="margin-top:10px;padding:10px 12px;background:var(--wash);border-radius:12px;font-size:13px;line-height:1.5;"></div>
+</div>
+    </div>
 </div><!-- /progOverview -->
   </section>
 
@@ -2222,7 +2236,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.11-g";
+const APP_VERSION = "2026.10.11-i";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -5640,8 +5654,63 @@ function wtStatusText(){
   if(flat) return "Holding steady.";
   return "Trending "+sgn(rate)+" "+wu+"/wk.";
 }
+/* Steps panel renderer (2026.10.11-h) */
+function renderSteps(){
+  var inp = document.getElementById("stepsInput");
+  var today = getSteps(todayStr());
+  if(inp && document.activeElement!==inp) inp.value = today==null?"":today;
+  var kcalLbl = document.getElementById("stepsKcalLbl");
+  if(kcalLbl) kcalLbl.textContent = today==null ? "" : "≈ "+stepsKcal(today).toLocaleString()+" kcal burned";
+  /* 7-day bars */
+  var bars = document.getElementById("stepsBars");
+  if(bars){
+    var h = "";
+    var max = 1;
+    var vals = [];
+    for(var i=6;i>=0;i--){
+      var ds = addDays(todayStr(), -i);
+      var n = getSteps(ds);
+      vals.push({ds:ds, n:n});
+      if(n!=null && n>max) max = n;
+    }
+    vals.forEach(function(v){
+      var pct = v.n==null ? 0 : Math.max(4, Math.round(v.n/max*100));
+      var col = v.n==null ? "var(--line)" : (dayType(v.ds)==="work" ? "var(--acc)" : "#94a3b8");
+      var day = new Date(v.ds+"T12:00:00").toLocaleDateString(undefined,{weekday:"narrow"});
+      h += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">'
+        + '<div style="width:100%;height:'+pct+'%;min-height:'+(v.n==null?2:4)+'px;background:'+col+';border-radius:4px;"></div>'
+        + '<span style="font-size:9px;color:var(--muted)">'+day+'</span></div>';
+    });
+    bars.innerHTML = h;
+  }
+  var wa = document.getElementById("stepsWorkAvg"), ra = document.getElementById("stepsRestAvg");
+  if(wa) wa.textContent = "Work days avg: "+avgStepsForDayType("work").toLocaleString();
+  if(ra) ra.textContent = "Rest days avg: "+avgStepsForDayType("off").toLocaleString();
+  /* tomorrow prediction */
+  var tp = document.getElementById("tomorrowPred");
+  if(tp){
+    try{
+      var p = predictTomorrow();
+      var dn = new Date(p.date+"T12:00:00").toLocaleDateString(undefined,{weekday:"long"});
+      var html = "<b>Tomorrow ("+dn+", "+(p.dayType==="work"?"work day":"rest day")+ "):</b> ~"+p.goal.toLocaleString()+" kcal "
+        + "<span style='color:var(--muted)'>("+p.tdee.toLocaleString()+" burn + "+p.surplus+" surplus, ~"+p.steps.toLocaleString()+" steps)</span>";
+      /* bulk status (research: 0.25-0.5 lb/wk band) */
+      try{
+        var ba = bulkAnalytics();
+        if(ba.ok){
+          var vc = ba.verdict==="on-track" ? "#16a34a" : ba.verdict==="stall" ? "#f97316" : "#3b82f6";
+          var vl = ba.verdict==="on-track" ? "On track" : ba.verdict==="stall" ? "Stalling — consider +100-150 kcal" : "Gaining fast — watch fat gain";
+          html += "<br><span style='color:"+vc+";font-weight:700;'>● "+ba.rateWk+" lb/wk — "+vl+"</span>"
+            + " <span style='color:var(--muted)'>("+ba.feedings+" protein feedings, "+ba.adherence+"/7 days logged)</span>";
+        }
+      }catch(e2){}
+      tp.innerHTML = html;
+    }catch(e){ tp.style.display="none"; }
+  }
+}
 function renderProgress(){
-  paintDayCycle(); /* day-cycle panel lives on Progress now (2026.09.23-g) */
+  paintDayCycle();
+  renderSteps(); /* day-cycle panel lives on Progress now (2026.09.23-g) */
   (function(){ var s=S.weekSeg||"cal";
     document.querySelectorAll("#weekSeg .segbtn").forEach(function(x){x.classList.toggle("on",x.dataset.seg===s);});
     ["sum","cal","mac"].forEach(function(k){ var el=document.getElementById("wseg-"+k); if(el) el.hidden = k!==s; });
@@ -5773,6 +5842,11 @@ var _at=document.getElementById("alcTap"); if(_at) _at.onclick = ()=>openCal("al
 document.getElementById("nutrInfo").onclick = ()=>openInfo("nutrients");
 document.getElementById("bmiInfo").onclick = ()=>openInfo("bmi");
 document.getElementById("calCheckInfo").onclick = ()=>openInfo("calcheck");
+document.getElementById("stepsAdd").onclick = ()=>{
+  var v = parseInt(document.getElementById("stepsInput").value, 10);
+  if(!(v>=0)) return;
+  logSteps(v); renderSteps();
+};
 document.getElementById("weightAdd").onclick = ()=>{
   const raw = parseFloat(document.getElementById("weightInput").value);
   const lo = wIsMet()?23:50, hi = wIsMet()?275:600;
@@ -6100,6 +6174,48 @@ function calcMaintenance(){
     formula = "Ten-Haaf (athlete)";
   }
   return {bmr: Math.round(bmr), maint: Math.round(bmr*actPAL(p)), formula};
+}
+/* Steps tracker (2026.10.11-h): like the weight tracker — daily step counts,
+   steps→kcal via weight-scaled formula (~0.037 kcal/step at 132 lb),
+   work/rest-aware, powers tomorrow's predicted intake. */
+function getSteps(dstr){
+  var r = (S.steps||[]).filter(function(s){ return s.d===dstr; });
+  return r.length ? r[0].n : null;
+}
+function logSteps(n, dstr){
+  dstr = dstr || todayStr();
+  n = Math.max(0, Math.round(n||0));
+  S.steps = S.steps || [];
+  var ex = S.steps.filter(function(s){ return s.d===dstr; })[0];
+  if(ex) ex.n = n; else S.steps.push({d:dstr, n:n});
+  S.steps.sort(function(a,b){ return a.d<b.d?-1:1; });
+  if(S.steps.length>365) S.steps = S.steps.slice(-365);
+  save();
+}
+function stepsKcal(steps){
+  /* ~0.00028 kcal per step per lb bodyweight (2000 steps ≈ 100 kcal at 180 lb) */
+  var lb = (S.goals.profile.weightLb||132);
+  return Math.round(steps * lb * 0.00028);
+}
+function avgStepsForDayType(dt, days){
+  days = days || 28;
+  var cut = addDays(todayStr(), -days);
+  var hist = (S.steps||[]).filter(function(s){ return s.d>=cut && s.d<todayStr() && dayType(s.d)===dt; });
+  if(!hist.length) return dt==="work" ? 11000 : 5000; /* sensible defaults */
+  return Math.round(hist.reduce(function(a,s){ return a+s.n; }, 0)/hist.length);
+}
+/* Tomorrow's predicted intake (2026.10.11-h): tomorrow's day type from the
+   schedule + your typical steps for that day type + constant surplus. */
+function predictTomorrow(){
+  var tm = addDays(todayStr(), 1);
+  var dt = (typeof dayType==="function") ? dayType(tm) : "work";
+  var base = dayMaintenance(tm);
+  var avgS = avgStepsForDayType(dt);
+  var typS = dt==="work" ? 11000 : 5000; /* assumed inside the PAL factors */
+  var adj = stepsKcal(Math.max(0, avgS)) - stepsKcal(typS);
+  var tdee = Math.round(base + adj);
+  var sur = (S.goals.surplus>0) ? S.goals.surplus : 0;
+  return {date:tm, dayType:dt, steps:avgS, tdee:tdee, goal:tdee+sur, surplus:sur};
 }
 /* Day-type maintenance (2026.10.11-g): research shows the ~1000 kcal work/rest
    swing is almost entirely NEAT. Work days run PAL ~1.8, rest days ~1.2.
@@ -7623,7 +7739,7 @@ function showView(v){
   paintSigned();
 }
 /* 2026.09.22-k: Apple-Photos-style reorder — compact row list with drag handles, checkmark saves */
-const PROG_UNITS = ["body","auto","week","daycycle"];
+const PROG_UNITS = ["body","auto","week","daycycle","steps"];
 const PROG_TITLES = {body:"Body",auto:"Autopilot",week:"This week",daycycle:"Day cycle"};
 const LINES_SVG = '<svg viewBox="0 0 24 24"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
 const CHECK_SVG = '<svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
