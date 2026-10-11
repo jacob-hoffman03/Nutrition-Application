@@ -29,14 +29,18 @@ body{
 }
 #app{max-width:430px; margin:0 auto; height:100vh; height:100dvh; display:flex; flex-direction:column; overflow:hidden;}
 button{font-family:inherit;}
-.view{display:none; padding:calc(env(safe-area-inset-top, 24px) + 34px) 14px 22px; animation:fade .18s ease; touch-action:pan-y;} /* 2026-10-05: clear the iPhone status-bar/Dynamic Island blur above every view */
+.view{display:none; padding:calc(env(safe-area-inset-top, 24px) + 34px) 14px 38px; animation:fade .18s ease; touch-action:pan-y;} /* 2026-10-05: clear the iPhone status-bar/Dynamic Island blur above every view */
 .view.active{display:block; flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;}
 @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
 .card{background:var(--card); border-radius:var(--radius); padding:16px; margin-bottom:12px;}
-/* top bar */
-.topbar{position:sticky; top:0; z-index:20; background:rgba(255,255,255,.94);
-  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
-  display:flex; align-items:center; justify-content:space-between; padding:12px 8px 10px;}
+/* top bar: flush with viewport top + safe-area blur to prevent overlapping cards */
+.topbar{position:sticky; top:calc(-1 * (env(safe-area-inset-top, 24px) + 34px)); z-index:20;
+  margin:calc(-1 * (env(safe-area-inset-top, 24px) + 34px)) -14px 14px -14px;
+  padding:calc(env(safe-area-inset-top, 24px) + 12px) 14px 10px 14px;
+  background:rgba(255,255,255,.95);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(0,0,0,.06);
+  display:flex; align-items:center; justify-content:space-between;}
 .topbar .tbtn{background:none; border:none; font-size:26px; line-height:1; color:var(--ink); width:44px; height:36px; display:flex; align-items:center; justify-content:center;}
 .topbar h1{margin:0; font-size:22px; font-weight:800; letter-spacing:-.3px;}
 .topbar .ticons{display:flex; gap:2px;}
@@ -1010,6 +1014,49 @@ body.reordering #progOverview{display:none}
 .pr-handle svg{width:24px;height:24px;stroke:var(--muted);fill:none;stroke-width:2.4;stroke-linecap:round}
 .pr-row.dragging{box-shadow:0 16px 34px rgba(60,60,120,.28);opacity:.97;position:relative;z-index:60}
 
+/* ============ SEAMLESS MILESTONE ROADMAP (2026.10.11) ============ */
+.road-flow{width:100%;margin-top:14px;padding:0 2px;}
+.road-pbar{position:relative;height:6px;border-radius:99px;background:#e9e9f0;margin:16px 0 10px;overflow:hidden;}
+.road-pfill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,var(--acc),#12cfae);transition:width .4s ease;width:0;}
+.road-stops{display:flex;justify-content:space-between;align-items:flex-start;position:relative;}
+.road-stop{display:flex;flex-direction:column;font-size:11px;}
+.road-stop:first-child{align-items:flex-start;text-align:left;}
+.road-stop:nth-child(2){align-items:center;text-align:center;}
+.road-stop:last-child{align-items:flex-end;text-align:right;}
+.road-tag{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+.road-num{font-size:13px;font-weight:800;color:var(--ink);margin-top:1px;font-variant-numeric:tabular-nums;}
+.road-subt{font-size:10.5px;color:var(--muted);margin-top:1px;}
+.road-cur-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;background:var(--acc-soft);color:var(--acc);font-weight:800;font-size:11px;}
+.road-capsule{display:flex;align-items:center;justify-content:space-around;background:#fff;border-radius:14px;padding:10px 8px;margin-top:14px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.road-cap-item{text-align:center;flex:1;}
+.road-cap-item b{display:block;font-size:13.5px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;}
+.road-cap-item span{display:block;font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px;}
+.road-cap-sep{width:1px;height:24px;background:var(--line);flex:none;}
+.road-status-note{font-size:12.5px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.45;}
+
+/* ============ ATHLETE PROFILE & ENGINE (2026.10.11) ============ */
+.pf-card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
+.pf-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
+.pf-stat{background:#fff;border-radius:14px;padding:9px 4px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.pf-stat b{display:block;font-size:13.5px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;}
+.pf-stat span{display:block;font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px;}
+.pf-engine-eq{display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:14px;padding:12px 6px;margin-top:10px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.pf-eq-box{text-align:center;flex:1;}
+.pf-eq-box b{display:block;font-size:14px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;}
+.pf-eq-box span{display:block;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.2px;margin-top:2px;}
+.pf-eq-op{font-size:13px;font-weight:800;color:var(--muted);padding:0 2px;}
+.pf-macro-table{margin-top:8px;}
+.pf-macro-row{display:flex;align-items:center;justify-content:space-between;padding:8px 2px;border-bottom:1px solid var(--line);font-size:13px;}
+.pf-macro-row:last-child{border-bottom:none;}
+.pf-macro-lbl{display:flex;align-items:center;gap:8px;font-weight:700;}
+.pf-macro-lbl i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+.pf-macro-val{text-align:right;}
+.pf-macro-val b{font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums;}
+.pf-macro-val span{font-size:11px;color:var(--muted);margin-left:4px;}
+.pf-toggle-btn{display:inline-flex;align-items:center;gap:4px;background:none;border:none;color:var(--acc);font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 0;}
+.pf-edit-form{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+.pf-edit-form.open{display:block;}
+
 </style>
 </head>
 <body>
@@ -1319,150 +1366,191 @@ body.reordering #progOverview{display:none}
     </div>
     <div id="progReorder" hidden></div>
     <div id="progOverview">
-    <!-- DAY CYCLE — 2026.09.23-i: full rebuild per Jay. Main arc (day progress)
-         with sunrise/sunset slits (computed daily for Dana Point, they drift
-         through the year). The now-marker is a ring parted into the four meal
-         colors — a part lights up when that meal is logged today. Attached
-         below: a thinner eat-window bar, parted into per-meal segments in the
-         designated meal colors, with the app's tiny meal icons + times.
-         Everything is data-driven and adjusts over time as he logs. -->
-    <div class="punit" data-pid="daycycle">
-    <div class="daycycle" id="dayCycle" aria-label="Day cycle">
-      <svg viewBox="0 0 300 240" aria-hidden="true" id="dcSvg">
-        <defs>
-          <linearGradient id="dcGrad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#ff9f43"/><stop offset=".38" stop-color="#ffd23f"/>
-            <stop offset=".68" stop-color="#4aa8ff"/><stop offset="1" stop-color="#27408b"/>
-          </linearGradient>
-        </defs>
-        <path d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="14" stroke-linecap="round"/>
-        <path id="dcProg" d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="url(#dcGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377"/>
-        <g id="dcSunSlits"></g>
-        <g id="dcNowMark"></g>
-        <text id="dcClock" x="150" y="106" text-anchor="middle" fill="#ffffff" font-size="32" font-weight="800" style="font-variant-numeric:tabular-nums">--</text>
-        <text id="dcSub" x="150" y="128" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="12.5" font-weight="600"></text>
-        <rect x="30" y="188" width="240" height="8" rx="4" fill="rgba(255,255,255,.20)"/>
-        <g id="dcEatSegs"></g>
-        <line id="dcEatNow" y1="184" y2="200" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
-        <g id="dcEatLabels" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle"></g>
-      </svg>
-      <div class="dc-insight" id="dcInsight"></div>
-      <button class="dc-daytype" id="dcDayType"></button>
-    </div>
-    </div>
-    <div class="punit" data-pid="body">
-<div class="card bodycard">
-      <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l2.2 13H3.8L6 7z"/><path d="M9 10.5V6a3 3 0 0 1 6 0v4.5"/></svg></span><b>Body</b></div>
-      <div class="bodyhero">
-        <button class="wtcircle" id="wtCircle" aria-label="Open weight details">
-          <span class="wtc-num" id="wtCircleNum">—</span>
-          <span class="wtc-unit" id="wtCircleUnit">lb</span>
-          <span class="wtc-date" id="wtCircleDate"></span>
-          <span class="wtc-hint">TAP FOR DETAILS</span>
-        </button>
-        <div class="trajblock">
-          <div id="trajHead" style="font-size:26px; font-weight:800; letter-spacing:-.5px">—</div>
-          <div class="rangenote" id="trajSub" style="margin-top:2px"></div>
-          <div class="wgoalbar" id="trajBarWrap" style="margin-top:10px"><i id="trajBarFill" style="width:0%"></i></div>
-          <div class="rangenote" id="trajPct" style="margin-top:6px"></div>
-        </div>
-      </div>
-      <button class="xrow" data-x="bmi" aria-label="BMI details">
-        <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg></span>
-        <span class="xrow-main"><b>BMI</b></span>
-        <span class="xrow-val"><b id="bmiVal" style="font-size:17px">—</b><span class="pill" id="bmiPill" style="display:none"></span></span>
-        <span class="chev2">›</span>
-      </button>
-      <div class="xdetail" id="xdetail-bmi"><div class="pad">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="ginfo" id="bmiInfo" aria-label="About BMI">i</button><span class="rangenote">How BMI is calculated</span></div>
-        <div class="bmibar"><i id="bmiMark" style="display:none"></i></div>
-        <div class="bmilbls"><span>14</span><span>18.5</span><span>25</span><span>30</span><span>34</span></div>
-        <div class="rangenote" id="bmiNote" style="margin-top:8px"></div>
-        <div class="rangenote" id="whtrNote" style="margin-top:6px; display:none"></div>
-        <div class="statgrid" id="wtStats" style="margin-top:10px"></div>
-        <div class="rangenote" id="wtContext" style="margin-top:10px"></div>
-      </div></div>
-      <button class="xrow" data-x="calcheck" aria-label="Calorie target check details">
-        <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg></span>
-        <span class="xrow-main"><b>Target check</b><span class="rangenote" style="display:block; margin-top:1px">Is your calorie target working?</span></span>
-        <span class="xrow-val"><b id="calCheckVerdict" style="font-size:14px">—</b></span>
-        <span class="chev2">›</span>
-      </button>
-      <div class="xdetail" id="xdetail-calcheck"><div class="pad">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="ginfo" id="calCheckInfo" aria-label="How this checks your target">i</button><span class="rangenote">How the check works</span></div>
-        <div class="rangenote" id="calCheckOut" style="color:var(--ink)">Log weight for 2+ weeks to grade your target against your real rate of gain.</div>
-        <div id="calCheckApply" style="margin-top:10px; display:none"><button class="bigbtn" id="calApplyBtn"></button></div>
-      </div></div>
-      <button class="xrow" data-x="muscle" aria-label="Muscle estimate details">
-        <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 8v8M17 8v8M4 10v4M20 10v4M7 12h10"/></svg></span>
-        <span class="xrow-main"><b>Muscle</b><span class="rangenote" style="display:block; margin-top:1px" id="muscleRowGoal">Estimated gain</span></span>
-        <span class="xrow-val"><b id="muscleRowVal" style="font-size:17px">–</b></span>
-        <span class="chev2">›</span>
-      </button>
-      <div class="xdetail" id="xdetail-muscle"><div class="pad">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="ginfo" id="muscleInfo" aria-label="How this is estimated">i</button><span class="rangenote">How the estimate works</span></div>
-        <div style="display:flex; gap:16px; align-items:center;">
-          <svg width="104" height="104" viewBox="0 0 120 120" style="flex:none">
-            <circle cx="60" cy="60" r="52" fill="none" stroke="#ececf1" stroke-width="11"/>
-            <circle id="muscleArc" cx="60" cy="60" r="52" fill="none" style="stroke:var(--acc)" stroke-width="11" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="0 327"/>
-            <text id="muscleNum" x="60" y="58" text-anchor="middle" font-size="21" font-weight="800" fill="#1c1c1e">–</text>
-            <text x="60" y="79" text-anchor="middle" font-size="11" fill="#8a8a98">lb muscle</text>
+      <div class="punit" data-pid="body">
+        <div class="card bodycard">
+          <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l2.2 13H3.8L6 7z"/><path d="M9 10.5V6a3 3 0 0 1 6 0v4.5"/></svg></span><b>Body & Milestone Road</b><span class="pill" id="roadPill" style="margin-left:auto;font-size:11px;font-weight:700;">Lean Bulk</span></div>
+          <div class="bodyhero">
+            <button class="wtcircle" id="wtCircle" aria-label="Open weight details">
+              <span class="wtc-num" id="wtCircleNum">—</span>
+              <span class="wtc-unit" id="wtCircleUnit">lb</span>
+              <span class="wtc-date" id="wtCircleDate"></span>
+              <span class="wtc-hint">TAP FOR DETAILS</span>
+            </button>
+
+            <!-- SEAMLESS MODERN MILESTONE ROADMAP (2026.10.11) -->
+            <div class="road-flow" id="roadFlow">
+              <div class="road-stops">
+                <div class="road-stop">
+                  <span class="road-tag">Start</span>
+                  <b class="road-num" id="roadStartVal">—</b>
+                  <span class="road-subt" id="roadStartDate">Baseline</span>
+                </div>
+                <div class="road-stop">
+                  <span class="road-cur-badge" id="roadNetVal">+0.0 lb</span>
+                  <b class="road-num" id="roadCurVal" style="margin-top:3px">—</b>
+                  <span class="road-subt">Current</span>
+                </div>
+                <div class="road-stop">
+                  <span class="road-tag">Target</span>
+                  <b class="road-num" id="roadGoalVal">—</b>
+                  <span class="road-subt" id="roadGoalEta">Target Date</span>
+                </div>
+              </div>
+              <div class="road-pbar">
+                <div class="road-pfill" id="roadLine"></div>
+              </div>
+              <div class="road-capsule">
+                <div class="road-cap-item">
+                  <b id="roadRateVal">—</b>
+                  <span>Pacing Rate</span>
+                </div>
+                <div class="road-cap-sep"></div>
+                <div class="road-cap-item">
+                  <b id="roadToGoVal">—</b>
+                  <span>To Target</span>
+                </div>
+                <div class="road-cap-sep"></div>
+                <div class="road-cap-item">
+                  <b id="roadAdhVal">—</b>
+                  <span>Surplus Streak</span>
+                </div>
+              </div>
+              <div class="road-status-note" id="roadSummary"></div>
+            </div>
+
+            <div style="display:none">
+              <div id="trajHead"></div>
+              <div id="trajSub"></div>
+              <div id="trajBarWrap"><i id="trajBarFill"></i></div>
+              <div id="trajPct"></div>
+            </div>
+          </div><!-- /bodyhero -->
+
+          <button class="xrow" data-x="bmi" aria-label="BMI details">
+            <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg></span>
+            <span class="xrow-main"><b>BMI</b></span>
+            <span class="xrow-val"><b id="bmiVal" style="font-size:17px">—</b><span class="pill" id="bmiPill" style="display:none"></span></span>
+            <span class="chev2">›</span>
+          </button>
+          <div class="xdetail" id="xdetail-bmi"><div class="pad">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="ginfo" id="bmiInfo" aria-label="About BMI">i</button><span class="rangenote">How BMI is calculated</span></div>
+            <div class="bmibar"><i id="bmiMark" style="display:none"></i></div>
+            <div class="bmilbls"><span>14</span><span>18.5</span><span>25</span><span>30</span><span>34</span></div>
+            <div class="rangenote" id="bmiNote" style="margin-top:8px"></div>
+            <div class="rangenote" id="whtrNote" style="margin-top:6px; display:none"></div>
+            <div class="statgrid" id="wtStats" style="margin-top:10px"></div>
+            <div class="rangenote" id="wtContext" style="margin-top:10px"></div>
+          </div></div>
+
+          <button class="xrow" data-x="calcheck" aria-label="Calorie target check details">
+            <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg></span>
+            <span class="xrow-main"><b>Target check</b><span class="rangenote" style="display:block; margin-top:1px">Is your calorie target working?</span></span>
+            <span class="xrow-val"><b id="calCheckVerdict" style="font-size:14px">—</b></span>
+            <span class="chev2">›</span>
+          </button>
+          <div class="xdetail" id="xdetail-calcheck"><div class="pad">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="ginfo" id="calCheckInfo" aria-label="How this checks your target">i</button><span class="rangenote">How the check works</span></div>
+            <div class="rangenote" id="calCheckOut" style="color:var(--ink)">Log weight for 2+ weeks to grade your target against your real rate of gain.</div>
+            <div id="calCheckApply" style="margin-top:10px; display:none"><button class="bigbtn" id="calApplyBtn"></button></div>
+          </div></div>
+
+          <button class="xrow" data-x="muscle" aria-label="Muscle estimate details">
+            <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 8v8M17 8v8M4 10v4M20 10v4M7 12h10"/></svg></span>
+            <span class="xrow-main"><b>Muscle</b><span class="rangenote" style="display:block; margin-top:1px" id="muscleRowGoal">Estimated gain</span></span>
+            <span class="xrow-val"><b id="muscleRowVal" style="font-size:17px">–</b></span>
+            <span class="chev2">›</span>
+          </button>
+          <div class="xdetail" id="xdetail-muscle"><div class="pad">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="ginfo" id="muscleInfo" aria-label="How this is estimated">i</button><span class="rangenote">How the estimate works</span></div>
+            <div style="display:flex; gap:16px; align-items:center;">
+              <svg width="104" height="104" viewBox="0 0 120 120" style="flex:none">
+                <circle cx="60" cy="60" r="52" fill="none" stroke="#ececf1" stroke-width="11"/>
+                <circle id="muscleArc" cx="60" cy="60" r="52" fill="none" style="stroke:var(--acc)" stroke-width="11" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="0 327"/>
+                <text id="muscleNum" x="60" y="58" text-anchor="middle" font-size="21" font-weight="800" fill="#1c1c1e">–</text>
+                <text x="60" y="79" text-anchor="middle" font-size="11" fill="#8a8a98">lb muscle</text>
+              </svg>
+              <div id="muscleOut" style="flex:1; font-size:13.5px; line-height:1.6"></div>
+            </div>
+            <button class="srow" id="muscleGoalBtn" style="margin-top:8px"><span>Muscle goal: <b id="muscleGoalLbl">0 lb</b></span><span class="chev2">›</span></button>
+          </div></div>
+        </div><!-- /card bodycard -->
+      </div><!-- /punit data-pid="body" -->
+
+      <div class="punit" data-pid="week">
+        <div class="card weekcard">
+          <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="m10.5 14.5 2 2 3.5-4"/></svg></span><b>This week</b></div>
+          <div class="segctl" id="weekSeg" role="tablist" aria-label="Week views">
+            <button class="segbtn on" data-seg="cal" role="tab">Calories</button>
+            <button class="segbtn" data-seg="mac" role="tab">Macros</button>
+            <button class="segbtn" data-seg="sum" role="tab">Summary</button>
+          </div>
+          <div class="wseg" id="wseg-sum" hidden>
+            <div id="insCard">
+              <div id="insRows"></div>
+              <div class="rangenote" style="margin-top:8px">Estimates from your log — not medical advice.</div>
+            </div>
+            <div id="wkrevCard" style="display:none">
+              <div class="subhead">Weekly review</div>
+              <div class="rangenote" id="wkrevRange" style="margin:2px 0 6px"></div>
+              <div id="wkrevRows"></div>
+              <div id="wkrevTip" class="rangenote" style="margin-top:8px; color:var(--ink); font-weight:600"></div>
+            </div>
+            <div class="ministats" style="margin-top:14px">
+              <div class="ministat"><span class="ms-label">Day streak</span><b id="stStreak">0</b></div>
+              <div class="ministat"><span class="ms-label">Avg kcal / 7d</span><b id="stAvgCal">0</b></div>
+              <div class="ministat"><span class="ms-label">Avg protein / 7d</span><b id="stAvgP">0g</b></div>
+              <div class="ministat"><span class="ms-label">Water today</span><b id="stWater">0 <small>oz</small></b></div>
+            </div>
+          </div>
+          <div class="wseg" id="wseg-cal">
+            <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span><div class="ana-sub" id="anaAvg"></div></div><span class="wk-nav"><button id="pgWkPrev" aria-label="Previous week">‹</button><span class="ana-range" id="anaRange">Last 7 days</span><button id="pgWkNext" aria-label="Next week">›</button></span></div>
+            <div class="bars7" id="bars7"></div>
+            <div class="rangenote" id="trendChip" style="margin-top:8px"></div>
+            <div class="chal">
+              <div class="chal-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Goal days</div>
+              <div class="chal-row" id="goalDays"></div>
+            </div>
+          </div>
+          <div class="wseg" id="wseg-mac" hidden>
+            <div class="mc-head"><span class="mc-legend"><i style="background:#8b8bf5"></i>Carbs<i style="background:#f5a623"></i>Protein<i style="background:#34c77b"></i>Fat</span><span class="mc-week" id="mcWeek">Weekly</span></div>
+            <div class="mstack" id="macroStack"></div>
+            <div class="mstack-lbls" id="macroStackLbls"></div>
+          </div>
+        </div><!-- /card weekcard -->
+      </div><!-- /punit data-pid="week" -->
+
+      <div class="punit" data-pid="daycycle">
+        <div class="daycycle" id="dayCycle" aria-label="Day cycle">
+          <svg viewBox="0 0 300 240" aria-hidden="true" id="dcSvg">
+            <defs>
+              <linearGradient id="dcGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#ff9f43"/><stop offset=".38" stop-color="#ffd23f"/>
+                <stop offset=".68" stop-color="#4aa8ff"/><stop offset="1" stop-color="#27408b"/>
+              </linearGradient>
+            </defs>
+            <path d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="14" stroke-linecap="round"/>
+            <path id="dcProg" d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="url(#dcGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377"/>
+            <g id="dcSunSlits"></g>
+            <g id="dcNowMark"></g>
+            <text id="dcClock" x="150" y="106" text-anchor="middle" fill="#ffffff" font-size="32" font-weight="800" style="font-variant-numeric:tabular-nums">--</text>
+            <text id="dcSub" x="150" y="128" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="12.5" font-weight="600"></text>
+            <rect x="30" y="188" width="240" height="8" rx="4" fill="rgba(255,255,255,.20)"/>
+            <g id="dcEatSegs"></g>
+            <line id="dcEatNow" y1="184" y2="200" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
+            <g id="dcEatLabels" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle"></g>
           </svg>
-          <div id="muscleOut" style="flex:1; font-size:13.5px; line-height:1.6"></div>
-        </div>
-        <button class="srow" id="muscleGoalBtn" style="margin-top:8px"><span>Muscle goal: <b id="muscleGoalLbl">0 lb</b></span><span class="chev2">›</span></button>
-      </div></div>
-    </div>
-    </div>
-    <div class="punit" data-pid="auto">
-<div class="card">
-      <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 3v4h-4"/></svg></span><b>Autopilot</b><span id="autoLastRun" style="margin-left:auto;font-size:11px;color:var(--muted)"></span></div>
-      <div style="font-size:12.5px;color:var(--muted);margin:0 0 4px;line-height:1.5">Retunes your maintenance from your eating + weigh-ins, so your target tracks your body.</div>
-      <div id="autoZoneP"></div>
-</div>
-    </div>
-    <div class="punit" data-pid="week">
-<div class="card weekcard">
-      <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="m10.5 14.5 2 2 3.5-4"/></svg></span><b>This week</b></div>
-      <div class="segctl" id="weekSeg" role="tablist" aria-label="Week views">
-        <button class="segbtn on" data-seg="cal" role="tab">Calories</button>
-        <button class="segbtn" data-seg="mac" role="tab">Macros</button>
-        <button class="segbtn" data-seg="sum" role="tab">Summary</button>
-      </div>
-      <div class="wseg" id="wseg-sum" hidden>
-        <div id="insCard">
-          <div id="insRows"></div>
-          <div class="rangenote" style="margin-top:8px">Estimates from your log — not medical advice.</div>
-        </div>
-        <div id="wkrevCard" style="display:none">
-          <div class="subhead">Weekly review</div>
-          <div class="rangenote" id="wkrevRange" style="margin:2px 0 6px"></div>
-          <div id="wkrevRows"></div>
-          <div id="wkrevTip" class="rangenote" style="margin-top:8px; color:var(--ink); font-weight:600"></div>
-        </div>
-        <div class="ministats" style="margin-top:14px">
-          <div class="ministat"><span class="ms-label">Day streak</span><b id="stStreak">0</b></div>
-          <div class="ministat"><span class="ms-label">Avg kcal / 7d</span><b id="stAvgCal">0</b></div>
-          <div class="ministat"><span class="ms-label">Avg protein / 7d</span><b id="stAvgP">0g</b></div>
-          <div class="ministat"><span class="ms-label">Water today</span><b id="stWater">0 <small>oz</small></b></div>
-        </div>
-      </div>
-      <div class="wseg" id="wseg-cal">
-        <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span><div class="ana-sub" id="anaAvg"></div></div><span class="wk-nav"><button id="pgWkPrev" aria-label="Previous week">‹</button><span class="ana-range" id="anaRange">Last 7 days</span><button id="pgWkNext" aria-label="Next week">›</button></span></div>
-        <div class="bars7" id="bars7"></div>
-        <div class="rangenote" id="trendChip" style="margin-top:8px"></div>
-        <div class="chal">
-          <div class="chal-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Goal days</div>
-          <div class="chal-row" id="goalDays"></div>
-        </div>
-      </div>
-      <div class="wseg" id="wseg-mac" hidden>
-        <div class="mc-head"><span class="mc-legend"><i style="background:#8b8bf5"></i>Carbs<i style="background:#f5a623"></i>Protein<i style="background:#34c77b"></i>Fat</span><span class="mc-week" id="mcWeek">Weekly</span></div>
-        <div class="mstack" id="macroStack"></div>
-        <div class="mstack-lbls" id="macroStackLbls"></div>
-      </div>
-    </div>
-    </div>
+          <div class="dc-insight" id="dcInsight"></div>
+          <button class="dc-daytype" id="dcDayType"></button>
+        </div><!-- /daycycle -->
+      </div><!-- /punit data-pid="daycycle" -->
+
+      <div class="punit" data-pid="auto">
+        <div class="card">
+          <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 3v4h-4"/></svg></span><b>Autopilot</b><span id="autoLastRun" style="margin-left:auto;font-size:11px;color:var(--muted)"></span></div>
+          <div style="font-size:12.5px;color:var(--muted);margin:0 0 4px;line-height:1.5">Retunes your maintenance from your eating + weigh-ins, so your target tracks your body.</div>
+          <div id="autoZoneP"></div>
+        </div><!-- /card -->
+      </div><!-- /punit data-pid="auto" -->
     <div class="punit" data-pid="steps">
 <div class="card">
       <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3a2 2 0 0 0 2-2V6a2 2 0 0 1 2-2h3"/><path d="M13 20h3a2 2 0 0 0 2-2v-3"/><circle cx="8.5" cy="11" r="1.5"/><circle cx="15.5" cy="15" r="1.5"/></svg></span><b>Steps</b><span style="margin-left:auto;font-size:11px;color:var(--muted)" id="stepsKcalLbl"></span></div>
@@ -1491,9 +1579,106 @@ body.reordering #progOverview{display:none}
       <button class="pf-reorder" id="profReorderBtn" aria-label="Rearrange panels"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/><path d="m17 4 3 3-3 3"/></svg></button>
     </div>
     <div id="profPanels">
+      <!-- ATHLETE PHYSICAL STATS (2026.10.11) -->
+      <div class="punit" data-pid="stats">
+        <div class="card pf-card">
+          <div class="cardttl">
+            <span class="sicon sm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="7" r="4"/><path d="M5.5 21v-2a6.5 6.5 0 0 1 13 0v2"/>
+              </svg>
+            </span>
+            <b>Athlete Physical Stats</b>
+            <button class="pf-toggle-btn" id="pfEditToggle" style="margin-left:auto;">Edit Stats ›</button>
+          </div>
+          <div class="pf-grid" id="pfStatsGrid">
+            <div class="pf-stat"><b id="stWVal">—</b><span>Weight</span></div>
+            <div class="pf-stat"><b id="stHVal">—</b><span>Height</span></div>
+            <div class="pf-stat"><b id="stAVal">—</b><span>Age</span></div>
+            <div class="pf-stat"><b id="stSVal">—</b><span>Sex</span></div>
+            <div class="pf-stat"><b id="stFVal">—</b><span>Body Fat</span></div>
+            <div class="pf-stat"><b id="stWaVal">—</b><span>Waist</span></div>
+            <div class="pf-stat"><b id="stBmiVal">—</b><span>BMI</span></div>
+            <div class="pf-stat"><b id="stWhtrVal">—</b><span>WHtR</span></div>
+          </div>
+          <div class="pf-edit-form" id="pfEditForm">
+            <div class="flabel" style="margin-bottom:8px">Quick Edit Physical Inputs</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div><span class="subhead" style="margin:0 0 4px;display:block">Weight</span><input id="pfQuickW" type="number" step="0.1" placeholder="lb" style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:10px;font:inherit;"></div>
+              <div><span class="subhead" style="margin:0 0 4px;display:block">Age</span><input id="pfQuickAge" type="number" placeholder="yrs" style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:10px;font:inherit;"></div>
+              <div><span class="subhead" style="margin:0 0 4px;display:block">Height (in)</span><input id="pfQuickH" type="number" placeholder="inches" style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:10px;font:inherit;"></div>
+              <div><span class="subhead" style="margin:0 0 4px;display:block">Body Fat %</span><input id="pfQuickBf" type="number" step="0.1" placeholder="%" style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:10px;font:inherit;"></div>
+              <div><span class="subhead" style="margin:0 0 4px;display:block">Waist (in)</span><input id="pfQuickWaist" type="number" step="0.1" placeholder="inches" style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:10px;font:inherit;"></div>
+              <div style="display:flex;align-items:flex-end;"><button class="bigbtn" id="pfQuickSave" style="padding:10px;font-size:13px;margin:0;">Update Stats</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENERGY & TDEE METABOLIC ENGINE (2026.10.11) -->
+      <div class="punit" data-pid="engine">
+        <div class="card pf-card">
+          <div class="cardttl">
+            <span class="sicon sm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+            </span>
+            <b>Energy & TDEE Engine</b>
+            <span class="pill" id="pfEnginePill" style="margin-left:auto;font-size:10px;font-weight:800;">Analysis Driven</span>
+          </div>
+          <div class="rangenote" style="margin:2px 0 6px;line-height:1.4">Calculated from your personal stats, body metrics, and restaurant shift schedule:</div>
+          <div class="pf-engine-eq">
+            <div class="pf-eq-box"><b id="pfBmrVal">—</b><span>BMR (Base)</span></div>
+            <div class="pf-eq-op">×</div>
+            <div class="pf-eq-box"><b id="pfPalVal">—</b><span>PAL Multi</span></div>
+            <div class="pf-eq-op">=</div>
+            <div class="pf-eq-box"><b id="pfMaintVal">—</b><span>Maint (TDEE)</span></div>
+            <div class="pf-eq-op">+</div>
+            <div class="pf-eq-box"><b id="pfSurpVal">—</b><span>Surplus</span></div>
+            <div class="pf-eq-op">=</div>
+            <div class="pf-eq-box"><b id="pfGoalVal" style="color:var(--acc);font-size:15px">—</b><span>Daily Target</span></div>
+          </div>
+          <div class="rangenote" id="pfEngineNote" style="margin-top:10px;line-height:1.45;color:var(--ink);"></div>
+        </div>
+      </div>
+
+      <!-- MACRO & HYDRATION BLUEPRINT (2026.10.11) -->
+      <div class="punit" data-pid="macros">
+        <div class="card pf-card">
+          <div class="cardttl">
+            <span class="sicon sm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 12 2 12"/>
+              </svg>
+            </span>
+            <b>Macro & Hydration Blueprint</b>
+            <span class="rangenote" id="pfMacroCalTotal" style="margin-left:auto;font-weight:800;color:var(--ink);"></span>
+          </div>
+          <div class="pf-macro-table">
+            <div class="pf-macro-row">
+              <div class="pf-macro-lbl"><i style="background:var(--pro)"></i>Protein (Target)</div>
+              <div class="pf-macro-val"><b id="pfMacroP">—</b><span id="pfMacroPPer">—</span></div>
+            </div>
+            <div class="pf-macro-row">
+              <div class="pf-macro-lbl"><i style="background:var(--carb)"></i>Carbs (Energy)</div>
+              <div class="pf-macro-val"><b id="pfMacroC">—</b><span id="pfMacroCPct">—</span></div>
+            </div>
+            <div class="pf-macro-row">
+              <div class="pf-macro-lbl"><i style="background:var(--fat)"></i>Fat (Hormones)</div>
+              <div class="pf-macro-val"><b id="pfMacroF">—</b><span id="pfMacroFPct">—</span></div>
+            </div>
+            <div class="pf-macro-row">
+              <div class="pf-macro-lbl"><i style="background:#5aa2ff"></i>Daily Hydration</div>
+              <div class="pf-macro-val"><b id="pfMacroWater">—</b><span>auto goal</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="punit" data-pid="streaks"><div class="pf-streaks" id="pfStreaks"></div></div>
-      <div class="punit" data-pid="cal"><div class="card progcard pf-cal" id="pfCal"></div></div>
-      <div class="punit" data-pid="metrics"><div class="pf-metrics" id="pfMetrics"></div></div>
+      <div class="punit" data-pid="cal" style="display:none"><div class="card progcard pf-cal" id="pfCal"></div></div>
+      <div class="punit" data-pid="metrics" style="display:none"><div class="pf-metrics" id="pfMetrics"></div></div>
       <div class="punit" data-pid="settings"><div id="profSettings">
     <div class="slabel">Personalize</div>
     <div class="card" style="margin-top:6px">
@@ -1617,13 +1802,13 @@ body.reordering #progOverview{display:none}
     <button class="tab active" data-v="diary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>
       Diary</button>
-    <button class="tab" data-v="progress">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>
-      Progress</button>
-    <button class="tabfab" id="tabFab" aria-label="Log food"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
     <button class="tab" data-v="foods">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       Foods</button>
+    <button class="tabfab" id="tabFab" aria-label="Log food"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    <button class="tab" data-v="progress">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>
+      Progress</button>
     <button class="tab" data-v="profile">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
       Profile</button>
@@ -2231,7 +2416,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.11-k";
+const APP_VERSION = "2026.10.11-l";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -5719,7 +5904,7 @@ function renderSteps(){
 }
 function renderProgress(){
   paintDayCycle();
-  renderSteps(); /* day-cycle panel lives on Progress now (2026.09.23-g) */
+  renderSteps();
   (function(){ var s=S.weekSeg||"cal";
     document.querySelectorAll("#weekSeg .segbtn").forEach(function(x){x.classList.toggle("on",x.dataset.seg===s);});
     ["sum","cal","mac"].forEach(function(k){ var el=document.getElementById("wseg-"+k); if(el) el.hidden = k!==s; });
@@ -6059,19 +6244,57 @@ function paintTrajectory(){
   const p = goalProjection();
   const head = $("trajHead"), sub = $("trajSub"), pctEl = $("trajPct"), fill = $("trajBarFill"), wrap = $("trajBarWrap");
   const g = S.goals.weight, wu = wUnit(), cur = curBodyWeight();
+  const ws = sortedWeights(), start = (S.goals.weightStart>0) ? S.goals.weightStart : (ws.length ? ws[0].w : cur);
+  const pct = g===start ? 100 : Math.min(100, Math.max(0,(cur-start)/(g-start)*100));
+
   if(!p.ok){
     head.textContent = p.atGoal ? "At goal" : "Paused";
     sub.textContent = p.why;
     pctEl.textContent = ""; fill.style.width = "0%"; wrap.style.display = p.atGoal ? "" : "none";
-    return;
+  } else {
+    const toGo = Math.abs(p.toGo);
+    head.textContent = "≈"+p.etaDate;
+    sub.textContent = wDisp(toGo).toFixed(1)+" "+wu+" "+(p.toGo>0?"to go":"to lose")+" · at "+fmtRate(p.rateWk)+" "+wu+"/wk from your weigh-ins · "+p.rangeTxt+". A projection of the scale, not of muscle."+(p.paceWarn ? " "+p.paceWarn : "");
+    pctEl.textContent = pct.toFixed(0)+"%";
+    fill.style.width = pct.toFixed(1)+"%"; wrap.style.display = "";
   }
-  const toGo = Math.abs(p.toGo);
-  head.textContent = "≈"+p.etaDate;
-  sub.textContent = wDisp(toGo).toFixed(1)+" "+wu+" "+(p.toGo>0?"to go":"to lose")+" · at "+fmtRate(p.rateWk)+" "+wu+"/wk from your weigh-ins · "+p.rangeTxt+". A projection of the scale, not of muscle."+(p.paceWarn ? " "+p.paceWarn : "");
-  const ws = sortedWeights(), start = (S.goals.weightStart>0) ? S.goals.weightStart : (ws.length ? ws[0].w : cur);
-  const pct = g===start ? 100 : Math.min(100, Math.max(0,(cur-start)/(g-start)*100));
-  pctEl.textContent = pct.toFixed(0)+"%";
-  fill.style.width = pct.toFixed(1)+"%"; wrap.style.display = "";
+
+  /* 2026.10.11: Milestone Roadmap update */
+  const rStartVal = $("roadStartVal"), rStartDate = $("roadStartDate");
+  const rCurVal = $("roadCurVal"), rNetVal = $("roadNetVal");
+  const rGoalVal = $("roadGoalVal"), rGoalEta = $("roadGoalEta");
+  const rRateVal = $("roadRateVal"), rToGoVal = $("roadToGoVal");
+  const rAdhVal = $("roadAdhVal"), rSummary = $("roadSummary"), rLine = $("roadLine");
+  const rPill = $("roadPill");
+
+  if(rStartVal && cur > 0){
+    rStartVal.textContent = wDisp(start).toFixed(1) + " " + wu;
+    rStartDate.textContent = ws.length ? new Date(ws[0].d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "Baseline";
+    rCurVal.textContent = wDisp(cur).toFixed(1) + " " + wu;
+    const net = cur - start;
+    rNetVal.textContent = (net >= 0 ? "+" : "−") + wDisp(Math.abs(net)).toFixed(1) + " " + wu;
+    rGoalVal.textContent = g > 0 ? wDisp(g).toFixed(1) + " " + wu : "Set goal";
+    rGoalEta.textContent = p.ok ? "≈" + p.etaDate : (g > 0 ? "Target set" : "No goal");
+    if(rRateVal) rRateVal.textContent = p.ok ? fmtRate(p.rateWk) + " " + wu + "/wk" : "Building pace";
+    if(rToGoVal) rToGoVal.textContent = g > 0 ? wDisp(Math.abs(g - cur)).toFixed(1) + " " + wu : "–";
+    
+    /* 7-day adherence */
+    const days = weekDays(0), calGoal = goalTotal();
+    const hits = days.filter(x => x.logged && calGoal > 0 && x.cal >= calGoal * 0.9).length;
+    if(rAdhVal) rAdhVal.textContent = hits + " / 7 days";
+    if(rLine) rLine.style.width = Math.min(100, Math.max(0, pct)) + "%";
+    if(rPill){
+      const m = S.goals.mode;
+      rPill.textContent = m === "bulk" ? "Surplus Bulk" : (m === "maintain" ? "Maintenance" : "Lean Bulk");
+    }
+    if(rSummary){
+      if(p.ok){
+        rSummary.textContent = "At your current pace of " + fmtRate(p.rateWk) + " " + wu + "/wk, you are on track to reach " + wDisp(g).toFixed(1) + " " + wu + " around " + p.etaDate + " (" + p.rangeTxt + ").";
+      } else {
+        rSummary.textContent = g > 0 ? "Log weigh-ins regularly to calculate your velocity and project your exact milestone arrival." : "Tap your weight circle to set a target weight goal.";
+      }
+    }
+  }
 }
 /* Weight detail: Trend / Stats / History segmented views */
 document.querySelectorAll("#wtSeg button").forEach(b=>{
@@ -6186,6 +6409,7 @@ function calcMaintenance(){
   }
   return {bmr: Math.round(bmr), maint: Math.round(bmr*actPAL(p)), formula};
 }
+
 /* Steps tracker (2026.10.11-h): like the weight tracker — daily step counts,
    steps→kcal via weight-scaled formula (~0.037 kcal/step at 132 lb),
    work/rest-aware, powers tomorrow's predicted intake. */
@@ -7736,14 +7960,18 @@ function showView(v){
   paintSigned();
 }
 /* 2026.09.22-k: Apple-Photos-style reorder — compact row list with drag handles, checkmark saves */
-const PROG_UNITS = ["body","auto","week","daycycle","steps"];
-const PROG_TITLES = {body:"Body",auto:"Autopilot",week:"This week",daycycle:"Day cycle"};
+const PROG_UNITS = ["body","week","daycycle","auto","steps"];
+const PROG_TITLES = {body:"Body & Roadmap",week:"This week",daycycle:"Day cycle",auto:"Autopilot",steps:"Steps"};
 const LINES_SVG = '<svg viewBox="0 0 24 24"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
 const CHECK_SVG = '<svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
 function progUnits(){ return Array.prototype.slice.call(document.querySelectorAll("#progOverview .punit")); }
 function progOrder(){
   const saved = (typeof S!=="undefined" && S && Array.isArray(S.progLayout)) ? S.progLayout.filter(function(p){ return PROG_UNITS.indexOf(p)>=0; }) : [];
-  return saved.concat(PROG_UNITS.filter(function(p){ return saved.indexOf(p)<0; }));
+  const order = PROG_UNITS.filter(function(p){ return saved.indexOf(p)>=0; })
+    .concat(PROG_UNITS.filter(function(p){ return saved.indexOf(p)<0; }));
+  const bIdx = order.indexOf("body");
+  if(bIdx > 0){ order.splice(bIdx, 1); order.unshift("body"); }
+  return order;
 }
 function applyProgLayout(){
   const box = document.getElementById("progOverview"); if(!box) return;
@@ -7825,11 +8053,12 @@ function prHandleDown(e){
   handle.addEventListener("lostpointercapture", end);
 }
 /* ============ PROFILE VIEW (2026.10.11-a) ============ */
-const PROF_UNITS = ["streaks","cal","metrics","settings"];
-const PROF_TITLES = {streaks:"Streaks",cal:"Calorie",metrics:"Metrics",settings:"Settings"};
+const PROF_UNITS = ["stats","engine","macros","streaks","settings"];
+const PROF_TITLES = {stats:"Physical Stats",engine:"Energy Engine",macros:"Macro Blueprint",streaks:"Streaks",settings:"Settings"};
 function profOrder(){
   const saved = (S && Array.isArray(S.profOrder)) ? S.profOrder.filter(function(p){ return PROF_UNITS.indexOf(p)>=0; }) : [];
-  return saved.concat(PROF_UNITS.filter(function(p){ return saved.indexOf(p)<0; }));
+  return PROF_UNITS.filter(function(p){ return saved.indexOf(p)>=0; })
+    .concat(PROF_UNITS.filter(function(p){ return saved.indexOf(p)<0; }));
 }
 function applyProfLayout(){
   const box = document.getElementById("profPanels"); if(!box) return;
@@ -7908,8 +8137,109 @@ function renderProfile(){
   const ws = sortedWeights(), lw = ws.length ? ws[ws.length-1] : null;
   const ndays = Object.keys(S.days||{}).filter(function(k){ return !isLocked(k)&&dayHasData(S.days[k]); }).length;
   const sub = document.getElementById("pfSub");
-  if(sub) sub.textContent = ndays+" day"+(ndays===1?"":"s")+" logged"+(lw ? " \u00b7 "+wDisp(lw.w).toFixed(1)+" "+wUnit() : "");
-    paintPfStreaks();
+  if(sub) sub.textContent = ndays+" day"+(ndays===1?"":"s")+" logged"+(lw ? " · "+wDisp(lw.w).toFixed(1)+" "+wUnit() : "");
+  paintPfStreaks();
+
+  const p = S.goals.profile || {};
+  const hIn = p.heightIn || 0;
+  const curW = curBodyWeight();
+  const wLb = curW > 0 ? curW : (lw ? lw.w : (p.weightLb || 0));
+  const wu = wUnit();
+  const bmi = (wLb>0 && hIn>0) ? (wLb/(hIn*hIn)*703) : 0;
+  const whtr = (p.waistIn>0 && hIn>0) ? (p.waistIn/hIn) : 0;
+
+  /* 2026.10.11: Athlete Physical Stats Card */
+  const elW = document.getElementById("stWVal");
+  if(elW){
+    elW.textContent = wLb > 0 ? wDisp(wLb).toFixed(1) + " " + wu : "–";
+    const hFt = Math.floor(hIn / 12), hRem = Math.round(hIn % 12);
+    document.getElementById("stHVal").textContent = hIn > 0 ? (p.units==="met" ? Math.round(hIn*2.54)+" cm" : hFt+"'"+hRem+"\"") : "–";
+    document.getElementById("stAVal").textContent = p.age > 0 ? p.age + " yrs" : "–";
+    document.getElementById("stSVal").textContent = p.sex === "f" ? "Female" : (p.sex === "m" ? "Male" : "–");
+    document.getElementById("stFVal").textContent = p.bodyFat > 0 ? p.bodyFat + "%" : "–";
+    document.getElementById("stWaVal").textContent = p.waistIn > 0 ? p.waistIn + " in" : "–";
+    document.getElementById("stBmiVal").textContent = bmi > 0 ? bmi.toFixed(1) : "–";
+    document.getElementById("stWhtrVal").textContent = whtr > 0 ? whtr.toFixed(2) : "–";
+  }
+
+  /* 2026.10.11: Energy & TDEE Metabolic Engine */
+  const cm = calcMaintenance();
+  const elBmr = document.getElementById("pfBmrVal");
+  if(elBmr){
+    elBmr.textContent = cm.bmr > 0 ? cm.bmr.toLocaleString() : "–";
+    const pal = actPAL(p);
+    document.getElementById("pfPalVal").textContent = pal.toFixed(2);
+    document.getElementById("pfMaintVal").textContent = cm.maint > 0 ? cm.maint.toLocaleString() : "–";
+    const surp = S.goals.surplus || 0;
+    document.getElementById("pfSurpVal").textContent = surp > 0 ? "+" + surp : (surp < 0 ? surp : "0");
+    const gTot = goalTotal();
+    document.getElementById("pfGoalVal").textContent = gTot > 0 ? gTot.toLocaleString() + " kcal" : "–";
+    const enNote = document.getElementById("pfEngineNote");
+    if(enNote){
+      const isAdapt = S.goals.useAdaptive && S.goals.adVal > 0;
+      enNote.innerHTML = "<b>" + cm.formula + "</b> formula: BMR " + cm.bmr.toLocaleString() + " kcal base × " + pal + " activity tier = " + cm.maint.toLocaleString() + " kcal maintenance. " +
+        (isAdapt ? "<br><i>Adaptive TDEE active:</i> learned from your scale feedback (" + S.goals.adVal.toLocaleString() + " kcal)." : "");
+    }
+  }
+
+  /* 2026.10.11: Macro & Hydration Blueprint */
+  const elMacP = document.getElementById("pfMacroP");
+  if(elMacP){
+    const prot = S.goals.protein || 0;
+    const carb = S.goals.carbs || 0;
+    const fat = S.goals.fat || 0;
+    const gTot = goalTotal() || 1;
+    elMacP.textContent = prot + "g";
+    document.getElementById("pfMacroPPer").textContent = wLb > 0 ? "(" + (prot / wLb).toFixed(2) + " g/lb · " + (prot*4) + " kcal)" : "";
+    document.getElementById("pfMacroC").textContent = carb + "g";
+    document.getElementById("pfMacroCPct").textContent = "(" + Math.round(carb * 4 / gTot * 100) + "% · " + (carb*4) + " kcal)";
+    document.getElementById("pfMacroF").textContent = fat + "g";
+    document.getElementById("pfMacroFPct").textContent = "(" + Math.round(fat * 9 / gTot * 100) + "% · " + (fat*9) + " kcal)";
+    document.getElementById("pfMacroWater").textContent = (typeof autoWaterOz === "function" ? autoWaterOz() : 110) + " oz";
+    const elTot = document.getElementById("pfMacroCalTotal");
+    if(elTot) elTot.textContent = (prot*4 + carb*4 + fat*9) + " kcal total";
+  }
+
+  /* Setup quick edit toggle if not already bound */
+  const qTgl = document.getElementById("pfEditToggle");
+  const qForm = document.getElementById("pfEditForm");
+  if(qTgl && qForm && !qTgl.dataset.bound){
+    qTgl.dataset.bound = "1";
+    qTgl.onclick = function(){
+      const isOpen = qForm.classList.toggle("open");
+      qTgl.textContent = isOpen ? "Close ✕" : "Edit Stats ›";
+      if(isOpen){
+        document.getElementById("pfQuickW").value = wLb > 0 ? wDisp(wLb).toFixed(1) : "";
+        document.getElementById("pfQuickAge").value = p.age || "";
+        document.getElementById("pfQuickH").value = hIn || "";
+        document.getElementById("pfQuickBf").value = p.bodyFat || "";
+        document.getElementById("pfQuickWaist").value = p.waistIn || "";
+      }
+    };
+    const qSave = document.getElementById("pfQuickSave");
+    if(qSave){
+      qSave.onclick = function(){
+        const wVal = parseFloat(document.getElementById("pfQuickW").value) || 0;
+        const aVal = parseInt(document.getElementById("pfQuickAge").value) || 0;
+        const hVal = parseFloat(document.getElementById("pfQuickH").value) || 0;
+        const bfVal = parseFloat(document.getElementById("pfQuickBf").value) || 0;
+        const waistVal = parseFloat(document.getElementById("pfQuickWaist").value) || 0;
+        if(wVal > 0) S.goals.profile.weightLb = wVal;
+        if(aVal > 0) S.goals.profile.age = aVal;
+        if(hVal > 0) S.goals.profile.heightIn = hVal;
+        S.goals.profile.bodyFat = bfVal >= 0 ? bfVal : 0;
+        S.goals.profile.waistIn = waistVal >= 0 ? waistVal : 0;
+        S.goals.profile.updatedAt = todayStr();
+        recalcMaint();
+        if(typeof autoDeriveMacros === "function") autoDeriveMacros();
+        save();
+        renderProfile();
+        if(typeof renderDiary === "function") renderDiary();
+        if(typeof renderProgress === "function") renderProgress();
+      };
+    }
+  }
+
   const cal = document.getElementById("pfCal");
   if(cal){
     const t = totals(viewDate()), g = goalTotal();
@@ -7921,9 +8251,6 @@ function renderProfile(){
   }
   const mx = document.getElementById("pfMetrics");
   if(mx){
-    const hIn = (S.goals.profile||{}).heightIn||0;
-    const wLb = lw ? lw.w : 0;
-    const bmi = (wLb>0 && hIn>0) ? (wLb/(hIn*hIn)*703) : 0;
     const maint = S.goals.maintenance>0 ? Math.round(S.goals.maintenance) : 0;
     const tile = function(v,l){ return '<div class="pf-met"><b>'+v+'</b><span>'+l+'</span></div>'; };
     mx.innerHTML =
