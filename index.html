@@ -1476,6 +1476,7 @@ body.reordering #progOverview{display:none}
         <input id="stepsInput" type="number" inputmode="numeric" placeholder="Today's steps" style="flex:1;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;font-family:inherit;">
         <button class="wlogbtn" id="stepsAdd">Log</button>
       </div>
+      <div style="font-size:11px;color:var(--muted);margin:-4px 0 4px;">Tap a day above to log steps for that day</div>
       <div id="stepsBars" style="display:flex;align-items:flex-end;gap:4px;height:64px;margin-top:4px;"></div>
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px;">
         <span id="stepsWorkAvg"></span><span id="stepsRestAvg"></span>
@@ -2236,7 +2237,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.11-i";
+const APP_VERSION = "2026.10.11-j";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -5654,13 +5655,25 @@ function wtStatusText(){
   if(flat) return "Holding steady.";
   return "Trending "+sgn(rate)+" "+wu+"/wk.";
 }
-/* Steps panel renderer (2026.10.11-h) */
-function renderSteps(){
+/* Steps panel renderer (2026.10.11-h); backfill any day by tapping its bar (2026.10.11-j) */
+let stepsSel = null; /* selected date for logging; null = today */
+function stepsPickDay(ds){
+  stepsSel = (stepsSel===ds) ? null : ds; /* tap again to go back to today */
+  renderSteps();
   var inp = document.getElementById("stepsInput");
-  var today = getSteps(todayStr());
-  if(inp && document.activeElement!==inp) inp.value = today==null?"":today;
+  if(inp) inp.focus();
+}
+function renderSteps(){
+  var selDate = stepsSel || todayStr();
+  var isToday = selDate===todayStr();
+  var inp = document.getElementById("stepsInput");
+  var selSteps = getSteps(selDate);
+  if(inp && document.activeElement!==inp){
+    inp.value = selSteps==null?"":selSteps;
+    inp.placeholder = isToday ? "Today's steps" : "Steps for "+new Date(selDate+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  }
   var kcalLbl = document.getElementById("stepsKcalLbl");
-  if(kcalLbl) kcalLbl.textContent = today==null ? "" : "≈ "+stepsKcal(today).toLocaleString()+" kcal burned";
+  if(kcalLbl) kcalLbl.textContent = selSteps==null ? "" : "≈ "+stepsKcal(selSteps).toLocaleString()+" kcal burned";
   /* 7-day bars */
   var bars = document.getElementById("stepsBars");
   if(bars){
@@ -5677,9 +5690,11 @@ function renderSteps(){
       var pct = v.n==null ? 0 : Math.max(4, Math.round(v.n/max*100));
       var col = v.n==null ? "var(--line)" : (dayType(v.ds)==="work" ? "var(--acc)" : "#94a3b8");
       var day = new Date(v.ds+"T12:00:00").toLocaleDateString(undefined,{weekday:"narrow"});
-      h += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">'
+      var sel = v.ds===selDate;
+      h += '<div onclick="stepsPickDay(\''+v.ds+'\')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:4px 2px;border-radius:8px;'+(sel?'background:var(--wash);outline:2px solid var(--acc);':'')+'">'
         + '<div style="width:100%;height:'+pct+'%;min-height:'+(v.n==null?2:4)+'px;background:'+col+';border-radius:4px;"></div>'
-        + '<span style="font-size:9px;color:var(--muted)">'+day+'</span></div>';
+        + '<span style="font-size:9px;color:'+(sel?'var(--acc)':'var(--muted)')+';font-weight:'+(sel?'800':'400')+'">'+day+'</span>'
+        + (v.n==null?'':'<span style="font-size:8px;color:var(--muted)">'+(v.n>=1000?Math.round(v.n/100)/10+'k':v.n)+'</span>')+'</div>';
     });
     bars.innerHTML = h;
   }
@@ -5845,7 +5860,9 @@ document.getElementById("calCheckInfo").onclick = ()=>openInfo("calcheck");
 document.getElementById("stepsAdd").onclick = ()=>{
   var v = parseInt(document.getElementById("stepsInput").value, 10);
   if(!(v>=0)) return;
-  logSteps(v); renderSteps();
+  logSteps(v, stepsSel||todayStr());
+  stepsSel = null; /* back to today after logging */
+  renderSteps();
 };
 document.getElementById("weightAdd").onclick = ()=>{
   const raw = parseFloat(document.getElementById("weightInput").value);
