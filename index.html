@@ -726,11 +726,11 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .pf-reorder svg{width:22px;height:22px;}
 .pf-reorder.on{background:var(--acc);border-color:var(--acc);color:#fff;}
 .pf-streaks{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-.pf-streak{border:none;border-radius:20px;padding:14px 14px 12px;color:#fff;text-align:left;cursor:pointer;background:linear-gradient(135deg,var(--acc),var(--acc-deep));position:relative;overflow:hidden;font-family:inherit;}
+.pf-streak{border:none;border-radius:20px;padding:14px 10px 12px;color:#fff;text-align:center;cursor:pointer;background:linear-gradient(135deg,var(--acc),var(--acc-deep));position:relative;overflow:hidden;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;}
 .pf-streak::after{content:"";position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);top:-40px;right:-30px;pointer-events:none;}
-.pf-streak b{font-size:34px;font-weight:800;display:block;line-height:1;position:relative;z-index:1;font-variant-numeric:tabular-nums;}
-.pf-streak>span{font-size:12.5px;font-weight:700;opacity:.92;position:relative;z-index:1;display:block;margin-top:4px;}
-.pf-streak .pf-go{font-size:12px;font-weight:700;opacity:.75;margin-top:8px;}
+.pf-ring{width:78px;height:78px;position:relative;z-index:1;}
+.pf-streak>span{font-size:12.5px;font-weight:700;opacity:.92;position:relative;z-index:1;display:block;}
+.pf-streak .pf-go{font-size:12px;font-weight:700;opacity:.75;margin-top:6px;}
 .pf-cal{margin-bottom:12px;}
 .pf-calbar{height:10px;border-radius:6px;background:rgba(255,255,255,.25);overflow:hidden;min-width:110px;flex:1;}
 .pf-calbar i{display:block;height:100%;border-radius:6px;background:#fff;}
@@ -1488,14 +1488,9 @@ body.reordering #progOverview{display:none}
       <div class="punit" data-pid="cal"><div class="card progcard pf-cal" id="pfCal"></div></div>
       <div class="punit" data-pid="metrics"><div class="pf-metrics" id="pfMetrics"></div></div>
       <div class="punit" data-pid="settings"><div id="profSettings">
-    
-    </div>
-    <div class="slabel">Profile</div>
+    <div class="slabel">Personalize</div>
     <div class="card" style="margin-top:6px">
-      <div class="prow">
-        <button class="pavatar" id="sAvatar" style="width:58px;height:58px;font-size:22px" aria-label="Change profile photo"></button>
-        <div class="pmeta"><input class="sname" id="sName" placeholder="Your name" autocomplete="off"></div>
-      </div>
+      <div class="pmeta" style="margin-bottom:2px"><input class="sname" id="sName" placeholder="Your name" autocomplete="off"></div>
       <div class="flabel" style="margin:14px 0 8px">App theme</div>
       <div class="themerow" id="themeRow"></div>
       <div class="flabel" style="margin:14px 0 8px">Progress photos</div>
@@ -1533,7 +1528,7 @@ body.reordering #progOverview{display:none}
     </div>
     <div class="privline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 1 1 7 0v2.5"/></svg>Private to this phone · nothing leaves your device</div>
     <div class="ver" id="appVer"></div>
-  </section></div></div>
+  </div></div>
     </div>
     <div id="profReorder" hidden></div>
   </section>
@@ -2237,7 +2232,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.11-a";
+const APP_VERSION = "2026.10.11-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -7135,14 +7130,14 @@ function renderProfileStrip(){
 document.getElementById("pAvatar").onclick = ()=>showView("profile");
 function renderProfileCard(){
   const pr = S.profile || {name:"", img:""};
-  document.getElementById("sAvatar").innerHTML = avatarHTML(pr);
+  const sa = document.getElementById("sAvatar");
+  if(sa) sa.innerHTML = avatarHTML(pr);
   const nm = document.getElementById("sName");
-  if(document.activeElement!==nm) nm.value = pr.name || "";
+  if(nm && document.activeElement!==nm) nm.value = pr.name || "";
   paintScoreWheel();
   renderThemePicker();
   renderPhotoStrip();
 }
-document.getElementById("sAvatar").onclick = ()=>document.getElementById("pPhotoFile").click();
 document.getElementById("sName").addEventListener("change", e=>{
   if(!S.profile) S.profile = {};
   S.profile.name = e.target.value.trim() || "";
@@ -7641,10 +7636,16 @@ function renderProfile(){
   const st = document.getElementById("pfStreaks");
   if(st){
     const nd = qtDays("nicotine"), ad = qtDays("alcohol");
-    const card = function(days, label){
-      return '<button class="pf-streak"><b>'+(days==null?"\u2013":days)+'</b><span>'+label+'</span><span class="pf-go">'+(days==null?"Start counter":"Timeline")+' \u203a</span></button>';
+    const ring = function(days, label){
+      const C = 2*Math.PI*30, d = days==null ? 0 : Math.min(days,90);
+      const off = C*(1-d/90), num = days==null ? "\u2013" : days;
+      return '<button class="pf-streak">'
+        + '<svg class="pf-ring" viewBox="0 0 72 72"><circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="7"/>'
+        + '<circle cx="36" cy="36" r="30" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 36 36)"/>'
+        + '<text x="36" y="44" text-anchor="middle" fill="#fff" font-size="23" font-weight="800">'+num+'</text></svg>'
+        + '<span>'+label+'</span><span class="pf-go">'+(days==null?"Start counter":"Timeline")+' \u203a</span></button>';
     };
-    st.innerHTML = card(nd, "days nicotine-free") + card(ad, "days alcohol-free");
+    st.innerHTML = ring(nd, "days nicotine-free") + ring(ad, "days alcohol-free");
     st.querySelectorAll(".pf-streak").forEach(function(b){ b.onclick = function(){ showView("quit"); }; });
   }
   const cal = document.getElementById("pfCal");
@@ -7764,7 +7765,7 @@ function paintSigned(root){
     tn.parentNode.replaceChild(sp, tn);
   });
 }
-function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); applyProgLayout(); paintSigned(); }
+function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); applyProgLayout(); if(curView==="profile") renderProfile(); paintSigned(); }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.v));
 /* Progress sub-tabs were removed in 2026.09.22-a: Progress is a single view whose
    weight circle opens the full-screen #wtDetail sheet. */
