@@ -2222,7 +2222,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.11-e";
+const APP_VERSION = "2026.10.11-f";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -5421,6 +5421,36 @@ function paintCalCheck(){
      dark red beyond; straight segments so dense weigh-ins can't loop the
      way the old Catmull-Rom smoothing did
    - inline SVG (<1k points/year is deep in SVG's comfort zone; crisp on retina) */
+/* Research-backed weight analytics (2026.10.11-f):
+   - EWMA trend (alpha=0.15, ~12-day effective window) beats simple moving averages:
+     less lag, handles missing days by carrying forward, no fabricated points.
+   - Outlier rejection: discard weigh-ins >6.6 lb from neighbor median (typos/unit errors).
+   - Only complete days feed the TDEE math; partial days are "unknown", never zero. */
+function ewmaTrend(ws, alpha){
+  alpha = alpha || 0.15;
+  if(!ws.length) return [];
+  var pts = ws.slice().sort(function(a,b){ return a.d<b.d?-1:1; });
+  /* neighbor-median outlier filter */
+  var clean = pts.filter(function(p, i){
+    var nb = [];
+    if(i>0) nb.push(pts[i-1].w);
+    if(i<pts.length-1) nb.push(pts[i+1].w);
+    if(!nb.length) return true;
+    nb.sort(function(a,b){ return a-b; });
+    var med = nb[Math.floor(nb.length/2)];
+    return Math.abs(p.w - med) <= 6.6;
+  });
+  if(!clean.length) return [];
+  var out = [], trend = clean[0].w;
+  var prevD = null;
+  clean.forEach(function(p){
+    /* carry trend forward across gaps (no fabricated weights) */
+    trend = alpha*p.w + (1-alpha)*trend;
+    out.push({d:p.d, w:trend, n:1, raw:p.w});
+    prevD = p.d;
+  });
+  return out;
+}
 function trendMA(ws){
   /* 7-day trailing moving average ("trend weight"): each point averages the
      weigh-ins in its trailing 7 days. n = points in the window. */
@@ -6209,7 +6239,7 @@ function maybeAutoTune(suggest){
    with real food AND all three bars cleared: ≥800 kcal, ≥ half of maintenance,
    ≥ 60% of your own median day. Today is always excluded — unfinished by definition. */
 function completeDayCals(){
-  const WIN=21, raw=[];
+  const WIN=28, raw=[]; /* research: 28-day intake window on complete days only */
   for(let i=WIN-1;i>=1;i--){ const ds=addDays(todayStr(),-i); if(isLocked(ds)) continue; const t=dayTotals(ds); if(t.foodLogged) raw.push(t.cal); }
   const srt=raw.slice().sort((a,b)=>a-b), med=srt.length?srt[Math.floor(srt.length/2)]:0;
   const maint=calcMaintenance().maint||S.goals.maintenance||0;
@@ -6228,13 +6258,15 @@ function avgCompleteIntake(){ const r=completeDayCals(); return r.cals.length?r.
    blends toward the formula estimate while data is thin, and weekly moves are
    capped so one noisy week can't yank the target. */
 function adaptiveCalc(){
-  const WIN=21, MIN_DAYS=7, MIN_SPAN=7;
+  const WIN=28, MIN_DAYS=7, MIN_SPAN=7;
   if(!(S.goals.profile.weightLb>0)) return {ok:false, reason:"profile"};
   const comp=completeDayCals(), cals=comp.cals, partial=comp.partial;
   const ws=sortedWeights(), T=p=>new Date(p.d+"T12:00:00").getTime();
   const cutoff=new Date(todayStr()+"T12:00:00").getTime()-WIN*86400000;
-  const wpts=trendMA(ws).filter(p=>T(p)>=cutoff&&p.n>=2);
+  /* EWMA trend (research) instead of 7-day MA: less lag, robust to gaps */
+  const wpts=ewmaTrend(ws).filter(p=>T(p)>=cutoff);
   const spanD=wpts.length>=2?(T(wpts[wpts.length-1])-T(wpts[0]))/86400000:0;
+  const weighIns=ws.filter(p=>T(p)>=cutoff).length;
   if(cals.length<MIN_DAYS||wpts.length<2||spanD<MIN_SPAN)
     return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD), partial};
   const rateWk=halvesRate(wpts);
@@ -6243,12 +6275,72 @@ function adaptiveCalc(){
   if(!(formula>0)) return {ok:false, reason:"profile"};
   const avg=cals.reduce((a,v)=>a+v,0)/cals.length;
   const learned=avg-rateWk/7*3500; /* energy balance: surplus (gain) subtracts, deficit (loss) adds back */
-  const conf=Math.min(1,cals.length/WIN);
+  /* confidence: complete-days ramp x weigh-in density (research recipe) */
+  const conf=Math.min(1,cals.length/21)*Math.min(1,weighIns/8);
   let v=formula+(learned-formula)*conf;
   v=formula+Math.max(-400,Math.min(400,v-formula)); /* sanity: never trust the math more than ±400 from the formula */
   return {ok:true, days:cals.length, span:Math.round(spanD), avg:Math.round(avg),
           rateWk:Math.round(rateWk*100)/100, learned:Math.round(learned),
-          formula, conf, value:Math.round(v), partial};
+          formula, conf:Math.round(conf*100)/100, value:Math.round(v), partial, weighIns};
+}
+/* Bulk analytics dashboard (2026.10.11-f, research-backed):
+   - Trend rate vs 0.25-0.5 lb/week evidence band
+   - Implied surplus (slope x 3500 / 7) vs prescribed surplus
+   - 7-day protein g/kg vs 1.6-2.2 floor
+   - Adherence = complete days / 7 (rolling)
+   - Protein feedings: meals with >=0.4 g/kg (>=24g for 59kg) */
+function bulkAnalytics(){
+  var out = {ok:false};
+  var ws = sortedWeights();
+  if(ws.length < 2) return out;
+  var trend = ewmaTrend(ws);
+  if(trend.length < 2) return out;
+  var rateWk = halvesRate(trend);
+  if(rateWk == null) return out;
+  var prof = S.goals.profile || {};
+  var wKg = (prof.weightLb || 130) / 2.20462;
+  /* implied surplus from the trend slope */
+  var implied = rateWk * 3500 / 7;
+  var prescribed = (S.goals.surplus > 0) ? S.goals.surplus : 0;
+  /* 7-day protein g/kg */
+  var p7 = 0, pdays = 0;
+  for(var i=0;i<7;i++){
+    var ds = addDays(todayStr(), -i);
+    if(isLocked(ds)) continue;
+    var t = dayTotals(ds);
+    if(t.foodLogged && t.protein > 0){ p7 += t.protein; pdays++; }
+  }
+  var protGkg = (pdays > 0 && wKg > 0) ? (p7 / pdays) / wKg : null;
+  /* adherence: complete days / 7 */
+  var comp = 0;
+  for(var j=0;j<7;j++){
+    var ds2 = addDays(todayStr(), -j);
+    if(isLocked(ds2)) continue;
+    var t2 = dayTotals(ds2);
+    if(t2.foodLogged && t2.cal >= 1200) comp++;
+  }
+  /* protein feedings: meals >= 0.4 g/kg */
+  var feedThresh = Math.max(20, 0.4 * wKg);
+  var feedings = 0, fdays = 0;
+  for(var k=0;k<7;k++){
+    var ds3 = addDays(todayStr(), -k);
+    if(isLocked(ds3)) continue;
+    var d = S.days[ds3];
+    if(!d || !d.meals) continue;
+    fdays++;
+    ["breakfast","lunch","dinner","snacks"].forEach(function(m){
+      var mp = (d.meals[m]||[]).reduce(function(a,f){ return a + (f.protein||0); }, 0);
+      if(mp >= feedThresh) feedings++;
+    });
+  }
+  var bandLo = 0.25, bandHi = 0.5;
+  var verdict = rateWk < bandLo*0.5 ? "stall" : rateWk > bandHi ? "fast" : "on-track";
+  out = {ok:true, rateWk:Math.round(rateWk*100)/100, bandLo:bandLo, bandHi:bandHi,
+         implied:Math.round(implied), prescribed:Math.round(prescribed),
+         protGkg:protGkg==null?null:Math.round(protGkg*100)/100,
+         adherence:comp, feedings:feedings, feedDays:fdays,
+         feedThresh:Math.round(feedThresh), verdict:verdict};
+  return out;
 }
 function applyAdaptive(){
   const g=S.goals, r=adaptiveCalc();
