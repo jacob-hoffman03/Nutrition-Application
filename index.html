@@ -728,7 +728,15 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .pf-streaks{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
 .pf-streak{border:none;border-radius:20px;padding:14px 10px 12px;color:#fff;text-align:center;cursor:pointer;background:linear-gradient(135deg,var(--acc),var(--acc-deep));position:relative;overflow:hidden;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;}
 .pf-streak::after{content:"";position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);top:-40px;right:-30px;pointer-events:none;}
-.pf-ring{width:78px;height:78px;position:relative;z-index:1;}
+.pf-dbl{position:relative;width:86px;height:86px;z-index:1;flex:none;}
+.pf-bigring{width:86px;height:86px;display:block;}
+.pf-bignum{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;}
+.pf-bignum b{font-size:27px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;}
+.pf-bignum span{font-size:10px;font-weight:700;opacity:.85;}
+.pf-sat{position:absolute;right:-8px;bottom:-4px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;}
+.pf-sat svg{position:absolute;inset:0;width:100%;height:100%;}
+.pf-satpct{position:relative;font-size:9px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;}
+.pf-organ{font-size:10.5px;font-weight:700;color:#fff;opacity:.8;position:relative;z-index:1;}
 .pf-streak>span{font-size:12.5px;font-weight:700;opacity:.92;position:relative;z-index:1;display:block;}
 .pf-streak .pf-go{font-size:12px;font-weight:700;opacity:.75;margin-top:6px;}
 .pf-cal{margin-bottom:12px;}
@@ -1513,19 +1521,13 @@ body.reordering #progOverview{display:none}
       <button class="srow" id="importBtn"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14.5V4"/><path d="m7.5 8.5 4.5-4.5 4.5 4.5"/><path d="M4.5 20h15"/></svg></span>Restore backup</span><span class="chev2">›</span></button>
       <button class="srow" id="snapRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3.5 8.5 4.7-8.5 4.7-8.5-4.7L12 3.5z"/><path d="m4.5 12.5 7.5 4.1 7.5-4.1"/><path d="m4.5 16.5 7.5 4.1 7.5-4.1"/></svg></span>Snapshots</span><span class="sval"><b id="snapRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
       <input type="file" id="importFile" accept="application/json,.json" style="display:none">
+      <button class="srow" id="medalCaseRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14.5" r="4.5"/><path d="m9.2 10.8-2.7-7.3h3.6l1.9 4.4 1.9-4.4h3.6l-2.7 7.3"/></svg></span>Medals</span><span class="sval"><b id="medalCaseRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
+      <button class="srow" id="infoRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>Info</span><span class="sval"><span class="chev2">›</span></span></button>
       <button class="srow danger" id="wipeBtn"><span class="sleft"><span class="sicon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 7h15"/><path d="M9.5 7V4.8a.8.8 0 0 1 .8-.8h3.4a.8.8 0 0 1 .8.8V7"/><path d="M6.5 7l.9 13a1 1 0 0 0 1 .9h7.2a1 1 0 0 0 1-.9l.9-13"/><path d="M10 11v5.5M14 11v5.5"/></svg></span>Erase data</span><span class="chev2">›</span></button>
     </div>
-    <div class="slabel">Collection</div>
-    <div class="card slim" style="margin-top:6px;">
-      <button class="srow" id="medalCaseRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14.5" r="4.5"/><path d="m9.2 10.8-2.7-7.3h3.6l1.9 4.4 1.9-4.4h3.6l-2.7 7.3"/></svg></span>Medals</span><span class="sval"><b id="medalCaseRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
-      <button class="srow" id="infoRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>Info</span><span class="sval"><span class="chev2">›</span></span></button>
-    </div>
+    >
     <div class="slabel">About</div>
-    <div class="stat3" style="margin-top:6px;">
-      <div class="stat"><b id="dDays">0</b><span>Days logged</span></div>
-      <div class="stat"><b id="dFoods">0</b><span>Foods logged</span></div>
-      <div class="stat"><b id="dWeigh">0</b><span>Weigh-ins</span></div>
-    </div>
+    >
     <div class="privline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 1 1 7 0v2.5"/></svg>Private to this phone · nothing leaves your device</div>
     <div class="ver" id="appVer"></div>
   </div></div>
@@ -2232,7 +2234,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.11-b";
+const APP_VERSION = "2026.10.11-c";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -7410,11 +7412,8 @@ function renderSettings(){
   renderProfileCard();
   document.getElementById("goalRowVal").textContent = Math.round(goalTotal()).toLocaleString()+" kcal";
   document.getElementById("waterRowVal").textContent = g.water>0 ? (g.water*8)+" oz" : (waterTarget()>0 ? "Auto ("+(waterTarget()*8)+" oz)" : "Auto (set maintenance first)");
-  document.getElementById("dDays").textContent = Object.keys(S.days).filter(k=>!isLocked(k)&&dayHasData(S.days[k])).length;
   document.getElementById("appVer").textContent = "Fuel " + APP_VERSION;
-  document.getElementById("dFoods").textContent = Object.values(S.days).reduce((a,d)=>a+MEALS.filter(m=>m!=="supplements").reduce((x,m)=>x+(d.meals[m]||[]).length,0),0); /* supplements aren't food (2026.09.24-x) */
-  document.getElementById("dWeigh").textContent = (S.weights||[]).length;
-  const mrv=document.getElementById("medalCaseRowVal"); if(mrv) mrv.textContent=Object.keys(medalCase()).length+"/"+MDEF.length;
+    const mrv=document.getElementById("medalCaseRowVal"); if(mrv) mrv.textContent=Object.keys(medalCase()).length+"/"+MDEF.length;
   const swv=document.getElementById("schedRowVal"); if(swv) swv.textContent=workDaysSummary();
   const srv=document.getElementById("snapRowVal"); if(srv) srv.textContent=listSnapshots().length+" saved";
 }
@@ -7635,17 +7634,29 @@ function renderProfile(){
   if(sub) sub.textContent = ndays+" day"+(ndays===1?"":"s")+" logged"+(lw ? " \u00b7 "+wDisp(lw.w).toFixed(1)+" "+wUnit() : "");
   const st = document.getElementById("pfStreaks");
   if(st){
-    const nd = qtDays("nicotine"), ad = qtDays("alcohol");
-    const ring = function(days, label){
-      const C = 2*Math.PI*30, d = days==null ? 0 : Math.min(days,90);
-      const off = C*(1-d/90), num = days==null ? "\u2013" : days;
-      return '<button class="pf-streak">'
-        + '<svg class="pf-ring" viewBox="0 0 72 72"><circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="7"/>'
-        + '<circle cx="36" cy="36" r="30" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 36 36)"/>'
-        + '<text x="36" y="44" text-anchor="middle" fill="#fff" font-size="23" font-weight="800">'+num+'</text></svg>'
-        + '<span>'+label+'</span><span class="pf-go">'+(days==null?"Start counter":"Timeline")+' \u203a</span></button>';
+    /* double-circle like the diary Streaks card: big day-count ring + organ-healing satellite */
+    const dbl = function(key, label, organ){
+      const days = streakDays(key), started = ohStartMs(key)!=null;
+      const BC = 2*Math.PI*28, boff = BC*(1-(started?Math.min(days,30)/30:0));
+      const isNic = key==="nicotine";
+      let pct = 0;
+      if(started){
+        const x = ((Date.now()-ohStartMs(key))/36e5)/(isNic?1:24);
+        pct = ohProgress(isNic?OH_LUNGS:OH_LIVER, x);
+      }
+      const SC = 2*Math.PI*15.5, soff = SC*(1-pct/100);
+      const num = started ? days : "\u2013";
+      return '<button class="pf-streak"><span class="pf-dbl">'
+        + '<svg class="pf-bigring" viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="5"/>'
+        + '<circle cx="32" cy="32" r="28" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-dasharray="'+BC.toFixed(1)+'" stroke-dashoffset="'+boff.toFixed(1)+'" transform="rotate(-90 32 32)"/></svg>'
+        + '<span class="pf-bignum"><b>'+num+'</b><span>days</span></span>'
+        + '<span class="pf-sat"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(255,255,255,.30)" stroke-width="4"/>'
+        + '<circle cx="18" cy="18" r="15.5" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+SC.toFixed(1)+'" stroke-dashoffset="'+soff.toFixed(1)+'" transform="rotate(-90 18 18)"/></svg>'
+        + '<span class="pf-satpct">'+Math.round(pct)+'%</span></span></span>'
+        + '<span class="pf-organ">'+organ+'</span>'
+        + '<span>'+label+'</span><span class="pf-go">'+(started?"Timeline":"Start counter")+' \u203a</span></button>';
     };
-    st.innerHTML = ring(nd, "days nicotine-free") + ring(ad, "days alcohol-free");
+    st.innerHTML = dbl("nicotine", "days nicotine-free", "Lungs") + dbl("alcohol", "days alcohol-free", "Liver");
     st.querySelectorAll(".pf-streak").forEach(function(b){ b.onclick = function(){ showView("quit"); }; });
   }
   const cal = document.getElementById("pfCal");
