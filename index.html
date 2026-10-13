@@ -118,6 +118,7 @@ button{font-family:inherit;}
 .logrow .lthumb{width:40px; height:40px; border-radius:12px; overflow:hidden; flex:none; background:var(--card);}
 .logrow .nm{display:flex; flex-direction:column; align-items:flex-start; justify-content:center; flex:1; min-width:0; overflow:hidden; color:#3a3a42;}
 .logrow .nmt{font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;}
+.locpfx{font-weight:800; color:var(--acc);}
 .logrow .nmt .nmsub{color:var(--muted); font-size:11px;}
 .fbadges{display:flex; gap:6px; margin-top:5px;}
 .fb{width:13px; height:13px; border-radius:50%; background:#e4e4ea; flex:none;}
@@ -2069,6 +2070,12 @@ body.reordering #progOverview{display:none}
         <div class="cfrow"><span>Servings <span class="chint">per package</span></span><input id="cPServ" type="number" inputmode="decimal" min="0" placeholder="Optional"></div>
         <div style="padding:2px 0 12px;font-size:12px;color:var(--muted)">A $1 jar with 4 servings counts as $0.25 each — meals and days add it up automatically.</div>
       </div>
+      <div class="cfsec">Location <span style="font-weight:400">(optional)</span></div>
+      <div class="cfcard">
+        <div class="cfrow"><span>From <span class="chint">restaurant or store</span></span><input id="cLoc" placeholder="e.g. The Stand, Costco"></div>
+        <div class="chips" id="cLocChips" style="padding:2px 0 8px"></div>
+        <div style="padding:2px 0 12px;font-size:12px;color:var(--muted)">Shows in bold in front of the food's name wherever you log it. Leave blank for homemade.</div>
+      </div>
       <div id="cFoodNutrSec">
         <div class="cfsec">Nutrition Facts</div>
         <div class="cfcard" id="cFoodNutrBox"></div>
@@ -2394,7 +2401,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.11-n";
+const APP_VERSION = "2026.10.13-a";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2725,6 +2732,10 @@ function allFoods(){ const seen = new Set(FOODS.map(f=>f.n)); return FOODS.conca
 /* Verified foods: Fuel's own built-in database (served from inside the app —
    no barcode scan, no third-party lookup). His own custom foods always win on name matches. */
 function findFood(name){ return allFoods().find(f=>f.n===name) || VERIFIED_FOODS.find(f=>f.n===name); }
+/* Location tag (2026.10.13-a): a food's restaurant/store, shown bold in front of its name.
+   Stored as f.loc on the food; entries snapshot it, old entries resolve it by name. */
+function locPrefixHTML(loc){ return loc ? `<span class="locpfx">${esc(loc)}</span> ` : ""; }
+function entryLoc(e){ if(e && e.loc) return e.loc; const f = e && findFood(e.n); return (f && f.loc) || ""; }
 function isVerifiedFood(name){ return !isCustom(name) && VERIFIED_FOODS.some(f=>f.n===name); }
 /* Entry photos: logged meals don't carry a second copy of the library photo —
    the food library is the source of truth; display resolves it by entry name. */
@@ -3223,7 +3234,7 @@ function renderDiary(){
       const sub = (e.nutrs && e.nutrs.length)
         ? `${esc(eserv)}${eqty>1?` × ${eqty}`:""} · ${e.nutrs.map(x=>`${r1(x.amt)} ${esc(x.u)}`).join(" + ")}`
         : `${eqty} × ${esc(eserv)}`;
-      return `<div class="logrow">${im?`<span class="lthumb"><img src="${im}" alt=""></span>`:""}<span class="nm"><span class="nmt">${esc(e.n)} <span class="nmsub">${sub}</span></span>${foodBadgeHTML(findFood(e.n)||e)}</span><span class="kc">${Math.round(e.cal)}</span><button class="logdel" data-m="${m}" data-id="${e.id}">×</button></div>`;
+      return `<div class="logrow">${im?`<span class="lthumb"><img src="${im}" alt=""></span>`:""}<span class="nm"><span class="nmt">${locPrefixHTML(entryLoc(e))}${esc(e.n)} <span class="nmsub">${sub}</span></span>${foodBadgeHTML(findFood(e.n)||e)}</span><span class="kc">${Math.round(e.cal)}</span><button class="logdel" data-m="${m}" data-id="${e.id}">×</button></div>`;
     }).join("") : "";
     const wrap = document.createElement("div");
     wrap.innerHTML = html;
@@ -4398,7 +4409,7 @@ function sheetRowHtml(f){
     sub = 'last: '+trimNum(ls.q)+' '+esc(ls.u==="serv"?servUnitLabel(f):ls.u)+' · '+Math.round(f.cal*serv)+' kcal';
   }
   return '<div class="arow2" data-n="'+esc(f.n)+'"><span class="athumb">'+thumb+'</span>'+
-    '<div class="anm"><b>'+diy+ver+esc(f.n)+'</b><span>'+sub+'</span></div>'+
+    '<div class="anm"><b>'+diy+ver+locPrefixHTML(f.loc)+esc(f.n)+'</b><span>'+sub+'</span></div>'+
     '<button class="aplus" data-n="'+esc(f.n)+'">+</button></div>';
 }
 /* ============ LOGGING WAVE (2026.09.24-u): go-tos + fill-the-gap ============ */
@@ -4465,7 +4476,7 @@ function paintSheetSmart(q){
   if(gaps.length)
     h += '<div class="flabel" style="margin:12px 0 2px">Fill the gap</div>' + gaps.map(o=>
       '<button class="gaprow" data-n="'+esc(o.f.n)+'"><span class="athumb">'+foodThumb(o.f)+'</span>'+
-      '<span class="gmain"><span class="gn">'+esc(o.f.n)+'</span><span class="gs">'+trimNum(o.serv)+' × '+esc(o.f.s)+' · '+Math.round(o.cal)+' kcal</span></span>'+
+      '<span class="gmain"><span class="gn">'+locPrefixHTML(o.f.loc)+esc(o.f.n)+'</span><span class="gs">'+trimNum(o.serv)+' × '+esc(o.f.s)+' · '+Math.round(o.cal)+' kcal</span></span>'+
       '<span class="gk">+'+r1(o.p)+'g protein<small>tap to adjust</small></span></button>').join("");
   smart.innerHTML = h; smart.style.display = h ? "" : "none";
   smart.querySelectorAll(".arow2").forEach(r=>r.onclick=()=>{ const f=findFood(r.dataset.n); if(f) openDetail(f); });
@@ -4479,7 +4490,7 @@ function renderSheetResults(q0){
   let list = sheetTab==="recent" ? recentFoods()
     : sheetTab==="favorites" ? S.favorites.map(n=>findFood(n)).filter(Boolean) /* by name: resolves custom + verified */
     : (function(){ const seen = new Set(S.customFoods.map(f=>f.n)); return S.customFoods.slice().reverse().concat(FOODS.filter(f=>!seen.has(f.n))); })(); /* All: his foods first, then default foods not already his */
-  if(q) list = list.filter(f => f.n.toLowerCase().includes(q));
+  if(q) list = list.filter(f => f.n.toLowerCase().includes(q) || (f.loc||"").toLowerCase().includes(q)); /* searching a place finds its foods too */
   if(!q && sheetTab==="recent" && !list.length) list = allFoods();
   if(sheetSort==="name") list = list.slice().sort((a,b)=>a.n.localeCompare(b.n));
   /* Verified section: Fuel's own built-in database sits on top while searching —
@@ -4503,7 +4514,7 @@ function renderSheetResults(q0){
 /* one logged entry from a food + serving count; photo resolves by name at display time */
 function buildEntry(f, qty){
   const e = {id:uid(), n:f.n, s:f.s, qty, img:null, /* photo lives on the library food; entryImg() resolves it by name */
-    cal:f.cal*qty, p:f.p*qty, c:f.c*qty, f:f.f*qty,
+    loc:f.loc||null, cal:f.cal*qty, p:f.p*qty, c:f.c*qty, f:f.f*qty,
     kind:f.kind||"food", nutrs:(f.nutrs||[]).map(x=>({n:x.n, amt:x.amt*qty, u:x.u})), xw:!!f.xw};
   if(dayOffset===0) e.t = Date.now(); /* log-time stamp drives tired-model recency; backfills stay untimed */
   return e;
@@ -4667,7 +4678,7 @@ function openDetail(f){
   document.getElementById("sheetSearchWrap").style.display = "none";
   document.getElementById("sheetDetail").style.display = "";
   document.getElementById("sheetTitle").textContent = "Log food";
-  document.getElementById("dName").textContent = f.n;
+  document.getElementById("dName").innerHTML = locPrefixHTML(f.loc) + esc(f.n);
   document.getElementById("dSub").textContent = Math.round(f.cal)+"kcal / "+f.s;
   document.getElementById("dThumb").innerHTML = foodThumb(f);
   const dm = document.getElementById("dMeals"); dm.innerHTML = "";
@@ -4793,7 +4804,7 @@ function renderFoods(){
   const box = document.getElementById("foodResults");
   box.innerHTML = list.slice(0,60).map(f =>
     `<div class="arow2" data-n="${esc(f.n)}"><span class="athumb">${foodThumb(f)}</span>
-     <div class="anm"><b><span class="diy">DIY</span>${esc(f.n)}</b><span>${Math.round(f.cal)}kcal / ${esc(f.s)}</span></div>
+     <div class="anm"><b><span class="diy">DIY</span>${locPrefixHTML(f.loc)}${esc(f.n)}</b><span>${Math.round(f.cal)}kcal / ${esc(f.s)}</span></div>
      <button class="favstar" data-n="${esc(f.n)}">${isFav(f.n)?STAR_ON:STAR_OFF}</button>
      <button class="aplus" data-n="${esc(f.n)}">+</button>
      <button class="nedit" data-n="${esc(f.n)}" aria-label="Edit food"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
@@ -4815,6 +4826,15 @@ function setCPhoto(data){
   if(cPhotoData) prev.src = cPhotoData; else prev.removeAttribute("src");
   document.getElementById("cPhotoBtn").style.display = cPhotoData ? "none" : "";
   document.getElementById("cPhotoDel").style.display = cPhotoData ? "" : "none";
+}
+/* Location quick-picks: locations already used on his foods, most recent first — one tap instead of typing (2026.10.13-a) */
+function paintLocChips(){
+  const box = document.getElementById("cLocChips"); if(!box) return;
+  const seen = [];
+  S.customFoods.slice().reverse().forEach(f=>{ if(f.loc && !seen.includes(f.loc)) seen.push(f.loc); });
+  box.style.display = seen.length ? "" : "none";
+  box.innerHTML = seen.slice(0,8).map(l=>`<button type="button" class="chip" data-loc="${esc(l)}">${esc(l)}</button>`).join("");
+  box.querySelectorAll(".chip").forEach(ch=>ch.onclick=()=>{ document.getElementById("cLoc").value = ch.dataset.loc; });
 }
 let cEditing = null; // name of the custom food being edited (null = creating a new one)
 function editCustomFood(name){
@@ -4840,6 +4860,7 @@ function editCustomFood(name){
   document.getElementById("cCal").value = f.cal || "";
   document.getElementById("cPrice").value = f.pr || "";
   document.getElementById("cPServ").value = f.ps || "";
+  document.getElementById("cLoc").value = f.loc || "";
   if(isSupp){
     document.getElementById("cP").value = f.p || "";
     document.getElementById("cC").value = f.c || "";
@@ -4870,7 +4891,8 @@ function resetCustomForm(){
   cEditing = null;
   document.querySelector("#csheet h2").textContent = "Create Custom Food";
   document.getElementById("cSave").textContent = "Save";
-  ["cName","cServ","cCal","cPrice","cPServ","cP","cC","cF"].forEach(id=>document.getElementById(id).value="");
+  ["cName","cServ","cCal","cPrice","cPServ","cLoc","cP","cC","cF"].forEach(id=>document.getElementById(id).value="");
+  paintLocChips();
   FOOD_LABEL_ROWS.forEach(([id])=>{document.getElementById(id).value="";});
   document.getElementById("cPhotoFile").value = "";
   setCPhoto("");
@@ -4955,10 +4977,12 @@ document.getElementById("cSave").onclick = ()=>{
   const cPr = parseFloat(document.getElementById("cPrice").value)||0;
   let cPs = parseFloat(document.getElementById("cPServ").value)||0;
   if(cPr>0 && !(cPs>0)) cPs = 1; /* price without servings = the food as defined is the whole package */
+  const cLocTxt = document.getElementById("cLoc").value.trim();
   const rec = {n, s:sTxt,
     cal, p, c, f, img:cPhotoData, pr:cPr, ps:cPs,
     kind:isSupp?"supp":"food", unit:isSupp?cUnit:null, nutrs, xw:isSupp && document.getElementById("cXW").checked,
     createdAt: Date.now()}; /* Recent tab shows fresh creations immediately (2026.09.24-x) */
+  if(cLocTxt) rec.loc = cLocTxt; /* restaurant or store; absent = homemade (2026.10.13-a) */
   if(cEditing){
     if(rec.n!==cEditing && S.customFoods.some(x=>x.n===rec.n)){ alert("You already have a food called \""+rec.n+"\"."); return; }
     const ix = S.customFoods.findIndex(x=>x.n===cEditing);
