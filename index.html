@@ -1225,7 +1225,7 @@ body.reordering #progOverview{display:none}
     </div>
   </section>
 
-  <!-- GOALS (compact redesign 2026.10.13-e, Jay's brief: full compact, clean,
+  <!-- GOALS (compact redesign 2026.10.13-f, Jay's brief: full compact, clean,
        the machinery runs in the background. One goal card, one macros card,
        one stats card, one button. The learned estimate's evidence is a single
        line in the goal card — its history/data stay in storage, off the page.) -->
@@ -2341,7 +2341,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.13-e";
+const APP_VERSION = "2026.10.13-f";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6378,7 +6378,7 @@ function readProfile(){
    Called before ANY re-render and on every field change, so a tap can never
    silently wipe an edit the user typed but hadn't saved yet. */
 function commitMacroInputs(){
-  /* 2026.10.13-e: macros are calculated, never typed — the Goals page has no
+  /* 2026.10.13-f: macros are calculated, never typed — the Goals page has no
      macro inputs anymore. Kept as a no-op because commitGoalsInputs() and a
      few legacy callers still call it. */
 }function commitGoalsInputs(){
@@ -6434,17 +6434,19 @@ function avgCompleteIntake(){ const r=completeDayCals(); return r.cals.length?r.
    from an activity multiplier: TDEE = avg daily intake − (weight slope × 3500).
    Gaining weight means intake exceeded TDEE, so the trend subtracts;
    losing means intake fell short, so it adds back.
-   The slope runs on 7-day trend weights (MacroFactor convention) so daily scale
-   noise can't swing it; missing days are never padded with zeros. The result
-   blends toward the formula estimate while data is thin, and weekly moves are
-   capped so one noisy week can't yank the target. */
+   The slope runs on EWMA trend weights over an aligned 21-day window so daily
+   scale noise can't swing it; missing days are never padded with zeros. Below
+   the coverage gates (10+ complete days, 10+ day weigh-in span) the last good
+   value HOLDS with a stale flag — the estimate is never blended with the
+   formula and never capped: one number, computed one way (2026.10.13-b/c). */
 /* ============ SINGLE DERIVATION (2026.10.13-b) ============
    maintenance, surplus and macros are DERIVED state — this is the only function
-   allowed to write them (goal-setting inputs, the slider and the surplus chips,
-   write surplus directly by design; the invariant goal = maintenance + surplus
-   holds because surplus is defined against maintenance here). Exactly one
-   source decides maintenance: the learned value while Adaptive is on and valid,
-   otherwise the formula. Every derivation is stamped with its provenance. */
+   allowed to write them (goal-setting inputs like the mode chips set the mode
+   only — surplus is derived here from maintenance × the mode's %, so the
+   invariant goal = maintenance + surplus always holds). Exactly one source
+   decides maintenance: the learned value whenever the log supports it
+   (adaptive.ok), otherwise the stats formula. Every derivation is stamped
+   with its provenance. */
 function commitGoals(reason, maintOverride){
   const g = S.goals;
   let src;
@@ -6519,7 +6521,7 @@ function applyAdaptive(){
   paintAdaptive(); renderGoals(); renderDiary();
 }
 function paintAdaptive(){
-  /* Background machinery, one line of evidence (2026.10.13-e): the learned
+  /* Background machinery, one line of evidence (2026.10.13-f): the learned
      estimate, its history, and its gates all live in storage and keep
      updating via Calculate & Save + the daily autopilot. The page shows a
      single line inside the goal card: which maintenance is running and the
@@ -6533,12 +6535,14 @@ function paintAdaptive(){
       : "Learning your maintenance — "+(a.days||0)+" of 10 logged days so far. Your stats estimate runs your goal until your log takes over.";
     return;
   }
-  el.textContent = "Maintenance "+a.value.toLocaleString()+" · learned from your log · "+
+  el.textContent = (g.useAdaptive
+    ? "Maintenance "+a.value.toLocaleString()+" · learned from your log · "
+    : "Learned maintenance "+a.value.toLocaleString()+" from your log — tap Calculate & Save to run your goal on it · ") +
     a.avg.toLocaleString()+" avg intake · "+(a.rateWk>=0?"+":"−")+Math.abs(a.rateWk).toFixed(2)+" lb/wk · updated "+a.updated+
     (a.stale?" · holding — log more days to refresh it":"");
 }
 /* The scale is the single source of truth for body weight: every weigh-in updates the
-   profile weight, so Calculate maintenance, BMI, calorie check, and the diary all
+   profile weight, so the goal calculation, BMI, calorie check, and the diary all
    read the same number. The auto-adjust toggle only gates the *recalculation*
    (maintenance + macro re-split) — the weight itself always syncs. */
 function syncWeightFromLog(newLb, dateStr){
@@ -6581,21 +6585,21 @@ function infoContent(k){
     return {t: r.title, b: `<div class="irow">${esc(r.copy)}</div><div class="irow">${r.ev}</div>`};
   }
   if(k==="activity") return {t:"Activity & maintenance", b:
-    `<div class="irow">Maintenance uses the <b>calculator.net</b> method: <b>Mifflin-St Jeor</b> BMR (10×kg + 6.25×cm − 5×age + 5 for men, −161 for women; Katch-McArdle if body fat % is set) × an activity factor: <b>Sedentary 1.2 · Light 1.375 · Moderate 1.465 · Active 1.55 · Very active 1.725 · Extra active 1.9</b>.</div>
+    `<div class="irow">Your stats estimate uses the <b>Ten-Haaf</b> athlete equation (<b>Katch-McArdle</b> when body fat % is entered) from your height, weight, age, and sex, × your activity level. It is a starting estimate — the learned number from your log replaces it once your log has enough data.</div>
      <div class="irow"><b>Sedentary:</b> little or no exercise. <b>Light:</b> exercise 1-3 times/week. <b>Moderate:</b> 4-5 times/week. <b>Active:</b> daily or intense 3-4 times/week. <b>Very active:</b> intense 6-7 times/week. <b>Extra active:</b> very intense daily, or a physical job.</div>
      <div class="irow">The activity factor is the roughest part of the math (±10–15%) — your weigh-ins and the Calorie Check calibrate it.</div>`};
   if(k==="calorie") return {t:"Calorie goal", b:
     `<div class="irow"><b>Lean Bulk (+10% over maintenance):</b> a 2023 trial (Helms) found bigger surpluses add fat, not extra muscle — target 0.25–0.5% body weight/week.</div>
      <div class="irow"><b>Bulk (+15% over maintenance):</b> faster scale gains, but much of the extra is fat — target 0.35–0.7% body weight/week.</div>
      <div class="irow"><b>Maintain (+0%):</b> eat at maintenance to hold your weight steady.</div>
-     <div class="irow">Adjusting the slider changes your surplus on top of maintenance. Surplus presets are % of maintenance — research supports <b>5–20%</b> for lean gains.</div>`};
+     <div class="irow">Your goal mode sets the surplus on top of maintenance — research supports <b>5–20%</b> over maintenance for lean gains.</div>`};
   if(k==="macros") return {t:"Macros", b:
     `<div class="irow"><b>Protein:</b> muscle gains top out near <b>1.6 g/kg/day</b> (Morton 2018 meta-analysis); up to <b>2.2 g/kg</b> (1 g/lb) is the supported ceiling. No per-meal maximum — large protein meals are still used (Trommelen 2023); spread 0.3–0.4 g/kg across 3–5 meals.</div>
-     <div class="irow"><b>Auto:</b> protein 2.2 g/kg of body weight, fat 25% of your calorie goal, carbs fill the rest — re-derived every time your goal changes. Typing a number switches to manual; tap Auto to re-sync.</div>`};
+     <div class="irow"><b>Auto:</b> protein 2.2 g/kg of body weight, fat 25% of your calorie goal, carbs fill the rest — re-derived every time your goal changes.</div>`};
   if(k==="water"){
     const w = waterCalc();
     if(w.unset) return {t:"Water target", b:
-    `<div class="irow"><b>Auto</b> needs your maintenance first — set your profile in Goals › Profile, then tap Calculate & Save.</div>
+    `<div class="irow"><b>Auto</b> needs your maintenance first — set your stats in Nutrition Goals, then tap Calculate & Save.</div>
      <div class="irow">Or type a manual target below and it takes over immediately.</div>`};
     const pk = w.perKcal.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
     return {t:"Water target", b:
@@ -6604,9 +6608,8 @@ function infoContent(k){
      <div class="irow"><b>Creatine:</b> no extra water needed — controlled trials show creatine does <b>not</b> cause dehydration (ISSN, Kreider 2017). The "needs extra water" toggle is for other supplements (e.g. fiber).</div>`};
   }
   if(k==="advanced") return {t:"Advanced", b:
-    `<div class="irow"><b>Auto-adjust as I gain weight:</b> when you log a new weight in Progress, Fuel recalculates maintenance and re-derives your macros (protein 2.2 g/kg, fat 25%, carbs fill the rest) — unless you've switched macros to manual. Turn it off to control everything manually.</div>
-     <div class="irow"><b>Auto-tune maintenance:</b> when 2+ weeks of weigh-ins show your real gain rate missing the target band, Fuel nudges maintenance ±150 kcal — max once per 2 weeks.</div>
-     <div class="irow">The formulas are only ±10% accurate — your weigh-in trend is the calibration instrument.</div>`};
+    `<div class="irow"><b>Always on:</b> new weigh-ins feed the learned engine, and your maintenance + macros re-derive together whenever the number updates — open the app in the morning or tap Calculate & Save and everything is already in sync.</div>
+     <div class="irow">The formulas are only ±10% accurate — your weigh-in trend is the calibration instrument, which is why the learned number takes over once your log supports it.</div>`};
   if(k==="scores") return {t:"Energy & bloat", b: scoreInfoHTML()};
   if(k==="badges") return {t:"Food badges", b:
     `<div class="irow">The three dots under every food name say what the food is good for — a colored dot means yes, gray means no.</div>
@@ -7357,7 +7360,7 @@ document.getElementById("pPhotoFile").onchange = e=>{
 function waterBreakdown(){
   const w = waterCalc();
   if(w.manual) return "Manual target of "+(w.target*8)+" oz ("+w.target+" glasses). Switch to Auto for the research-based formula.";
-  if(w.unset) return "Auto needs your maintenance first — set your profile in Goals › Profile, then tap Calculate & Save.";
+  if(w.unset) return "Auto needs your maintenance first — set your stats in Nutrition Goals, then tap Calculate & Save.";
   return "Auto: "+(w.target*8)+" oz ("+w.target+" glasses) from "+Math.round(w.tdee).toLocaleString()+" kcal maintenance × "+w.tier+" activity (1.0–1.2 mL/kcal, IOM 2004)"+(w.xw?" — +16 oz for a supplement you flagged 'needs extra water'.":" — creatine needs no extra water (ISSN 2017).")+".";
 }
 function paintWater(){
@@ -7394,7 +7397,7 @@ function renderGoals(){
   const nc = Object.keys(g.nutrTargets||{}).length;
   document.getElementById("microSub").textContent = nc ? nc+" custom · rest FDA defaults" : "FDA defaults — tap to customize";
 }
-/* Macro split: read-only analysis (2026.10.13-e). Percentages are % of the daily
+/* Macro split: read-only analysis (2026.10.13-f). Percentages are % of the daily
    calorie goal, uncapped — if the numbers go past 100% that's the truth. */
 function updateMacroSplit(){
   const g = S.goals, tot = goalTotal();
@@ -7466,7 +7469,7 @@ document.getElementById("microRow").onclick = ()=>{
 };
 document.getElementById("goalsDone").onclick = ()=>{
   commitGoalsInputs();
-  /* THE one calculation (2026.10.13-e): refresh the learned estimate, then let
+  /* THE one calculation (2026.10.13-f): refresh the learned estimate, then let
      the data pick the source — learned when his log supports it, the stats
      formula until it does. Macros are always calculated. One button. */
   refreshAdaptive();
@@ -8307,7 +8310,7 @@ function autoPilot(){
        commitGoals() is the only writer of maintenance/surplus/macros. */
     changed = refreshAdaptive();
     if(g.adaptive && g.adaptive.ok){
-      /* 2026.10.13-e: no toggle anymore — the log takes over automatically once
+      /* 2026.10.13-f: no toggle anymore — the log takes over automatically once
          it can support the number ("based off small amounts of data and over
          time it will get better" — Jay's brief). The switch from formula to
          learned is itself a change worth applying + logging. */
