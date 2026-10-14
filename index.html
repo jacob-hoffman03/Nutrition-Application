@@ -1225,12 +1225,10 @@ body.reordering #progOverview{display:none}
     </div>
   </section>
 
-  <!-- GOALS (redesigned 2026.10.13-d, Jay's brief: "take my data and calculate
-       just what I need to eat — macros and calories, that's it." One button:
-       Calculate & Save. The engine picks its own source: learned from his log
-       when the data supports it, his stats formula until it does, and it
-       sharpens itself over time via the daily autopilot. No toggles, no
-       slider, no manual macro editing on this page.) -->
+  <!-- GOALS (compact redesign 2026.10.13-e, Jay's brief: full compact, clean,
+       the machinery runs in the background. One goal card, one macros card,
+       one stats card, one button. The learned estimate's evidence is a single
+       line in the goal card — its history/data stay in storage, off the page.) -->
   <section class="view" id="view-goals">
     <div class="topbar">
       <button class="tbtn" id="goalsBack" aria-label="Back">‹</button>
@@ -1242,26 +1240,26 @@ body.reordering #progOverview{display:none}
       <div class="gnum"><span id="goalTotal">3000</span> <small>kcal</small></div>
       <div class="gsub" id="goalSub"></div>
       <div class="gsub" id="gainProj" style="font-weight:700"></div>
-    </div>
-    <div class="card">
-      <div class="flabel" style="margin:0 0 10px">Goal</div>
-      <div class="chips" id="goalMode">
-        <button class="chip" data-m="lean" data-pct="10">Lean Bulk</button>
-        <button class="chip" data-m="bulk" data-pct="15">Bulk</button>
-        <button class="chip" data-m="maintain" data-pct="0">Maintain</button>
+      <div class="gsub" id="goalSrc" style="margin-top:6px"></div>
+      <div style="border-top:1px solid var(--line); margin-top:14px; padding-top:12px">
+        <div class="flabel" style="margin:0 0 10px">Goal</div>
+        <div class="chips" id="goalMode">
+          <button class="chip" data-m="lean" data-pct="10">Lean Bulk</button>
+          <button class="chip" data-m="bulk" data-pct="15">Bulk</button>
+          <button class="chip" data-m="maintain" data-pct="0">Maintain</button>
+        </div>
       </div>
     </div>
     <div class="secttl">Macros</div>
-    <div class="macro3">
-      <div class="m3 c"><div class="mn">Carbs</div><div class="mp" id="gmCp">–</div><div class="mg"><b id="gmCg">–</b> g</div><div class="mk" id="gmCk"></div></div>
-      <div class="m3 p"><div class="mn">Protein</div><div class="mp" id="gmPp">–</div><div class="mg"><b id="gmPg">–</b> g</div><div class="mk" id="gmPk"></div></div>
-      <div class="m3 f"><div class="mn">Fat</div><div class="mp" id="gmFp">–</div><div class="mg"><b id="gmFg">–</b> g</div><div class="mk" id="gmFk"></div></div>
+    <div class="card">
+      <div class="macro3" style="margin:0">
+        <div class="m3 c"><div class="mn">Carbs</div><div class="mp" id="gmCp">–</div><div class="mg"><b id="gmCg">–</b> g</div><div class="mk" id="gmCk"></div></div>
+        <div class="m3 p"><div class="mn">Protein</div><div class="mp" id="gmPp">–</div><div class="mg"><b id="gmPg">–</b> g</div><div class="mk" id="gmPk"></div></div>
+        <div class="m3 f"><div class="mn">Fat</div><div class="mp" id="gmFp">–</div><div class="mg"><b id="gmFg">–</b> g</div><div class="mk" id="gmFk"></div></div>
+      </div>
+      <div class="segbar" style="margin:12px 0 0"><i id="segC" style="background:#7e7ef2"></i><i id="segP" style="background:#12cfae"></i><i id="segF" style="background:#fb6f84"></i></div>
+      <div class="cfrow" style="margin-top:10px; border-top:1px solid var(--line); padding-top:10px"><span><b>Fiber</b> <span class="ph">auto · 14 g per 1,000 kcal</span></span><b id="gmFip">–</b></div>
     </div>
-    <div class="segbar"><i id="segC" style="background:#7e7ef2"></i><i id="segP" style="background:#12cfae"></i><i id="segF" style="background:#fb6f84"></i></div>
-    <div class="card" style="margin:12px 0">
-      <div class="cfrow"><span><b>Fiber</b> <span class="ph">auto · 14 g per 1,000 kcal (FDA / IOM)</span></span><b id="gmFip">–</b></div>
-    </div>
-    <div class="rangenote" id="macroAutoNote" style="margin:2px 0 10px"></div>
     <div class="rangenote" id="macroAnalysis"></div>
     <div class="secttl">Your stats</div>
     <div class="card">
@@ -1283,16 +1281,8 @@ body.reordering #progOverview{display:none}
         <button class="chip" data-k="very" title="Very Active: intense exercise 6-7 times/week">Very active</button>
         <button class="chip" data-k="extra" title="Extra Active: very intense exercise daily, or physical job">Extra active</button>
       </div>
+      <div class="rangenote" id="pfNote" style="margin-top:10px"></div>
     </div>
-    <div class="rangenote" id="pfNote"></div>
-    <div class="secttl">Where the number comes from</div>
-    <div class="card goalbig">
-      <div class="glabel">Maintenance</div>
-      <div class="gnum"><span id="adVal">–</span> <small>kcal</small></div>
-      <div class="gsub" id="adSub"></div>
-      <svg id="adChart" viewBox="0 0 300 84" style="width:100%;height:84px;margin-top:8px;display:none" role="img" aria-label="Learned maintenance history"></svg>
-    </div>
-    <div class="rangenote" id="adNote"></div>
 <div class="gsec" id="gsecWater">
       <div class="ghead"><span>Water</span><b class="gval" id="waterHeadVal"></b><span class="gchev">›</span></div>
       <div class="gbody">
@@ -2351,7 +2341,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.13-d";
+const APP_VERSION = "2026.10.13-e";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6348,10 +6338,10 @@ function paintGainProj(){
 }
 function paintMaintNote(){
   const p = S.goals.profile;
-  if(!(p.weightLb>0)){ document.getElementById("pfNote").textContent = "Enter your stats above, then tap Calculate & Save — your calorie goal builds from it."; return; }
+  if(!(p.weightLb>0)){ document.getElementById("pfNote").textContent = "Enter your stats, then tap Calculate & Save."; return; }
   const cm = calcMaintenance();
   const sexNote = p.sex==="" ? " (sex not set — assuming male; set it above for an exact number)" : "";
-  document.getElementById("pfNote").textContent = cm.formula+sexNote+": BMR "+cm.bmr.toLocaleString()+" (just living) × "+actPAL(p)+" activity = "+cm.maint.toLocaleString()+" kcal maintenance. Formulas run ±10%; the activity factor is the roughest part — weigh-ins calibrate it.";
+  document.getElementById("pfNote").textContent = "Stats estimate: "+cm.maint.toLocaleString()+" kcal ("+cm.formula+")"+sexNote+" — stands in until your log takes over.";
 }
 function readProfile(){
   const p = S.goals.profile, met = p.units==="met";
@@ -6388,7 +6378,7 @@ function readProfile(){
    Called before ANY re-render and on every field change, so a tap can never
    silently wipe an edit the user typed but hadn't saved yet. */
 function commitMacroInputs(){
-  /* 2026.10.13-d: macros are calculated, never typed — the Goals page has no
+  /* 2026.10.13-e: macros are calculated, never typed — the Goals page has no
      macro inputs anymore. Kept as a no-op because commitGoalsInputs() and a
      few legacy callers still call it. */
 }function commitGoalsInputs(){
@@ -6529,38 +6519,23 @@ function applyAdaptive(){
   paintAdaptive(); renderGoals(); renderDiary();
 }
 function paintAdaptive(){
-  /* Readout only (2026.10.13-d): what maintenance the engine believes, and the
-     evidence under it. No controls here — Calculate & Save and the daily
-     autopilot keep it current. */
-  const g=S.goals, a=g.adaptive, $=id=>document.getElementById(id);
-  const chart=$("adChart");
-  const learnNote = "How it works: your maintenance is learned from what you actually ate vs your weight trend over the last 3 weeks — TDEE = avg intake − (weight change × 3,500 kcal/lb). It needs 10+ complete logged days and weigh-ins spread across 10+ days; until your log supports it, your stats formula stands in. The more you log, the sharper it gets.";
-  if(!a){
-    $("adVal").textContent="–"; $("adSub").textContent="Not calculated yet — tap Calculate & Save.";
-    chart.style.display="none"; $("adNote").textContent=learnNote; return;
-  }
+  /* Background machinery, one line of evidence (2026.10.13-e): the learned
+     estimate, its history, and its gates all live in storage and keep
+     updating via Calculate & Save + the daily autopilot. The page shows a
+     single line inside the goal card: which maintenance is running and the
+     evidence under it. */
+  const g=S.goals, a=g.adaptive, el=document.getElementById("goalSrc");
+  if(!el) return;
+  if(!a){ el.textContent="Maintenance not calculated yet — tap Calculate & Save."; return; }
   if(!a.ok){
-    $("adVal").textContent="–";
-    $("adSub").textContent = a.reason==="profile"
-      ? "Add your stats above first."
-      : "Learning — "+(a.days||0)+" of 10 logged days so far. Your stats estimate is running your goal until your log takes over.";
-    chart.style.display="none"; $("adNote").textContent=learnNote; return;
+    el.textContent = a.reason==="profile"
+      ? "Maintenance comes from your stats for now — add them below."
+      : "Learning your maintenance — "+(a.days||0)+" of 10 logged days so far. Your stats estimate runs your goal until your log takes over.";
+    return;
   }
-  $("adVal").textContent=a.value.toLocaleString();
-  $("adSub").textContent=(g.useAdaptive?"Running your goal now":"Learned from your log")+" · updated "+a.updated+" · "+a.days+" logged days"+(a.partial?" · "+a.partial+" partial skipped":"")+(a.stale?" · holding — log more days to refresh it":"");
-  const hist=(g.adaptiveHist||[]).slice(-8);
-  if(hist.length>=2){
-    const W=300,H=84,P=10, vs=hist.map(h=>h.v), mn=Math.min.apply(null,vs), mx=Math.max.apply(null,vs), rg=Math.max(1,mx-mn);
-    const X=k=>P+k*(W-2*P)/Math.max(1,hist.length-1), Y=v=>H-P-(v-mn)/rg*(H-2*P);
-    let str='<polyline fill="none" stroke="var(--acc,#5b5bf0)" stroke-width="2.5" stroke-linecap="round" points="'+
-      hist.map((h,k)=>X(k).toFixed(1)+","+Y(h.v).toFixed(1)).join(" ")+'"/>';
-    str+='<circle cx="'+X(hist.length-1).toFixed(1)+'" cy="'+Y(vs[vs.length-1]).toFixed(1)+'" r="4.5" fill="var(--acc,#5b5bf0)"/>';
-    str+='<text x="'+P+'" y="'+(P+4)+'" font-size="10" fill="#999">'+mx.toLocaleString()+'</text>';
-    str+='<text x="'+P+'" y="'+(H-2)+'" font-size="10" fill="#999">'+mn.toLocaleString()+'</text>';
-    chart.innerHTML=str; chart.style.display="";
-  } else chart.style.display="none";
-  $("adNote").textContent="Learned "+a.learned.toLocaleString()+" kcal from "+a.avg.toLocaleString()+" kcal/day avg intake and a "+
-    (a.rateWk>=0?"+":"−")+Math.abs(a.rateWk).toFixed(2)+" lb/wk trend over the last 3 weeks.";
+  el.textContent = "Maintenance "+a.value.toLocaleString()+" · learned from your log · "+
+    a.avg.toLocaleString()+" avg intake · "+(a.rateWk>=0?"+":"−")+Math.abs(a.rateWk).toFixed(2)+" lb/wk · updated "+a.updated+
+    (a.stale?" · holding — log more days to refresh it":"");
 }
 /* The scale is the single source of truth for body weight: every weigh-in updates the
    profile weight, so Calculate maintenance, BMI, calorie check, and the diary all
@@ -7407,9 +7382,7 @@ document.getElementById("waterCustom").addEventListener("change", e=>{
 function renderGoals(){
   const g = S.goals, tot = goalTotal();
   document.getElementById("goalTotal").textContent = Math.round(tot).toLocaleString();
-  /* one number, and where it came from — printed right under it */
-  const srcTxt = g.derived ? (g.derived.src==="learned" ? " · from your log" : g.derived.src==="auto-tune" ? " · auto-tuned" : " · from your stats") : "";
-  document.getElementById("goalSub").textContent = Math.round(g.maintenance).toLocaleString()+" maintenance + "+Math.round(g.surplus>0?g.surplus:0).toLocaleString()+" surplus"+srcTxt;
+  document.getElementById("goalSub").textContent = Math.round(g.maintenance).toLocaleString()+" maintenance + "+Math.round(g.surplus>0?g.surplus:0).toLocaleString()+" surplus";
   document.getElementById("gmCg").textContent = Math.round(g.carbs||0).toLocaleString();
   document.getElementById("gmPg").textContent = Math.round(g.protein||0).toLocaleString();
   document.getElementById("gmFg").textContent = Math.round(g.fat||0).toLocaleString();
@@ -7421,13 +7394,10 @@ function renderGoals(){
   const nc = Object.keys(g.nutrTargets||{}).length;
   document.getElementById("microSub").textContent = nc ? nc+" custom · rest FDA defaults" : "FDA defaults — tap to customize";
 }
-/* Macro split: read-only analysis (2026.10.13-d). Percentages are % of the daily
+/* Macro split: read-only analysis (2026.10.13-e). Percentages are % of the daily
    calorie goal, uncapped — if the numbers go past 100% that's the truth. */
 function updateMacroSplit(){
   const g = S.goals, tot = goalTotal();
-  document.getElementById("macroAutoNote").textContent = tot>0
-    ? "Calculated from your goal — protein 2.2 g/kg, fat 25%, carbs fill the rest."
-    : "Tap Calculate & Save and your macros fill in from your stats and log.";
   const c = Math.max(0, g.carbs||0), p = Math.max(0, g.protein||0), f = Math.max(0, g.fat||0);
   const cc = c*4, pc = p*4, fc = f*9, sum = cc+pc+fc;
   const pg = v => tot>0 ? Math.round(v/tot*100)+"%" : "–";
@@ -7496,7 +7466,7 @@ document.getElementById("microRow").onclick = ()=>{
 };
 document.getElementById("goalsDone").onclick = ()=>{
   commitGoalsInputs();
-  /* THE one calculation (2026.10.13-d): refresh the learned estimate, then let
+  /* THE one calculation (2026.10.13-e): refresh the learned estimate, then let
      the data pick the source — learned when his log supports it, the stats
      formula until it does. Macros are always calculated. One button. */
   refreshAdaptive();
@@ -8337,7 +8307,7 @@ function autoPilot(){
        commitGoals() is the only writer of maintenance/surplus/macros. */
     changed = refreshAdaptive();
     if(g.adaptive && g.adaptive.ok){
-      /* 2026.10.13-d: no toggle anymore — the log takes over automatically once
+      /* 2026.10.13-e: no toggle anymore — the log takes over automatically once
          it can support the number ("based off small amounts of data and over
          time it will get better" — Jay's brief). The switch from formula to
          learned is itself a change worth applying + logging. */
