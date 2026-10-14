@@ -1063,6 +1063,18 @@ body.reordering #progOverview{display:none}
 .pf-toggle-btn{display:inline-flex;align-items:center;gap:4px;background:none;border:none;color:var(--acc);font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 0;}
 .pf-edit-form{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
 .pf-edit-form.open{display:block;}
+
+/* Profile goals hero (2026.10.13-i): the data center — one colorful panel on
+   top of Profile, painted only from S.goals (never the formula). */
+.pfhero{display:block;width:100%;text-align:left;border:none;cursor:pointer;font-family:inherit;color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc-deep));border-radius:var(--radius);padding:16px;margin:0 0 12px}
+.pfhero-lbl{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.pfhero-chev{float:right;font-size:22px;line-height:1;opacity:.8}
+.pfhero-num{display:block;font-size:34px;font-weight:900;letter-spacing:-.02em;margin-top:2px}
+.pfhero-num span{font-size:15px;font-weight:700;opacity:.85}
+.pfhero-sub{display:block;font-size:12.5px;opacity:.92;margin-top:2px}
+.pfhero-macros{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.pfhero-m{background:rgba(255,255,255,.16);padding:5px 10px;border-radius:7px;font-size:12.5px}
+.pfhero-m b{font-size:13px}
 </style>
 </head>
 <body>
@@ -1241,7 +1253,7 @@ body.reordering #progOverview{display:none}
     </div>
   </section>
 
-  <!-- GOALS (compact redesign 2026.10.13-h, Jay's brief: full compact, clean,
+  <!-- GOALS (compact redesign 2026.10.13-i, Jay's brief: full compact, clean,
        the machinery runs in the background. One goal card, one macros card,
        one stats card, one button. The learned estimate's evidence is a single
        line in the goal card — its history/data stay in storage, off the page.) -->
@@ -1525,96 +1537,36 @@ body.reordering #progOverview{display:none}
       </div>
       <button class="pf-reorder" id="profReorderBtn" aria-label="Rearrange panels"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/><path d="m17 4 3 3-3 3"/></svg></button>
     </div>
+    <button class="pfhero" id="pfGoalsHero">
+      <span class="pfhero-chev">›</span>
+      <span class="pfhero-lbl">Daily goal · <span id="pfHeroMode">—</span></span>
+      <span class="pfhero-num"><b id="pfHeroGoal">—</b><span> kcal</span></span>
+      <span class="pfhero-sub" id="pfHeroSub">—</span>
+      <span class="pfhero-macros">
+        <span class="pfhero-m"><b id="pfHeroP">—</b> protein</span>
+        <span class="pfhero-m"><b id="pfHeroC">—</b> carbs</span>
+        <span class="pfhero-m"><b id="pfHeroF">—</b> fat</span>
+      </span>
+    </button>
+    <div class="card slim" style="margin-top:6px;margin-bottom:12px">
+      <button class="srow" id="settingsRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Settings</span><span class="sval"><span class="chev2">›</span></span></button>
+    </div>
     <div id="profPanels">
-      <!-- ATHLETE BLUEPRINT (Modern, Simplistic & Colorful) -->
-      <div class="punit" data-pid="stats">
-        <div class="card pf-card">
-          <div class="cardttl">
-            <span class="sicon sm" style="background:var(--acc-soft);color:var(--acc);">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 20V10M12 20V4M6 20v-6"/>
-              </svg>
-            </span>
-            <b>Athlete Blueprint</b>
-            <button class="ginfo" id="athleteInfo" aria-label="Athlete calculation info">i</button>
-            <button class="pf-toggle-btn" id="pfEditToggle" style="margin-left:auto;">Edit Stats ›</button>
-          </div>
-
-          <!-- Highlight Target & Maintenance -->
-          <div class="ap-hero">
-            <div class="ap-hero-left">
-              <span class="ap-label">Daily Target</span>
-              <div class="ap-target-wrap">
-                <b class="ap-target-num" id="apTargetVal">3,134</b>
-                <span class="ap-target-unit">kcal</span>
-              </div>
-              <div class="ap-target-sub" id="apMaintSub">Maint: 2,849 kcal · +10% surplus</div>
-            </div>
-            <div class="ap-hero-right">
-              <span class="pill" id="apModePill" style="font-size:11px;font-weight:800;">Lean Bulk</span>
-              <div class="ap-body-pill" id="apBodyPill">122.2 lb</div>
-            </div>
-          </div>
-
-          <!-- Colorful Macro Strip -->
-          <div class="ap-macro-strip">
-            <div class="ap-macro-chip ap-chip-pro">
-              <span class="ap-dot" style="background:var(--pro)"></span>
-              <div class="ap-chip-tx">
-                <b id="apPVal">150g</b>
-                <span>Protein</span>
-              </div>
-            </div>
-            <div class="ap-macro-chip ap-chip-carb">
-              <span class="ap-dot" style="background:var(--carb)"></span>
-              <div class="ap-chip-tx">
-                <b id="apCVal">386g</b>
-                <span>Carbs</span>
-              </div>
-            </div>
-            <div class="ap-macro-chip ap-chip-fat">
-              <span class="ap-dot" style="background:var(--fat)"></span>
-              <div class="ap-chip-tx">
-                <b id="apFVal">88g</b>
-                <span>Fat</span>
-              </div>
-            </div>
-            <div class="ap-macro-chip ap-chip-water">
-              <span class="ap-dot" style="background:#5aa2ff"></span>
-              <div class="ap-chip-tx">
-                <b id="apWVal">110 oz</b>
-                <span>Water</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Key Physical Metrics Strip -->
-          <div class="ap-stats-row">
-            <div class="ap-stat-item"><span class="ap-s-lbl">Weight</span><b id="apWeightVal">122.2 lb</b></div>
-            <div class="ap-stat-item"><span class="ap-s-lbl">Height</span><b id="apHeightVal">5'10"</b></div>
-            <div class="ap-stat-item"><span class="ap-s-lbl">Body Fat</span><b id="apBfVal">~6%</b></div>
-            <div class="ap-stat-item"><span class="ap-s-lbl">BMI</span><b id="apBmiVal">17.5</b></div>
-          </div>
-
-          <!-- Collapsible Quick Edit Form -->
-          <div class="pf-edit-form" id="pfEditForm">
-            <div class="flabel" style="margin-bottom:8px">Quick Edit Physical Inputs</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <div><span class="subhead" style="margin:0 0 4px;display:block">Weight</span><input id="pfQuickW" type="number" step="0.1" placeholder="lb" style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:6px;font:inherit;"></div>
-              <div><span class="subhead" style="margin:0 0 4px;display:block">Age</span><input id="pfQuickAge" type="number" placeholder="yrs" style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:6px;font:inherit;"></div>
-              <div><span class="subhead" style="margin:0 0 4px;display:block">Height (in)</span><input id="pfQuickH" type="number" placeholder="inches" style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:6px;font:inherit;"></div>
-              <div><span class="subhead" style="margin:0 0 4px;display:block">Body Fat %</span><input id="pfQuickBf" type="number" step="0.1" placeholder="%" style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:6px;font:inherit;"></div>
-              <div><span class="subhead" style="margin:0 0 4px;display:block">Waist (in)</span><input id="pfQuickWaist" type="number" step="0.1" placeholder="inches" style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:6px;font:inherit;"></div>
-              <div style="display:flex;align-items:flex-end;"><button class="bigbtn" id="pfQuickSave" style="padding:10px;font-size:13px;margin:0;">Update Stats</button></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div class="punit" data-pid="streaks"><div class="pf-streaks" id="pfStreaks"></div></div>
       <div class="punit" data-pid="cal" style="display:none"><div class="card progcard pf-cal" id="pfCal"></div></div>
       <div class="punit" data-pid="metrics" style="display:none"><div class="pf-metrics" id="pfMetrics"></div></div>
-      <div class="punit" data-pid="settings"><div id="profSettings">
+
+    </div>
+    <div id="profReorder" hidden></div>
+  </section>
+
+  <section class="view" id="view-settings">
+    <div class="topbar">
+      <button class="tbtn" id="settingsBack" aria-label="Back">‹</button>
+      <h1>Settings</h1>
+      <div style="width:44px"></div>
+    </div>
+<div id="profSettings">
     <div class="slabel">Personalize</div>
     <div class="card" style="margin-top:6px">
       <div class="pmeta" style="margin-bottom:2px"><input class="sname" id="sName" placeholder="Your name" autocomplete="off"></div>
@@ -1629,11 +1581,6 @@ body.reordering #progOverview{display:none}
     <div class="card slim" style="margin-top:6px;">
       <button class="srow" id="schedRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/><path d="M3.5 12.5h17"/></svg></span>Work schedule</span><span class="sval"><b id="schedRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
     </div>
-    <div class="slabel">Targets</div>
-    <div class="card slim" style="margin-top:6px;">
-      <button class="srow" id="goalRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></span>Goals</span><span class="sval"><b id="goalRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
-      <button class="srow" id="waterRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3.5c3.2 4.3 5.8 7.7 5.8 10.7a5.8 5.8 0 1 1-11.6 0C6.2 11.2 8.8 7.8 12 3.5z"/></svg></span>Water</span><span class="sval"><b id="waterRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
-    </div>
     <div class="slabel">Data</div>
     <div class="card slim" style="margin-top:6px;">
       <button class="srow" id="exportBtn"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10.5"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4.5 20h15"/></svg></span>Export data</span><span class="chev2">›</span></button>
@@ -1647,9 +1594,7 @@ body.reordering #progOverview{display:none}
     <div class="slabel">About</div>
     <div class="privline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 1 1 7 0v2.5"/></svg>Private to this phone · nothing leaves your device</div>
     <div class="ver" id="appVer"></div>
-  </div></div>
-    </div>
-    <div id="profReorder" hidden></div>
+  </div>
   </section>
 
   <section class="view" id="view-medals">
@@ -2358,7 +2303,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.13-h";
+const APP_VERSION = "2026.10.13-i";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4447,7 +4392,7 @@ function renderSheetResults(q0){
   paintSheetSmart(q);
   let list = sheetTab==="recent" ? recentFoods()
     : sheetTab==="favorites" ? S.favorites.map(n=>findFood(n)).filter(Boolean) /* by name: resolves custom + verified */
-    : sheetTab==="supps" ? allFoods().filter(f=>f.kind==="supp") /* his whole stack, defaults + custom — never buried in All (2026.10.13-h) */
+    : sheetTab==="supps" ? allFoods().filter(f=>f.kind==="supp") /* his whole stack, defaults + custom — never buried in All (2026.10.13-i) */
     : (function(){ const seen = new Set(S.customFoods.map(f=>f.n)); return S.customFoods.slice().reverse().concat(FOODS.filter(f=>!seen.has(f.n))); })(); /* All: his foods first, then default foods not already his */
   if(q) list = list.filter(f => f.n.toLowerCase().includes(q) || (f.loc||"").toLowerCase().includes(q)); /* searching a place finds its foods too */
   if(!q && sheetTab==="recent" && !list.length) list = allFoods();
@@ -4756,7 +4701,7 @@ function delCustomFood(name){
   const fi = S.favorites.indexOf(name); if(fi>=0) S.favorites.splice(fi,1);
   save(); renderFoods();
 }
-/* Foods page (2026.10.13-h): Supplements get their own card so the daily stack
+/* Foods page (2026.10.13-i): Supplements get their own card so the daily stack
    is never buried in the food list, and the list actually sorts — Recent,
    Most logged (counted from his diary, no new tracking), A–Z, per-serving
    Protein/Carbs/Fat/Calories, and protein density. The star chip filters to
@@ -6453,7 +6398,7 @@ function readProfile(){
    Called before ANY re-render and on every field change, so a tap can never
    silently wipe an edit the user typed but hadn't saved yet. */
 function commitMacroInputs(){
-  /* 2026.10.13-h: macros are calculated, never typed — the Goals page has no
+  /* 2026.10.13-i: macros are calculated, never typed — the Goals page has no
      macro inputs anymore. Kept as a no-op because commitGoalsInputs() and a
      few legacy callers still call it. */
 }function commitGoalsInputs(){
@@ -6596,7 +6541,7 @@ function applyAdaptive(){
   paintAdaptive(); renderGoals(); renderDiary();
 }
 function paintAdaptive(){
-  /* Background machinery, one line of evidence (2026.10.13-h): the learned
+  /* Background machinery, one line of evidence (2026.10.13-i): the learned
      estimate, its history, and its gates all live in storage and keep
      updating via Calculate & Save + the daily autopilot. The page shows a
      single line inside the goal card: which maintenance is running and the
@@ -7472,7 +7417,7 @@ function renderGoals(){
   const nc = Object.keys(g.nutrTargets||{}).length;
   document.getElementById("microSub").textContent = nc ? nc+" custom · rest FDA defaults" : "FDA defaults — tap to customize";
 }
-/* Macro split: read-only analysis (2026.10.13-h). Percentages are % of the daily
+/* Macro split: read-only analysis (2026.10.13-i). Percentages are % of the daily
    calorie goal, uncapped — if the numbers go past 100% that's the truth. */
 function updateMacroSplit(){
   const g = S.goals, tot = goalTotal();
@@ -7544,7 +7489,7 @@ document.getElementById("microRow").onclick = ()=>{
 };
 document.getElementById("goalsDone").onclick = ()=>{
   commitGoalsInputs();
-  /* THE one calculation (2026.10.13-h): refresh the learned estimate, then let
+  /* THE one calculation (2026.10.13-i): refresh the learned estimate, then let
      the data pick the source — learned when his log supports it, the stats
      formula until it does. Macros are always calculated. One button. */
   refreshAdaptive();
@@ -7566,8 +7511,20 @@ document.getElementById("goalsBack").onclick = ()=>{ commitGoalsInputs(); save()
 function renderSettings(){
   const g = S.goals;
   renderProfileCard();
-  document.getElementById("goalRowVal").textContent = Math.round(goalTotal()).toLocaleString()+" kcal";
-  document.getElementById("waterRowVal").textContent = g.water>0 ? (g.water*8)+" oz" : (waterTarget()>0 ? "Auto ("+(waterTarget()*8)+" oz)" : "Auto (set maintenance first)");
+  /* Profile hero (2026.10.13-i): painted from S.goals — the same stored
+     maintenance/surplus/macros the Goals page runs on. Never the formula. */
+  const hg = document.getElementById("pfHeroGoal");
+  if(hg){
+    hg.textContent = Math.round(goalTotal()).toLocaleString();
+    const md = document.getElementById("pfHeroMode"); if(md) md.textContent = ({lean:"Lean Bulk", bulk:"Bulk", maintain:"Maintain", custom:"Custom"})[g.mode] || ""; /* local map: renderSettings runs at boot, before MODE_LABEL's script */
+    const hs = document.getElementById("pfHeroSub");
+    if(hs) hs.textContent = g.maintenance > 0
+      ? Math.round(g.maintenance).toLocaleString() + " maintenance + " + Math.round(g.surplus).toLocaleString() + " surplus"
+      : "Tap to set up your goals";
+    const hp = document.getElementById("pfHeroP"); if(hp) hp.textContent = (g.protein || 0) + "g";
+    const hc = document.getElementById("pfHeroC"); if(hc) hc.textContent = (g.carbs || 0) + "g";
+    const hf = document.getElementById("pfHeroF"); if(hf) hf.textContent = (g.fat || 0) + "g";
+  }
   document.getElementById("appVer").textContent = "Fuel " + APP_VERSION;
     const mrv=document.getElementById("medalCaseRowVal"); if(mrv) mrv.textContent=Object.keys(medalCase()).length+"/"+MDEF.length;
   const swv=document.getElementById("schedRowVal"); if(swv) swv.textContent=workDaysSummary();
@@ -7581,8 +7538,9 @@ document.getElementById("medalCaseRow").onclick = ()=>showView("medals");
 document.getElementById("medalsBack").onclick = ()=>showView(viewReturn);
 document.getElementById("snapRow").onclick = ()=>showView("snaps");
 document.getElementById("snapsBack").onclick = ()=>showView(viewReturn);
-document.getElementById("goalRow").onclick = ()=>{ renderGoals(); showView("goals"); };
-document.getElementById("waterRow").onclick = ()=>{ renderGoals(); showView("goals"); openGsec("Water"); };
+document.getElementById("pfGoalsHero").onclick = ()=>{ renderGoals(); showView("goals"); };
+document.getElementById("settingsRow").onclick = ()=>showView("settings");
+document.getElementById("settingsBack").onclick = ()=>showView("profile");
 document.getElementById("exportBtn").onclick = ()=>{
   const blob = new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
   const a = document.createElement("a"); a.href=URL.createObjectURL(blob);
@@ -7649,7 +7607,7 @@ document.getElementById("wipeBtn").onclick = ()=>{
 let curView = "diary";
 let viewReturn = "diary"; /* 2026.10.11-d: subview backs return to the tab you came from */
 const MAIN_TABS = ["diary","progress","foods","profile"];
-const SUB_VIEWS = ["quit","medals","info","goals","snaps","worksched","analysis","calendar"];
+const SUB_VIEWS = ["quit","medals","info","goals","snaps","worksched","analysis","calendar","settings"];
 /* 2026.09.22-o: body no longer scrolls — the active .view owns the scroll, so
    scroll helpers target it instead of window. */
 function activeViewEl(){ return document.querySelector(".view.active"); }
@@ -7662,9 +7620,10 @@ function showView(v){
   curView = v;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active", x.id==="view-"+v));
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",
-    t.dataset.v===v || ((v==="analysis"||v==="calendar"||v==="goals"||v==="medals"||v==="snaps"||v==="worksched"||v==="quit"||v==="info")&&t.dataset.v==="diary")));
+    t.dataset.v===v || ((v==="analysis"||v==="calendar"||v==="goals"||v==="medals"||v==="snaps"||v==="worksched"||v==="quit"||v==="info"||v==="settings")&&t.dataset.v==="diary")));
   if(v==="progress"){ weekOffset = 0; renderProgress(); } /* always open on the current 7 days 2026.09.21-j */
   if(v==="profile") renderProfile();
+  if(v==="settings") renderSettings();
   if(v==="medals") renderMedalsPage();
   if(v==="worksched") renderWorkSched();
   if(v==="quit") renderQuit();
@@ -7770,8 +7729,8 @@ function prHandleDown(e){
   handle.addEventListener("lostpointercapture", end);
 }
 /* ============ PROFILE VIEW (2026.10.11-a) ============ */
-const PROF_UNITS = ["stats","streaks","settings"];
-const PROF_TITLES = {stats:"Athlete Blueprint",streaks:"Habit Trackers",settings:"Preferences"};
+const PROF_UNITS = ["streaks"];
+const PROF_TITLES = {streaks:"Habit Trackers"};
 function profOrder(){
   const saved = (S && Array.isArray(S.profOrder)) ? S.profOrder.filter(function(p){ return PROF_UNITS.indexOf(p)>=0; }) : [];
   return PROF_UNITS.filter(function(p){ return saved.indexOf(p)>=0; })
@@ -7864,105 +7823,6 @@ function renderProfile(){
   const wu = wUnit();
   const bmi = (wLb>0 && hIn>0) ? (wLb/(hIn*hIn)*703) : 0;
   const whtr = (p.waistIn>0 && hIn>0) ? (p.waistIn/hIn) : 0;
-
-  /* 2026.10.11: Athlete Blueprint (Modern, Simplistic & Colorful) */
-  const apTot = goalTotal();
-  const cm = calcMaintenance();
-  const surp = S.goals.surplus || 0;
-  const prot = S.goals.protein || 0;
-  const carb = S.goals.carbs || 0;
-  const fat = S.goals.fat || 0;
-  const waterOz = (typeof autoWaterOz === "function" ? autoWaterOz() : (S.goals.water>0 ? S.goals.water*8 : 110));
-
-  const elApTarget = document.getElementById("apTargetVal");
-  if(elApTarget){
-    elApTarget.textContent = apTot > 0 ? Math.round(apTot).toLocaleString() : (cm.maint > 0 ? Math.round(cm.maint + (surp||0)).toLocaleString() : "3,134");
-    const elApMaintSub = document.getElementById("apMaintSub");
-    if(elApMaintSub){
-      const mText = cm.maint > 0 ? Math.round(cm.maint).toLocaleString() + " kcal maint" : "2,849 kcal maint";
-      const sText = surp > 0 ? " · +" + surp + " kcal" : (surp < 0 ? " · " + surp + " kcal" : " · +10% surplus");
-      elApMaintSub.textContent = mText + sText;
-    }
-    const elApMode = document.getElementById("apModePill");
-    if(elApMode){
-      const m = S.goals.mode;
-      elApMode.textContent = m === "bulk" ? "Surplus Bulk" : (m === "maintain" ? "Maintain" : "Lean Bulk");
-    }
-    const elApBodyPill = document.getElementById("apBodyPill");
-    if(elApBodyPill){
-      elApBodyPill.textContent = wLb > 0 ? wDisp(wLb).toFixed(1) + " " + wu : "122.2 lb";
-    }
-    const elApP = document.getElementById("apPVal");
-    if(elApP) elApP.textContent = prot > 0 ? prot + "g" : "150g";
-    const elApC = document.getElementById("apCVal");
-    if(elApC) elApC.textContent = carb > 0 ? carb + "g" : "386g";
-    const elApF = document.getElementById("apFVal");
-    if(elApF) elApF.textContent = fat > 0 ? fat + "g" : "88g";
-    const elApW = document.getElementById("apWVal");
-    if(elApW) elApW.textContent = waterOz + " oz";
-
-    const elApWgt = document.getElementById("apWeightVal");
-    if(elApWgt) elApWgt.textContent = wLb > 0 ? wDisp(wLb).toFixed(1) + " " + wu : "122.2 lb";
-    const elApHgt = document.getElementById("apHeightVal");
-    if(elApHgt){
-      const hFt = Math.floor(hIn / 12), hRem = Math.round(hIn % 12);
-      elApHgt.textContent = hIn > 0 ? (p.units==="met" ? Math.round(hIn*2.54)+" cm" : hFt + "′" + hRem + "″") : "5′10″";
-    }
-    const elApBf = document.getElementById("apBfVal");
-    if(elApBf) elApBf.textContent = p.bodyFat > 0 ? p.bodyFat + "%" : "~6%";
-    const elApBmi = document.getElementById("apBmiVal");
-    if(elApBmi) elApBmi.textContent = bmi > 0 ? bmi.toFixed(1) : (wLb > 0 && hIn > 0 ? (wLb/(hIn*hIn)*703).toFixed(1) : "17.5");
-  }
-
-  const aiBtn = document.getElementById("athleteInfo");
-  if(aiBtn && !aiBtn.dataset.bound){
-    aiBtn.dataset.bound = "1";
-    aiBtn.onclick = function(e){
-      e.stopPropagation();
-      openInfo("athlete");
-    };
-  }
-
-  /* Setup quick edit toggle if not already bound */
-  const qTgl = document.getElementById("pfEditToggle");
-  const qForm = document.getElementById("pfEditForm");
-  if(qTgl && qForm && !qTgl.dataset.bound){
-    qTgl.dataset.bound = "1";
-    qTgl.onclick = function(){
-      const isOpen = qForm.classList.toggle("open");
-      qTgl.textContent = isOpen ? "Close ✕" : "Edit Stats ›";
-      if(isOpen){
-        document.getElementById("pfQuickW").value = wLb > 0 ? wDisp(wLb).toFixed(1) : "";
-        document.getElementById("pfQuickAge").value = p.age || "";
-        document.getElementById("pfQuickH").value = hIn || "";
-        document.getElementById("pfQuickBf").value = p.bodyFat || "";
-        document.getElementById("pfQuickWaist").value = p.waistIn || "";
-      }
-    };
-    const qSave = document.getElementById("pfQuickSave");
-    if(qSave){
-      qSave.onclick = function(){
-        const wVal = parseFloat(document.getElementById("pfQuickW").value) || 0;
-        const aVal = parseInt(document.getElementById("pfQuickAge").value) || 0;
-        const hVal = parseFloat(document.getElementById("pfQuickH").value) || 0;
-        const bfVal = parseFloat(document.getElementById("pfQuickBf").value) || 0;
-        const waistVal = parseFloat(document.getElementById("pfQuickWaist").value) || 0;
-        if(wVal > 0) S.goals.profile.weightLb = wVal;
-        if(aVal > 0) S.goals.profile.age = aVal;
-        if(hVal > 0) S.goals.profile.heightIn = hVal;
-        S.goals.profile.bodyFat = bfVal >= 0 ? bfVal : 0;
-        S.goals.profile.waistIn = waistVal >= 0 ? waistVal : 0;
-        S.goals.profile.updatedAt = todayStr();
-        commitGoals("stats"); /* single derivation — maintenance/surplus/macros together, adaptive-safe */
-        save();
-        qForm.classList.remove("open");
-        qTgl.textContent = "Edit Stats ›";
-        renderProfile();
-        if(typeof renderDiary === "function") renderDiary();
-        if(typeof renderProgress === "function") renderProgress();
-      };
-    }
-  }
 
   const cal = document.getElementById("pfCal");
   if(cal){
@@ -8385,7 +8245,7 @@ function autoPilot(){
        commitGoals() is the only writer of maintenance/surplus/macros. */
     changed = refreshAdaptive();
     if(g.adaptive && g.adaptive.ok){
-      /* 2026.10.13-h: no toggle anymore — the log takes over automatically once
+      /* 2026.10.13-i: no toggle anymore — the log takes over automatically once
          it can support the number ("based off small amounts of data and over
          time it will get better" — Jay's brief). The switch from formula to
          learned is itself a change worth applying + logging. */
