@@ -1064,7 +1064,7 @@ body.reordering #progOverview{display:none}
 .pf-edit-form{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
 .pf-edit-form.open{display:block;}
 
-/* Profile goals hero (2026.10.13-j): the data center — one colorful panel on
+/* Profile goals hero (2026.10.13-k): the data center — one colorful panel on
    top of Profile, painted only from S.goals (never the formula). */
 .pfhero{display:block;width:100%;text-align:left;border:none;cursor:pointer;font-family:inherit;color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc-deep));border-radius:var(--radius);padding:16px;margin:0 0 12px}
 .pfhero-lbl{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
@@ -1075,6 +1075,15 @@ body.reordering #progOverview{display:none}
 .pfhero-macros{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .pfhero-m{background:rgba(255,255,255,.16);padding:5px 10px;border-radius:7px;font-size:12.5px}
 .pfhero-m b{font-size:13px}
+
+/* Consistency heatmap (2026.10.13-k): 14 weeks x 7 days, color = share of the
+   goal eaten. Locked days get an outline; future days fade out. */
+.hmgrid{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:3px;margin-top:10px}
+.hmcell{aspect-ratio:1;border:none;border-radius:3px;padding:0;cursor:pointer;background:var(--card2)}
+.hmcell.fut{opacity:.35;cursor:default}
+.hmcell.locked{box-shadow:inset 0 0 0 1.5px var(--line);background:var(--card2)}
+.hmlegend{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);margin-top:8px}
+.hmlegend i{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
 </style>
 </head>
 <body>
@@ -1253,7 +1262,7 @@ body.reordering #progOverview{display:none}
     </div>
   </section>
 
-  <!-- GOALS (compact redesign 2026.10.13-j, Jay's brief: full compact, clean,
+  <!-- GOALS (compact redesign 2026.10.13-k, Jay's brief: full compact, clean,
        the machinery runs in the background. One goal card, one macros card,
        one stats card, one button. The learned estimate's evidence is a single
        line in the goal card — its history/data stay in storage, off the page.) -->
@@ -1492,6 +1501,14 @@ body.reordering #progOverview{display:none}
           </div>
         </div><!-- /card weekcard -->
       </div><!-- /punit data-pid="week" -->
+      <div class="punit" data-pid="heatmap">
+        <div class="card">
+          <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></span><b>Consistency</b><span id="hmSum" style="margin-left:auto;font-size:12px;color:var(--muted);font-weight:600"></span></div>
+          <div class="hmgrid" id="hmGrid"></div>
+          <div class="hmlegend"><span>Less</span><i style="background:var(--card2)"></i><i style="background:var(--acc);opacity:.3"></i><i style="background:var(--acc);opacity:.55"></i><i style="background:var(--acc);opacity:.85"></i><i style="background:var(--acc)"></i><span>More</span><span style="margin-left:auto">share of your goal eaten · tap a day to open it</span></div>
+        </div>
+      </div><!-- /punit data-pid="heatmap" -->
+
 
       <div class="punit" data-pid="daycycle">
         <div class="daycycle" id="dayCycle" aria-label="Day cycle">
@@ -2303,7 +2320,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.13-j";
+const APP_VERSION = "2026.10.13-k";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4392,7 +4409,7 @@ function renderSheetResults(q0){
   paintSheetSmart(q);
   let list = sheetTab==="recent" ? recentFoods()
     : sheetTab==="favorites" ? S.favorites.map(n=>findFood(n)).filter(Boolean) /* by name: resolves custom + verified */
-    : sheetTab==="supps" ? allFoods().filter(f=>f.kind==="supp") /* his whole stack, defaults + custom — never buried in All (2026.10.13-j) */
+    : sheetTab==="supps" ? allFoods().filter(f=>f.kind==="supp") /* his whole stack, defaults + custom — never buried in All (2026.10.13-k) */
     : (function(){ const seen = new Set(S.customFoods.map(f=>f.n)); return S.customFoods.slice().reverse().concat(FOODS.filter(f=>!seen.has(f.n))); })(); /* All: his foods first, then default foods not already his */
   if(q) list = list.filter(f => f.n.toLowerCase().includes(q) || (f.loc||"").toLowerCase().includes(q)); /* searching a place finds its foods too */
   if(!q && sheetTab==="recent" && !list.length) list = allFoods();
@@ -4701,7 +4718,7 @@ function delCustomFood(name){
   const fi = S.favorites.indexOf(name); if(fi>=0) S.favorites.splice(fi,1);
   save(); renderFoods();
 }
-/* Foods page (2026.10.13-j): Supplements get their own card so the daily stack
+/* Foods page (2026.10.13-k): Supplements get their own card so the daily stack
    is never buried in the food list, and the list actually sorts — Recent,
    Most logged (counted from his diary, no new tracking), A–Z, per-serving
    Protein/Carbs/Fat/Calories, and protein density. The star chip filters to
@@ -5799,6 +5816,7 @@ function wtStatusText(){
 }
 function renderProgress(){
   paintDayCycle();
+  if(typeof paintHeatmap==="function") paintHeatmap(); /* defined in a later script block — same guard as paintAutoZone in renderDiary */
   (function(){ var s=S.weekSeg||"cal";
     document.querySelectorAll("#weekSeg .segbtn").forEach(function(x){x.classList.toggle("on",x.dataset.seg===s);});
     ["sum","cal","mac"].forEach(function(k){ var el=document.getElementById("wseg-"+k); if(el) el.hidden = k!==s; });
@@ -6398,7 +6416,7 @@ function readProfile(){
    Called before ANY re-render and on every field change, so a tap can never
    silently wipe an edit the user typed but hadn't saved yet. */
 function commitMacroInputs(){
-  /* 2026.10.13-j: macros are calculated, never typed — the Goals page has no
+  /* 2026.10.13-k: macros are calculated, never typed — the Goals page has no
      macro inputs anymore. Kept as a no-op because commitGoalsInputs() and a
      few legacy callers still call it. */
 }function commitGoalsInputs(){
@@ -6541,7 +6559,7 @@ function applyAdaptive(){
   paintAdaptive(); renderGoals(); renderDiary();
 }
 function paintAdaptive(){
-  /* Background machinery, one line of evidence (2026.10.13-j): the learned
+  /* Background machinery, one line of evidence (2026.10.13-k): the learned
      estimate, its history, and its gates all live in storage and keep
      updating via Calculate & Save + the daily autopilot. The page shows a
      single line inside the goal card: which maintenance is running and the
@@ -7417,7 +7435,7 @@ function renderGoals(){
   const nc = Object.keys(g.nutrTargets||{}).length;
   document.getElementById("microSub").textContent = nc ? nc+" custom · rest FDA defaults" : "FDA defaults — tap to customize";
 }
-/* Macro split: read-only analysis (2026.10.13-j). Percentages are % of the daily
+/* Macro split: read-only analysis (2026.10.13-k). Percentages are % of the daily
    calorie goal, uncapped — if the numbers go past 100% that's the truth. */
 function updateMacroSplit(){
   const g = S.goals, tot = goalTotal();
@@ -7489,7 +7507,7 @@ document.getElementById("microRow").onclick = ()=>{
 };
 document.getElementById("goalsDone").onclick = ()=>{
   commitGoalsInputs();
-  /* THE one calculation (2026.10.13-j): refresh the learned estimate, then let
+  /* THE one calculation (2026.10.13-k): refresh the learned estimate, then let
      the data pick the source — learned when his log supports it, the stats
      formula until it does. Macros are always calculated. One button. */
   refreshAdaptive();
@@ -7511,7 +7529,7 @@ document.getElementById("goalsBack").onclick = ()=>{ commitGoalsInputs(); save()
 function renderSettings(){
   const g = S.goals;
   renderProfileCard();
-  /* Profile hero (2026.10.13-j): painted from S.goals — the same stored
+  /* Profile hero (2026.10.13-k): painted from S.goals — the same stored
      maintenance/surplus/macros the Goals page runs on. Never the formula. */
   const hg = document.getElementById("pfHeroGoal");
   if(hg){
@@ -7636,8 +7654,8 @@ function showView(v){
   paintSigned();
 }
 /* 2026.09.22-k: Apple-Photos-style reorder — compact row list with drag handles, checkmark saves */
-const PROG_UNITS = ["body","week","daycycle","auto"];
-const PROG_TITLES = {body:"Body & Roadmap",week:"This week",daycycle:"Day cycle",auto:"Autopilot"};
+const PROG_UNITS = ["body","week","heatmap","daycycle","auto"];
+const PROG_TITLES = {body:"Body & Roadmap",week:"This week",heatmap:"Consistency",daycycle:"Day cycle",auto:"Autopilot"};
 const LINES_SVG = '<svg viewBox="0 0 24 24"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
 const CHECK_SVG = '<svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
 function progUnits(){ return Array.prototype.slice.call(document.querySelectorAll("#progOverview .punit")); }
@@ -8202,6 +8220,36 @@ function autoDismissProp(id){
   for(var i = 0; i < a.props.length; i++) if(a.props[i].id === id) a.props[i].done = 1;
   save(); paintAutoZone();
 }
+
+/* Consistency heatmap painter (2026.10.13-k). One yardstick — today's goal —
+   applied to every day, so the colors can never disagree with the targets. */
+function paintHeatmap(){
+  var grid = document.getElementById("hmGrid"); if(!grid) return;
+  var goal = goalTotal(), today = todayStr();
+  var end = new Date(today + "T12:00:00");
+  end.setDate(end.getDate() + (6 - (end.getDay() + 6) % 7)); /* Sunday of this week */
+  var start = new Date(end); start.setDate(start.getDate() - 97); /* Monday, 14 weeks back */
+  var html = "", logged = 0, inZone = 0;
+  for(var i = 0; i < 98; i++){
+    var d = new Date(start); d.setDate(d.getDate() + i);
+    var ds = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    if(ds > today){ html += '<span class="hmcell fut"></span>'; continue; }
+    if(isLocked(ds)){ html += '<button class="hmcell locked" data-hm="' + ds + '" aria-label="' + ds + ' (locked)"></button>'; continue; }
+    var cal = dayTotals(ds).cal, pct = goal > 0 ? cal / goal : 0, op = "";
+    if(cal > 0){ logged++; if(pct >= 0.85 && pct <= 1.15) inZone++;
+      op = ' style="background:var(--acc);opacity:' + (pct < 0.5 ? ".3" : pct < 0.85 ? ".55" : pct <= 1.15 ? ".85" : "1") + '"'; }
+    html += '<button class="hmcell" data-hm="' + ds + '" aria-label="' + ds + '"' + op + '></button>';
+  }
+  grid.innerHTML = html;
+  var sum = document.getElementById("hmSum");
+  if(sum) sum.textContent = logged ? Math.round(inZone / logged * 100) + "% of logged days in the zone" : "";
+  grid.querySelectorAll("[data-hm]").forEach(function(b){ b.onclick = function(){
+    var now = new Date(todayStr() + "T12:00:00");
+    dayOffset = Math.round((new Date(b.getAttribute("data-hm") + "T12:00:00") - now) / 864e5);
+    renderDiary(); showView("diary");
+  }; });
+}
+
 function paintAutoZone(){
   var z = document.getElementById("autoZoneP");
   if(!z) return;
@@ -8216,13 +8264,33 @@ function paintAutoZone(){
       '<button class="bigbtn" style="flex:1;margin:0;background:none;border:1.5px solid var(--line);color:var(--ink)" data-ap-dismiss="' + p.id + '">Not now</button>' +
       '</div></div>';
   });
-  var feed = a.feed.slice(0, 3);
+  /* Compact feed (2026.10.13-k): the current maintenance is a hero number;
+     history is one slim row per entry (value + delta + date) instead of the
+     same long sentence repeated. Nothing is hidden — just said once. */
+  var feed = a.feed.slice(0, 6);
   var curIx = -1;
   for(var cix = 0; cix < feed.length; cix++){ if(feed[cix].t.indexOf("Maintenance ") === 0){ curIx = cix; break; } }
+  var maintVal = function(t){ var m = /→\s*([\d,]+)\s*kcal/.exec(t); return m ? parseInt(m[1].replace(/,/g, ""), 10) : null; };
+  var fmtD = function(ds){ var p = String(ds || "").split("-"); if(p.length !== 3) return ds || ""; var mo = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]; return (mo[parseInt(p[1], 10) - 1] || "") + " " + parseInt(p[2], 10); };
+  var pill = ' <span style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;color:#0b7a4b;background:#e2f4e9;border-radius:6px;padding:2px 8px;margin-left:2px;vertical-align:3px">CURRENT</span>';
   if(feed.length){
     html += feed.map(function(f, ix){
-      var pill = ix === curIx ? ' <span style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;color:#0b7a4b;background:#e2f4e9;border-radius:11px;padding:2px 8px;margin-left:6px;vertical-align:1px">CURRENT</span>' : "";
-      return '<div style="font-size:13px;color:var(--muted);padding:6px 0;border-top:1px solid var(--line)">' + esc(f.t) + pill + '</div>';
+      var v = maintVal(f.t);
+      if(ix === curIx && v != null){
+        var dm = /last (\d+) days/.exec(f.t);
+        return '<div style="padding:10px 0 12px;border-top:1px solid var(--line)">' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><b style="font-size:26px;letter-spacing:-.02em">' + v.toLocaleString() + '</b>' +
+          '<span style="font-size:13px;color:var(--muted)">kcal maintenance</span>' + pill + '</div>' +
+          '<div style="font-size:12.5px;color:var(--muted);margin-top:2px">Learned from your last ' + (dm ? dm[1] : "?") + ' days of eating + weigh-ins \u00b7 ' + fmtD(f.d) + '</div></div>';
+      }
+      if(v != null){
+        var older = null;
+        for(var k = ix + 1; k < feed.length; k++){ var ov = maintVal(feed[k].t); if(ov != null){ older = ov; break; } }
+        var dHtml = "";
+        if(older != null && v !== older){ var dv = v - older; dHtml = ' <span style="font-size:11.5px;font-weight:700;color:' + (dv > 0 ? "#0b7a4b" : "#c0392b") + '">' + (dv > 0 ? "+" : "\u2212") + Math.abs(dv).toLocaleString() + '</span>'; }
+        return '<div style="display:flex;align-items:baseline;gap:6px;font-size:13px;padding:6px 0;border-top:1px solid var(--line)"><b>' + v.toLocaleString() + '</b><span style="color:var(--muted)">kcal</span>' + dHtml + '<span style="margin-left:auto;color:var(--muted);font-size:12px">' + fmtD(f.d) + '</span></div>';
+      }
+      return '<div style="font-size:12.5px;color:var(--muted);padding:6px 0;border-top:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(f.t) + ' <span style="font-size:11.5px">\u00b7 ' + fmtD(f.d) + '</span></div>';
     }).join("");
   }
   var lr = document.getElementById("autoLastRun");
@@ -8245,7 +8313,7 @@ function autoPilot(){
        commitGoals() is the only writer of maintenance/surplus/macros. */
     changed = refreshAdaptive();
     if(g.adaptive && g.adaptive.ok){
-      /* 2026.10.13-j: no toggle anymore — the log takes over automatically once
+      /* 2026.10.13-k: no toggle anymore — the log takes over automatically once
          it can support the number ("based off small amounts of data and over
          time it will get better" — Jay's brief). The switch from formula to
          learned is itself a change worth applying + logging. */
