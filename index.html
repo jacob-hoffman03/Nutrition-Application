@@ -1225,7 +1225,12 @@ body.reordering #progOverview{display:none}
     </div>
   </section>
 
-  <!-- GOALS -->
+  <!-- GOALS (redesigned 2026.10.13-d, Jay's brief: "take my data and calculate
+       just what I need to eat — macros and calories, that's it." One button:
+       Calculate & Save. The engine picks its own source: learned from his log
+       when the data supports it, his stats formula until it does, and it
+       sharpens itself over time via the daily autopilot. No toggles, no
+       slider, no manual macro editing on this page.) -->
   <section class="view" id="view-goals">
     <div class="topbar">
       <button class="tbtn" id="goalsBack" aria-label="Back">‹</button>
@@ -1245,73 +1250,50 @@ body.reordering #progOverview{display:none}
         <button class="chip" data-m="bulk" data-pct="15">Bulk</button>
         <button class="chip" data-m="maintain" data-pct="0">Maintain</button>
       </div>
-      <input type="range" id="goalSlider" min="1500" max="6000" step="25" value="3000">
-      <div class="rangelabels"><span id="goalMin">1500 kcal</span><span id="goalMax">6000 kcal</span></div>
-      <div class="chips" id="surpChips" style="margin-top:10px">
-        <button class="chip" data-p="5">+5%</button>
-        <button class="chip" data-p="10">+10%</button>
-        <button class="chip" data-p="15">+15%</button>
-      </div>
-    </div>
-    <div class="gsec" id="gsecMaint">
-      <div class="ghead"><span>Maintenance</span><b class="gval" id="maintHeadVal"></b><span class="gchev">›</span></div>
-      <div class="gbody">
-        <div class="chips" id="pfAct">
-          <button class="chip" data-k="sedentary" title="Sedentary: little or no exercise">Sedentary</button>
-          <button class="chip" data-k="light" title="Light: exercise 1-3 times/week">Light</button>
-          <button class="chip" data-k="moderate" title="Moderate: exercise 4-5 times/week">Moderate</button>
-          <button class="chip" data-k="active" title="Active: daily exercise or intense exercise 3-4 times/week">Active</button>
-          <button class="chip" data-k="very" title="Very Active: intense exercise 6-7 times/week">Very active</button>
-          <button class="chip" data-k="extra" title="Extra Active: very intense exercise daily, or physical job">Extra active</button>
-        </div>
-        <button class="bigbtn" id="pfCalc" style="margin-top:4px">Calculate maintenance</button>
-        <div class="rangenote" id="pfNote"></div>
-        <div class="secttl">Adaptive TDEE</div>
-        <div class="card goalbig">
-          <div class="glabel">Learned from your log</div>
-          <div class="gnum"><span id="adVal">–</span> <small>kcal</small></div>
-          <div class="gsub" id="adSub"></div>
-          <svg id="adChart" viewBox="0 0 300 84" style="width:100%;height:84px;margin-top:8px;display:none" role="img" aria-label="Adaptive TDEE history"></svg>
-        </div>
-        <div class="rangenote" id="adNote"></div>
-        <div class="card slim">
-          <div class="wdet">
-            <div><div class="wt">Use as my maintenance</div><div class="ws">Learns from your last 3 weeks</div></div>
-            <button class="wtgl" id="adToggle" role="switch" aria-checked="false" aria-label="Use adaptive TDEE as maintenance"><span class="knob"></span></button>
-          </div>
-          <div class="wdet" style="border-top:1px solid var(--line)">
-            <div><div class="wt">Recalculate</div><div class="ws">Refresh the learned value now</div></div>
-            <button class="chip" id="adRecalc">Recalculate</button>
-          </div>
-        </div>
-        <div class="rangenote" id="adTuneNote"></div>
-        <div class="secttl">True metrics</div>
-        <div class="card">
-          <div class="cfrow"><span>Avg intake · logged days</span><b id="tmIntake">–</b></div>
-          <div class="cfrow" style="margin-top:6px"><span>Weight trend</span><b id="tmTrend">–</b></div>
-          <div class="cfrow" style="margin-top:6px"><span>True maintenance</span><b id="tmMaint">–</b></div>
-        </div>
-        <div class="rangenote" id="tmNote"></div>
-      </div>
     </div>
     <div class="secttl">Macros</div>
-    <div class="segctl" id="macroModeSeg" role="tablist" aria-label="Macro mode">
-      <button class="segbtn" data-m="auto">Auto</button>
-      <button class="segbtn" data-m="manual">Manual</button>
-    </div>
-    <div class="rangenote" id="macroAutoNote" style="margin:2px 0 10px"></div>
     <div class="macro3">
-      <div class="m3 c"><div class="mn">Carbs</div><div class="mp" id="gmCp">–</div><div class="mg"><input id="gmC" type="number" inputmode="numeric"> g</div><input type="range" class="mslider" id="gmCs" min="0" max="800" step="5" aria-label="Carbs grams"><div class="mkcal" id="gmCk"></div></div>
-      <div class="m3 p"><div class="mn">Protein</div><div class="mp" id="gmPp">–</div><div class="mg"><input id="gmP" type="number" inputmode="numeric"> g</div><input type="range" class="mslider" id="gmPs" min="0" max="400" step="5" aria-label="Protein grams"><div class="mkcal" id="gmPk"></div></div>
-      <div class="m3 f"><div class="mn">Fat</div><div class="mp" id="gmFp">–</div><div class="mg"><input id="gmF" type="number" inputmode="numeric"> g</div><input type="range" class="mslider" id="gmFs" min="0" max="300" step="5" aria-label="Fat grams"><div class="mkcal" id="gmFk"></div></div>
-    </div>
-    <div class="card" style="margin-bottom:12px">
-      <div class="cfrow"><span><b>Fiber</b> <span class="ph" id="fiberAutoTag"></span></span><span><b id="gmFip" style="margin-right:8px">–</b><input id="gmFi" type="number" inputmode="numeric" style="width:64px"> g</span></div>
-      <div class="cfrow" style="margin-top:6px"><span class="ph" id="fiberNote"></span><button class="chip" id="fiberAutoBtn" style="display:none">Use auto</button></div>
+      <div class="m3 c"><div class="mn">Carbs</div><div class="mp" id="gmCp">–</div><div class="mg"><b id="gmCg">–</b> g</div><div class="mk" id="gmCk"></div></div>
+      <div class="m3 p"><div class="mn">Protein</div><div class="mp" id="gmPp">–</div><div class="mg"><b id="gmPg">–</b> g</div><div class="mk" id="gmPk"></div></div>
+      <div class="m3 f"><div class="mn">Fat</div><div class="mp" id="gmFp">–</div><div class="mg"><b id="gmFg">–</b> g</div><div class="mk" id="gmFk"></div></div>
     </div>
     <div class="segbar"><i id="segC" style="background:#7e7ef2"></i><i id="segP" style="background:#12cfae"></i><i id="segF" style="background:#fb6f84"></i></div>
+    <div class="card" style="margin:12px 0">
+      <div class="cfrow"><span><b>Fiber</b> <span class="ph">auto · 14 g per 1,000 kcal (FDA / IOM)</span></span><b id="gmFip">–</b></div>
+    </div>
+    <div class="rangenote" id="macroAutoNote" style="margin:2px 0 10px"></div>
     <div class="rangenote" id="macroAnalysis"></div>
-    <div class="gsec" id="gsecWater">
+    <div class="secttl">Your stats</div>
+    <div class="card">
+<div class="cfrow"><span>Units</span><span class="chips" id="pfUnits" style="margin:0"><button class="chip" data-u="imp">Imperial</button><button class="chip" data-u="met">Metric</button></span></div>
+          <div class="cfrow"><span>Sex</span><span class="chips" id="pfSex" style="margin:0"><button class="chip" data-x="m">Male</button><button class="chip" data-x="f">Female</button></span></div>
+          <div class="cfrow"><span>Age</span><span><input id="pfAge" type="number" inputmode="numeric" style="width:90px"> <span class="ph">yrs</span></span></div>
+          <div class="cfrow" id="htImpRow"><span>Height</span><span><input id="pfHtFt" type="number" inputmode="numeric" style="width:52px"> <span class="ph">ft</span> <input id="pfHtIn" type="number" inputmode="numeric" style="width:52px"> <span class="ph">in</span></span></div>
+          <div class="cfrow" id="htMetRow" style="display:none"><span>Height</span><span><input id="pfHtCm" type="number" inputmode="decimal" style="width:90px"> <span class="ph">cm</span></span></div>
+          <div class="cfrow"><span>Weight</span><span><input id="pfWeight" type="number" inputmode="decimal" style="width:90px"> <span class="ph" id="pfWeightUnit">lb</span></span></div>
+          <div class="cfrow"><span>Body fat <span class="ph">(optional)</span></span><span><input id="pfFat" type="number" inputmode="decimal" style="width:90px"> <span class="ph">%</span></span></div>
+          <div class="cfrow"><span>Waist <span class="ph">(optional)</span></span><span><input id="pfWaist" type="number" inputmode="decimal" style="width:90px"> <span class="ph" id="pfWaistUnit">in</span></span></div>
+        
+      <div class="cfrow" style="margin-top:8px"><span>Activity</span></div>
+      <div class="chips" id="pfAct" style="margin-top:6px">
+        <button class="chip" data-k="sedentary" title="Sedentary: little or no exercise">Sedentary</button>
+        <button class="chip" data-k="light" title="Light: exercise 1-3 times/week">Light</button>
+        <button class="chip" data-k="moderate" title="Moderate: exercise 4-5 times/week">Moderate</button>
+        <button class="chip" data-k="active" title="Active: daily exercise or intense exercise 3-4 times/week">Active</button>
+        <button class="chip" data-k="very" title="Very Active: intense exercise 6-7 times/week">Very active</button>
+        <button class="chip" data-k="extra" title="Extra Active: very intense exercise daily, or physical job">Extra active</button>
+      </div>
+    </div>
+    <div class="rangenote" id="pfNote"></div>
+    <div class="secttl">Where the number comes from</div>
+    <div class="card goalbig">
+      <div class="glabel">Maintenance</div>
+      <div class="gnum"><span id="adVal">–</span> <small>kcal</small></div>
+      <div class="gsub" id="adSub"></div>
+      <svg id="adChart" viewBox="0 0 300 84" style="width:100%;height:84px;margin-top:8px;display:none" role="img" aria-label="Learned maintenance history"></svg>
+    </div>
+    <div class="rangenote" id="adNote"></div>
+<div class="gsec" id="gsecWater">
       <div class="ghead"><span>Water</span><b class="gval" id="waterHeadVal"></b><span class="gchev">›</span></div>
       <div class="gbody">
         <div class="card">
@@ -1321,46 +1303,14 @@ body.reordering #progOverview{display:none}
         <div class="rangenote" id="waterBreak"></div>
       </div>
     </div>
-    <div class="secttl">Micronutrients</div>
+<div class="secttl">Micronutrients</div>
     <div class="card" style="padding:4px 14px">
       <button class="srow" id="microRow">
         <span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h10M18 8h2M4 16h4M12 16h8"/><circle cx="16" cy="8" r="2.2"/><circle cx="10" cy="16" r="2.2"/></svg></span><span><b style="font-size:16px">Micronutrient targets</b><br><span class="ph" id="microSub"></span></span></span>
         <span class="sval"><span class="chev2">›</span></span>
       </button>
     </div>
-    <div class="gsec closed" id="gsecBody">
-      <div class="ghead"><span>Body stats</span><b class="gval" id="bodyHeadVal"></b><span class="gchev">›</span></div>
-      <div class="gbody">
-        <div class="card">
-          <div class="cfrow"><span>Units</span><span class="chips" id="pfUnits" style="margin:0"><button class="chip" data-u="imp">Imperial</button><button class="chip" data-u="met">Metric</button></span></div>
-          <div class="cfrow"><span>Sex</span><span class="chips" id="pfSex" style="margin:0"><button class="chip" data-x="m">Male</button><button class="chip" data-x="f">Female</button></span></div>
-          <div class="cfrow"><span>Age</span><span><input id="pfAge" type="number" inputmode="numeric" style="width:90px"> <span class="ph">yrs</span></span></div>
-          <div class="cfrow" id="htImpRow"><span>Height</span><span><input id="pfHtFt" type="number" inputmode="numeric" style="width:52px"> <span class="ph">ft</span> <input id="pfHtIn" type="number" inputmode="numeric" style="width:52px"> <span class="ph">in</span></span></div>
-          <div class="cfrow" id="htMetRow" style="display:none"><span>Height</span><span><input id="pfHtCm" type="number" inputmode="decimal" style="width:90px"> <span class="ph">cm</span></span></div>
-          <div class="cfrow"><span>Weight</span><span><input id="pfWeight" type="number" inputmode="decimal" style="width:90px"> <span class="ph" id="pfWeightUnit">lb</span></span></div>
-          <div class="cfrow"><span>Body fat <span class="ph">(optional)</span></span><span><input id="pfFat" type="number" inputmode="decimal" style="width:90px"> <span class="ph">%</span></span></div>
-          <div class="cfrow"><span>Waist <span class="ph">(optional)</span></span><span><input id="pfWaist" type="number" inputmode="decimal" style="width:90px"> <span class="ph" id="pfWaistUnit">in</span></span></div>
-        </div>
-      </div>
-    </div>
-    <div class="gsec closed" id="gsecAdv">
-      <div class="ghead"><span>Advanced</span><span class="gchev">›</span></div>
-      <div class="gbody">
-        <div class="card slim">
-          <div class="wdet">
-            <div><div class="wt">Auto-adjust as I gain weight</div><div class="ws">Recalculates maintenance from new weigh-ins</div></div>
-            <button class="wtgl" id="pfAuto" role="switch" aria-checked="false" aria-label="Auto-adjust as I gain weight"><span class="knob"></span></button>
-          </div>
-          <div class="wdet" style="border-top:1px solid var(--line)">
-            <div><div class="wt">Auto-tune maintenance</div><div class="ws">Nudges maintenance toward your weight trend</div></div>
-            <button class="wtgl" id="pfTune" role="switch" aria-checked="false" aria-label="Auto-tune maintenance"><span class="knob"></span></button>
-          </div>
-        </div>
-        <div class="rangenote" id="pfAutoNote"></div>
-        <div class="rangenote" id="pfTuneNote"></div>
-      </div>
-    </div>
-    <button class="bigbtn" id="goalsDone">Save changes</button>
+    <button class="bigbtn" id="goalsDone">Calculate &amp; Save</button>
   </section>
 
 <!-- PROGRESS -->
@@ -2401,7 +2351,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.13-c";
+const APP_VERSION = "2026.10.13-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6398,7 +6348,7 @@ function paintGainProj(){
 }
 function paintMaintNote(){
   const p = S.goals.profile;
-  if(!(p.weightLb>0)){ document.getElementById("pfNote").textContent = "Enter your stats above, then tap Calculate maintenance — your calorie goal builds from it."; return; }
+  if(!(p.weightLb>0)){ document.getElementById("pfNote").textContent = "Enter your stats above, then tap Calculate & Save — your calorie goal builds from it."; return; }
   const cm = calcMaintenance();
   const sexNote = p.sex==="" ? " (sex not set — assuming male; set it above for an exact number)" : "";
   document.getElementById("pfNote").textContent = cm.formula+sexNote+": BMR "+cm.bmr.toLocaleString()+" (just living) × "+actPAL(p)+" activity = "+cm.maint.toLocaleString()+" kcal maintenance. Formulas run ±10%; the activity factor is the roughest part — weigh-ins calibrate it.";
@@ -6438,15 +6388,10 @@ function readProfile(){
    Called before ANY re-render and on every field change, so a tap can never
    silently wipe an edit the user typed but hadn't saved yet. */
 function commitMacroInputs(){
-  const num=(id,fb)=>{ const v=parseFloat(document.getElementById(id).value); return v>=0?v:fb; };
-  S.goals.carbs = num("gmC",S.goals.carbs); S.goals.protein = num("gmP",S.goals.protein); S.goals.fat = num("gmF",S.goals.fat);
-  /* fiber goal lives in the nutrient-target store: a typed value overrides the 14 g/1,000 kcal auto-target, clearing it goes back to auto */
-  const fv = parseFloat(document.getElementById("gmFi").value);
-  S.goals.nutrTargets = S.goals.nutrTargets||{};
-  if(fv>0) S.goals.nutrTargets["Fiber"] = {val:fv, unit:"g"};
-  else delete S.goals.nutrTargets["Fiber"];
-}
-function commitGoalsInputs(){
+  /* 2026.10.13-d: macros are calculated, never typed — the Goals page has no
+     macro inputs anymore. Kept as a no-op because commitGoalsInputs() and a
+     few legacy callers still call it. */
+}function commitGoalsInputs(){
   commitMacroInputs();
   readProfile();
   S.goals.profile.updatedAt = todayStr(); /* anchors the 1-month milestone suggestion */
@@ -6466,16 +6411,6 @@ function renderGoalsProfile(){
   document.getElementById("pfWaist").value = p.waistIn>0 ? (met ? Math.round(p.waistIn*2.54*10)/10 : Math.round(p.waistIn*10)/10) : "";
   document.getElementById("pfWaistUnit").textContent = met?"cm":"in";
   document.querySelectorAll("#pfAct .chip").forEach(c=>c.classList.toggle("sel", c.dataset.k===p.activityKey));
-  const ft = Math.floor(p.heightIn/12), fi = Math.round(p.heightIn%12);
-  document.getElementById("bodyHeadVal").textContent =
-    (p.heightIn>0 ? ft+"′"+fi+"″" : "—") + " · " +
-    (p.weightLb>0 ? (met ? (p.weightLb/2.20462).toFixed(1)+" kg" : Math.round(p.weightLb*10)/10+" lb") : "—");
-  const at = document.getElementById("pfAuto");
-  at.classList.toggle("on", !!p.auto); at.setAttribute("aria-checked", !!p.auto);
-  document.getElementById("pfAutoNote").textContent = S.goals.autoNote || "";
-  const tn = document.getElementById("pfTune");
-  tn.classList.toggle("on", !!S.goals.autoTune); tn.setAttribute("aria-checked", !!S.goals.autoTune);
-  document.getElementById("pfTuneNote").textContent = S.goals.tuneNote || "";
   paintMaintNote();
 }
 /* Auto-tune: nudge maintenance itself toward the weigh-in trend (max once per 2 weeks).
@@ -6594,71 +6529,38 @@ function applyAdaptive(){
   paintAdaptive(); renderGoals(); renderDiary();
 }
 function paintAdaptive(){
+  /* Readout only (2026.10.13-d): what maintenance the engine believes, and the
+     evidence under it. No controls here — Calculate & Save and the daily
+     autopilot keep it current. */
   const g=S.goals, a=g.adaptive, $=id=>document.getElementById(id);
-  const tg=$("adToggle");
-  tg.classList.toggle("on", !!g.useAdaptive);
-  tg.setAttribute("aria-checked", !!g.useAdaptive);
-  const explainer="Compares what you ate against your weight trend over the last 3 weeks: TDEE = avg intake − (weight change × 3,500 kcal/lb). Needs 10+ complete logged days and weigh-ins spread across 10+ days — below that, the last good value holds instead of guessing.";
   const chart=$("adChart");
+  const learnNote = "How it works: your maintenance is learned from what you actually ate vs your weight trend over the last 3 weeks — TDEE = avg intake − (weight change × 3,500 kcal/lb). It needs 10+ complete logged days and weigh-ins spread across 10+ days; until your log supports it, your stats formula stands in. The more you log, the sharper it gets.";
   if(!a){
-    $("adVal").textContent="–"; $("adSub").textContent="Tap Recalculate to learn your TDEE from your log.";
-    
-    chart.style.display="none"; $("adNote").textContent=explainer; $("adTuneNote").textContent=g.adTuneNote||""; return;
+    $("adVal").textContent="–"; $("adSub").textContent="Not calculated yet — tap Calculate & Save.";
+    chart.style.display="none"; $("adNote").textContent=learnNote; return;
   }
   if(!a.ok){
     $("adVal").textContent="–";
-    $("adSub").textContent=a.reason==="profile"
-      ? "Add your profile above first."
-      : "Not enough data yet — "+a.days+" of 10 logged days"+(a.span<10?"; weigh-ins span "+a.span+" of 10 days":"")+".";
-    
-    chart.style.display="none"; $("adNote").textContent=explainer; $("adTuneNote").textContent=g.adTuneNote||""; return;
+    $("adSub").textContent = a.reason==="profile"
+      ? "Add your stats above first."
+      : "Learning — "+(a.days||0)+" of 10 logged days so far. Your stats estimate is running your goal until your log takes over.";
+    chart.style.display="none"; $("adNote").textContent=learnNote; return;
   }
   $("adVal").textContent=a.value.toLocaleString();
-  $("adSub").textContent="updated "+a.updated+" · "+a.days+" logged days"+(a.partial?" · "+a.partial+" partial skipped":"")+(a.stale?" · stale — log more days":"");
+  $("adSub").textContent=(g.useAdaptive?"Running your goal now":"Learned from your log")+" · updated "+a.updated+" · "+a.days+" logged days"+(a.partial?" · "+a.partial+" partial skipped":"")+(a.stale?" · holding — log more days to refresh it":"");
   const hist=(g.adaptiveHist||[]).slice(-8);
   if(hist.length>=2){
     const W=300,H=84,P=10, vs=hist.map(h=>h.v), mn=Math.min.apply(null,vs), mx=Math.max.apply(null,vs), rg=Math.max(1,mx-mn);
-    const X=i=>P+i*(W-2*P)/Math.max(1,hist.length-1), Y=v=>H-P-(v-mn)/rg*(H-2*P);
-    let s='<polyline fill="none" stroke="var(--acc,#5b5bf0)" stroke-width="2.5" stroke-linecap="round" points="'+
-      hist.map((h,i)=>X(i).toFixed(1)+","+Y(h.v).toFixed(1)).join(" ")+'"/>';
-    s+='<circle cx="'+X(hist.length-1).toFixed(1)+'" cy="'+Y(vs[vs.length-1]).toFixed(1)+'" r="4.5" fill="var(--acc,#5b5bf0)"/>';
-    s+='<text x="'+P+'" y="'+(P+4)+'" font-size="10" fill="#999">'+mx.toLocaleString()+'</text>';
-    s+='<text x="'+P+'" y="'+(H-2)+'" font-size="10" fill="#999">'+mn.toLocaleString()+'</text>';
-    chart.innerHTML=s; chart.style.display="";
+    const X=k=>P+k*(W-2*P)/Math.max(1,hist.length-1), Y=v=>H-P-(v-mn)/rg*(H-2*P);
+    let str='<polyline fill="none" stroke="var(--acc,#5b5bf0)" stroke-width="2.5" stroke-linecap="round" points="'+
+      hist.map((h,k)=>X(k).toFixed(1)+","+Y(h.v).toFixed(1)).join(" ")+'"/>';
+    str+='<circle cx="'+X(hist.length-1).toFixed(1)+'" cy="'+Y(vs[vs.length-1]).toFixed(1)+'" r="4.5" fill="var(--acc,#5b5bf0)"/>';
+    str+='<text x="'+P+'" y="'+(P+4)+'" font-size="10" fill="#999">'+mx.toLocaleString()+'</text>';
+    str+='<text x="'+P+'" y="'+(H-2)+'" font-size="10" fill="#999">'+mn.toLocaleString()+'</text>';
+    chart.innerHTML=str; chart.style.display="";
   } else chart.style.display="none";
   $("adNote").textContent="Learned "+a.learned.toLocaleString()+" kcal from "+a.avg.toLocaleString()+" kcal/day avg intake and a "+
-    (a.rateWk>=0?"+":"−")+Math.abs(a.rateWk).toFixed(2)+" lb/wk trend.";
-  $("adTuneNote").textContent=g.adTuneNote||"";
-}
-/* True metrics (2026.09.24-c): live readouts from accumulated stored data — no tap
-   needed, repainted on every render. Shows what his log actually says and updates
-   as he logs: avg intake, weight trend, maintenance (learned when data qualifies,
-   otherwise the calculator.net formula). */
-function paintTrueMetrics(){
-  const $=id=>document.getElementById(id);
-  const comp=completeDayCals(21), cals=comp.cals;
-  $("tmIntake").textContent = cals.length ? Math.round(cals.reduce((a,v)=>a+v,0)/cals.length).toLocaleString()+" kcal" : "–";
-  const ws=sortedWeights();
-  /* ONE trend, computed the same way the adaptive engine computes it: EWMA-smoothed,
-     halves-rate over the same 21-day window (2026.10.13-b — no more second trend
-     from all-history first-to-last on the same screen). */
-  let trend=null;
-  if(ws.length>=2){
-    const T=p=>new Date(p.d+"T12:00:00").getTime();
-    const cutoff=new Date(todayStr()+"T12:00:00").getTime()-21*86400000;
-    const wpts=ewmaTrend(ws).filter(p=>T(p)>=cutoff);
-    if(wpts.length>=2) trend=halvesRate(wpts);
-  }
-  $("tmTrend").textContent = trend==null ? "–" : (trend>=0?"+":"−")+Math.abs(trend).toFixed(2)+" "+wUnit()+"/wk";
-  const r=adaptiveCalc(), m=$("tmMaint");
-  /* show the APPLIED learned value (capped) when one exists — the same number the
-     goals run on — not the raw uncapped estimate (2026.10.13-b) */
-  if(S.goals.adaptive&&S.goals.adaptive.ok) m.textContent=S.goals.adaptive.value.toLocaleString()+" kcal · learned"+(S.goals.adaptive.stale?" · holding":"");
-  else if(r.ok) m.textContent=r.value.toLocaleString()+" kcal · learned";
-  else { const f=calcMaintenance(); m.textContent = f.maint>0 ? f.maint.toLocaleString()+" kcal · formula" : "–"; }
-  const wspan = ws.length>=2 ? Math.round((new Date(ws[ws.length-1].d+"T12:00:00")-new Date(ws[0].d+"T12:00:00"))/86400000) : 0;
-  $("tmNote").textContent = cals.length+" complete day"+(cals.length===1?"":"s")+" in the last 3 weeks"+(comp.partial?" · "+comp.partial+" partial skipped":"")+" · weigh-ins span "+wspan+" day"+(wspan===1?"":"s")+
-    " — updates live as you log. The learned value needs 10+ complete days and a 10-day weigh-in span.";
+    (a.rateWk>=0?"+":"−")+Math.abs(a.rateWk).toFixed(2)+" lb/wk trend over the last 3 weeks.";
 }
 /* The scale is the single source of truth for body weight: every weigh-in updates the
    profile weight, so Calculate maintenance, BMI, calorie check, and the diary all
@@ -6718,7 +6620,7 @@ function infoContent(k){
   if(k==="water"){
     const w = waterCalc();
     if(w.unset) return {t:"Water target", b:
-    `<div class="irow"><b>Auto</b> needs your maintenance first — set your profile in Goals › Profile, then tap Calculate maintenance.</div>
+    `<div class="irow"><b>Auto</b> needs your maintenance first — set your profile in Goals › Profile, then tap Calculate & Save.</div>
      <div class="irow">Or type a manual target below and it takes over immediately.</div>`};
     const pk = w.perKcal.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
     return {t:"Water target", b:
@@ -7480,7 +7382,7 @@ document.getElementById("pPhotoFile").onchange = e=>{
 function waterBreakdown(){
   const w = waterCalc();
   if(w.manual) return "Manual target of "+(w.target*8)+" oz ("+w.target+" glasses). Switch to Auto for the research-based formula.";
-  if(w.unset) return "Auto needs your maintenance first — set your profile in Goals › Profile, then tap Calculate maintenance.";
+  if(w.unset) return "Auto needs your maintenance first — set your profile in Goals › Profile, then tap Calculate & Save.";
   return "Auto: "+(w.target*8)+" oz ("+w.target+" glasses) from "+Math.round(w.tdee).toLocaleString()+" kcal maintenance × "+w.tier+" activity (1.0–1.2 mL/kcal, IOM 2004)"+(w.xw?" — +16 oz for a supplement you flagged 'needs extra water'.":" — creatine needs no extra water (ISSN 2017).")+".";
 }
 function paintWater(){
@@ -7504,43 +7406,29 @@ document.getElementById("waterCustom").addEventListener("change", e=>{
 });
 function renderGoals(){
   const g = S.goals, tot = goalTotal();
-  const sl = document.getElementById("goalSlider");
-  sl.min = Math.max(1200, g.maintenance);
-  sl.max = g.maintenance + 2000;
-  sl.value = tot;
-  sl.disabled = !(g.maintenance>0); /* blank slate: calculate maintenance first (matches the mode/surplus chip guards) */
-  document.getElementById("goalMin").textContent = Number(sl.min).toLocaleString()+" kcal";
-  document.getElementById("goalMax").textContent = Number(sl.max).toLocaleString()+" kcal";
   document.getElementById("goalTotal").textContent = Math.round(tot).toLocaleString();
-  document.getElementById("goalSub").textContent = Math.round(g.maintenance).toLocaleString()+" maintenance + "+Math.round(g.surplus>0?g.surplus:0).toLocaleString()+" surplus";
-  document.getElementById("gmC").value = g.carbs; document.getElementById("gmP").value = g.protein; document.getElementById("gmF").value = g.fat;
-  if(typeof syncMacroSliders==="function") syncMacroSliders();
-  const fct = (g.nutrTargets||{}).Fiber;
-  document.getElementById("gmFi").value = fct ? fct.val : "";
-  document.getElementById("gmFi").placeholder = "auto";
+  /* one number, and where it came from — printed right under it */
+  const srcTxt = g.derived ? (g.derived.src==="learned" ? " · from your log" : g.derived.src==="auto-tune" ? " · auto-tuned" : " · from your stats") : "";
+  document.getElementById("goalSub").textContent = Math.round(g.maintenance).toLocaleString()+" maintenance + "+Math.round(g.surplus>0?g.surplus:0).toLocaleString()+" surplus"+srcTxt;
+  document.getElementById("gmCg").textContent = Math.round(g.carbs||0).toLocaleString();
+  document.getElementById("gmPg").textContent = Math.round(g.protein||0).toLocaleString();
+  document.getElementById("gmFg").textContent = Math.round(g.fat||0).toLocaleString();
   renderGoalsProfile();
-  paintAdaptive(); paintTrueMetrics();
+  paintAdaptive();
   document.querySelectorAll("#goalMode .chip").forEach(c=>c.classList.toggle("sel", c.dataset.m===g.mode));
-  document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", g.maintenance>0 && +c.dataset.p === Math.round(g.surplus/g.maintenance*100)));
   paintGainProj();
   updateMacroSplit(); paintWater();
-  document.getElementById("maintHeadVal").textContent = g.maintenance>0 ? Math.round(g.maintenance).toLocaleString()+" kcal" : "";
   const nc = Object.keys(g.nutrTargets||{}).length;
   document.getElementById("microSub").textContent = nc ? nc+" custom · rest FDA defaults" : "FDA defaults — tap to customize";
 }
-/* Macro split: pure analysis, no auto-magic. Percentages are % of the daily calorie goal,
-   uncapped — if the numbers go past 100% that's the truth, not a bug. */
+/* Macro split: read-only analysis (2026.10.13-d). Percentages are % of the daily
+   calorie goal, uncapped — if the numbers go past 100% that's the truth. */
 function updateMacroSplit(){
   const g = S.goals, tot = goalTotal();
-  const auto = g.macroAuto!==false;
-  document.querySelectorAll("#macroModeSeg .segbtn").forEach(b=>b.classList.toggle("on", (b.dataset.m==="auto")===auto));
-  document.getElementById("macroAutoNote").textContent = auto
-    ? (tot>0 ? "Auto · protein 2.2 g/kg, fat 25%, carbs fill the rest. Type a number to go manual."
-             : "Auto is on — calculate your maintenance above and macros fill in themselves.")
-    : "Manual — tap Auto to re-sync.";
-  const c = Math.max(0, parseFloat(document.getElementById("gmC").value)||0);
-  const p = Math.max(0, parseFloat(document.getElementById("gmP").value)||0);
-  const f = Math.max(0, parseFloat(document.getElementById("gmF").value)||0);
+  document.getElementById("macroAutoNote").textContent = tot>0
+    ? "Calculated from your goal — protein 2.2 g/kg, fat 25%, carbs fill the rest."
+    : "Tap Calculate & Save and your macros fill in from your stats and log.";
+  const c = Math.max(0, g.carbs||0), p = Math.max(0, g.protein||0), f = Math.max(0, g.fat||0);
   const cc = c*4, pc = p*4, fc = f*9, sum = cc+pc+fc;
   const pg = v => tot>0 ? Math.round(v/tot*100)+"%" : "–";
   document.getElementById("gmCp").textContent = pg(cc);
@@ -7554,72 +7442,26 @@ function updateMacroSplit(){
   document.getElementById("segC").style.width = w(cc);
   document.getElementById("segP").style.width = w(pc);
   document.getElementById("segF").style.width = w(fc);
-  /* fiber: research auto-target (14 g / 1,000 kcal) or his own override */
+  /* fiber: always the research auto-target now (14 g / 1,000 kcal) */
   const fi = fiberTarget();
-  const fiv = Math.max(0, parseFloat(document.getElementById("gmFi").value)||0);
-  document.getElementById("gmFip").textContent = fi>0 ? Math.round(fiv/fi*100)+"%" : "–";
-  const custom = !!((S.goals.nutrTargets||{}).Fiber);
-  document.getElementById("fiberAutoTag").textContent = custom ? "your target" : "auto · "+fi+" g";
-  document.getElementById("fiberNote").textContent = custom
-    ? "Your target — clear the field for auto."
-    : "Auto · 14 g per 1,000 kcal (FDA / IOM).";
-  document.getElementById("fiberAutoBtn").style.display = custom ? "" : "none";
+  document.getElementById("gmFip").textContent = fi>0 ? Math.round(fi)+" g" : "–";
   /* do the macros actually add up to the goal? */
   const an = document.getElementById("macroAnalysis");
-  if(!(tot>0)){ an.textContent = "Percentages are % of your daily calorie goal — calculate your maintenance above to see them."; return; }
+  if(!(tot>0)){ an.textContent = "Percentages are % of your daily calorie goal — tap Calculate & Save to see them."; return; }
   const diff = Math.round(sum-tot);
-  let s = "Your macros add up to "+Math.round(sum).toLocaleString()+" kcal vs your "+tot.toLocaleString()+" kcal goal";
-  s += diff===0 ? " — exactly on target." : " — "+Math.abs(diff).toLocaleString()+" kcal "+(diff>0?"over":"under")+" your goal.";
+  let st = "Your macros add up to "+Math.round(sum).toLocaleString()+" kcal vs your "+Math.round(tot).toLocaleString()+" kcal goal";
+  st += diff===0 ? " — exactly on target." : " — "+Math.abs(diff).toLocaleString()+" kcal "+(diff>0?"over":"under")+" your goal.";
   const kg = S.goals.profile.weightLb/2.20462;
-  if(kg>0 && p>0) s += " Protein is "+(p/kg).toFixed(1)+" g/kg — the research range for gaining muscle is 1.6–2.2 g/kg (Morton 2018).";
-  an.textContent = s;
+  if(kg>0 && p>0) st += " Protein is "+(p/kg).toFixed(1)+" g/kg — the research range for gaining muscle is 1.6–2.2 g/kg (Morton 2018).";
+  an.textContent = st;
 }
-document.getElementById("goalSlider").addEventListener("input", e=>{
-  const tot = +e.target.value;
-  S.goals.surplus = Math.max(0, Math.round(tot - S.goals.maintenance));
-  S.goals.mode = "custom";
-  save();
-  document.getElementById("goalTotal").textContent = Math.round(goalTotal()).toLocaleString();
-  document.getElementById("goalSub").textContent = Math.round(S.goals.maintenance).toLocaleString()+" maintenance + "+Math.round(S.goals.surplus).toLocaleString()+" surplus";
-  document.querySelectorAll("#goalMode .chip").forEach(c=>c.classList.remove("sel"));
-  document.querySelectorAll("#surpChips .chip").forEach(c=>c.classList.toggle("sel", S.goals.maintenance>0 && +c.dataset.p === Math.round(S.goals.surplus/S.goals.maintenance*100)));
-  paintGainProj();
-  autoDeriveMacros();
-  updateMacroSplit();
-});
-["gmC","gmP","gmF"].forEach(id=>document.getElementById(id).addEventListener("input", ()=>{
-  /* typing a macro takes over manually — Auto switches off so the next recalculation
-     won't overwrite what he typed. Tap Auto to re-sync from the calorie goal. */
-  if(S.goals.macroAuto!==false){ S.goals.macroAuto = false; }
-  commitMacroInputs(); save(); updateMacroSplit();
-  var sl = document.getElementById(id+"s"); if(sl) sl.value = document.getElementById(id).value||0;
-}));
-/* macro sliders — drag to adjust, synced both ways with the number inputs */
-[["gmCs","gmC"],["gmPs","gmP"],["gmFs","gmF"]].forEach(function(pair){
-  var sl = document.getElementById(pair[0]), num = document.getElementById(pair[1]);
-  if(!sl || !num) return;
-  sl.addEventListener("input", function(){
-    num.value = sl.value;
-    if(S.goals.macroAuto!==false){ S.goals.macroAuto = false; }
-    commitMacroInputs(); save(); updateMacroSplit();
-  });
-});
-function syncMacroSliders(){
-  [["gmCs","gmC"],["gmPs","gmP"],["gmFs","gmF"]].forEach(function(pair){
-    var sl = document.getElementById(pair[0]), num = document.getElementById(pair[1]);
-    if(sl && num) sl.value = parseFloat(num.value)||0;
-  });
-}
-document.getElementById("gmFi").addEventListener("input", ()=>{
-  commitMacroInputs(); save(); updateMacroSplit();
-});
 document.querySelectorAll("#pfAct .chip").forEach(c=>c.onclick=()=>{
   commitGoalsInputs();
   S.goals.profile.activityKey = c.dataset.k;
   document.querySelectorAll("#pfAct .chip").forEach(x=>x.classList.toggle("sel", x===c));
-  /* single derivation (2026.10.13-b): in formula mode this recomputes maintenance
-     AND re-derives surplus + macros together; in adaptive mode the chip only feeds
-     the formula prior — the learned maintenance on screen does not move. */
+  /* single derivation: in formula mode this recomputes maintenance AND re-derives
+     surplus + macros together; while the log is running the goal, the chip only
+     feeds the stats estimate — the learned maintenance does not move. */
   commitGoals("activity");
   renderGoals(); renderDiary();
 });
@@ -7635,77 +7477,15 @@ document.querySelectorAll("#pfSex .chip").forEach(c=>c.onclick=()=>{
   commitGoals("profile"); /* single derivation — same rule as the activity chips */
   renderGoals(); renderDiary();
 });
-document.getElementById("pfAuto").onclick = ()=>{
-  commitGoalsInputs();
-  S.goals.profile.auto = !S.goals.profile.auto;
-  save(); renderGoalsProfile();
-};
-document.getElementById("pfTune").onclick = ()=>{
-  commitGoalsInputs();
-  S.goals.autoTune = !S.goals.autoTune;
-  if(S.goals.autoTune && S.goals.useAdaptive){ S.goals.useAdaptive=false; S.goals.adTuneNote=""; } /* the two tuners never fight */
-  save(); renderGoalsProfile();
-};
-document.getElementById("adToggle").onclick = ()=>{
-  commitGoalsInputs();
-  const g=S.goals;
-  g.useAdaptive = !g.useAdaptive;
-  if(g.useAdaptive){
-    if(!(g.adaptive&&g.adaptive.ok)){ alert("Calculate your adaptive TDEE first."); g.useAdaptive=false; }
-    else{
-      g.autoTune=false; /* the two tuners never fight */
-      commitGoals("adaptive");
-      g.adTuneNote="Adaptive TDEE "+todayStr()+": maintenance set to "+g.adaptive.value.toLocaleString()+" kcal.";
-    }
-  } else {
-    /* OFF must mean off (2026.10.13-c): restore the formula derivation atomically.
-       Before, toggling off left the learned maintenance in force with the switch
-       showing off — the state on screen lied about which source was running. */
-    g.adTuneNote="";
-    commitGoals("formula");
-  }
-  save(); renderGoals(); renderDiary();
-};
-document.getElementById("adRecalc").onclick = ()=>{ commitGoalsInputs(); applyAdaptive(); };
 /* 2026.09.27-h: "Needs extra water" is a schedule-style switch row now */
 function paintXWTgl(){ const c=document.getElementById("cXW"), b=document.getElementById("cXWTgl"); if(c&&b) b.classList.toggle("on", c.checked); }
 document.getElementById("cXWRow").onclick = ()=>{ const c=document.getElementById("cXW"); c.checked=!c.checked; paintXWTgl(); };
 document.querySelectorAll("#goalMode .chip").forEach(c=>c.onclick=()=>{
   commitGoalsInputs();
-  if(!(S.goals.maintenance>0)){ alert("Calculate your maintenance first."); return; }
+  if(!(S.goals.maintenance>0)){ alert("Tap Calculate & Save first."); return; }
   S.goals.mode = c.dataset.m;
-  S.goals.surplus = Math.round(S.goals.maintenance*(+c.dataset.pct)/100);
-  autoDeriveMacros();
-  save(); renderGoals(); renderDiary();
-});
-document.querySelectorAll("#surpChips .chip").forEach(c=>c.onclick=()=>{
-  commitGoalsInputs();
-  if(!(S.goals.maintenance>0)){ alert("Calculate your maintenance first."); return; }
-  S.goals.surplus = Math.round(S.goals.maintenance*(+c.dataset.p)/100);
-  S.goals.mode = "custom";
-  autoDeriveMacros();
-  save(); renderGoals(); renderDiary();
-});
-document.getElementById("pfCalc").onclick = ()=>{
-  commitGoalsInputs();
-  /* explicit formula choice wins over the adaptive engine — the ONE place the
-     source switches back to formula (2026.10.13-b). The toggle flips BEFORE the
-     derivation runs, so the formula value is what actually lands. */
-  if(S.goals.useAdaptive){ S.goals.useAdaptive=false; S.goals.adTuneNote=""; }
-  commitGoals("formula"); /* maintenance + surplus % + macros land together */
+  commitGoals("mode"); /* surplus % + macros re-derive with the new mode, atomically */
   renderGoals(); renderDiary();
-  /* never silently "not work": if there's still nothing to calculate from, put the cursor on the missing weight field */
-  if(!(S.goals.profile.weightLb>0)) document.getElementById("pfWeight").focus();
-};
-document.getElementById("fiberAutoBtn").onclick = ()=>{
-  if(S.goals.nutrTargets) delete S.goals.nutrTargets["Fiber"];
-  save(); renderGoals();
-};
-document.querySelectorAll("#macroModeSeg .segbtn").forEach(b=>b.onclick=()=>{
-  commitGoalsInputs();
-  if(b.dataset.m==="auto"){ S.goals.macroAuto = true; deriveMacros(); }
-  else S.goals.macroAuto = false;
-  save(); renderGoals();
 });
 document.getElementById("microRow").onclick = ()=>{
   commitGoalsInputs(); save();
@@ -7716,15 +7496,21 @@ document.getElementById("microRow").onclick = ()=>{
 };
 document.getElementById("goalsDone").onclick = ()=>{
   commitGoalsInputs();
-  if(profHash()!==S.goals.profHash){
-    if(S.goals.useAdaptive) applyAdaptive(); /* adaptive owns maintenance now — re-learn with the new profile */
-    else commitGoals("formula");
-  } /* profile changed → goal can never go stale */
-  save(); showView("profile"); renderDiary();
+  /* THE one calculation (2026.10.13-d): refresh the learned estimate, then let
+     the data pick the source — learned when his log supports it, the stats
+     formula until it does. Macros are always calculated. One button. */
+  refreshAdaptive();
+  S.goals.useAdaptive = !!(S.goals.adaptive && S.goals.adaptive.ok);
+  S.goals.macroAuto = true;
+  if(S.goals.nutrTargets) delete S.goals.nutrTargets["Fiber"]; /* fiber is auto now */
+  commitGoals("calculate");
+  save(); paintAdaptive(); renderGoals(); renderDiary();
+  /* never silently "not work": if there's still nothing to calculate from, put the cursor on the missing weight field */
+  if(!(S.goals.profile.weightLb>0)){ showView("goals"); document.getElementById("pfWeight").focus(); return; }
+  showView("profile");
 };
 /* Typed values commit on every field change (blur/return), so nothing the user
-   typed can ever be lost or silently reverted — Save changes just finalizes. */
-["gmC","gmP","gmF","gmFi"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); updateMacroSplit(); }));
+   typed can ever be lost or silently reverted — Calculate & Save finalizes. */
 ["pfAge","pfHtFt","pfHtIn","pfHtCm","pfWeight","pfFat"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); paintMaintNote(); }));
 document.getElementById("goalsBack").onclick = ()=>{ commitGoalsInputs(); save(); showView(viewReturn); };
 
@@ -8550,12 +8336,16 @@ function autoPilot(){
        recomputes the estimate + provenance and HOLDS (stale flag) on thin data;
        commitGoals() is the only writer of maintenance/surplus/macros. */
     changed = refreshAdaptive();
-    if(changed && g.useAdaptive){
-      /* 2026.10.11-d: only auto-apply when the adaptive toggle is on — otherwise
-         the Goals numbers would "randomly" move every day. The learned value is
-         still recorded above and shown as a tap-to-apply suggestion. */
-      commitGoals("adaptive");
-      autoLog("Maintenance → " + g.adaptive.value.toLocaleString() + " kcal, learned from your last " + g.adaptive.days + " days of eating + weigh-ins.");
+    if(g.adaptive && g.adaptive.ok){
+      /* 2026.10.13-d: no toggle anymore — the log takes over automatically once
+         it can support the number ("based off small amounts of data and over
+         time it will get better" — Jay's brief). The switch from formula to
+         learned is itself a change worth applying + logging. */
+      if(!g.useAdaptive){ g.useAdaptive = true; changed = true; }
+      if(changed){
+        commitGoals("adaptive");
+        autoLog("Maintenance → " + g.adaptive.value.toLocaleString() + " kcal, learned from your last " + g.adaptive.days + " days of eating + weigh-ins.");
+      }
     }
     /* 2. stall / too-fast proposals — the one approve step */
     autoCheckStall();
