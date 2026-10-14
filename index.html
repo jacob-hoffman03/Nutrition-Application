@@ -1276,7 +1276,7 @@ body.reordering #progOverview{display:none}
         <div class="rangenote" id="adNote"></div>
         <div class="card slim">
           <div class="wdet">
-            <div><div class="wt">Use as my maintenance</div><div class="ws">Learns from your last 2 weeks</div></div>
+            <div><div class="wt">Use as my maintenance</div><div class="ws">Learns from your last 3 weeks</div></div>
             <button class="wtgl" id="adToggle" role="switch" aria-checked="false" aria-label="Use adaptive TDEE as maintenance"><span class="knob"></span></button>
           </div>
           <div class="wdet" style="border-top:1px solid var(--line)">
@@ -2401,7 +2401,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.13-a";
+const APP_VERSION = "2026.10.13-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2685,7 +2685,8 @@ function setTheme(hex){
 /* fingerprint of the profile inputs that feed calcMaintenance — if these changed since
    maintenance was last calculated, Save recalculates so the goal can never go stale */
 function profHash(){ const p=S.goals.profile; return [p.weightLb,p.heightIn,p.age,p.sex,p.bodyFat,p.activityKey].join("|"); }
-function recalcMaint(){ if(!(S.goals.profile.weightLb>0)){ const cw = (typeof curBodyWeight==="function")?curBodyWeight():0; if(cw>0) S.goals.profile.weightLb=cw; else { S.goals.profHash = profHash(); return; } } S.goals.maintenance = calcMaintenance().maint; applyModePct(); S.goals.profHash = profHash(); }
+function recalcMaint(){ if(S.goals.useAdaptive) return; /* 2026.10.13-b: adaptive owns maintenance — profile edits (activity, sex, stats) only feed the formula prior, they never overwrite the learned value */
+  if(!(S.goals.profile.weightLb>0)){ const cw = (typeof curBodyWeight==="function")?curBodyWeight():0; if(cw>0) S.goals.profile.weightLb=cw; else { S.goals.profHash = profHash(); return; } } S.goals.maintenance = calcMaintenance().maint; applyModePct(); S.goals.profHash = profHash(); }
 if(!S.goals.profHash) S.goals.profHash = profHash();
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const dstr = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -6485,9 +6486,7 @@ function maybeAutoTune(suggest){
   const last = S.goals.lastAutoTune;
   const since = last ? Math.round((new Date(todayStr()+"T12:00:00")-new Date(last+"T12:00:00"))/86400000) : 999;
   if(since < 14) return false;
-  S.goals.maintenance = Math.max(1200, Math.round(S.goals.maintenance + suggest));
-  applyModePct();
-  autoDeriveMacros();
+  commitGoals("autotune", Math.max(1200, Math.round(S.goals.maintenance + suggest)));
   S.goals.lastAutoTune = todayStr();
   S.goals.tuneNote = "Auto-tune "+todayStr()+": maintenance "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal from your weight trend.";
   return true;
@@ -6514,57 +6513,89 @@ function avgCompleteIntake(){ const r=completeDayCals(); return r.cals.length?r.
    noise can't swing it; missing days are never padded with zeros. The result
    blends toward the formula estimate while data is thin, and weekly moves are
    capped so one noisy week can't yank the target. */
+/* ============ SINGLE DERIVATION (2026.10.13-b) ============
+   maintenance, surplus and macros are DERIVED state — this is the only function
+   allowed to write them (goal-setting inputs, the slider and the surplus chips,
+   write surplus directly by design; the invariant goal = maintenance + surplus
+   holds because surplus is defined against maintenance here). Exactly one
+   source decides maintenance: the learned value while Adaptive is on and valid,
+   otherwise the formula. Every derivation is stamped with its provenance. */
+function commitGoals(reason, maintOverride){
+  const g = S.goals;
+  let src;
+  if(maintOverride>0){ g.maintenance = Math.round(maintOverride); src = "auto-tune"; }
+  else if(g.useAdaptive && g.adaptive && g.adaptive.ok && g.adaptive.value>0){ g.maintenance = g.adaptive.value; src = "learned"; }
+  else {
+    if(!(g.profile.weightLb>0)){ const cw = (typeof curBodyWeight==="function") ? curBodyWeight() : 0; if(cw>0) g.profile.weightLb = cw; }
+    const cm = calcMaintenance(); if(cm.maint>0) g.maintenance = cm.maint;
+    src = g.useAdaptive ? "formula (learning)" : "formula";
+    g.profHash = profHash();
+  }
+  applyModePct();      /* preset modes: surplus stays glued to its % of maintenance */
+  autoDeriveMacros();  /* macros follow the goal unless he locked them manually */
+  g.derived = {src, maint: Math.round(g.maintenance||0), at: todayStr(), why: reason||""};
+  save();
+}
 function adaptiveCalc(){
-  /* COMPACT MODEL (2026.10.11-g): one learned number. TDEE = avg intake − (lb/wk ÷ 7 × 3500).
-     No formula blending, no confidence %. Formula is bootstrap-only when data is thin. */
-  const WIN=14, MIN_DAYS=7, MIN_SPAN=7;
+  /* ADAPTIVE v3 (2026.10.13-b): one learned number over ONE aligned 21-day window —
+     the intake average and the weight trend cover the same days (MacroFactor's
+     ~3-week lookback). TDEE = avg intake − (lb/wk ÷ 7 × 3500). No formula blending,
+     no confidence %. Coverage gates: below 10 complete days or a 10-day weigh-in
+     span the estimate reports not-ok and the caller HOLDS the last good value
+     instead of guessing (a frozen number beats a drifting one). */
+  const WIN=21, MIN_DAYS=10, MIN_SPAN=10;
   if(!(S.goals.profile.weightLb>0)) return {ok:false, reason:"profile"};
-  const comp=completeDayCals(WIN), cals=comp.cals, partial=comp.partial;
+  const comp=completeDayCals(WIN), cals=comp.cals, partial=comp.partial, logged=comp.logged||0;
   const ws=sortedWeights(), T=p=>new Date(p.d+"T12:00:00").getTime();
   const cutoff=new Date(todayStr()+"T12:00:00").getTime()-WIN*86400000;
   /* EWMA smoothing before differencing: water weight must not whipsaw the number */
   const wpts=ewmaTrend(ws).filter(p=>T(p)>=cutoff);
   const spanD=wpts.length>=2?(T(wpts[wpts.length-1])-T(wpts[0]))/86400000:0;
   if(cals.length<MIN_DAYS||wpts.length<2||spanD<MIN_SPAN)
-    return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD), partial};
+    return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD), partial, logged};
   const rateWk=halvesRate(wpts);
-  if(rateWk==null) return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD), partial};
+  if(rateWk==null) return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD), partial, logged};
   const avg=cals.reduce((a,v)=>a+v,0)/cals.length;
   const learned=avg-rateWk/7*3500; /* energy balance: surplus (gain) subtracts, deficit (loss) adds back */
   return {ok:true, days:cals.length, span:Math.round(spanD), avg:Math.round(avg),
           rateWk:Math.round(rateWk*100)/100, learned:Math.round(learned),
-          value:Math.round(learned), partial};
+          value:Math.round(learned), partial, logged};
 }
-function applyAdaptive(){
+/* Recompute the learned estimate and its provenance record. Returns true when the
+   applied value moved. Never writes maintenance itself — commitGoals does that. */
+function refreshAdaptive(){
   const g=S.goals, r=adaptiveCalc();
   if(!r.ok){
-    /* keep the last good value and flag it stale — thin data must never nuke a learned target */
+    /* HOLD: thin data keeps the last good value and flags it stale */
     if(g.adaptive&&g.adaptive.ok) g.adaptive.stale=true;
-    else g.adaptive={ok:false, reason:r.reason, days:r.days||0, span:r.span||0, partial:r.partial||0, updated:todayStr()};
-    save(); paintAdaptive(); renderGoals(); renderDiary(); return;
+    else g.adaptive={ok:false, reason:r.reason, days:r.days||0, span:r.span||0, partial:r.partial||0, logged:r.logged||0, updated:todayStr()};
+    return false;
   }
   let v=r.value;
   const prev=g.adaptive&&g.adaptive.value>0?g.adaptive.value:null;
-  if(prev!=null) v=prev+Math.max(-150,Math.min(150,v-prev)); /* weekly moves capped, same spirit as auto-tune */
+  if(prev!=null) v=prev+Math.max(-150,Math.min(150,v-prev)); /* moves capped: a noisy week can't yank the target */
   v=Math.round(v);
   g.adaptive={ok:true, stale:false, value:v, learned:r.learned, avg:r.avg,
-    rateWk:r.rateWk, days:r.days, span:r.span, partial:r.partial||0, updated:todayStr()};
+    rateWk:r.rateWk, days:r.days, span:r.span, partial:r.partial||0, logged:r.logged||0, updated:todayStr(), algo:"v3-21d"};
   g.adaptiveHist=g.adaptiveHist||[];
   const last=g.adaptiveHist[g.adaptiveHist.length-1];
   if(!last||last.d!==todayStr()) g.adaptiveHist.push({d:todayStr(), v});
   if(g.adaptiveHist.length>26) g.adaptiveHist=g.adaptiveHist.slice(-26);
-  if(g.useAdaptive){
-    g.maintenance=v; applyModePct(); autoDeriveMacros();
+  if(g.useAdaptive)
     g.adTuneNote="Adaptive TDEE "+todayStr()+": maintenance set to "+v.toLocaleString()+" kcal from your trend.";
-  }
-  save(); paintAdaptive(); renderGoals(); renderDiary();
+  return prev==null||v!==prev;
+}
+function applyAdaptive(){
+  refreshAdaptive();
+  commitGoals("adaptive");
+  paintAdaptive(); renderGoals(); renderDiary();
 }
 function paintAdaptive(){
   const g=S.goals, a=g.adaptive, $=id=>document.getElementById(id);
   const tg=$("adToggle");
   tg.classList.toggle("on", !!g.useAdaptive);
   tg.setAttribute("aria-checked", !!g.useAdaptive);
-  const explainer="Compares what you ate against your weight trend over the last 2 weeks: TDEE = avg intake − (weight change × 3,500 kcal/lb). Needs 7+ logged days and weigh-ins spread across a week.";
+  const explainer="Compares what you ate against your weight trend over the last 3 weeks: TDEE = avg intake − (weight change × 3,500 kcal/lb). Needs 10+ complete logged days and weigh-ins spread across 10+ days — below that, the last good value holds instead of guessing.";
   const chart=$("adChart");
   if(!a){
     $("adVal").textContent="–"; $("adSub").textContent="Tap Recalculate to learn your TDEE from your log.";
@@ -6575,7 +6606,7 @@ function paintAdaptive(){
     $("adVal").textContent="–";
     $("adSub").textContent=a.reason==="profile"
       ? "Add your profile above first."
-      : "Not enough data yet — "+a.days+" of 7 logged days"+(a.span<7?"; weigh-ins span "+a.span+" of 7 days":"")+".";
+      : "Not enough data yet — "+a.days+" of 10 logged days"+(a.span<10?"; weigh-ins span "+a.span+" of 10 days":"")+".";
     
     chart.style.display="none"; $("adNote").textContent=explainer; $("adTuneNote").textContent=g.adTuneNote||""; return;
   }
@@ -6602,22 +6633,29 @@ function paintAdaptive(){
    otherwise the calculator.net formula). */
 function paintTrueMetrics(){
   const $=id=>document.getElementById(id);
-  const comp=completeDayCals(14), cals=comp.cals;
+  const comp=completeDayCals(21), cals=comp.cals;
   $("tmIntake").textContent = cals.length ? Math.round(cals.reduce((a,v)=>a+v,0)/cals.length).toLocaleString()+" kcal" : "–";
   const ws=sortedWeights();
+  /* ONE trend, computed the same way the adaptive engine computes it: EWMA-smoothed,
+     halves-rate over the same 21-day window (2026.10.13-b — no more second trend
+     from all-history first-to-last on the same screen). */
   let trend=null;
   if(ws.length>=2){
     const T=p=>new Date(p.d+"T12:00:00").getTime();
-    const spanD=(T(ws[ws.length-1])-T(ws[0]))/86400000;
-    if(spanD>=1) trend=(ws[ws.length-1].w-ws[0].w)/spanD*7;
+    const cutoff=new Date(todayStr()+"T12:00:00").getTime()-21*86400000;
+    const wpts=ewmaTrend(ws).filter(p=>T(p)>=cutoff);
+    if(wpts.length>=2) trend=halvesRate(wpts);
   }
   $("tmTrend").textContent = trend==null ? "–" : (trend>=0?"+":"−")+Math.abs(trend).toFixed(2)+" "+wUnit()+"/wk";
   const r=adaptiveCalc(), m=$("tmMaint");
-  if(r.ok) m.textContent=r.value.toLocaleString()+" kcal · learned";
+  /* show the APPLIED learned value (capped) when one exists — the same number the
+     goals run on — not the raw uncapped estimate (2026.10.13-b) */
+  if(S.goals.adaptive&&S.goals.adaptive.ok) m.textContent=S.goals.adaptive.value.toLocaleString()+" kcal · learned"+(S.goals.adaptive.stale?" · holding":"");
+  else if(r.ok) m.textContent=r.value.toLocaleString()+" kcal · learned";
   else { const f=calcMaintenance(); m.textContent = f.maint>0 ? f.maint.toLocaleString()+" kcal · formula" : "–"; }
   const wspan = ws.length>=2 ? Math.round((new Date(ws[ws.length-1].d+"T12:00:00")-new Date(ws[0].d+"T12:00:00"))/86400000) : 0;
-  $("tmNote").textContent = cals.length+" complete day"+(cals.length===1?"":"s")+" in the last 2 weeks"+(comp.partial?" · "+comp.partial+" partial skipped":"")+" · weigh-ins span "+wspan+" day"+(wspan===1?"":"s")+
-    " — updates live as you log. The learned value needs 7+ complete days and a 7-day weigh-in span.";
+  $("tmNote").textContent = cals.length+" complete day"+(cals.length===1?"":"s")+" in the last 3 weeks"+(comp.partial?" · "+comp.partial+" partial skipped":"")+" · weigh-ins span "+wspan+" day"+(wspan===1?"":"s")+
+    " — updates live as you log. The learned value needs 10+ complete days and a 10-day weigh-in span.";
 }
 /* The scale is the single source of truth for body weight: every weigh-in updates the
    profile weight, so Calculate maintenance, BMI, calorie check, and the diary all
@@ -6632,12 +6670,9 @@ function syncWeightFromLog(newLb, dateStr){
   p.weightLb = effW;
   let tuned = false;
   if(p.auto && changed && effW>0 && !S.goals.useAdaptive){
-    S.goals.maintenance = calcMaintenance().maint;
-    applyModePct();
-    autoDeriveMacros(); /* auto macros follow the new goal; manual macros stay untouched */
+    commitGoals("weight"); /* single derivation: maintenance + surplus % + macros together */
     S.goals.autoNote = "Auto-adjusted from "+wDisp(effW)+" "+wUnit()+" on "+dateStr+" — maintenance"+(S.goals.macroAuto!==false?" and macros":"")+" recalculated.";
     tuned = true;
-    S.goals.profHash = profHash();
   } else if(changed && effW>0){
     /* 2026.09.25-d: auto-adjust is off — the weight still syncs (BMI, BAC, macro
        math all read it) but maintenance waits for the user's next Goals save.
@@ -7579,8 +7614,11 @@ document.querySelectorAll("#pfAct .chip").forEach(c=>c.onclick=()=>{
   commitGoalsInputs();
   S.goals.profile.activityKey = c.dataset.k;
   document.querySelectorAll("#pfAct .chip").forEach(x=>x.classList.toggle("sel", x===c));
-  recalcMaint();
-  save(); renderGoals(); renderDiary();
+  /* single derivation (2026.10.13-b): in formula mode this recomputes maintenance
+     AND re-derives surplus + macros together; in adaptive mode the chip only feeds
+     the formula prior — the learned maintenance on screen does not move. */
+  commitGoals("activity");
+  renderGoals(); renderDiary();
 });
 document.querySelectorAll("#pfUnits .chip").forEach(c=>c.onclick=()=>{
   commitGoalsInputs();
@@ -7591,8 +7629,8 @@ document.querySelectorAll("#pfSex .chip").forEach(c=>c.onclick=()=>{
   commitGoalsInputs();
   S.goals.profile.sex = c.dataset.x;
   document.querySelectorAll("#pfSex .chip").forEach(x=>x.classList.toggle("sel", x===c));
-  recalcMaint();
-  save(); renderGoals(); renderDiary();
+  commitGoals("profile"); /* single derivation — same rule as the activity chips */
+  renderGoals(); renderDiary();
 });
 document.getElementById("pfAuto").onclick = ()=>{
   commitGoalsInputs();
@@ -7613,7 +7651,7 @@ document.getElementById("adToggle").onclick = ()=>{
     if(!(g.adaptive&&g.adaptive.ok)){ alert("Calculate your adaptive TDEE first."); g.useAdaptive=false; }
     else{
       g.autoTune=false; /* the two tuners never fight */
-      g.maintenance=g.adaptive.value; applyModePct(); autoDeriveMacros();
+      commitGoals("adaptive");
       g.adTuneNote="Adaptive TDEE "+todayStr()+": maintenance set to "+g.adaptive.value.toLocaleString()+" kcal.";
     }
   } else g.adTuneNote="";
@@ -7641,10 +7679,12 @@ document.querySelectorAll("#surpChips .chip").forEach(c=>c.onclick=()=>{
 });
 document.getElementById("pfCalc").onclick = ()=>{
   commitGoalsInputs();
-  recalcMaint();
-  if(S.goals.useAdaptive){ S.goals.useAdaptive=false; S.goals.adTuneNote=""; } /* explicit formula choice wins over the adaptive engine */
-  autoDeriveMacros(); /* macros follow the fresh calculation — nothing to type */
-  save(); renderGoals(); renderDiary();
+  /* explicit formula choice wins over the adaptive engine — the ONE place the
+     source switches back to formula (2026.10.13-b). The toggle flips BEFORE the
+     derivation runs, so the formula value is what actually lands. */
+  if(S.goals.useAdaptive){ S.goals.useAdaptive=false; S.goals.adTuneNote=""; }
+  commitGoals("formula"); /* maintenance + surplus % + macros land together */
+  renderGoals(); renderDiary();
   /* never silently "not work": if there's still nothing to calculate from, put the cursor on the missing weight field */
   if(!(S.goals.profile.weightLb>0)) document.getElementById("pfWeight").focus();
 };
@@ -7669,7 +7709,7 @@ document.getElementById("goalsDone").onclick = ()=>{
   commitGoalsInputs();
   if(profHash()!==S.goals.profHash){
     if(S.goals.useAdaptive) applyAdaptive(); /* adaptive owns maintenance now — re-learn with the new profile */
-    else { recalcMaint(); autoDeriveMacros(); }
+    else commitGoals("formula");
   } /* profile changed → goal can never go stale */
   save(); showView("profile"); renderDiary();
 };
@@ -8070,8 +8110,7 @@ function renderProfile(){
         S.goals.profile.bodyFat = bfVal >= 0 ? bfVal : 0;
         S.goals.profile.waistIn = waistVal >= 0 ? waistVal : 0;
         S.goals.profile.updatedAt = todayStr();
-        recalcMaint();
-        if(typeof autoDeriveMacros === "function") autoDeriveMacros();
+        commitGoals("stats"); /* single derivation — maintenance/surplus/macros together, adaptive-safe */
         save();
         qForm.classList.remove("open");
         qTgl.textContent = "Edit Stats ›";
@@ -8496,31 +8535,18 @@ function autoPilot(){
   var a = autoState(), g = S.goals, today = todayStr(), changed = false;
   if(a.lastRun !== today){
     a.lastRun = today;
-    /* 1. learned maintenance auto-applies — same guards as the manual Calorie Check */
-    var r = adaptiveCalc();
-    if(r.ok){
-      var prev = (g.adaptive && g.adaptive.value > 0) ? g.adaptive.value : null;
-      var v = r.value;
-      if(prev != null) v = prev + Math.max(-150, Math.min(150, v - prev));
-      v = Math.round(v);
-      g.adaptive = {ok: true, stale: false, value: v, learned: r.learned, avg: r.avg,
-        rateWk: r.rateWk, days: r.days, span: r.span, partial: r.partial || 0, updated: today};
-      g.adaptiveHist = g.adaptiveHist || [];
-      var last = g.adaptiveHist[g.adaptiveHist.length - 1];
-      if(!last || last.d !== today) g.adaptiveHist.push({d: today, v: v});
-      if(g.adaptiveHist.length > 26) g.adaptiveHist = g.adaptiveHist.slice(-26);
-      if(prev == null || v !== prev){
-        /* 2026.10.11-d: only auto-apply when the adaptive toggle is on — otherwise
-           the Goals numbers would "randomly" move every day. Learned value is still
-           recorded and shown as a tap-to-apply suggestion. */
-        if(g.useAdaptive){
-          g.maintenance = v; applyModePct(); autoDeriveMacros();
-          autoLog("Maintenance → " + v.toLocaleString() + " kcal, learned from your last " + r.days + " days of eating + weigh-ins.");
-        }
-        changed = true;
-      }
-    } else if(g.adaptive && g.adaptive.ok){
-      g.adaptive.stale = true; /* thin data: keep the last good value, flag it */
+    /* 1. learned maintenance auto-applies through the SAME single derivation as
+       the manual Recalculate (2026.10.13-b) — this block used to be a second,
+       hand-copied implementation that could drift from it. refreshAdaptive()
+       recomputes the estimate + provenance and HOLDS (stale flag) on thin data;
+       commitGoals() is the only writer of maintenance/surplus/macros. */
+    changed = refreshAdaptive();
+    if(changed && g.useAdaptive){
+      /* 2026.10.11-d: only auto-apply when the adaptive toggle is on — otherwise
+         the Goals numbers would "randomly" move every day. The learned value is
+         still recorded above and shown as a tap-to-apply suggestion. */
+      commitGoals("adaptive");
+      autoLog("Maintenance → " + g.adaptive.value.toLocaleString() + " kcal, learned from your last " + g.adaptive.days + " days of eating + weigh-ins.");
     }
     /* 2. stall / too-fast proposals — the one approve step */
     autoCheckStall();
