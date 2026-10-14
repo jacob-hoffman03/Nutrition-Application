@@ -905,9 +905,9 @@ body{ background:var(--bg); }
   margin:0 2px;
   background:linear-gradient(135deg,var(--acc),var(--acc-deep)); box-shadow:0 8px 20px rgba(91,91,240,.42);
   display:flex; align-items:center; justify-content:center; transition:transform .15s ease;
-  transform:translateY(-22px); } /* 2026.10.14-b: raised further (Jay's ask) */
+  transform:translateY(-30px); } /* 2026.10.14-c: raised further (Jay's ask) */
 .tabfab svg{ width:24px; height:24px; }
-.tabfab:active{ transform:translateY(-22px) scale(.93); }
+.tabfab:active{ transform:translateY(-30px) scale(.93); }
 /* sheets + primary buttons */
 .sheet .panel{ border-radius:11px 14px 0 0; }
 .bigbtn{ border-radius:9px; }
@@ -1065,7 +1065,7 @@ body.reordering #progOverview{display:none}
 .pf-edit-form{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
 .pf-edit-form.open{display:block;}
 
-/* Profile goals hero (2026.10.14-b): the data center — one colorful panel on
+/* Profile goals hero (2026.10.14-c): the data center — one colorful panel on
    top of Profile, painted only from S.goals (never the formula). */
 .pfhero{display:block;width:100%;text-align:left;border:none;cursor:pointer;font-family:inherit;color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc-deep));border-radius:var(--radius);padding:16px;margin:0 0 12px}
 .pfhero-lbl{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
@@ -1077,7 +1077,7 @@ body.reordering #progOverview{display:none}
 .pfhero-m{background:rgba(255,255,255,.16);padding:5px 10px;border-radius:5px;font-size:12.5px}
 .pfhero-m b{font-size:13px}
 
-/* Consistency heatmap (2026.10.14-b): 14 weeks x 7 days, color = share of the
+/* Consistency heatmap (2026.10.14-c): 14 weeks x 7 days, color = share of the
    goal eaten. Locked days get an outline; future days fade out. */
 .hmgrid{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:3px;margin-top:10px}
 .hmcell{aspect-ratio:1;border:none;border-radius:3px;padding:0;cursor:pointer;background:var(--card2)}
@@ -1086,7 +1086,7 @@ body.reordering #progOverview{display:none}
 .hmlegend{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);margin-top:8px}
 .hmlegend i{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
 
-/* Progress simplification (2026.10.14-b, Jay's brief): the weight panel becomes
+/* Progress simplification (2026.10.14-c, Jay's brief): the weight panel becomes
    a cube — circle + live weight + the Start/Current/Target mini row. The pacing
    capsule and the status note are hidden (their painters still run harmlessly;
    one word brings them back). Day cycle arc shrinks a step. */
@@ -1095,10 +1095,10 @@ body.reordering #progOverview{display:none}
 .bodycard .road-capsule{display:none}
 .bodycard .road-status-note{display:none}
 .bodycard .xrow{padding:10px 2px}
-/* Heatmap: explicit 14 columns so cells fill the card evenly (2026.10.14-b) */
+/* Heatmap: explicit 14 columns so cells fill the card evenly (2026.10.14-c) */
 .hmgrid{grid-template-columns:repeat(14,1fr)}
 
-/* Progress downsizing, round 2 (2026.10.14-b, Jay's brief): This week's chart
+/* Progress downsizing, round 2 (2026.10.14-c, Jay's brief): This week's chart
    and goal-day circles shrink a step; the macro stacks match; the Day cycle
    panel trims padding and arc size again. Info content unchanged. */
 .weekcard .bars7{height:104px}
@@ -1110,6 +1110,24 @@ body.reordering #progOverview{display:none}
 .weekcard .chal-dot svg{width:11px;height:11px}
 .daycycle{padding:10px 14px 10px}
 .daycycle svg{max-width:240px}
+
+/* Body hero redesign (2026.10.14-c, Jay's brief): theme-gradient panel —
+   translucent ring circle with the live weight, white road minis and progress
+   fill. BMI / Target check / Muscle now live in a plain card below it, still
+   inside the same panel unit. All painters/ids untouched. */
+.bodycard{background:linear-gradient(135deg,var(--acc),var(--acc-deep));color:#fff;border:none}
+.bodycard .cardttl{color:#fff}
+.bodycard .sicon{background:rgba(255,255,255,.16);color:#fff}
+.bodycard .pill{background:rgba(255,255,255,.22);color:#fff}
+.bodycard .wtcircle{width:148px;height:148px;background:rgba(255,255,255,.13);border:2px solid rgba(255,255,255,.38);box-shadow:0 10px 26px rgba(20,20,70,.22);color:#fff}
+.bodycard .wtc-unit{color:rgba(255,255,255,.85)}
+.bodycard .wtc-date{color:rgba(255,255,255,.78)}
+.bodycard .wtc-hint{color:#fff}
+.bodycard .road-tag,.bodycard .road-subt{color:rgba(255,255,255,.75)}
+.bodycard .road-num{color:#fff}
+.bodycard .road-cur-badge{background:rgba(255,255,255,.22);color:#fff}
+.bodycard .road-pbar{background:rgba(255,255,255,.25)}
+.bodycard .road-pfill{background:#fff}
 </style>
 </head>
 <body>
@@ -1288,7 +1306,7 @@ body.reordering #progOverview{display:none}
     </div>
   </section>
 
-  <!-- GOALS (compact redesign 2026.10.14-b, Jay's brief: full compact, clean,
+  <!-- GOALS (compact redesign 2026.10.14-c, Jay's brief: full compact, clean,
        the machinery runs in the background. One goal card, one macros card,
        one stats card, one button. The learned estimate's evidence is a single
        line in the goal card — its history/data stay in storage, off the page.) -->
@@ -1434,6 +1452,8 @@ body.reordering #progOverview{display:none}
               <div id="trajPct"></div>
             </div>
           </div><!-- /bodyhero -->
+        </div><!-- /card bodycard (hero) -->
+        <div class="card" style="margin-top:0">
 
           <button class="xrow" data-x="bmi" aria-label="BMI details">
             <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg></span>
@@ -1482,7 +1502,7 @@ body.reordering #progOverview{display:none}
             </div>
             <button class="srow" id="muscleGoalBtn" style="margin-top:8px"><span>Muscle goal: <b id="muscleGoalLbl">0 lb</b></span><span class="chev2">›</span></button>
           </div></div>
-        </div><!-- /card bodycard -->
+        </div><!-- /card body details -->
       </div><!-- /punit data-pid="body" -->
 
       <div class="punit" data-pid="week">
@@ -2346,7 +2366,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.14-b";
+const APP_VERSION = "2026.10.14-c";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4435,7 +4455,7 @@ function renderSheetResults(q0){
   paintSheetSmart(q);
   let list = sheetTab==="recent" ? recentFoods()
     : sheetTab==="favorites" ? S.favorites.map(n=>findFood(n)).filter(Boolean) /* by name: resolves custom + verified */
-    : sheetTab==="supps" ? allFoods().filter(f=>f.kind==="supp") /* his whole stack, defaults + custom — never buried in All (2026.10.14-b) */
+    : sheetTab==="supps" ? allFoods().filter(f=>f.kind==="supp") /* his whole stack, defaults + custom — never buried in All (2026.10.14-c) */
     : (function(){ const seen = new Set(S.customFoods.map(f=>f.n)); return S.customFoods.slice().reverse().concat(FOODS.filter(f=>!seen.has(f.n))); })(); /* All: his foods first, then default foods not already his */
   if(q) list = list.filter(f => f.n.toLowerCase().includes(q) || (f.loc||"").toLowerCase().includes(q)); /* searching a place finds its foods too */
   if(!q && sheetTab==="recent" && !list.length) list = allFoods();
@@ -4744,7 +4764,7 @@ function delCustomFood(name){
   const fi = S.favorites.indexOf(name); if(fi>=0) S.favorites.splice(fi,1);
   save(); renderFoods();
 }
-/* Foods page (2026.10.14-b): Supplements get their own card so the daily stack
+/* Foods page (2026.10.14-c): Supplements get their own card so the daily stack
    is never buried in the food list, and the list actually sorts — Recent,
    Most logged (counted from his diary, no new tracking), A–Z, per-serving
    Protein/Carbs/Fat/Calories, and protein density. The star chip filters to
@@ -6442,7 +6462,7 @@ function readProfile(){
    Called before ANY re-render and on every field change, so a tap can never
    silently wipe an edit the user typed but hadn't saved yet. */
 function commitMacroInputs(){
-  /* 2026.10.14-b: macros are calculated, never typed — the Goals page has no
+  /* 2026.10.14-c: macros are calculated, never typed — the Goals page has no
      macro inputs anymore. Kept as a no-op because commitGoalsInputs() and a
      few legacy callers still call it. */
 }function commitGoalsInputs(){
@@ -6585,7 +6605,7 @@ function applyAdaptive(){
   paintAdaptive(); renderGoals(); renderDiary();
 }
 function paintAdaptive(){
-  /* Background machinery, one line of evidence (2026.10.14-b): the learned
+  /* Background machinery, one line of evidence (2026.10.14-c): the learned
      estimate, its history, and its gates all live in storage and keep
      updating via Calculate & Save + the daily autopilot. The page shows a
      single line inside the goal card: which maintenance is running and the
@@ -7461,7 +7481,7 @@ function renderGoals(){
   const nc = Object.keys(g.nutrTargets||{}).length;
   document.getElementById("microSub").textContent = nc ? nc+" custom · rest FDA defaults" : "FDA defaults — tap to customize";
 }
-/* Macro split: read-only analysis (2026.10.14-b). Percentages are % of the daily
+/* Macro split: read-only analysis (2026.10.14-c). Percentages are % of the daily
    calorie goal, uncapped — if the numbers go past 100% that's the truth. */
 function updateMacroSplit(){
   const g = S.goals, tot = goalTotal();
@@ -7533,7 +7553,7 @@ document.getElementById("microRow").onclick = ()=>{
 };
 document.getElementById("goalsDone").onclick = ()=>{
   commitGoalsInputs();
-  /* THE one calculation (2026.10.14-b): refresh the learned estimate, then let
+  /* THE one calculation (2026.10.14-c): refresh the learned estimate, then let
      the data pick the source — learned when his log supports it, the stats
      formula until it does. Macros are always calculated. One button. */
   refreshAdaptive();
@@ -7555,7 +7575,7 @@ document.getElementById("goalsBack").onclick = ()=>{ commitGoalsInputs(); save()
 function renderSettings(){
   const g = S.goals;
   renderProfileCard();
-  /* Profile hero (2026.10.14-b): painted from S.goals — the same stored
+  /* Profile hero (2026.10.14-c): painted from S.goals — the same stored
      maintenance/surplus/macros the Goals page runs on. Never the formula. */
   const hg = document.getElementById("pfHeroGoal");
   if(hg){
@@ -8247,7 +8267,7 @@ function autoDismissProp(id){
   save(); paintAutoZone();
 }
 
-/* Consistency heatmap painter (2026.10.14-b). One yardstick — today's goal —
+/* Consistency heatmap painter (2026.10.14-c). One yardstick — today's goal —
    applied to every day, so the colors can never disagree with the targets. */
 function paintHeatmap(){
   var grid = document.getElementById("hmGrid"); if(!grid) return;
@@ -8290,7 +8310,7 @@ function paintAutoZone(){
       '<button class="bigbtn" style="flex:1;margin:0;background:none;border:1.5px solid var(--line);color:var(--ink)" data-ap-dismiss="' + p.id + '">Not now</button>' +
       '</div></div>';
   });
-  /* Compact feed (2026.10.14-b): the current maintenance is a hero number;
+  /* Compact feed (2026.10.14-c): the current maintenance is a hero number;
      history is one slim row per entry (value + delta + date) instead of the
      same long sentence repeated. Nothing is hidden — just said once. */
   var feed = a.feed.slice(0, 6);
@@ -8339,7 +8359,7 @@ function autoPilot(){
        commitGoals() is the only writer of maintenance/surplus/macros. */
     changed = refreshAdaptive();
     if(g.adaptive && g.adaptive.ok){
-      /* 2026.10.14-b: no toggle anymore — the log takes over automatically once
+      /* 2026.10.14-c: no toggle anymore — the log takes over automatically once
          it can support the number ("based off small amounts of data and over
          time it will get better" — Jay's brief). The switch from formula to
          learned is itself a change worth applying + logging. */
