@@ -905,7 +905,7 @@ body{ background:var(--bg); }
   margin:0 2px;
   background:linear-gradient(135deg,var(--acc),var(--acc-deep)); box-shadow:0 8px 20px rgba(91,91,240,.42);
   display:flex; align-items:center; justify-content:center; transition:transform .15s ease;
-  transform:translateY(-30px); } /* 2026.10.14-g: raised further (Jay's ask) */
+  transform:translateY(-30px); } /* 2026.10.14-h: raised further (Jay's ask) */
 .tabfab svg{ width:24px; height:24px; }
 .tabfab:active{ transform:translateY(-30px) scale(.93); }
 /* sheets + primary buttons */
@@ -1065,7 +1065,7 @@ body.reordering #progOverview{display:none}
 .pf-edit-form{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
 .pf-edit-form.open{display:block;}
 
-/* Profile goals hero (2026.10.14-g): the data center — one colorful panel on
+/* Profile goals hero (2026.10.14-h): the data center — one colorful panel on
    top of Profile, painted only from S.goals (never the formula). */
 .pfhero{display:block;width:100%;text-align:left;border:none;cursor:pointer;font-family:inherit;color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc-deep));border-radius:var(--radius);padding:16px;margin:0 0 12px}
 .pfhero-lbl{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
@@ -1077,7 +1077,7 @@ body.reordering #progOverview{display:none}
 .pfhero-m{background:rgba(255,255,255,.16);padding:5px 10px;border-radius:5px;font-size:12.5px}
 .pfhero-m b{font-size:13px}
 
-/* Consistency heatmap (2026.10.14-g): 14 weeks x 7 days, color = share of the
+/* Consistency heatmap (2026.10.14-h): 14 weeks x 7 days, color = share of the
    goal eaten. Locked days get an outline; future days fade out. */
 .hmgrid{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:3px;margin-top:10px}
 .hmcell{aspect-ratio:1;border:none;border-radius:3px;padding:0;cursor:pointer;background:var(--card2)}
@@ -1086,7 +1086,7 @@ body.reordering #progOverview{display:none}
 .hmlegend{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);margin-top:8px}
 .hmlegend i{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
 
-/* Progress simplification (2026.10.14-g, Jay's brief): the weight panel becomes
+/* Progress simplification (2026.10.14-h, Jay's brief): the weight panel becomes
    a cube — circle + live weight + the Start/Current/Target mini row. The pacing
    capsule and the status note are hidden (their painters still run harmlessly;
    one word brings them back). Day cycle arc shrinks a step. */
@@ -1095,10 +1095,10 @@ body.reordering #progOverview{display:none}
 .bodycard .road-capsule{display:none}
 .bodycard .road-status-note{display:none}
 .bodycard .xrow{padding:10px 2px}
-/* Heatmap: explicit 14 columns so cells fill the card evenly (2026.10.14-g) */
+/* Heatmap: explicit 14 columns so cells fill the card evenly (2026.10.14-h) */
 .hmgrid{grid-template-columns:repeat(14,1fr)}
 
-/* Progress downsizing, round 2 (2026.10.14-g, Jay's brief): This week's chart
+/* Progress downsizing, round 2 (2026.10.14-h, Jay's brief): This week's chart
    and goal-day circles shrink a step; the macro stacks match; the Day cycle
    panel trims padding and arc size again. Info content unchanged. */
 .weekcard .bars7{height:104px}
@@ -1111,7 +1111,7 @@ body.reordering #progOverview{display:none}
 .daycycle{padding:10px 14px 10px}
 .daycycle svg{max-width:240px}
 
-/* Body hero redesign (2026.10.14-g, Jay's brief): theme-gradient panel —
+/* Body hero redesign (2026.10.14-h, Jay's brief): theme-gradient panel —
    translucent ring circle with the live weight, white road minis and progress
    fill. BMI / Target check / Muscle now live in a plain card below it, still
    inside the same panel unit. All painters/ids untouched. */
@@ -1129,7 +1129,7 @@ body.reordering #progOverview{display:none}
 .bodycard .road-pbar{background:rgba(255,255,255,.25)}
 .bodycard .road-pfill{background:#fff}
 
-/* Weight circle refinement (2026.10.14-g, Jay's spec): the number + unit sit
+/* Weight circle refinement (2026.10.14-h, Jay's spec): the number + unit sit
    on ONE line, the date below is numeric (0/0/0 style), and progress from
    start to target is a RING around the circle — the straight bar is gone.
    Muscle row removed from the details card (painters left harmless). */
@@ -1143,17 +1143,24 @@ body.reordering #progOverview{display:none}
 .xrow[data-x="muscle"]{display:none}
 #xdetail-muscle{display:none}
 
-/* Detail-sheet food management (2026.10.14-g) */
+/* Detail-sheet food management (2026.10.14-h) */
 .dmanage{display:flex;gap:8px;margin-top:10px}
 .dmanage .ghostbtn{flex:1}
 .dmanage .dremove{color:var(--red)}
 
-/* Macro split steppers (2026.10.14-g) */
+/* Macro split steppers (2026.10.14-h) */
 .splitctl{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
 .splitrow{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13.5px;font-weight:600}
 .splitbtns{margin-left:auto;display:flex;align-items:center;gap:10px}
 .splitbtns b{min-width:40px;text-align:center;font-variant-numeric:tabular-nums}
 .sbtn{width:30px;height:30px;border-radius:50%;border:none;background:var(--card2);color:var(--acc);font-size:18px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+/* %DV entry toggle for micronutrient rows (2026.10.14-h) */
+.cfrowin{display:flex;align-items:center;gap:6px}
+.cfrowin input{width:104px}
+.pcttgl{border:1px solid var(--line);background:var(--card2);color:var(--muted);border-radius:9px;font-size:11px;font-weight:700;padding:5px 7px;cursor:pointer;flex:none}
+.pcttgl.sel{background:var(--acc);border-color:var(--acc);color:#fff}
+.pcthint{font-size:11.5px;color:var(--acc);font-weight:700;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -1333,7 +1340,7 @@ body.reordering #progOverview{display:none}
     <div id="foodsRestore"></div>
   </section>
 
-  <!-- GOALS (compact redesign 2026.10.14-g, Jay's brief: full compact, clean,
+  <!-- GOALS (compact redesign 2026.10.14-h, Jay's brief: full compact, clean,
        the machinery runs in the background. One goal card, one macros card,
        one stats card, one button. The learned estimate's evidence is a single
        line in the goal card — its history/data stay in storage, off the page.) -->
@@ -2400,7 +2407,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.14-g";
+const APP_VERSION = "2026.10.14-h";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -3983,7 +3990,7 @@ function paintScoreWheel(){
   const a = adherenceStats(), t = tiredLevel(), b = bloatScore();
   const aFrac = a.pct===null ? null : Math.min(a.pct,100)/100;
   const aTxt = a.pct===null ? "–" : a.pct+"%";
-  const aColH = "#ffffff"; /* white fill (2026.10.14-g, Jay) */
+  const aColH = "#ffffff"; /* white fill (2026.10.14-h, Jay) */
   paintWheel("adhArcH","adhNumH",aFrac,aColH,aTxt);
   const tFrac = t.level/5;
   const tTxt = t.level;
@@ -3991,7 +3998,7 @@ function paintScoreWheel(){
   paintWheel("tiredArcH","tiredNumH",tFrac,tColH,tTxt);
   const bFracH = b.score===null ? null : b.score/100;
   const bTxtH = b.score===null ? "–" : b.score+"%";
-  const bColH = "#ffffff"; /* white fill (2026.10.14-g, Jay) */
+  const bColH = "#ffffff"; /* white fill (2026.10.14-h, Jay) */
   paintWheel("bloatArcH","bloatNumH",bFracH,bColH,bTxtH);
 }
 document.getElementById("adhWheelH").onclick = ()=>openInfo("scores");
@@ -4494,8 +4501,8 @@ function renderSheetResults(q0){
   paintSheetSmart(q);
   let list = sheetTab==="recent" ? recentFoods()
     : sheetTab==="favorites" ? S.favorites.map(n=>findFood(n)).filter(Boolean) /* by name: resolves custom + verified */
-    : sheetTab==="supps" ? allFoods().filter(f=>f.kind==="supp") /* his whole stack, defaults + custom — never buried in All (2026.10.14-g) */
-    : (function(){ const all = allFoods(); const cust = all.filter(f=>isCustom(f.n)).reverse(); return cust.concat(all.filter(f=>!isCustom(f.n))); })(); /* All: his foods first, then built-ins — via allFoods() so removed built-ins stay removed (2026.10.14-g) */ /* All: his foods first, then default foods not already his */
+    : sheetTab==="supps" ? allFoods().filter(f=>f.kind==="supp") /* his whole stack, defaults + custom — never buried in All (2026.10.14-h) */
+    : (function(){ const all = allFoods(); const cust = all.filter(f=>isCustom(f.n)).reverse(); return cust.concat(all.filter(f=>!isCustom(f.n))); })(); /* All: his foods first, then built-ins — via allFoods() so removed built-ins stay removed (2026.10.14-h) */ /* All: his foods first, then default foods not already his */
   if(q) list = list.filter(f => f.n.toLowerCase().includes(q) || (f.loc||"").toLowerCase().includes(q)); /* searching a place finds its foods too */
   if(!q && sheetTab==="recent" && !list.length) list = allFoods();
   if(sheetSort==="name") list = list.slice().sort((a,b)=>a.n.localeCompare(b.n));
@@ -4726,7 +4733,7 @@ function stepQty(dir){
 document.getElementById("dModes").querySelectorAll(".chip").forEach(c=>c.onclick=()=>setDMode(c.dataset.m));
 document.getElementById("dMinus").onclick = ()=>stepQty(-1);
 document.getElementById("dPlus").onclick = ()=>stepQty(1);
-/* Manage any food from its detail sheet (2026.10.14-g, Jay's ask): built-ins
+/* Manage any food from its detail sheet (2026.10.14-h, Jay's ask): built-ins
    can be edited (saving forks them into a custom food) and removed (hidden
    via S.deletedFoods, restorable from the Foods tab). */
 document.getElementById("dEditBtn").onclick = ()=>{
@@ -4832,7 +4839,7 @@ function delCustomFood(name){
   const fi = S.favorites.indexOf(name); if(fi>=0) S.favorites.splice(fi,1);
   save(); renderFoods();
 }
-/* Foods page (2026.10.14-g): Supplements get their own card so the daily stack
+/* Foods page (2026.10.14-h): Supplements get their own card so the daily stack
    is never buried in the food list, and the list actually sorts — Recent,
    Most logged (counted from his diary, no new tracking), A–Z, per-serving
    Protein/Carbs/Fat/Calories, and protein density. The star chip filters to
@@ -4936,7 +4943,7 @@ function paintLocChips(){
   box.querySelectorAll(".chip").forEach(ch=>ch.onclick=()=>{ document.getElementById("cLoc").value = ch.dataset.loc; });
 }
 let cEditing = null; // name of the custom food being edited (null = creating a new one)
-let cForkOf = null; // built-in food being forked into a custom one on save (2026.10.14-g)
+let cForkOf = null; // built-in food being forked into a custom one on save (2026.10.14-h)
 function editCustomFood(name){
   const cust = S.customFoods.find(x=>x.n===name);
   const f = cust || FOODS.find(x=>x.n===name);
@@ -4997,6 +5004,9 @@ function resetCustomForm(){
   ["cName","cServ","cCal","cPrice","cPServ","cLoc","cP","cC","cF"].forEach(id=>document.getElementById(id).value="");
   paintLocChips();
   FOOD_LABEL_ROWS.forEach(([id])=>{document.getElementById(id).value="";});
+  if(typeof pctMode!=="undefined"){ pctMode = {}; }
+  document.querySelectorAll(".pcttgl").forEach(b=>b.classList.remove("sel"));
+  ["fVitD","fCalc","fIron","fPot"].forEach(id=>{ const h = document.getElementById(id+"Hint"); if(h) h.textContent = ""; });
   document.getElementById("cPhotoFile").value = "";
   setCPhoto("");
   cKind = "food"; cUnit = "capsule"; cFoodUnit = "g";
@@ -5034,6 +5044,17 @@ document.getElementById("cPhotoFile").onchange = e=>{
   img.onerror = ()=>{ URL.revokeObjectURL(url); alert("Couldn't read that photo."); };
   img.src = url;
 };
+/* %DV -> amount conversion for the label form (2026.10.14-h) */
+function pctAmt(n, id){
+  const v = parseFloat(document.getElementById(id).value) || 0;
+  if(!(v>0)) return 0;
+  if(typeof pctMode!=="undefined" && pctMode[id] && NUTR_DV[n]){
+    /* 1 decimal kept: Iron's DV is only 18 mg, so whole-mg rounding would
+       turn a label's 10% into 2 mg instead of 1.8 */
+    return Math.round(v/100*NUTR_DV[n].dv*10)/10;
+  }
+  return v;
+}
 document.getElementById("cSave").onclick = ()=>{
   const n = document.getElementById("cName").value.trim();
   if(!n){ alert("Give it a name."); return; }
@@ -5061,7 +5082,7 @@ document.getElementById("cSave").onclick = ()=>{
              ["Cholesterol","fChol","mg"],["Sodium","fSod","mg"],
              ["Dietary Fiber","fFiber","g"],["Total Sugars","fSugar","g"],["Added Sugars","fAddSugar","g"],
              ["Vitamin D","fVitD","mcg"],["Calcium","fCalc","mg"],["Iron","fIron","mg"],["Potassium","fPot","mg"]]
-      .map(([n,id,u])=>({n, amt:num(id), u})).filter(x=>x.amt>0);
+      .map(([n,id,u])=>({n, amt:pctAmt(n,id), u})).filter(x=>x.amt>0);
   }
   /* Serving-size plausibility: if the calories/macros can't physically fit the
      serving, the serving size is probably too small (Atwater: 4/4/9 kcal/g, fat max ~9). */
@@ -5124,8 +5145,34 @@ const FOOD_LABEL_ROWS = [
   ["fProt","Protein","g"],
   ["fVitD","Vitamin D","mcg"],["fCalc","Calcium","mg"],["fIron","Iron","mg"],["fPot","Potassium","mg"]
 ];
-document.getElementById("cFoodNutrBox").innerHTML = FOOD_LABEL_ROWS.map(([id,n,u])=>
-  `<div class="cfrow"><span>${n} (${u})</span><input id="${id}" type="number" inputmode="decimal" placeholder="Optional"></div>`).join("");
+document.getElementById("cFoodNutrBox").innerHTML = FOOD_LABEL_ROWS.map(([id,n,u])=>{
+  const pct = ["fVitD","fCalc","fIron","fPot"].includes(id)
+    ? `<span class="pcthint" id="${id}Hint"></span><button type="button" class="pcttgl" data-for="${id}" aria-label="Enter as percent of daily value">%DV</button>` : "";
+  return `<div class="cfrow"><span>${n} (${u})</span><span class="cfrowin">${pct}<input id="${id}" type="number" inputmode="decimal" placeholder="Optional"></span></div>`;
+}).join("");
+/* % Daily Value entry for the four micronutrients (2026.10.14-h, Jay's ask):
+   many labels print only a % for Vitamin D / Calcium / Iron / Potassium, no
+   mcg/mg amount. In % mode the field takes the % and converts it to the
+   amount with the FDA daily value on save, so nutrient totals stay right. */
+let pctMode = {};
+const PCT_FIELDS = ["fVitD","fCalc","fIron","fPot"];
+const PCT_NAME = {fVitD:"Vitamin D", fCalc:"Calcium", fIron:"Iron", fPot:"Potassium"};
+function paintPctHint(id){
+  const hint = document.getElementById(id+"Hint"); if(!hint) return;
+  const v = parseFloat(document.getElementById(id).value) || 0;
+  const dv = NUTR_DV[PCT_NAME[id]];
+  if(pctMode[id] && v>0 && dv){
+    const amt = v/100*dv.dv;
+    hint.textContent = "= " + (amt>=100 ? Math.round(amt) : Math.round(amt*10)/10) + " " + dv.unit;
+  } else hint.textContent = "";
+}
+document.querySelectorAll(".pcttgl").forEach(b=>b.onclick = ()=>{
+  const id = b.dataset.for;
+  pctMode[id] = !pctMode[id];
+  b.classList.toggle("sel", !!pctMode[id]);
+  paintPctHint(id);
+});
+PCT_FIELDS.forEach(id=>{ const el = document.getElementById(id); if(el) el.addEventListener("input", ()=>paintPctHint(id)); });
 /* ============ SUPPLEMENT CREATION ============ */
 const SUPP_UNITS = ["capsule","tablet","softgel","gummy","scoop","packet","dropper (mL)","serving","g","mg","mcg","mL","IU"];
 const NUTR_UNITS = ["mg","mcg","g","IU","mL"];
@@ -6314,7 +6361,7 @@ function paintTrajectory(){
     const hits = days.filter(x => x.logged && calGoal > 0 && x.cal >= calGoal * 0.9).length;
     if(rAdhVal) rAdhVal.textContent = hits + " / 7 days";
     if(rLine) rLine.style.width = Math.min(100, Math.max(0, pct)) + "%";
-    var wtRing = document.getElementById("wtRingFill"); /* 2026.10.14-g: progress ring replaces the straight bar */
+    var wtRing = document.getElementById("wtRingFill"); /* 2026.10.14-h: progress ring replaces the straight bar */
     if(wtRing) wtRing.style.strokeDashoffset = (289 * (1 - Math.min(100, Math.max(0, pct)) / 100)).toFixed(1);
     if(rPill){
       const m = S.goals.mode;
@@ -6400,7 +6447,7 @@ function goalTotal(){ return (S.goals.maintenance>0?S.goals.maintenance:0) + (S.
 function deriveMacros(){
   const tot = goalTotal();
   if(!(tot>0)){ S.goals.protein=0; S.goals.carbs=0; S.goals.fat=0; return; }
-  /* Custom split (2026.10.14-g): protein/fat as % of the goal, carbs fill —
+  /* Custom split (2026.10.14-h): protein/fat as % of the goal, carbs fill —
      set with the steppers on the Goals page; null = the recommended split. */
   const sp = S.goals.splitPct;
   if(sp && sp.p>0 && sp.f>0){
@@ -6474,7 +6521,7 @@ function dayCalGoal(kstr){
 /* keep a preset mode's surplus glued to its % of maintenance */
 function applyModePct(){
   const g = S.goals;
-  /* Gain-rate mode (2026.10.14-g, GymGeek-style): the surplus is the chosen
+  /* Gain-rate mode (2026.10.14-h, GymGeek-style): the surplus is the chosen
      gain rate x 500 kcal/day (3500 kcal/lb / 7) — the same for any body. */
   if(g.surplusMode==="rate" && g.gainRate>=0 && g.maintenance>0){ g.surplus = Math.round(g.gainRate*500); return; }
   const pct = MODE_PCT[g.mode];
@@ -6557,7 +6604,7 @@ function readProfile(){
    Called before ANY re-render and on every field change, so a tap can never
    silently wipe an edit the user typed but hadn't saved yet. */
 function commitMacroInputs(){
-  /* 2026.10.14-g: macros are calculated, never typed — the Goals page has no
+  /* 2026.10.14-h: macros are calculated, never typed — the Goals page has no
      macro inputs anymore. Kept as a no-op because commitGoalsInputs() and a
      few legacy callers still call it. */
 }function commitGoalsInputs(){
@@ -6700,7 +6747,7 @@ function applyAdaptive(){
   paintAdaptive(); renderGoals(); renderDiary();
 }
 function paintAdaptive(){
-  /* Background machinery, one line of evidence (2026.10.14-g): the learned
+  /* Background machinery, one line of evidence (2026.10.14-h): the learned
      estimate, its history, and its gates all live in storage and keep
      updating via Calculate & Save + the daily autopilot. The page shows a
      single line inside the goal card: which maintenance is running and the
@@ -7561,7 +7608,7 @@ document.getElementById("waterCustom").addEventListener("change", e=>{
   const n = Math.round(parseFloat(e.target.value)||0);
   if(n>=0 && n<=30){ S.goals.water = n; save(); paintWater(); renderDiary(); renderSettings(); }
 });
-/* Macro split steppers (2026.10.14-g): % of the goal, GymGeek-style. The
+/* Macro split steppers (2026.10.14-h): % of the goal, GymGeek-style. The
    percentages shown are always derived from the stored grams, so the tiles,
    the segbar, and the steppers can never disagree. */
 function paintSplit(){
@@ -7609,7 +7656,7 @@ function renderGoals(){
   const nc = Object.keys(g.nutrTargets||{}).length;
   document.getElementById("microSub").textContent = nc ? nc+" custom · rest FDA defaults" : "FDA defaults — tap to customize";
 }
-/* Macro split: read-only analysis (2026.10.14-g). Percentages are % of the daily
+/* Macro split: read-only analysis (2026.10.14-h). Percentages are % of the daily
    calorie goal, uncapped — if the numbers go past 100% that's the truth. */
 function updateMacroSplit(){
   const g = S.goals, tot = goalTotal();
@@ -7684,7 +7731,7 @@ document.getElementById("microRow").onclick = ()=>{
 };
 document.getElementById("goalsDone").onclick = ()=>{
   commitGoalsInputs();
-  /* THE one calculation (2026.10.14-g): refresh the learned estimate, then let
+  /* THE one calculation (2026.10.14-h): refresh the learned estimate, then let
      the data pick the source — learned when his log supports it, the stats
      formula until it does. Macros are always calculated. One button. */
   refreshAdaptive();
@@ -7706,7 +7753,7 @@ document.getElementById("goalsBack").onclick = ()=>{ commitGoalsInputs(); save()
 function renderSettings(){
   const g = S.goals;
   renderProfileCard();
-  /* Profile hero (2026.10.14-g): painted from S.goals — the same stored
+  /* Profile hero (2026.10.14-h): painted from S.goals — the same stored
      maintenance/surplus/macros the Goals page runs on. Never the formula. */
   const hg = document.getElementById("pfHeroGoal");
   if(hg){
@@ -8398,7 +8445,7 @@ function autoDismissProp(id){
   save(); paintAutoZone();
 }
 
-/* Consistency heatmap painter (2026.10.14-g). One yardstick — today's goal —
+/* Consistency heatmap painter (2026.10.14-h). One yardstick — today's goal —
    applied to every day, so the colors can never disagree with the targets. */
 function paintHeatmap(){
   var grid = document.getElementById("hmGrid"); if(!grid) return;
@@ -8441,7 +8488,7 @@ function paintAutoZone(){
       '<button class="bigbtn" style="flex:1;margin:0;background:none;border:1.5px solid var(--line);color:var(--ink)" data-ap-dismiss="' + p.id + '">Not now</button>' +
       '</div></div>';
   });
-  /* Compact feed (2026.10.14-g): the current maintenance is a hero number;
+  /* Compact feed (2026.10.14-h): the current maintenance is a hero number;
      history is one slim row per entry (value + delta + date) instead of the
      same long sentence repeated. Nothing is hidden — just said once. */
   var feed = a.feed.slice(0, 6);
@@ -8490,7 +8537,7 @@ function autoPilot(){
        commitGoals() is the only writer of maintenance/surplus/macros. */
     changed = refreshAdaptive();
     if(g.adaptive && g.adaptive.ok){
-      /* 2026.10.14-g: no toggle anymore — the log takes over automatically once
+      /* 2026.10.14-h: no toggle anymore — the log takes over automatically once
          it can support the number ("based off small amounts of data and over
          time it will get better" — Jay's brief). The switch from formula to
          learned is itself a change worth applying + logging. */
