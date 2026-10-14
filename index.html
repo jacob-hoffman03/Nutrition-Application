@@ -2401,7 +2401,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.13-b";
+const APP_VERSION = "2026.10.13-c";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6571,10 +6571,13 @@ function refreshAdaptive(){
     else g.adaptive={ok:false, reason:r.reason, days:r.days||0, span:r.span||0, partial:r.partial||0, logged:r.logged||0, updated:todayStr()};
     return false;
   }
-  let v=r.value;
+  /* ONE number (2026.10.13-c, Jay's call): the applied value IS the learned value.
+     An earlier ±150-per-refresh cap made the headline lag the computed estimate
+     (stored 2,055 → applied 2,205 while the note printed "Learned 2,319") — two
+     numbers for one thing reads as the app lying. Noise control lives on the
+     input side now: 21-day aligned window, EWMA trend, 10-day coverage gates. */
+  let v=Math.round(r.value);
   const prev=g.adaptive&&g.adaptive.value>0?g.adaptive.value:null;
-  if(prev!=null) v=prev+Math.max(-150,Math.min(150,v-prev)); /* moves capped: a noisy week can't yank the target */
-  v=Math.round(v);
   g.adaptive={ok:true, stale:false, value:v, learned:r.learned, avg:r.avg,
     rateWk:r.rateWk, days:r.days, span:r.span, partial:r.partial||0, logged:r.logged||0, updated:todayStr(), algo:"v3-21d"};
   g.adaptiveHist=g.adaptiveHist||[];
@@ -7654,7 +7657,13 @@ document.getElementById("adToggle").onclick = ()=>{
       commitGoals("adaptive");
       g.adTuneNote="Adaptive TDEE "+todayStr()+": maintenance set to "+g.adaptive.value.toLocaleString()+" kcal.";
     }
-  } else g.adTuneNote="";
+  } else {
+    /* OFF must mean off (2026.10.13-c): restore the formula derivation atomically.
+       Before, toggling off left the learned maintenance in force with the switch
+       showing off — the state on screen lied about which source was running. */
+    g.adTuneNote="";
+    commitGoals("formula");
+  }
   save(); renderGoals(); renderDiary();
 };
 document.getElementById("adRecalc").onclick = ()=>{ commitGoalsInputs(); applyAdaptive(); };
