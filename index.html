@@ -2407,7 +2407,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.14-i";
+const APP_VERSION = "2026.10.15-a";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6689,6 +6689,35 @@ function commitGoals(reason, maintOverride){
   g.derived = {src, maint: Math.round(g.maintenance||0), at: todayStr(), why: reason||""};
   save();
 }
+function dailyTrendSeries(ws, alpha){
+  /* Daily trend weight (MacroFactor / Happy Scale convention): one EWMA step
+     per calendar day. Days without a weigh-in re-step against the last known
+     weight, so the trend digests a change on a clock — not on weigh-in count.
+     Same neighbor-median outlier filter as the chart's ewmaTrend. */
+  alpha = alpha || 0.15;
+  if(!ws || !ws.length) return [];
+  var pts = ws.slice().sort(function(a,b){ return a.d<b.d?-1:1; });
+  var clean = pts.filter(function(p, i){
+    var nb = [];
+    if(i>0) nb.push(pts[i-1].w);
+    if(i<pts.length-1) nb.push(pts[i+1].w);
+    if(!nb.length) return true;
+    nb.sort(function(a,b){ return a-b; });
+    var med = nb[Math.floor(nb.length/2)];
+    return Math.abs(p.w - med) <= 6.6;
+  });
+  if(!clean.length) return [];
+  var byDay = {};
+  clean.forEach(function(p){ byDay[p.d] = p.w; });
+  var out = [], trend = null, last = null, end = todayStr();
+  for(var ds = clean[0].d; ds <= end; ds = addDays(ds, 1)){
+    if(byDay[ds] !== undefined) last = byDay[ds];
+    if(last === null) continue;
+    trend = (trend === null) ? last : alpha*last + (1-alpha)*trend;
+    out.push({d: ds, w: trend});
+  }
+  return out;
+}
 function adaptiveCalc(){
   /* ADAPTIVE v3 (2026.10.13-b): one learned number over ONE aligned 21-day window —
      the intake average and the weight trend cover the same days (MacroFactor's
@@ -6702,9 +6731,15 @@ function adaptiveCalc(){
   const ws=sortedWeights(), T=p=>new Date(p.d+"T12:00:00").getTime();
   const cutoff=new Date(todayStr()+"T12:00:00").getTime()-WIN*86400000;
   /* EWMA smoothing before differencing: water weight must not whipsaw the number */
-  const wpts=ewmaTrend(ws).filter(p=>T(p)>=cutoff);
-  const spanD=wpts.length>=2?(T(wpts[wpts.length-1])-T(wpts[0]))/86400000:0;
-  if(cals.length<MIN_DAYS||wpts.length<2||spanD<MIN_SPAN)
+  /* v4 (2026.10.15-a): trend from the DAILY-step series, not per-weigh-in
+     points. Per-weigh-in stepping moved at weigh-in frequency, so a one-time
+     step change (+5.6 lb quit-week rebound, 2026-10-11) stayed "current gain"
+     for weeks and dragged maintenance down while the scale sat flat. The
+     coverage span is still measured on the RAW weigh-ins in the window. */
+  const wpts=dailyTrendSeries(ws).filter(p=>T(p)>=cutoff);
+  const rawInWin=ws.filter(p=>T(p)>=cutoff);
+  const spanD=rawInWin.length>=2?(T(rawInWin[rawInWin.length-1])-T(rawInWin[0]))/86400000:0;
+  if(cals.length<MIN_DAYS||rawInWin.length<2||spanD<MIN_SPAN)
     return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD), partial, logged};
   const rateWk=halvesRate(wpts);
   if(rateWk==null) return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD), partial, logged};
@@ -6732,7 +6767,7 @@ function refreshAdaptive(){
   let v=Math.round(r.value);
   const prev=g.adaptive&&g.adaptive.value>0?g.adaptive.value:null;
   g.adaptive={ok:true, stale:false, value:v, learned:r.learned, avg:r.avg,
-    rateWk:r.rateWk, days:r.days, span:r.span, partial:r.partial||0, logged:r.logged||0, updated:todayStr(), algo:"v3-21d"};
+    rateWk:r.rateWk, days:r.days, span:r.span, partial:r.partial||0, logged:r.logged||0, updated:todayStr(), algo:"v4-daily"};
   g.adaptiveHist=g.adaptiveHist||[];
   const last=g.adaptiveHist[g.adaptiveHist.length-1];
   if(!last||last.d!==todayStr()) g.adaptiveHist.push({d:todayStr(), v});
