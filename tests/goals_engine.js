@@ -126,7 +126,7 @@ async function scenarioD() {
   const tot = g.maintenance + g.surplus, msum = g.protein * 4 + g.carbs * 4 + g.fat * 9;
   ok(Math.abs(msum - tot) <= 12, "macros sum to goal (" + msum + " vs " + tot + ")");
   ok(g.derived && g.derived.src === "learned" && g.derived.maint === 2200, "provenance stamped with applied value");
-  ok(g.adaptive.algo === "v3-21d" && typeof g.adaptive.logged === "number", "estimate record carries algo + coverage");
+  ok(g.adaptive.algo === "v4-daily" && typeof g.adaptive.logged === "number", "estimate record carries algo + coverage");
   const av = w.eval(`(function(){ paintAdaptive(); return document.getElementById("goalSrc").textContent; })()`);
   ok(/2,200/.test(av), "Goal card source line shows the APPLIED value (" + av + ")");
   ok(errors.length === 0, "no runtime errors");
