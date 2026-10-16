@@ -305,25 +305,7 @@ span.calday{cursor:default;}
 .insrow .insconf{display:inline-block; font-size:10px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--acc-deep); margin-left:6px; vertical-align:1px;}
 /* profile strip + medals */
 .pstrip{display:flex; align-items:center; gap:12px; padding:2px 2px 12px;}
-/* DAY CYCLE — 2026.09.23-e: day/night panel. Theme-filled like the diary hero;
-   the arc itself carries the day gradient (orange→yellow→blue→dark blue).
-   2026.09.23-i: sunrise/sunset slits on the arc, segmented meal-color
-   now-marker, and an attached thin eat-window bar with tiny meal icons.
-   Plain card in normal flow — scrolls with everything else, nothing sticky,
-   nothing slides behind anything. Lives on the Progress page (2026.09.23-g). */
-.daycycle{margin:0 0 12px; padding:14px 18px 12px;
-  background:linear-gradient(135deg,var(--acc) 0%,var(--acc-deep) 100%); color:#fff;
-  border-radius:9px; box-shadow:0 8px 24px rgba(0,0,0,.12);}
-.daycycle svg{display:block; width:100%; max-width:272px; margin:0 auto;}
-.dc-insight{text-align:center; font-size:12.5px; font-weight:600; opacity:.92; margin-top:8px; line-height:1.45; padding:0 8px;}
-/* 2026.09.27-a: log-lag chips — he usually logs after eating; the learned meal
-   windows shift back by this so they reflect eat time, not log time. */
-.dc-daytype{margin:10px auto 0; display:block; border:1px solid rgba(255,255,255,.45); background:rgba(255,255,255,.14); color:#fff; border-radius:9px; padding:5px 14px; font-size:11.5px; font-weight:700; cursor:pointer;}
-/* Day Cycle 2.0: scrub-the-arc preview + tap-a-meal detail */
-#dcSvg{touch-action:pan-y;}
-.dc-seg{cursor:pointer;}
-#dayCycle{user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
-.dc-logpill{display:inline-block; margin-left:6px; padding:3px 13px; border:0; border-radius:9px; background:#fff; color:#5b3df0; font-size:12px; font-weight:800; cursor:pointer; vertical-align:1px;}
+
 .pavatar{width:46px; height:46px; border-radius:50%; object-fit:cover; flex:none; background:var(--acc-soft); color:var(--acc);
   display:flex; align-items:center; justify-content:center; font-weight:800; font-size:19px; border:none; cursor:pointer; overflow:hidden; padding:0;}
 .pavatar img{width:100%; height:100%; object-fit:cover; display:block;}
@@ -1108,8 +1090,6 @@ body.reordering #progOverview{display:none}
 .weekcard .chal-day{gap:4px}
 .weekcard .chal-dot{width:22px;height:22px;border-width:1.5px}
 .weekcard .chal-dot svg{width:11px;height:11px}
-.daycycle{padding:10px 14px 10px}
-.daycycle svg{max-width:240px}
 
 /* Body hero redesign (2026.10.14-i, Jay's brief): theme-gradient panel —
    translucent ring circle with the live weight, white road minis and progress
@@ -1154,8 +1134,7 @@ body.reordering #progOverview{display:none}
 #insRows .insrow span{font-size:11.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .hmstat{margin-left:auto;font-size:12px;font-weight:800;color:var(--acc-deep);background:var(--acc-soft);border-radius:9px;padding:3px 9px}
 .hmcell{border-radius:4px}
-.dc-eyebrow{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.75);margin-bottom:2px}
-.dc-insight{max-width:320px;margin-left:auto;margin-right:auto}
+
 
 /* Progress round 3 (2026.10.15-c, Jay's feedback): the net-change badge on
    the weight hero gets a solid white background so its signed dark red /
@@ -1639,37 +1618,11 @@ body.reordering #progOverview{display:none}
       </div><!-- /punit data-pid="heatmap" -->
 
 
-      <div class="punit" data-pid="daycycle">
-        <div class="daycycle" id="dayCycle" aria-label="Day cycle">
-          <div class="dc-eyebrow">Day cycle</div>
-          <svg viewBox="0 0 300 240" aria-hidden="true" id="dcSvg">
-            <defs>
-              <linearGradient id="dcGrad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0" stop-color="#ff9f43"/><stop offset=".38" stop-color="#ffd23f"/>
-                <stop offset=".68" stop-color="#4aa8ff"/><stop offset="1" stop-color="#27408b"/>
-              </linearGradient>
-            </defs>
-            <path d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="14" stroke-linecap="round"/>
-            <path id="dcProg" d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="url(#dcGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377"/>
-            <g id="dcSunSlits"></g>
-            <g id="dcNowMark"></g>
-            <text id="dcClock" x="150" y="106" text-anchor="middle" fill="#ffffff" font-size="32" font-weight="800" style="font-variant-numeric:tabular-nums">--</text>
-            <text id="dcSub" x="150" y="128" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="12.5" font-weight="600"></text>
-            <rect x="30" y="188" width="240" height="8" rx="4" fill="rgba(255,255,255,.20)"/>
-            <g id="dcEatSegs"></g>
-            <line id="dcEatNow" y1="184" y2="200" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
-            <g id="dcEatLabels" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle"></g>
-          </svg>
-          <div class="dc-insight" id="dcInsight"></div>
-          <button class="dc-daytype" id="dcDayType"></button>
-        </div><!-- /daycycle -->
-      </div><!-- /punit data-pid="daycycle" -->
-
+      
       <div class="punit" data-pid="auto">
         <div class="card">
           <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 3v4h-4"/></svg></span><b>Autopilot</b><span id="autoLastRun" style="margin-left:auto;font-size:11px;color:var(--muted)"></span></div>
-          <div style="font-size:12.5px;color:var(--muted);margin:0 0 4px;line-height:1.5">Learns your maintenance from your log.</div>
-          <div id="autoZoneP"></div>
+                    <div id="autoZoneP"></div>
         </div><!-- /card -->
       </div><!-- /punit data-pid="auto" -->
     </div><!-- /progOverview -->
@@ -2454,7 +2407,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.15-c";
+const APP_VERSION = "2026.10.15-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2553,16 +2506,6 @@ function dayType(kstr){
   const ov = (S.dayTypeOv||{})[kstr];
   if(ov==="work" || ov==="off") return ov;
   return isWorkDayAuto(kstr) ? "work" : "off";
-}
-function toggleDayType(){
-  const k = todayStr(), auto = isWorkDayAuto(k)?"work":"off";
-  const next = dayType(k)==="work" ? "off" : "work";
-  if(!S.dayTypeOv) S.dayTypeOv = {};
-  if(next===auto) delete S.dayTypeOv[k]; else S.dayTypeOv[k] = next;
-  /* 2026.09.27-c: prune stale overrides — only today matters going forward */
-  const cut = addDays(todayStr(),-7);
-  Object.keys(S.dayTypeOv).forEach(x=>{ if(x<cut) delete S.dayTypeOv[x]; });
-  save(); renderAll();
 }
 /* 2026.09.27-d: work schedule editor (Settings › Work schedule) */
 const WD_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -2980,14 +2923,11 @@ function ringPaint(eCal, mCal, tCal){
     surp.style.stroke = eCal >= tCal ? "#2fbf71" : "#d5d5e0"; /* --green: surplus hit = green, never red */
   } else { track.style.display = "none"; surp.style.display = "none"; }
 }
-/* ============ DAY CYCLE — 2026.09.23-e ============
-   Sticky day/night panel: half-circle arc from morning (5am, left) to night
-   (11pm, right), gradient orange→yellow→blue→dark blue. Live clock in the
-   middle, sun marker tracks now, white dots mark YOUR learned meal times.
-   The learning: every food log records minutes-since-midnight per meal
-   (last 30 kept). That trains the "best window to eat" insight and gives the
-   tired model real meal times instead of fixed guesses. */
-const DC_T0 = 5*60, DC_T1 = 23*60; /* arc spans 5am → 11pm */
+/* ============ MEAL-TIME LEARNING ============
+   Every food log records minutes-since-midnight per meal (last 30 kept,
+   tagged work/off day). That trains the meal-timing insights and gives
+   the tired model real meal times instead of fixed guesses. (The Day
+   Cycle panel that displayed this was removed 2026.10.15-d.) */
 function recordMealTime(meal){
   /* 2026.09.27-c: returns the observation so Undo can retract it */
   if(LEARN_MEALS.indexOf(meal)<0) return null; /* supplements don't learn timing */
@@ -3032,216 +2972,6 @@ function fmtClock(mins){
   h = h%12; if(h===0) h=12;
   return h+":"+String(m).padStart(2,"0")+" "+ap;
 }
-function dcXY(frac){ /* point on the arc: frac 0 = 5am (left) → 1 = 11pm (right) */
-  const th = Math.PI*(1-frac);
-  return [150+120*Math.cos(th), 150-120*Math.sin(th)];
-}
-function fmtClockS(mins){
-  mins = ((Math.round(mins)%1440)+1440)%1440;
-  let h = Math.floor(mins/60); const ap = h>=12?"p":"a"; h = h%12; if(h===0) h=12;
-  return h+":"+String(mins%60).padStart(2,"0")+ap;
-}
-/* sunrise/sunset for Dana Point (home), NOAA math — recomputed daily so the
-   slits drift through the year. Returns minutes-since-midnight local. */
-const DC_LAT = 33.4672, DC_LON = -117.6981;
-function dcSunTimes(date){
-  const rad = Math.PI/180;
-  const N = Math.floor((date-new Date(date.getFullYear(),0,0))/864e5);
-  const lngH = DC_LON/15;
-  function calc(rise){
-    const t = N+((rise?6:18)-lngH)/24, M = (0.9856*t)-3.289;
-    let L = M+1.916*Math.sin(M*rad)+0.020*Math.sin(2*M*rad)+282.634; L = ((L%360)+360)%360;
-    let RA = Math.atan(0.91764*Math.tan(L*rad))/rad; RA = ((RA%360)+360)%360;
-    RA += Math.floor(L/90)*90-Math.floor(RA/90)*90; RA /= 15;
-    const sinDec = 0.39782*Math.sin(L*rad), cosDec = Math.cos(Math.asin(sinDec));
-    const cosH = (Math.cos(90.833*rad)-sinDec*Math.sin(DC_LAT*rad))/(cosDec*Math.cos(DC_LAT*rad));
-    if(cosH>1 || cosH<-1) return null;
-    const H = (rise ? 360-Math.acos(cosH)/rad : Math.acos(cosH)/rad)/15;
-    const T = H+RA-(0.06571*t)-6.622;
-    let UT = T-lngH; UT = ((UT%24)+24)%24;
-    return (UT*60 - date.getTimezoneOffset() + 1440)%1440;
-  }
-  return {rise:calc(true), set:calc(false)};
-}
-function dcDonut(cx,cy,r0,r1,a0,a1){
-  const p = (r,a)=>[cx+r*Math.cos(a), cy+r*Math.sin(a)];
-  const q0=p(r1,a0), q1=p(r1,a1), q2=p(r0,a1), q3=p(r0,a0);
-  const lg = (a1-a0)>Math.PI?1:0, f=n=>n.toFixed(1);
-  return "M"+f(q0[0])+" "+f(q0[1])+" A"+r1+" "+r1+" 0 "+lg+" 1 "+f(q1[0])+" "+f(q1[1])+
-    " L"+f(q2[0])+" "+f(q2[1])+" A"+r0+" "+r0+" 0 "+lg+" 0 "+f(q3[0])+" "+f(q3[1])+" Z";
-}
-const DC_MEALS3 = ["breakfast","lunch","dinner"];
-const DC_DEFAULT = {breakfast:480, lunch:750, dinner:1110};
-function dcMealWindows(){
-  /* learned window per meal (avg ±25 min); faded defaults until 3+ logs —
-     2026.09.27-b: windows are per day type, so work days show the work schedule */
-  const work = workToday(), out = {};
-  DC_MEALS3.forEach(m=>{
-    const s = mealTimeStats(m, work);
-    out[m] = s.n>=3 ? {avg:s.avg, n:s.n, learned:true} : {avg:DC_DEFAULT[m], n:0, learned:false};
-  });
-  return out;
-}
-let dcLastDay = "";
-/* Day Cycle 2.0 (2026.09.25-c): scrub-the-arc preview, tap-a-meal detail.
-   Same card, same vibe — everything stays data-driven. The eating-window
-   system is fully removed (no bar, no handles, no readouts). */
-let dcScrubbing = false, dcScrub = null, dcMealFocus = null;
-function dcSvgPoint(e){
-  const r = $("dcSvg").getBoundingClientRect();
-  return [(e.clientX-r.left)/r.width*300, (e.clientY-r.top)/r.height*240];
-}
-function dcScrubFrac(x, y){
-  const dx = x-150, dy = 150-y, d = Math.hypot(dx,dy);
-  if(d<75 || d>165 || dy<-30) return null; /* grab the arc band, not the whole card */
-  let th = Math.atan2(dy,dx); if(th<0) th = 0; if(th>Math.PI) th = Math.PI;
-  return 1-th/Math.PI;
-}
-function dcMealDetailHTML(m){
-  const w = dcMealWindows()[m], s = mealTimeStats(m, workToday());
-  const cap = m.charAt(0).toUpperCase()+m.slice(1);
-  const sub = w.learned ? ("usually "+fmtClock(w.avg)+" · "+s.n+" logs") : "still learning your timing";
-  return "<span>"+esc(cap+" · "+sub)+"</span>"+
-    '<button class="dc-logpill" data-logmeal="'+m+'">Log</button>';
-}
-function wireDayCycle2(){
-  if(!$("dcSvg") || wireDayCycle2.done) return; wireDayCycle2.done = true;
-  const svg = $("dcSvg");
-  svg.addEventListener("pointerdown", e=>{
-    const p = dcSvgPoint(e), f = dcScrubFrac(p[0],p[1]);
-    if(f==null) return;
-    dcScrubbing = true; dcScrub = DC_T0+f*(DC_T1-DC_T0);
-    try{ svg.setPointerCapture(e.pointerId); }catch(_){}
-    paintDayCycle(); e.preventDefault();
-  });
-  svg.addEventListener("pointermove", e=>{
-    if(!dcScrubbing) return;
-    const p = dcSvgPoint(e), f = dcScrubFrac(p[0],p[1]);
-    if(f!=null){ dcScrub = DC_T0+f*(DC_T1-DC_T0); paintDayCycle(); }
-  });
-  ["pointerup","pointercancel"].forEach(ev=>svg.addEventListener(ev, ()=>{
-    if(dcScrubbing){ dcScrubbing = false; dcScrub = null; paintDayCycle(); }
-  }));
-  /* tap a meal window (segment, icon, or time) → detail + Log shortcut */
-  $("dayCycle").addEventListener("click", e=>{
-    const lm = e.target.closest("[data-logmeal]");
-    if(lm){ const m = lm.getAttribute("data-logmeal"); dcMealFocus = null; paintDayCycle(); openSheet(m); return; }
-    const sg = e.target.closest("[data-meal]");
-    if(sg){
-      const m = sg.getAttribute("data-meal");
-      dcMealFocus = (dcMealFocus===m) ? null : m;
-      paintDayCycle();
-    }
-  });
-}
-function paintDayCycle(){
-  if(!$("dayCycle")) return;
-  wireDayCycle2();
-  const now = new Date(), realMin = now.getHours()*60+now.getMinutes();
-  const nowMin = dcScrub!=null ? dcScrub : realMin;
-  const frac = Math.max(0, Math.min(1,(nowMin-DC_T0)/(DC_T1-DC_T0)));
-  const X = t => 30+240*Math.max(0, Math.min(1,(t-DC_T0)/(DC_T1-DC_T0)));
-  $("dcProg").style.strokeDashoffset = 377*(1-frac);
-  /* sunrise / sunset slits on the arc, like the gray slit on the deficit bar */
-  const st = dcSunTimes(now);
-  let slits = "";
-  [["rise",st.rise,"dcSunPathRise"],["set",st.set,"dcSunPathSet"]].forEach(a=>{
-    const t = a[1]; if(t==null) return;
-    const f = Math.max(0, Math.min(1,(t-DC_T0)/(DC_T1-DC_T0)));
-    const th = Math.PI*(1-f), c = Math.cos(th), s2 = Math.sin(th);
-    slits += '<line x1="'+(150+108*c).toFixed(1)+'" y1="'+(150-108*s2).toFixed(1)+
-      '" x2="'+(150+132*c).toFixed(1)+'" y2="'+(150-132*s2).toFixed(1)+
-      '" stroke="rgba(255,255,255,.85)" stroke-width="3" stroke-linecap="round"/>';
-    /* label wraps around the circle just above the slit (2026.09.23-m):
-       an invisible arc at r=141 carries the text via textPath, so it hugs
-       the circle instead of sitting flat across the slit */
-    const rr = 141, da = 0.13;
-    const px1 = 150+rr*Math.cos(th+da), py1 = 150-rr*Math.sin(th+da);
-    const px2 = 150+rr*Math.cos(th-da), py2 = 150-rr*Math.sin(th-da);
-    slits += '<path id="'+a[2]+'" d="M'+px1.toFixed(1)+' '+py1.toFixed(1)+
-      ' A'+rr+' '+rr+' 0 0 1 '+px2.toFixed(1)+' '+py2.toFixed(1)+'" fill="none"/>';
-    slits += '<text font-size="9" font-weight="700" fill="rgba(255,255,255,.85)" text-anchor="middle">'+
-      '<textPath href="#'+a[2]+'" startOffset="50%">'+fmtClockS(t)+'</textPath></text>';
-  });
-  $("dcSunSlits").innerHTML = slits;
-  /* now-marker: ring parted into the four meal colors — a part lights up when
-     that meal is logged today */
-  const mm0 = mealMacros(todayStr());
-  const pt = dcXY(frac);
-  const order = ["breakfast","lunch","dinner","snacks"];
-  let mark = "";
-  order.forEach((m,i)=>{
-    const a0 = -Math.PI/2 + i*Math.PI/2;
-    const lit = (mm0[m]||{cal:0}).cal>0; /* any log today lights the segment */
-    mark += '<path d="'+dcDonut(pt[0],pt[1],6,10.5,a0+0.07,a0+Math.PI/2-0.07)+
-      '" fill="'+MEAL_SEG[m]+'" opacity="'+(lit?1:.28)+'"/>';
-  });
-  mark += '<circle cx="'+pt[0].toFixed(1)+'" cy="'+pt[1].toFixed(1)+'" r="3.6" fill="#ffffff" style="filter:drop-shadow(0 0 5px rgba(255,255,255,.9))"/>';
-  $("dcNowMark").innerHTML = mark;
-  /* clock + day progress (scrub preview drives these while dragging) */
-  let hh = Math.floor(nowMin/60); const ap = hh>=12?"PM":"AM"; hh = hh%12; if(hh===0) hh=12;
-  $("dcClock").textContent = hh+":"+String(Math.round(nowMin%60)).padStart(2,"0")+" "+ap;
-  const night = nowMin<DC_T0 || nowMin>DC_T1;
-  $("dcSub").textContent = dcScrub!=null ? "preview · release to return" : (night ? "Night" : Math.round(frac*100)+"% of day");
-  /* eat-window bar: parted into per-meal segments in the designated colors */
-  const wins = dcMealWindows();
-  let sg = "";
-  DC_MEALS3.forEach(m=>{
-    const w = wins[m];
-    sg += '<rect x="'+X(w.avg-25).toFixed(1)+'" y="188" width="'+Math.max(8,X(w.avg+25)-X(w.avg-25)).toFixed(1)+
-      '" height="8" rx="4" fill="'+MEAL_SEG[m]+'" opacity="'+(w.learned?.95:.30)+'" data-meal="'+m+'" class="dc-seg"/>';
-  });
-  $("dcEatSegs").innerHTML = sg;
-  const en = $("dcEatNow"), nx = X(nowMin);
-  en.setAttribute("x1", nx.toFixed(1)); en.setAttribute("x2", nx.toFixed(1));
-  /* tiny meal icons + times under the bar */
-  let lb = "";
-  DC_MEALS3.forEach(m=>{
-    const w = wins[m], cx = X(w.avg);
-    const inner = MEAL_ICON[m].replace(/<\/?svg[^>]*>/g,"");
-    lb += '<svg x="'+(cx-7).toFixed(1)+'" y="205" width="14" height="14" viewBox="0 0 24 24" data-meal="'+m+'" class="dc-seg">'+inner+'</svg>';
-    lb += '<text x="'+cx.toFixed(1)+'" y="232" opacity="'+(w.learned?1:.55)+'" data-meal="'+m+'" class="dc-seg">'+fmtClockS(w.avg)+'</text>';
-  });
-  $("dcEatLabels").innerHTML = lb;
-  /* insight: next window — wakes up at 3+ logs, same threshold as the eat bar above */
-  const learned = DC_MEALS3.map(m=>({m, s:mealTimeStats(m, workToday())}))
-    .filter(o=>o.s.n>=3).sort((a,b)=>a.s.avg-b.s.avg);
-  let ins;
-  if(!learned.length){
-    ins = "Log meals for a few days and I'll learn your usual meal times.";
-  }else{
-    const openNow = learned.find(o=>(mm0[o.m]||{cal:0}).cal<=0 && nowMin>=o.s.avg-30 && nowMin<=o.s.avg+120);
-    const upcoming = learned.find(o=>o.s.avg>nowMin+15);
-    const next = openNow || upcoming || learned[0];
-    const cap = next.m.charAt(0).toUpperCase()+next.m.slice(1);
-    ins = cap+" · your best window "+fmtClock(next.s.avg-25)+"–"+fmtClock(next.s.avg+25)+
-      (openNow ? " · it's now" : upcoming ? " today" : " tomorrow")+" · learned from "+next.s.n+" logs";
-  }
-  if(dcMealFocus && DC_MEALS3.indexOf(dcMealFocus)>=0){
-    $("dcInsight").innerHTML = dcMealDetailHTML(dcMealFocus);
-  }else if(dcScrub!=null){
-    const wm = DC_MEALS3.find(m=>{ const w = wins[m]; return dcScrub>=w.avg-30 && dcScrub<=w.avg+30; });
-    $("dcInsight").textContent = fmtClock(dcScrub)+" · "+(wm ? "inside your "+wm+" window" : "between meals")+" · release to return";
-  }else{
-    $("dcInsight").textContent = ins;
-  }
-  /* 2026.09.27-b: work/off day toggle — auto from his weekly pattern
-     (Mon/Wed/Fri/Sat = work), tap to override today. The card shows that
-     type's learned windows. */
-  (function(){
-    const el = $("dcDayType"); if(!el) return;
-    const k = todayStr(), t = dayType(k);
-    const auto = !(S.dayTypeOv && S.dayTypeOv[k]);
-    el.textContent = (t==="work" ? "Work day" : "Day off") + (auto ? " · auto" : "");
-    el.onclick = e=>{ e.stopPropagation(); toggleDayType(); };
-  })();
-  /* midnight rollover while the app sits open */
-  const ds = todayStr();
-  if(dcLastDay && dcLastDay!==ds){ dcLastDay = ds; renderAll(); return; }
-  dcLastDay = ds;
-}
-/* live clock: repaint every minute while Progress is showing */
-setInterval(()=>{ const v=$("view-progress"); if(v && v.classList.contains("active")) paintDayCycle(); }, 60000);
 function renderDiary(){
   const k = viewDate(), d = day(), g = S.goals, t = totals(k);
   renderProfileStrip();
@@ -6035,7 +5765,6 @@ function wtStatusText(){
   return "Trending "+sgn(rate)+" "+wu+"/wk.";
 }
 function renderProgress(){
-  paintDayCycle();
   if(typeof paintHeatmap==="function") paintHeatmap(); /* defined in a later script block — same guard as paintAutoZone in renderDiary */
   (function(){ var s=S.weekSeg||"cal";
     document.querySelectorAll("#weekSeg .segbtn").forEach(function(x){x.classList.toggle("on",x.dataset.seg===s);});
@@ -7008,10 +6737,6 @@ function infoContent(k){
   if(k==="insights") return {t:"Progress insights", b:
     `<div class="irow">Correlation-style readouts from your own log — adherence vs weight trend, protein vs trend, water vs tiredness, training weeks, sodium vs bloat.</div>
      <div class="irow">They need a few weeks of consistent logging before they say anything useful, and they're <b>estimates, not medical advice</b> — sleep, stress, and illness matter too, and the app can't see those.</div>`};
-  if(k==="daycycle") return {t:"Day Cycle", b:
-    `<div class="irow"><b>Drag the arc</b> to preview any time of day. <b>Tap a meal window</b> for its usual time and a Log shortcut. The colored ticks on the arc mark <b>sunrise and sunset</b>.</div>
-     <div class="irow">Meal-timing research (chrononutrition) links <b>consistent</b> meal times and a <b>shorter eating window</b> (around 10–12 hours) to better metabolic markers — one phone-based study saw people shrink a ~15-hour window to 10 hours and lose ~3.3 kg over 16 weeks with no calorie guidance (Gill & Panda).</div>
-     <div class="irow">Front-load more calories earlier in the day and avoid late-night eating when you can. Associations, not prescriptions — consistency beats perfection.</div>`};
 }
 function openInfo(k){
   const c = infoContent(k); if(!c) return;
@@ -7046,7 +6771,7 @@ try{
 const INFO_CATS = [
   {id:"diary",    label:"Diary & logging",  keys:["waterinfo","streakinfo","nicphase","alcphase","energy","scores","badges","schedule"]},
   {id:"goals",    label:"Goals & targets",  keys:["activity","calorie","macros","water","advanced"]},
-  {id:"progress", label:"Progress & insights", keys:["daycycle","wtgoal","milestone","bmi","calcheck","insights"]},
+  {id:"progress", label:"Progress & insights", keys:["wtgoal","milestone","bmi","calcheck","insights"]},
   {id:"nutrients",label:"Nutrients",        keys:["nutrients"]},
   {id:"medals",   label:"Medals",           keys:["medals"]},
   {id:"data",     label:"Data & backups",   keys:["snapshots"]},
@@ -7960,8 +7685,8 @@ function showView(v){
   paintSigned();
 }
 /* 2026.09.22-k: Apple-Photos-style reorder — compact row list with drag handles, checkmark saves */
-const PROG_UNITS = ["body","week","heatmap","daycycle","auto"];
-const PROG_TITLES = {body:"Weight",week:"This week",heatmap:"Consistency",daycycle:"Day cycle",auto:"Autopilot"};
+const PROG_UNITS = ["body","week","heatmap","auto"];
+const PROG_TITLES = {body:"Weight",week:"This week",heatmap:"Consistency",auto:"Autopilot"};
 const LINES_SVG = '<svg viewBox="0 0 24 24"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
 const CHECK_SVG = '<svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
 function progUnits(){ return Array.prototype.slice.call(document.querySelectorAll("#progOverview .punit")); }
@@ -8562,7 +8287,7 @@ function paintAutoZone(){
   var a = autoState(), html = "";
   a.props.forEach(function(p){
     if(p.done) return;
-    html += '<div style="border:1.5px solid var(--acc);border-radius:6px;padding:12px;margin:10px 0">' +
+    html += '<div style="border:1.5px solid var(--acc);border-radius:6px;padding:10px;margin:8px 0">' +
       '<div style="font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--acc);margin-bottom:4px">AUTOPILOT SUGGESTION</div>' +
       '<div style="font-size:14px;line-height:1.5">' + esc(p.text) + '</div>' +
       '<div style="display:flex;gap:8px;margin-top:10px">' +
@@ -8573,7 +8298,7 @@ function paintAutoZone(){
   /* Compact feed (2026.10.14-i): the current maintenance is a hero number;
      history is one slim row per entry (value + delta + date) instead of the
      same long sentence repeated. Nothing is hidden — just said once. */
-  var feed = a.feed.slice(0, 6);
+  var feed = a.feed.slice(0, 4);
   var curIx = -1;
   for(var cix = 0; cix < feed.length; cix++){ if(feed[cix].t.indexOf("Maintenance ") === 0){ curIx = cix; break; } }
   var maintVal = function(t){ var m = /→\s*([\d,]+)\s*kcal/.exec(t); return m ? parseInt(m[1].replace(/,/g, ""), 10) : null; };
@@ -8584,10 +8309,9 @@ function paintAutoZone(){
       var v = maintVal(f.t);
       if(ix === curIx && v != null){
         var dm = /last (\d+) days/.exec(f.t);
-        return '<div style="padding:10px 0 12px;border-top:1px solid var(--line)">' +
-          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><b style="font-size:26px;letter-spacing:-.02em;color:var(--acc)">' + v.toLocaleString() + '</b>' +
-          '<span style="font-size:13px;color:var(--muted)">kcal maintenance</span>' + pill + '</div>' +
-          '<div style="font-size:12.5px;color:var(--muted);margin-top:2px">Learned from your last ' + (dm ? dm[1] : "?") + ' days of eating + weigh-ins \u00b7 ' + fmtD(f.d) + '</div></div>';
+        return '<div style="display:flex;align-items:baseline;gap:7px;padding:8px 0 10px;border-top:1px solid var(--line)"><b style="font-size:23px;letter-spacing:-.02em;color:var(--acc)">' + v.toLocaleString() + '</b>' +
+          '<span style="font-size:12px;color:var(--muted)">kcal maintenance</span>' + pill +
+          '<span style="margin-left:auto;color:var(--muted);font-size:12px">' + (dm ? dm[1] + 'd \u00b7 ' : '') + fmtD(f.d) + '</span></div>';
       }
       if(v != null){
         var older = null;
