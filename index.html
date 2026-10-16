@@ -1157,6 +1157,22 @@ body.reordering #progOverview{display:none}
 .dc-eyebrow{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.75);margin-bottom:2px}
 .dc-insight{max-width:320px;margin-left:auto;margin-right:auto}
 
+/* Progress round 3 (2026.10.15-c, Jay's feedback): the net-change badge on
+   the weight hero gets a solid white background so its signed dark red /
+   green value reads clearly on the gradient. BMI + Target check leave the
+   white card and become standalone theme-gradient widget cards — the pair
+   treatment from Profile's Lungs/Liver cards; their details open as white
+   cards below the pair. */
+.bodycard .road-cur-badge{background:#fff;color:var(--ink)}
+.pg-details{background:transparent;box-shadow:none;border:none;padding:0;overflow:visible}
+.pg-duo .xrow{background:linear-gradient(135deg,var(--acc),var(--acc-deep));color:#fff;box-shadow:0 8px 24px rgba(30,30,80,.18)}
+.pg-duo .xrow .sicon{background:rgba(255,255,255,.16);color:#fff}
+.pg-duo .xrow-main b{color:#fff}
+.pg-duo .xrow-val{color:#fff}
+.pg-duo .chev2{display:none}
+.pg-details .xdetail{background:#fff;border-radius:var(--radius);box-shadow:0 10px 28px rgba(84,84,180,.08);margin-top:10px}
+.pg-details .xdetail .pad{padding:12px 14px 16px}
+
 /* Weight circle refinement (2026.10.14-i, Jay's spec): the number + unit sit
    on ONE line, the date below is numeric (0/0/0 style), and progress from
    start to target is a RING around the circle — the straight bar is gone.
@@ -1518,7 +1534,7 @@ body.reordering #progOverview{display:none}
             </div>
           </div><!-- /bodyhero -->
         </div><!-- /card bodycard (hero) -->
-        <div class="card" style="margin-top:0">
+        <div class="card pg-details" style="margin-top:0">
 
           <div class="pg-duo">
           <button class="xrow" data-x="bmi" aria-label="BMI details">
@@ -2438,7 +2454,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.15-b";
+const APP_VERSION = "2026.10.15-c";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
