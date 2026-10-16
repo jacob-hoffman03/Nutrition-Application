@@ -1129,6 +1129,34 @@ body.reordering #progOverview{display:none}
 .bodycard .road-pbar{background:rgba(255,255,255,.25)}
 .bodycard .road-pfill{background:#fff}
 
+/* Progress widget redesign (2026.10.15-b, Jay's brief): panels mirror the
+   Profile page — one gradient hero, glass stat tiles, small widget cards,
+   visuals first, sentences demoted to expandable details. Painters and
+   data unchanged; only structure and emphasis move. */
+.bodycard .road-flow{width:100%}
+.bodycard .road-stops{align-items:stretch;gap:8px}
+.bodycard .road-stop{flex:1;background:rgba(255,255,255,.13);border-radius:7px;padding:8px 10px;justify-content:center}
+.bodycard .road-num{font-size:15px}
+.pg-duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pg-duo .xrow{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"ic lb ch" "vl vl vl";align-items:center;column-gap:8px;row-gap:7px;border-top:0;background:var(--card2);border-radius:7px;padding:12px}
+.pg-duo .xrow .sicon{grid-area:ic}
+.pg-duo .xrow-main{grid-area:lb}
+.pg-duo .xrow-main b{font-size:14px}
+.pg-duo .xrow-val{grid-area:vl}
+.pg-duo .xrow-val b{font-size:21px !important;letter-spacing:-.02em}
+.pg-duo .chev2{grid-area:ch}
+#anaTotal{font-size:30px;letter-spacing:-.02em}
+.weekcard .bars7{height:118px}
+.weekcard .chal{border-top:1px solid var(--line);padding-top:10px}
+#insRows{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#insRows .insrow{background:#fff;border:1px solid var(--line);border-radius:7px;padding:11px 12px;box-shadow:0 6px 18px rgba(84,84,180,.06)}
+#insRows .insrow b{font-size:13px;line-height:1.35}
+#insRows .insrow span{font-size:11.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.hmstat{margin-left:auto;font-size:12px;font-weight:800;color:var(--acc-deep);background:var(--acc-soft);border-radius:9px;padding:3px 9px}
+.hmcell{border-radius:4px}
+.dc-eyebrow{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.75);margin-bottom:2px}
+.dc-insight{max-width:320px;margin-left:auto;margin-right:auto}
+
 /* Weight circle refinement (2026.10.14-i, Jay's spec): the number + unit sit
    on ONE line, the date below is numeric (0/0/0 style), and progress from
    start to target is a RING around the circle — the straight bar is gone.
@@ -1492,12 +1520,20 @@ body.reordering #progOverview{display:none}
         </div><!-- /card bodycard (hero) -->
         <div class="card" style="margin-top:0">
 
+          <div class="pg-duo">
           <button class="xrow" data-x="bmi" aria-label="BMI details">
             <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg></span>
             <span class="xrow-main"><b>BMI</b></span>
             <span class="xrow-val"><b id="bmiVal" style="font-size:17px">—</b><span class="pill" id="bmiPill" style="display:none"></span></span>
             <span class="chev2">›</span>
           </button>
+          <button class="xrow" data-x="calcheck" aria-label="Calorie target check details">
+            <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg></span>
+            <span class="xrow-main"><b>Target check</b></span>
+            <span class="xrow-val"><b id="calCheckVerdict" style="font-size:14px">—</b></span>
+            <span class="chev2">›</span>
+          </button>
+          </div><!-- /pg-duo -->
           <div class="xdetail" id="xdetail-bmi"><div class="pad">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="ginfo" id="bmiInfo" aria-label="About BMI">i</button><span class="rangenote">How BMI is calculated</span></div>
             <div class="bmibar"><i id="bmiMark" style="display:none"></i></div>
@@ -1508,12 +1544,6 @@ body.reordering #progOverview{display:none}
             <div class="rangenote" id="wtContext" style="margin-top:10px"></div>
           </div></div>
 
-          <button class="xrow" data-x="calcheck" aria-label="Calorie target check details">
-            <span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg></span>
-            <span class="xrow-main"><b>Target check</b><span class="rangenote" style="display:block; margin-top:1px">Is your calorie target working?</span></span>
-            <span class="xrow-val"><b id="calCheckVerdict" style="font-size:14px">—</b></span>
-            <span class="chev2">›</span>
-          </button>
           <div class="xdetail" id="xdetail-calcheck"><div class="pad">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="ginfo" id="calCheckInfo" aria-label="How this checks your target">i</button><span class="rangenote">How the check works</span></div>
             <div class="rangenote" id="calCheckOut" style="color:var(--ink)">Log weight for 2+ weeks to grade your target against your real rate of gain.</div>
@@ -1586,15 +1616,16 @@ body.reordering #progOverview{display:none}
       </div><!-- /punit data-pid="week" -->
       <div class="punit" data-pid="heatmap">
         <div class="card">
-          <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></span><b>Consistency</b><span id="hmSum" style="margin-left:auto;font-size:12px;color:var(--muted);font-weight:600"></span></div>
+          <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></span><b>Consistency</b><span id="hmSum" class="hmstat"></span></div>
           <div class="hmgrid" id="hmGrid"></div>
-          <div class="hmlegend"><span>Less</span><i style="background:var(--card2)"></i><i style="background:var(--acc);opacity:.3"></i><i style="background:var(--acc);opacity:.55"></i><i style="background:var(--acc);opacity:.85"></i><i style="background:var(--acc)"></i><span>More</span><span style="margin-left:auto">share of your goal eaten · tap a day to open it</span></div>
+          <div class="hmlegend"><span>Less</span><i style="background:var(--card2)"></i><i style="background:var(--acc);opacity:.3"></i><i style="background:var(--acc);opacity:.55"></i><i style="background:var(--acc);opacity:.85"></i><i style="background:var(--acc)"></i><span>More</span><span style="margin-left:auto">tap a day to open it</span></div>
         </div>
       </div><!-- /punit data-pid="heatmap" -->
 
 
       <div class="punit" data-pid="daycycle">
         <div class="daycycle" id="dayCycle" aria-label="Day cycle">
+          <div class="dc-eyebrow">Day cycle</div>
           <svg viewBox="0 0 300 240" aria-hidden="true" id="dcSvg">
             <defs>
               <linearGradient id="dcGrad" x1="0" y1="0" x2="1" y2="0">
@@ -1621,7 +1652,7 @@ body.reordering #progOverview{display:none}
       <div class="punit" data-pid="auto">
         <div class="card">
           <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 3v4h-4"/></svg></span><b>Autopilot</b><span id="autoLastRun" style="margin-left:auto;font-size:11px;color:var(--muted)"></span></div>
-          <div style="font-size:12.5px;color:var(--muted);margin:0 0 4px;line-height:1.5">Retunes your maintenance from your eating + weigh-ins, so your target tracks your body.</div>
+          <div style="font-size:12.5px;color:var(--muted);margin:0 0 4px;line-height:1.5">Learns your maintenance from your log.</div>
           <div id="autoZoneP"></div>
         </div><!-- /card -->
       </div><!-- /punit data-pid="auto" -->
@@ -2407,7 +2438,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.15-a";
+const APP_VERSION = "2026.10.15-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -8501,7 +8532,7 @@ function paintHeatmap(){
   }
   grid.innerHTML = html;
   var sum = document.getElementById("hmSum");
-  if(sum) sum.textContent = logged ? Math.round(inZone / logged * 100) + "% of logged days in the zone" : "";
+  if(sum) sum.textContent = logged ? Math.round(inZone / logged * 100) + "% in zone" : "";
   grid.querySelectorAll("[data-hm]").forEach(function(b){ b.onclick = function(){
     var now = new Date(todayStr() + "T12:00:00");
     dayOffset = Math.round((new Date(b.getAttribute("data-hm") + "T12:00:00") - now) / 864e5);
@@ -8538,7 +8569,7 @@ function paintAutoZone(){
       if(ix === curIx && v != null){
         var dm = /last (\d+) days/.exec(f.t);
         return '<div style="padding:10px 0 12px;border-top:1px solid var(--line)">' +
-          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><b style="font-size:26px;letter-spacing:-.02em">' + v.toLocaleString() + '</b>' +
+          '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><b style="font-size:26px;letter-spacing:-.02em;color:var(--acc)">' + v.toLocaleString() + '</b>' +
           '<span style="font-size:13px;color:var(--muted)">kcal maintenance</span>' + pill + '</div>' +
           '<div style="font-size:12.5px;color:var(--muted);margin-top:2px">Learned from your last ' + (dm ? dm[1] : "?") + ' days of eating + weigh-ins \u00b7 ' + fmtD(f.d) + '</div></div>';
       }
