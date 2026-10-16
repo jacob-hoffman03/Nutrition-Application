@@ -1370,11 +1370,11 @@ body.reordering #progOverview{display:none}
   <section class="view" id="view-goals">
     <div class="topbar">
       <button class="tbtn" id="goalsBack" aria-label="Back">‹</button>
-      <h1>Nutrition Goals <button class="ginfo" id="goalsInfo" aria-label="Goals information">i</button></h1>
+      <h1>Daily Check-In <button class="ginfo" id="goalsInfo" aria-label="Goals information">i</button></h1>
       <div style="width:44px"></div>
     </div>
     <div class="card goalbig" style="margin-top:14px">
-      <div class="glabel">Daily calorie goal</div>
+      <div class="glabel">What to eat daily</div>
       <div class="gnum"><span id="goalTotal">3000</span> <small>kcal</small></div>
       <div class="gsub" id="goalSub"></div>
       <div class="gsub" id="gainProj" style="font-weight:700"></div>
@@ -1639,7 +1639,7 @@ body.reordering #progOverview{display:none}
     </div>
     <button class="pfhero" id="pfGoalsHero">
       <span class="pfhero-chev">›</span>
-      <span class="pfhero-lbl">Daily goal · <span id="pfHeroMode">—</span></span>
+      <span class="pfhero-lbl">Eat daily · <span id="pfHeroMode">—</span></span>
       <span class="pfhero-num"><b id="pfHeroGoal">—</b><span> kcal</span></span>
       <span class="pfhero-sub" id="pfHeroSub">—</span>
       <span class="pfhero-macros">
@@ -2407,7 +2407,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.15-d";
+const APP_VERSION = "2026.10.15-e";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2678,11 +2678,9 @@ function setTheme(hex){
   renderAll();
 }
 /* save() is defined up near KEY — quota-aware, trims oldest progress photos when storage is full */
-/* fingerprint of the profile inputs that feed calcMaintenance — if these changed since
-   maintenance was last calculated, Save recalculates so the goal can never go stale */
+/* profile fingerprint (state compatibility — kept from the formula era) */
 function profHash(){ const p=S.goals.profile; return [p.weightLb,p.heightIn,p.age,p.sex,p.bodyFat,p.activityKey].join("|"); }
-function recalcMaint(){ if(S.goals.useAdaptive) return; /* 2026.10.13-b: adaptive owns maintenance — profile edits (activity, sex, stats) only feed the formula prior, they never overwrite the learned value */
-  if(!(S.goals.profile.weightLb>0)){ const cw = (typeof curBodyWeight==="function")?curBodyWeight():0; if(cw>0) S.goals.profile.weightLb=cw; else { S.goals.profHash = profHash(); return; } } S.goals.maintenance = calcMaintenance().maint; applyModePct(); S.goals.profHash = profHash(); }
+
 if(!S.goals.profHash) S.goals.profHash = profHash();
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const dstr = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -5510,9 +5508,6 @@ function paintCalCheck(){
     msg += "On target — hold steady and re-check in 2–3 weeks.";
   } else if(underAte){
     msg += "Below target — but your complete days average "+Math.round(avgC).toLocaleString()+" kcal, under 90% of your "+Math.round(goal).toLocaleString()+" kcal goal. Hit the goal first; raising the target won't help until the food is actually eaten.";
-  } else if(maybeAutoTune(suggest)){
-    msg += "Auto-tuned just now: maintenance "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal applied from your trend. Re-check in 2–3 weeks.";
-    save(); renderGoals(); renderProgress(); renderDiary(); return;
   } else if(sinceT < 21){
     msg += (suggest>0?"Below target. ":"Above target. ")+"Maintenance was tuned on "+lastT+" — give it 2–3 weeks before changing again.";
   } else {
@@ -6212,7 +6207,7 @@ document.getElementById("wtGoalEditClear").onclick = ()=>{
 document.getElementById("wtGoalEditCancel").onclick = closeWtGoalEdit;
 
 /* ============ GOALS VIEW ============ */
-function goalTotal(){ return (S.goals.maintenance>0?S.goals.maintenance:0) + (S.goals.surplus>0?S.goals.surplus:0); }
+function goalTotal(){ return (S.goals.maintenance>0) ? Math.round(S.goals.maintenance) + (S.goals.surplus>0?S.goals.surplus:0) : 0; }
 /* ================= ANALYTICS ENGINE — MACROS =================
    Research sources (2026 refresh): protein 1.6-2.2 g/kg/d for muscle gain
    (Morton 2018 meta-analysis: breakpoint 1.62; ISSN 2017: 1.4-2.0) — auto default
@@ -6257,43 +6252,6 @@ const ACT_TIERS = [
 ];
 const actPAL = p => (ACT_TIERS.find(t=>t.key===(p&&p.activityKey))||ACT_TIERS[2]).pal;
 const MODE_PCT = {lean:10, bulk:15, maintain:0}; /* Helms 2023: bigger surpluses add fat, not muscle — bulk capped at +15% */
-function calcMaintenance(){
-  const p = S.goals.profile || {};
-  const curW = (typeof curBodyWeight==="function")?curBodyWeight():0;
-  const wLb = (p.weightLb>0) ? p.weightLb : (curW>0 ? curW : 122.2);
-  if(!(wLb>0)) return {bmr:0, maint:0, formula:"—"};
-  const kg = wLb/2.20462;
-  const hIn = (p.heightIn>0) ? p.heightIn : 70;
-  const cm = hIn*2.54;
-  const age = (p.age>0) ? p.age : 23;
-  const sex = p.sex || "m";
-  let bmr, formula;
-  if(p.bodyFat>0){
-    bmr = 370 + 21.6*(kg*(1-p.bodyFat/100));
-    formula = "Katch-McArdle";
-  } else {
-    bmr = 29.279 + 11.936*kg + 587.728*(cm/100) - 8.129*age + 191.027*(sex==="f"?0:1);
-    formula = "Ten-Haaf (athlete)";
-  }
-  return {bmr: Math.round(bmr), maint: Math.round(bmr*actPAL(p)), formula};
-}
-
-/* Day-type maintenance (2026.10.11-g): research shows the ~1000 kcal work/rest
-   swing is almost entirely NEAT. Work days run PAL ~1.8, rest days ~1.2.
-   Surplus stays constant; intake scales with the day's TDEE. */
-function dayMaintenance(kstr){
-  var cm = calcMaintenance();
-  if(!(cm.bmr>0)) return 0;
-  var isWork = (typeof dayType==="function") ? dayType(kstr||todayStr())==="work" : true;
-  var pal = isWork ? Math.max(1.8, actPAL(S.goals.profile)) : 1.2;
-  return Math.round(cm.bmr * pal);
-}
-function dayCalGoal(kstr){
-  var m = dayMaintenance(kstr);
-  if(!(m>0)) return 0;
-  var sur = (S.goals.surplus>0) ? S.goals.surplus : 0;
-  return m + sur;
-}
 /* keep a preset mode's surplus glued to its % of maintenance */
 function applyModePct(){
   const g = S.goals;
@@ -6302,14 +6260,6 @@ function applyModePct(){
   if(g.surplusMode==="rate" && g.gainRate>=0 && g.maintenance>0){ g.surplus = Math.round(g.gainRate*500); return; }
   const pct = MODE_PCT[g.mode];
   if(pct!==undefined && g.maintenance>0) g.surplus = Math.round(g.maintenance*pct/100);
-}
-/* 2026.09.24-c: calculator.net method replaces the FAO activity bands — one-time
-   maintenance recalc so goals immediately use Mifflin-St Jeor × the new factors.
-   Adaptive TDEE owners keep their learned value; intake logging untouched. Lives in
-   block 1 because recalcMaint/autoDeriveMacros are defined here (not hoisted). */
-if(!flagGet().calcNet){
-  if(!S.goals.useAdaptive && S.goals.profile && S.goals.profile.weightLb>0){ recalcMaint(); autoDeriveMacros(); }
-  flagSet("calcNet",1);
 }
 /* Photo dedup: log entries used to carry a second copy of their library food's
    photo. The library is now the source of truth (entryImg resolves by name), so
@@ -6339,13 +6289,13 @@ function paintGainProj(){
   el.textContent = "≈ +"+wDisp(lbWk).toFixed(2)+" "+wu+"/week ("+(lbWk/w*100).toFixed(2)+"% of body weight) at this surplus — first-week estimate only; gains slow as you grow (Hall 2011). Your weigh-ins are the real answer";
 }
 function paintMaintNote(){
-  const p = S.goals.profile;
-  if(!(p.weightLb>0)){ document.getElementById("pfNote").textContent = "Enter your stats, then tap Calculate & Save."; return; }
-  const cm = calcMaintenance();
-  const sexNote = p.sex==="" ? " (sex not set — assuming male; set it above for an exact number)" : "";
-  document.getElementById("pfNote").textContent = "Stats estimate: "+cm.maint.toLocaleString()+" kcal ("+cm.formula+")"+sexNote+" — stands in until your log takes over.";
-}
-function readProfile(){
+  const p = S.goals.profile, a = S.goals.adaptive;
+  const el = document.getElementById("pfNote");
+  if(!(p.weightLb>0)){ el.textContent = "Add your stats — they feed your BMI and water target. Your eating number comes from your log, not from stats."; return; }
+  el.textContent = (a && a.ok)
+    ? "These stats do not set your number — it is calculated from your log ("+a.days+" days, updated "+a.updated+"). Stats here feed BMI and water."
+    : "These stats do not set your number — it is calculated from your food log and weigh-ins once there is ~10 days of data. Stats here feed BMI and water.";
+}function readProfile(){
   const p = S.goals.profile, met = p.units==="met";
   const oldW = p.weightLb||0;
   const age = parseInt(document.getElementById("pfAge").value);
@@ -6405,19 +6355,6 @@ function renderGoalsProfile(){
   document.querySelectorAll("#pfAct .chip").forEach(c=>c.classList.toggle("sel", c.dataset.k===p.activityKey));
   paintMaintNote();
 }
-/* Auto-tune: nudge maintenance itself toward the weigh-in trend (max once per 2 weeks).
-   The ±150 kcal cap keeps one noisy fortnight from swinging the target. */
-function maybeAutoTune(suggest){
-  if(!S.goals.autoTune || !suggest) return false;
-  if(S.goals.useAdaptive) return false; /* adaptive engine owns maintenance — never double-tune */
-  const last = S.goals.lastAutoTune;
-  const since = last ? Math.round((new Date(todayStr()+"T12:00:00")-new Date(last+"T12:00:00"))/86400000) : 999;
-  if(since < 14) return false;
-  commitGoals("autotune", Math.max(1200, Math.round(S.goals.maintenance + suggest)));
-  S.goals.lastAutoTune = todayStr();
-  S.goals.tuneNote = "Auto-tune "+todayStr()+": maintenance "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal from your weight trend.";
-  return true;
-}
 /* Complete-day gating: partial days must not teach the model. A day counts only
    with real food AND all three bars cleared: ≥800 kcal, ≥ half of maintenance,
    ≥ 60% of your own median day. Today is always excluded — unfinished by definition. */
@@ -6425,7 +6362,7 @@ function completeDayCals(WIN){
   WIN=WIN||28; const raw=[]; /* compact model passes 14; legacy callers keep 28 */
   for(let i=WIN-1;i>=1;i--){ const ds=addDays(todayStr(),-i); if(isLocked(ds)) continue; const t=dayTotals(ds); if(t.foodLogged) raw.push(t.cal); }
   const srt=raw.slice().sort((a,b)=>a-b), med=srt.length?srt[Math.floor(srt.length/2)]:0;
-  const maint=calcMaintenance().maint||S.goals.maintenance||0;
+  const maint=S.goals.maintenance||0;
   const cals=[]; let partial=0;
   raw.forEach(cal=>{ if(cal>=800 && cal>=0.5*maint && cal>=0.6*med) cals.push(cal); else partial++; });
   return {cals, partial, logged:raw.length};
@@ -6447,19 +6384,15 @@ function avgCompleteIntake(){ const r=completeDayCals(); return r.cals.length?r.
    only — surplus is derived here from maintenance × the mode's %, so the
    invariant goal = maintenance + surplus always holds). Exactly one source
    decides maintenance: the learned value whenever the log supports it
-   (adaptive.ok), otherwise the stats formula. Every derivation is stamped
+   (adaptive.ok), otherwise the last data-derived value holds (stale) — and before any data exists, no number is presented at all. No formula anywhere (2026.10.15-e). Every derivation is stamped
    with its provenance. */
 function commitGoals(reason, maintOverride){
   const g = S.goals;
   let src;
   if(maintOverride>0){ g.maintenance = Math.round(maintOverride); src = "auto-tune"; }
-  else if(g.useAdaptive && g.adaptive && g.adaptive.ok && g.adaptive.value>0){ g.maintenance = g.adaptive.value; src = "learned"; }
-  else {
-    if(!(g.profile.weightLb>0)){ const cw = (typeof curBodyWeight==="function") ? curBodyWeight() : 0; if(cw>0) g.profile.weightLb = cw; }
-    const cm = calcMaintenance(); if(cm.maint>0) g.maintenance = cm.maint;
-    src = g.useAdaptive ? "formula (learning)" : "formula";
-    g.profHash = profHash();
-  }
+  else if(g.adaptive && g.adaptive.ok && g.adaptive.value>0){ g.maintenance = g.adaptive.value; src = "learned"; }
+  else if(g.maintenance>0 && g.derived && (g.derived.src==="learned" || g.derived.src==="auto-tune" || g.derived.src==="learned-stale")){ src = "learned-stale"; /* HOLD: the last data-derived number stays until the log supports a fresh one */ }
+  else { g.maintenance = 0; src = "nodata"; /* no data has ever supported a number — present none */ }
   applyModePct();      /* preset modes: surplus stays glued to its % of maintenance */
   autoDeriveMacros();  /* macros follow the goal unless he locked them manually */
   g.derived = {src, maint: Math.round(g.maintenance||0), at: todayStr(), why: reason||""};
@@ -6548,8 +6481,7 @@ function refreshAdaptive(){
   const last=g.adaptiveHist[g.adaptiveHist.length-1];
   if(!last||last.d!==todayStr()) g.adaptiveHist.push({d:todayStr(), v});
   if(g.adaptiveHist.length>26) g.adaptiveHist=g.adaptiveHist.slice(-26);
-  if(g.useAdaptive)
-    g.adTuneNote="Adaptive TDEE "+todayStr()+": maintenance set to "+v.toLocaleString()+" kcal from your trend.";
+  g.adTuneNote="Adaptive TDEE "+todayStr()+": maintenance set to "+v.toLocaleString()+" kcal from your trend.";
   return prev==null||v!==prev;
 }
 function applyAdaptive(){
@@ -6558,27 +6490,20 @@ function applyAdaptive(){
   paintAdaptive(); renderGoals(); renderDiary();
 }
 function paintAdaptive(){
-  /* Background machinery, one line of evidence (2026.10.14-i): the learned
-     estimate, its history, and its gates all live in storage and keep
-     updating via Calculate & Save + the daily autopilot. The page shows a
-     single line inside the goal card: which maintenance is running and the
-     evidence under it. */
+  /* One line of evidence (2026.10.15-e): the learned estimate is the only
+     source — the page shows which maintenance is running and the data under
+     it. Before the data exists, it says so instead of presenting a number. */
   const g=S.goals, a=g.adaptive, el=document.getElementById("goalSrc");
   if(!el) return;
-  if(!a){ el.textContent="Maintenance not calculated yet — tap Calculate & Save."; return; }
+  if(!a){ el.textContent="No number yet — it is calculated from your food log and weigh-ins once there is about 10 days of data."; return; }
   if(!a.ok){
-    el.textContent = a.reason==="profile"
-      ? "Maintenance comes from your stats for now — add them below."
-      : "Learning your maintenance — "+(a.days||0)+" of 10 logged days so far. Your stats estimate runs your goal until your log takes over.";
+    el.textContent="Learning from your log — "+(a.days||0)+" of 10 logged days so far. No number is presented until there is data behind it.";
     return;
   }
-  el.textContent = (g.useAdaptive
-    ? "Maintenance "+a.value.toLocaleString()+" · learned from your log · "
-    : "Learned maintenance "+a.value.toLocaleString()+" from your log — tap Calculate & Save to run your goal on it · ") +
-    a.avg.toLocaleString()+" avg intake · "+(a.rateWk>=0?"+":"−")+Math.abs(a.rateWk).toFixed(2)+" lb/wk · updated "+a.updated+
+  el.textContent = "Maintenance "+a.value.toLocaleString()+" · calculated from your log · "+
+    a.avg.toLocaleString()+" avg intake · "+(a.rateWk>=0?"+":"-")+Math.abs(a.rateWk).toFixed(2)+" lb/wk · updated "+a.updated+
     (a.stale?" · holding — log more days to refresh it":"");
-}
-/* The scale is the single source of truth for body weight: every weigh-in updates the
+}/* The scale is the single source of truth for body weight: every weigh-in updates the
    profile weight, so the goal calculation, BMI, calorie check, and the diary all
    read the same number. The auto-adjust toggle only gates the *recalculation*
    (maintenance + macro re-split) — the weight itself always syncs. */
@@ -6590,9 +6515,10 @@ function syncWeightFromLog(newLb, dateStr){
   const changed = Math.abs(effW - (p.weightLb||0)) >= 0.05;
   p.weightLb = effW;
   let tuned = false;
-  if(p.auto && changed && effW>0 && !S.goals.useAdaptive){
-    commitGoals("weight"); /* single derivation: maintenance + surplus % + macros together */
-    S.goals.autoNote = "Auto-adjusted from "+wDisp(effW)+" "+wUnit()+" on "+dateStr+" — maintenance"+(S.goals.macroAuto!==false?" and macros":"")+" recalculated.";
+  if(p.auto && changed && effW>0){
+    if(typeof refreshAdaptive==="function") refreshAdaptive();
+    commitGoals("weight"); /* single derivation from the log: maintenance + surplus + macros together */
+    S.goals.autoNote = "Weighed "+wDisp(effW)+" "+wUnit()+" on "+dateStr+" — your daily number recalculated from your log.";
     tuned = true;
   } else if(changed && effW>0){
     /* 2026.09.25-d: auto-adjust is off — the weight still syncs (BMI, BAC, macro
@@ -6607,12 +6533,12 @@ function syncWeightFromLog(newLb, dateStr){
 /* ============ GOALS: collapsible sections + info buttons ============ */
 /* Goals section explainers shown behind the ⓘ buttons */
 function infoContent(k){
-  if(k==="athlete" || k==="engine") return {t:"Athlete Energy & Macro Engine", b:
-    `<div class="irow"><b>Basal Metabolic Rate (BMR):</b> Calculated using the validated <b>Ten-Haaf</b> athlete equation (or <b>Katch-McArdle</b> when body fat % is entered) from your height, weight, age, and sex.</div>
-     <div class="irow"><b>TDEE & Shift Multipliers:</b> Maintenance expenditure combines your baseline metabolism with your physical activity level (PAL), accounting for your restaurant shift workload (Truly Pizza server & aPizzaDoho expeditor on-foot hours) plus weekly gym sessions.</div>
-     <div class="irow"><b>Lean Bulk Surplus:</b> A calibrated +10% surplus above maintenance is targeted to drive muscular hypertrophy while keeping body fat low (Helms et al., 2023).</div>
-     <div class="irow"><b>Macro Distribution:</b> High protein (~1.0 g/lb / 2.2 g/kg) ensures maximum muscle protein synthesis, healthy dietary fats (~20–25%) maintain hormone and joint health, and clean carbohydrates fuel intensive shifts and training.</div>
-     <div class="irow"><b>Adaptive Learning:</b> The engine runs quietly in the background, continuously refining your real metabolic rate based on your daily food logs and weigh-in trends.</div>`};
+  if(k==="athlete" || k==="engine") return {t:"How your number works", b:
+    `<div class="irow"><b>No formula.</b> Your maintenance is calculated from your own data only: what you logged eating over the last ~21 days, minus your weight trend x 500 (energy balance — gaining means you ate above maintenance, losing means below).</div>
+     <div class="irow"><b>No number without data.</b> Until your log has ~10 complete days and your weigh-ins span ~10 days, no daily number is presented at all — nothing stands in for your data.</div>
+     <div class="irow"><b>Your weigh-ins move it</b> through the trend (smoothed daily, so one salty day cannot swing it), never through a stats table. Your stats below only feed BMI and your water target.</div>
+     <div class="irow"><b>Bulk:</b> your gain-rate pick adds the surplus on top — rate x 500 kcal (so +1.5 lb/wk = +750). Maintain adds nothing.</div>
+     <div class="irow"><b>Macros:</b> protein ~2.2 g/kg, fat ~25%, carbs fill the rest (or your split, if you set one) — re-derived every time the number changes.</div>`};
   /* 2026.09.22-h: Progress insight rows open their evidence here */
   if(k.indexOf("insight:")===0){
     const ik = k.slice(8);
@@ -6621,22 +6547,20 @@ function infoContent(k){
     const r = fn(); if(!r) return null;
     return {t: r.title, b: `<div class="irow">${esc(r.copy)}</div><div class="irow">${r.ev}</div>`};
   }
-  if(k==="activity") return {t:"Activity & maintenance", b:
-    `<div class="irow">Your stats estimate uses the <b>Ten-Haaf</b> athlete equation (<b>Katch-McArdle</b> when body fat % is entered) from your height, weight, age, and sex, × your activity level. It is a starting estimate — the learned number from your log replaces it once your log has enough data.</div>
-     <div class="irow"><b>Sedentary:</b> little or no exercise. <b>Light:</b> exercise 1-3 times/week. <b>Moderate:</b> 4-5 times/week. <b>Active:</b> daily or intense 3-4 times/week. <b>Very active:</b> intense 6-7 times/week. <b>Extra active:</b> very intense daily, or a physical job.</div>
-     <div class="irow">The activity factor is the roughest part of the math (±10–15%) — your weigh-ins and the Calorie Check calibrate it.</div>`};
-  if(k==="calorie") return {t:"Calorie goal", b:
-    `<div class="irow"><b>Lean Bulk (+10% over maintenance):</b> a 2023 trial (Helms) found bigger surpluses add fat, not extra muscle — target 0.25–0.5% body weight/week.</div>
-     <div class="irow"><b>Bulk (+15% over maintenance):</b> faster scale gains, but much of the extra is fat — target 0.35–0.7% body weight/week.</div>
-     <div class="irow"><b>Maintain (+0%):</b> eat at maintenance to hold your weight steady.</div>
-     <div class="irow">Your goal mode sets the surplus on top of maintenance — research supports <b>5–20%</b> over maintenance for lean gains.</div>`};
+  if(k==="activity") return {t:"Activity level", b:
+    `<div class="irow">Your activity pick does <b>not</b> set your eating number — that is calculated from your food log and weigh-ins, not from an activity table. This setting now only adjusts your <b>water target</b> tier.</div>
+     <div class="irow"><b>Sedentary:</b> little or no exercise. <b>Light:</b> exercise 1-3 times/week. <b>Moderate:</b> 4-5 times/week. <b>Active:</b> daily or intense 3-4 times/week. <b>Very active:</b> intense 6-7 times/week. <b>Extra active:</b> very intense daily, or a physical job.</div>`};
+  if(k==="calorie") return {t:"Daily number", b:
+    `<div class="irow">The big number is what to eat today: <b>maintenance</b> (calculated from your log) <b>+ your surplus</b>. It is a check-in, not a target to beat — eat it and let the trend judge.</div>
+     <div class="irow"><b>Maintain:</b> surplus 0 — eat at maintenance to hold your weight.</div>
+     <div class="irow"><b>+0.5 / +1.0 / +1.5 lb/wk:</b> adds 250 / 500 / 750 kcal. Research (Helms 2023) puts useful muscle gain near 0.25-0.5% of body weight per week — bigger surpluses mostly add fat.</div>`};
   if(k==="macros") return {t:"Macros", b:
     `<div class="irow"><b>Protein:</b> muscle gains top out near <b>1.6 g/kg/day</b> (Morton 2018 meta-analysis); up to <b>2.2 g/kg</b> (1 g/lb) is the supported ceiling. No per-meal maximum — large protein meals are still used (Trommelen 2023); spread 0.3–0.4 g/kg across 3–5 meals.</div>
      <div class="irow"><b>Auto:</b> protein 2.2 g/kg of body weight, fat 25% of your calorie goal, carbs fill the rest — re-derived every time your goal changes.</div>`};
   if(k==="water"){
     const w = waterCalc();
     if(w.unset) return {t:"Water target", b:
-    `<div class="irow"><b>Auto</b> needs your maintenance first — set your stats in Nutrition Goals, then tap Calculate & Save.</div>
+    `<div class="irow"><b>Auto</b> needs your maintenance first — it is calculated from your log (see Daily Check-In) once there is about 10 days of data.</div>
      <div class="irow">Or type a manual target below and it takes over immediately.</div>`};
     const pk = w.perKcal.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
     return {t:"Water target", b:
@@ -7393,7 +7317,7 @@ document.getElementById("pPhotoFile").onchange = e=>{
 function waterBreakdown(){
   const w = waterCalc();
   if(w.manual) return "Manual target of "+(w.target*8)+" oz ("+w.target+" glasses). Switch to Auto for the research-based formula.";
-  if(w.unset) return "Auto needs your maintenance first — set your stats in Nutrition Goals, then tap Calculate & Save.";
+  if(w.unset) return "Auto needs your maintenance first — it is calculated from your log (see Daily Check-In) once there is about 10 days of data.";
   return "Auto: "+(w.target*8)+" oz ("+w.target+" glasses) from "+Math.round(w.tdee).toLocaleString()+" kcal maintenance × "+w.tier+" activity (1.0–1.2 mL/kcal, IOM 2004)"+(w.xw?" — +16 oz for a supplement you flagged 'needs extra water'.":" — creatine needs no extra water (ISSN 2017).")+".";
 }
 function paintWater(){
@@ -7445,8 +7369,8 @@ document.getElementById("splitReset").onclick = ()=>{
 };
 function renderGoals(){
   const g = S.goals, tot = goalTotal();
-  document.getElementById("goalTotal").textContent = Math.round(tot).toLocaleString();
-  document.getElementById("goalSub").textContent = Math.round(g.maintenance).toLocaleString()+" maintenance + "+Math.round(g.surplus>0?g.surplus:0).toLocaleString()+" surplus";
+  document.getElementById("goalTotal").textContent = tot>0 ? Math.round(tot).toLocaleString() : "—";
+  document.getElementById("goalSub").textContent = tot>0 ? (Math.round(g.maintenance).toLocaleString()+" maintenance + "+Math.round(g.surplus>0?g.surplus:0).toLocaleString()+" surplus") : "No number yet — calculated from your log once there is data";
   document.getElementById("gmCg").textContent = Math.round(g.carbs||0).toLocaleString();
   document.getElementById("gmPg").textContent = Math.round(g.protein||0).toLocaleString();
   document.getElementById("gmFg").textContent = Math.round(g.fat||0).toLocaleString();
@@ -7498,9 +7422,9 @@ document.querySelectorAll("#pfAct .chip").forEach(c=>c.onclick=()=>{
   commitGoalsInputs();
   S.goals.profile.activityKey = c.dataset.k;
   document.querySelectorAll("#pfAct .chip").forEach(x=>x.classList.toggle("sel", x===c));
-  /* single derivation: in formula mode this recomputes maintenance AND re-derives
-     surplus + macros together; while the log is running the goal, the chip only
-     feeds the stats estimate — the learned maintenance does not move. */
+  /* The activity chip only feeds the water tier now — it never moves the
+     eating number. This commit just re-derives surplus + macros from the
+     current (log-calculated) maintenance. */
   commitGoals("activity");
   renderGoals(); renderDiary();
 });
@@ -7538,11 +7462,10 @@ document.getElementById("microRow").onclick = ()=>{
 };
 document.getElementById("goalsDone").onclick = ()=>{
   commitGoalsInputs();
-  /* THE one calculation (2026.10.14-i): refresh the learned estimate, then let
-     the data pick the source — learned when his log supports it, the stats
-     formula until it does. Macros are always calculated. One button. */
+  /* THE one calculation (2026.10.15-e): refresh the learned estimate and
+     commit it. The log is the only source — no formula stands in, ever.
+     Macros are always calculated. One button. */
   refreshAdaptive();
-  S.goals.useAdaptive = !!(S.goals.adaptive && S.goals.adaptive.ok);
   S.goals.macroAuto = true;
   if(S.goals.nutrTargets) delete S.goals.nutrTargets["Fiber"]; /* fiber is auto now */
   commitGoals("calculate");
@@ -7564,12 +7487,12 @@ function renderSettings(){
      maintenance/surplus/macros the Goals page runs on. Never the formula. */
   const hg = document.getElementById("pfHeroGoal");
   if(hg){
-    hg.textContent = Math.round(goalTotal()).toLocaleString();
+    hg.textContent = goalTotal()>0 ? Math.round(goalTotal()).toLocaleString() : "—";
     const md = document.getElementById("pfHeroMode"); if(md) md.textContent = ({lean:"Lean Bulk", bulk:"Bulk", maintain:"Maintain", custom:"Custom"})[g.mode] || ""; /* local map: renderSettings runs at boot, before MODE_LABEL's script */
     const hs = document.getElementById("pfHeroSub");
     if(hs) hs.textContent = g.maintenance > 0
       ? Math.round(g.maintenance).toLocaleString() + " maintenance + " + Math.round(g.surplus).toLocaleString() + " surplus"
-      : "Tap to set up your goals";
+      : "Not enough data yet — calculated from your log";
     const hp = document.getElementById("pfHeroP"); if(hp) hp.textContent = (g.protein || 0) + "g";
     const hc = document.getElementById("pfHeroC"); if(hc) hc.textContent = (g.carbs || 0) + "g";
     const hf = document.getElementById("pfHeroF"); if(hf) hf.textContent = (g.fat || 0) + "g";
@@ -8343,11 +8266,9 @@ function autoPilot(){
        commitGoals() is the only writer of maintenance/surplus/macros. */
     changed = refreshAdaptive();
     if(g.adaptive && g.adaptive.ok){
-      /* 2026.10.14-i: no toggle anymore — the log takes over automatically once
-         it can support the number ("based off small amounts of data and over
-         time it will get better" — Jay's brief). The switch from formula to
-         learned is itself a change worth applying + logging. */
-      if(!g.useAdaptive){ g.useAdaptive = true; changed = true; }
+      /* The log is the only source (2026.10.15-e): once it can support the
+         number, the number runs — no toggle, no formula before it. A change
+         in the estimate is worth applying + logging. */
       if(changed){
         commitGoals("adaptive");
         autoLog("Maintenance → " + g.adaptive.value.toLocaleString() + " kcal, learned from your last " + g.adaptive.days + " days of eating + weigh-ins.");
