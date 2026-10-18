@@ -2407,7 +2407,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.18-a";
+const APP_VERSION = "2026.10.18-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -4184,7 +4184,7 @@ function closeInfoSheet(){ document.getElementById("infoSheet").classList.remove
 document.getElementById("infoScrim").onclick = closeInfoSheet;
 document.getElementById("infoX").onclick = closeInfoSheet;
 function foodThumb(f){ return f.img ? '<img src="'+f.img+'" alt="">' : (f.kind==="supp"?MEAL_ICON.supplements:FOOD_ICON); }
-function sheetRowHtml(f){
+function sheetRowHtml(f, subExtra){
   const thumb = foodThumb(f);
   const diy = isCustom(f.n) ? '<span class="diy">DIY</span>' : "";
   const ver = isVerifiedFood(f.n) ? '<span class="verfd">Verified</span>' : "";
@@ -4195,13 +4195,48 @@ function sheetRowHtml(f){
     const serv = lastServServings(f, ls);
     sub = 'last: '+trimNum(ls.q)+' '+esc(ls.u==="serv"?servUnitLabel(f):ls.u)+' · '+Math.round(f.cal*serv)+' kcal';
   }
+  if(subExtra) sub += ' · '+subExtra; /* Smart Go-tos reason (2026.10.18-b) — same sub-line, same style */
   return '<div class="arow2" data-n="'+esc(f.n)+'"><span class="athumb">'+thumb+'</span>'+
     '<div class="anm"><b>'+diy+ver+locPrefixHTML(f.loc)+esc(f.n)+'</b><span>'+sub+'</span></div>'+
     '<button class="aplus" data-n="'+esc(f.n)+'">+</button></div>';
 }
 /* ============ LOGGING WAVE (2026.09.24-u): go-tos + fill-the-gap ============ */
+/* Smart Go-tos (2026.10.18-b, Jay's ask): the day's MACRO GAP — the macro he is
+   behind on relative to his calorie pace (its remaining fraction vs the
+   calories' remaining fraction, by >= 0.10). No goal on file -> no gap and
+   suggestions stay neutral, per the no-number-without-data law. */
+function macroGap(){
+  const g = S.goals, tCal = goalTotal();
+  if(!(tCal>0)) return null;
+  const t = totals(viewDate());
+  const calFrac = Math.max(0, (tCal - t.cal)/tCal);
+  const defs = [["p","protein",g.protein],["c","carbs",g.carbs],["f","fat",g.fat]];
+  let best = null;
+  defs.forEach(([k, label, target])=>{
+    if(!(target>0)) return;
+    const rem = Math.max(0, target - (t[k]||0)), frac = rem/target;
+    if(frac - calFrac >= 0.10 && (!best || frac > best.frac)) best = {key:k, label, rem, target, frac};
+  });
+  return best;
+}
+/* how much of the gap one remembered serving of f covers (0..1) */
+function gapCover(f, gap){
+  if(!gap || !(gap.rem>0)) return 0;
+  const ls = S.lastServ && S.lastServ[f.n];
+  const serv = ls ? lastServServings(f, ls) : 1;
+  if(!(serv>0)) return 0;
+  return Math.min((f[gap.key]||0)*serv, gap.rem)/gap.rem;
+}
+function gapReason(f, gap){
+  const cov = gapCover(f, gap);
+  if(cov < 0.25) return "";
+  if(cov >= 0.95) return "covers your remaining "+gap.label;
+  return "covers ~"+Math.round(cov*100)+"% of remaining "+gap.label;
+}
 /* Go-tos: zero-query suggestions weighted by frequency x recency x same-meal-slot x hour proximity,
-   so the right food is visible before typing. */
+   so the right food is visible before typing. Smart Go-tos adds one term: how
+   well the food covers today's macro gap can re-rank his usuals for this meal —
+   it never surfaces a food he does not already eat. Returns scored records. */
 function gotoFoods(meal){
   const nowH = new Date().getHours();
   const score = new Map();
@@ -4223,16 +4258,28 @@ function gotoFoods(meal){
       }
     }));
   });
-  return [...score.values()].sort((a,b)=>b.sc - a.sc).slice(0, 4).map(r=>r.f);
+  const gap = macroGap();
+  const recs = [...score.values()];
+  recs.forEach(r=>{
+    r.fit = gapCover(r.f, gap);
+    if(gap) r.sc += r.fit * 8; /* macro fit: re-ranks near-ties among his usuals, never outranks a true staple */
+    r.reason = gap ? gapReason(r.f, gap) : "";
+  });
+  return recs.sort((a,b)=>b.sc - a.sc).slice(0, 4);
 }
-/* Fill the gap: rank candidates by how well one remembered serving closes the day's
-   remaining protein without blowing past remaining calories. */
+/* Fill the gap: rank candidates by how well one remembered serving closes the
+   day's biggest macro gap without blowing past remaining calories. Smart
+   Go-tos (2026.10.18-b): the gap is whichever macro he is behind on (carbs
+   included); with no clear gap it falls back to the original protein rule. */
 function gapFoods(){
   const k = viewDate(), t = totals(k), g = S.goals;
   const mCal = g.maintenance>0 ? g.maintenance : 0;
   const tCal = mCal + (g.surplus>0 ? g.surplus : 0);
   const calRem = Math.max(0, tCal - t.cal), pRem = Math.max(0, (g.protein||0) - t.p);
-  if(calRem < 60 && pRem < 5) return [];
+  const gap = macroGap();
+  const key = gap ? gap.key : "p", gkLabel = gap ? gap.label : "protein";
+  const rem = gap ? gap.rem : pRem;
+  if(calRem < 60 && (gap ? rem < 10 : pRem < 5)) return [];
   const cands = new Map();
   recentFoods().concat((S.favorites||[]).map(n=>findFood(n)).filter(Boolean)).forEach(f=>{
     if(f && !cands.has(f.n)) cands.set(f.n, f);
@@ -4242,12 +4289,12 @@ function gapFoods(){
     const ls = S.lastServ && S.lastServ[f.n];
     const serv = ls ? lastServServings(f, ls) : 1;
     if(!(serv>0)) return;
-    const p = f.p*serv, cal = f.cal*serv;
-    if(p <= 0 && cal <= 0) return;
-    const pFill = Math.min(p, pRem)/Math.max(pRem, 1);
+    const gv = (f[key]||0)*serv, cal = f.cal*serv;
+    if(gv <= 0 && cal <= 0) return;
+    const fill = Math.min(gv, rem)/Math.max(rem, 1);
     const calOver = Math.max(0, cal - calRem - 200)/400;
     const calFit = calRem > 0 ? Math.min(cal, calRem)/calRem : 0;
-    out.push({f, serv, p, cal, sc: pFill*2 - calOver + calFit*0.5});
+    out.push({f, serv, p: f.p*serv, cal, gk: gv, gkLabel, sc: fill*2 - calOver + calFit*0.5});
   });
   return out.sort((a,b)=>b.sc - a.sc).slice(0, 3);
 }
@@ -4258,13 +4305,13 @@ function paintSheetSmart(q){
   let h = "";
   const gotos = gotoFoods(sheetMeal);
   if(gotos.length)
-    h += '<div class="flabel" style="margin:6px 0 2px">Go-tos · '+esc(MEAL_LABEL[sheetMeal]||"")+'</div>' + gotos.map(sheetRowHtml).join("");
+    h += '<div class="flabel" style="margin:6px 0 2px">Go-tos · '+esc(MEAL_LABEL[sheetMeal]||"")+'</div>' + gotos.map(r=>sheetRowHtml(r.f, r.reason)).join("");
   const gaps = gapFoods();
   if(gaps.length)
     h += '<div class="flabel" style="margin:12px 0 2px">Fill the gap</div>' + gaps.map(o=>
       '<button class="gaprow" data-n="'+esc(o.f.n)+'"><span class="athumb">'+foodThumb(o.f)+'</span>'+
       '<span class="gmain"><span class="gn">'+locPrefixHTML(o.f.loc)+esc(o.f.n)+'</span><span class="gs">'+trimNum(o.serv)+' × '+esc(o.f.s)+' · '+Math.round(o.cal)+' kcal</span></span>'+
-      '<span class="gk">+'+r1(o.p)+'g protein<small>tap to adjust</small></span></button>').join("");
+      '<span class="gk">+'+r1(o.gk)+'g '+o.gkLabel+'<small>tap to adjust</small></span></button>').join("");
   smart.innerHTML = h; smart.style.display = h ? "" : "none";
   smart.querySelectorAll(".arow2").forEach(r=>r.onclick=()=>{ const f=findFood(r.dataset.n); if(f) openDetail(f); });
   smart.querySelectorAll(".arow2 .aplus").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const f=findFood(b.dataset.n); if(f) openDetail(f); });
