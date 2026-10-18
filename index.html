@@ -581,22 +581,6 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .bars7 .bdot{width:6px; height:6px; border-radius:50%; background:#dcdce4; flex:none;}
 .bars7 .bcol.work .bdot{background:var(--acc);}
 .bars7 .bcol.future{opacity:.38;}
-/* Day-by-day charts (2026.10.18-c): bars7's visual language, 14 columns, db- prefix */
-.dbcard .db-head{display:flex; align-items:baseline; gap:6px; margin:14px 0 0;}
-.dbcard .db-head.first{margin-top:2px;}
-.db-avg{margin-left:auto; font-size:11px; color:var(--muted); font-weight:600;}
-.dbars{display:flex; align-items:flex-end; gap:4px; height:96px; margin-top:4px;}
-.dbcol{flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; height:100%; justify-content:flex-end; min-width:0;}
-.dbbar{width:100%; max-width:20px; border-radius:5px 6px 3px 3px; min-height:3px;}
-.dbbar.crb{background:linear-gradient(#8f8ff7,var(--acc));}
-.dbbar.wtr{background:linear-gradient(#6fc3f7,#2f8fe8);}
-.dbbar.sod{background:linear-gradient(#bcbcd8,#8383a8);}
-.dbcol.today .dbbar{filter:brightness(.88) saturate(1.2);}
-.dbv{font-size:9.5px; font-weight:700; color:var(--muted); white-space:nowrap; line-height:1;}
-.dbcol.today .dbv{color:var(--ink);}
-.dbl{font-size:9.5px; color:var(--muted); font-weight:600; line-height:1;}
-.dbn{font-size:11px; font-weight:800; color:var(--ink); line-height:1;}
-.dbcol.today .dbn{color:var(--acc);}
 /* weight-chart dot legend (2026.10.18-c) */
 .wlg-dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; vertical-align:-1px;}
 .wlg-dot.fed{background:var(--acc);}
@@ -1629,13 +1613,15 @@ body.reordering #progOverview{display:none}
           </div>
         </div><!-- /card weekcard -->
         <div class="card dbcard">
-          <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-6M11 20V6M17 20v-9M3 20h18"/></svg></span><b>Day by day</b><span style="margin-left:auto;font-size:11px;color:var(--muted)">last 14 days</span></div>
-          <div class="db-head first"><b>Carbs</b><span class="db-avg" id="dbCarbAvg"></span></div>
-          <div class="dbars" id="dbCarbs"></div>
-          <div class="db-head"><b>Water</b><span class="db-avg" id="dbWaterAvg"></span></div>
-          <div class="dbars" id="dbWater"></div>
-          <div class="db-head"><b>Sodium</b><span class="db-avg" id="dbSodiumAvg"></span></div>
-          <div class="dbars" id="dbSodium"></div>
+          <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-6M11 20V6M17 20v-9M3 20h18"/></svg></span><b>Day by day</b></div>
+          <div class="segctl" id="dbSeg" role="tablist" aria-label="Day by day metrics">
+            <button class="segbtn on" data-dseg="crb" role="tab">Carbs</button>
+            <button class="segbtn" data-dseg="wtr" role="tab">Water</button>
+            <button class="segbtn" data-dseg="sod" role="tab">Sodium</button>
+          </div>
+          <div class="ana-top"><div><b id="dbTotal">0</b><span class="ana-unit" id="dbUnit">g</span><div class="ana-sub" id="dbAvg"></div></div><span class="wk-nav"><button id="dbPrev" aria-label="Previous week">‹</button><span class="ana-range" id="dbRange">Last 7 days</span><button id="dbNext" aria-label="Next week">›</button></span></div>
+          <div class="bars7" id="dbBars"></div>
+          <div class="rangenote" id="dbNote" style="margin-top:8px"></div>
         </div><!-- /card dbcard -->
       </div><!-- /punit data-pid="week" -->
       <div class="punit" data-pid="heatmap">
@@ -2436,7 +2422,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.18-c";
+const APP_VERSION = "2026.10.18-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -5857,30 +5843,59 @@ function wtStatusText(){
   if(flat) return "Holding steady.";
   return "Trending "+sgn(rate)+" "+wu+"/wk.";
 }
-/* Day-by-day charts (2026.10.18-c, Jay's ask): carbs, water and sodium as
-   14-day bar charts in the week card's language — he tracks all three daily,
-   so they graph day to day like calories do. Averages count only days with
-   data (food logged for carbs/sodium, water logged for water). */
+/* Day-by-day panel (2026.10.18-d, Jay's ask): works like This week — metric
+   categories (Carbs / Water / Sodium) in a segctl, a 7-day window with the
+   same < > paging and backtrack labels, the total + per-day-average header,
+   and bars7 bars with per-metric gradients. Averages count only days with
+   data (food logged for carbs/sodium, water logged for water), locked days
+   excluded — the same rules as the week panel above it. */
+let dbOffset = 0;
+const DB_METRICS = {
+  crb: { unit:"g", get:t=>t.c, has:t=>t.foodLogged, fmt:v=>String(Math.round(v)), tot:v=>Math.round(v).toLocaleString(), grad:"", gradT:"background:linear-gradient(var(--acc),var(--acc-deep));" },
+  wtr: { unit:"oz", get:t=>t.waterOz, has:t=>t.waterOz>0, fmt:v=>String(Math.round(v)), tot:v=>Math.round(v).toLocaleString(), grad:"background:linear-gradient(#6fc3f7,#2f8fe8);", gradT:"background:linear-gradient(#2f8fe8,#1f6fc4);" },
+  sod: { unit:"mg", get:t=>t.sodium, has:t=>t.foodLogged, fmt:v=>v>=1000?((v/1000).toFixed(1).replace(/\.0$/,"")+"k"):String(Math.round(v)), tot:v=>Math.round(v).toLocaleString(), grad:"background:linear-gradient(#bcbcd8,#8383a8);", gradT:"background:linear-gradient(#8383a8,#5f5f86);" }
+};
 function paintDayCharts(){
-  const charts = [
-    { id:"dbCarbs", avg:"dbCarbAvg", cls:"crb", unit:"g", get:t=>t.c, has:t=>t.foodLogged, fmt:v=>String(Math.round(v)), avgFmt:v=>Math.round(v)+"g" },
-    { id:"dbWater", avg:"dbWaterAvg", cls:"wtr", unit:"oz", get:t=>t.waterOz, has:t=>t.waterOz>0, fmt:v=>String(Math.round(v)), avgFmt:v=>Math.round(v)+" oz" },
-    { id:"dbSodium", avg:"dbSodiumAvg", cls:"sod", unit:"mg", get:t=>t.sodium, has:t=>t.foodLogged, fmt:v=>v>=1000?((v/1000).toFixed(1).replace(/\.0$/,"")+"k"):String(Math.round(v)), avgFmt:v=>Math.round(v).toLocaleString()+" mg" }
-  ];
-  charts.forEach(ch=>{
-    const box = document.getElementById(ch.id); if(!box) return;
-    const rows = [];
-    for(let i=13;i>=0;i--){ const ds = addDays(todayStr(), -i), t = dayTotals(ds); rows.push({ds, v: ch.get(t), has: ch.has(t)}); }
-    const vals = rows.filter(r=>r.has).map(r=>r.v);
-    const avgEl = document.getElementById(ch.avg);
-    if(avgEl) avgEl.textContent = vals.length ? "avg "+ch.avgFmt(vals.reduce((a,b)=>a+b,0)/vals.length)+" · "+vals.length+" of 14 days" : "no data yet";
-    const max = Math.max(...vals, 1);
-    box.innerHTML = rows.map(r=>{
-      const dt = new Date(r.ds+"T12:00:00"), isT = r.ds===todayStr();
-      const h = r.has ? Math.max(r.v/max*100, 3) : 2;
-      return `<div class="dbcol${isT?" today":""}"><div class="dbv">${r.has?ch.fmt(r.v):"–"}</div><div class="dbbar ${ch.cls}" style="height:${h.toFixed(1)}%"></div><div class="dbl">${"SMTWTFS"[dt.getDay()]}</div><div class="dbn">${dt.getDate()}</div></div>`;
-    }).join("");
+  const seg = S.dbSeg || "crb", m = DB_METRICS[seg] || DB_METRICS.crb;
+  document.querySelectorAll("#dbSeg .segbtn").forEach(b=>b.classList.toggle("on", b.dataset.dseg===seg));
+  const box = document.getElementById("dbBars"); if(!box) return;
+  const end = addDays(todayStr(), -dbOffset*7);
+  const rows = [];
+  for(let i=6;i>=0;i--){ const ds = addDays(end, -i), t = dayTotals(ds); rows.push({k:ds, v:m.get(t), has:m.has(t), locked:isLocked(ds), future: ds>todayStr()}); }
+  const lg = rows.filter(r=>r.has && !r.locked);
+  const total = lg.reduce((a,r)=>a+r.v, 0);
+  $("dbTotal").textContent = m.tot(total);
+  $("dbUnit").textContent = m.unit;
+  $("dbAvg").textContent = lg.length ? Math.round(total/lg.length).toLocaleString()+"/day average · "+lg.length+" of 7 days" : "no logged days yet";
+  $("dbRange").textContent = dbOffset===0 ? "Last 7 days" : weekLabel(rows);
+  $("dbPrev").disabled = dbOffset>=MAX_WEEKS_BACK;
+  $("dbNext").disabled = dbOffset===0;
+  const max = Math.max(...rows.map(r=>r.v), 1);
+  box.innerHTML = "";
+  rows.forEach(r=>{
+    const c = document.createElement("div");
+    const dt = new Date(r.k+"T12:00:00"), isT = r.k===todayStr();
+    c.className = "bcol"+(isWorkDayAuto(r.k)?" work":"")+(isT?" today":"")+(r.future?" future":"");
+    c.innerHTML =
+      `<div class="bkcal">${r.has?m.fmt(r.v):"–"}</div>`+
+      `<div class="bar" style="height:${Math.max(r.v/max*100,2)}%;${isT?m.gradT:m.grad}"></div>`+
+      `<div class="bl">${dt.toLocaleDateString(undefined,{weekday:"short"})}</div>`+
+      `<div class="bdn">${dt.getDate()}</div>`+
+      `<div class="bdot"></div>`;
+    box.appendChild(c);
   });
+  /* vs the week before: one quiet line in the rangenote style */
+  const note = $("dbNote");
+  if(note){
+    const prows = [];
+    for(let i=6;i>=0;i--){ const ds = addDays(end, -7-i), t = dayTotals(ds); prows.push({v:m.get(t), has:m.has(t), locked:isLocked(ds)}); }
+    const plg = prows.filter(r=>r.has && !r.locked);
+    if(lg.length && plg.length){
+      const cur = total/lg.length, prev = plg.reduce((a,r)=>a+r.v,0)/plg.length;
+      const nm = seg==="crb" ? "Carbs" : seg==="wtr" ? "Water" : "Sodium";
+      note.textContent = nm+" averaged "+Math.round(cur).toLocaleString()+" "+m.unit+"/day — "+(Math.abs(cur-prev)<0.5 ? "same as " : (cur>prev ? "up from " : "down from "))+Math.round(prev).toLocaleString()+" "+m.unit+" the week before.";
+    } else note.textContent = "";
+  }
 }
 function renderProgress(){
   if(typeof paintHeatmap==="function") paintHeatmap(); /* defined in a later script block — same guard as paintAutoZone in renderDiary */
@@ -8058,6 +8073,11 @@ document.querySelectorAll("#weekSeg .segbtn").forEach(function(b){
     S.weekSeg=b.dataset.seg; save();
   };
 });
+document.querySelectorAll("#dbSeg .segbtn").forEach(function(b){
+  b.onclick=function(){ S.dbSeg=b.dataset.dseg; save(); paintDayCharts(); };
+});
+document.getElementById("dbPrev").onclick = ()=>{ if(dbOffset<MAX_WEEKS_BACK){ dbOffset++; paintDayCharts(); } };
+document.getElementById("dbNext").onclick = ()=>{ if(dbOffset>0){ dbOffset--; paintDayCharts(); } };
 document.querySelectorAll(".xrow").forEach(function(r){
   r.onclick=function(){
     var d=document.getElementById("xdetail-"+r.dataset.x); if(!d) return;
