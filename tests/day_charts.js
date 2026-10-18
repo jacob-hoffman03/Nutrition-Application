@@ -1,9 +1,9 @@
-/* Day-by-day charts + weight-dot context + maintenance sparkline (2026.10.18-c).
-   Runs on Jay's real export (fuel-data-8): the last-14 window (Oct 5-18)
-   contains his flat-127 fed week and the Oct 11 jump, so the weight chart must
-   show BOTH dot kinds (fed solid, light hollow), the sodium chart must show
-   Oct 15's 8,085 mg as "8.1k", and the sparkline must render from his real
-   17-entry adaptiveHist. */
+/* Day-by-day panel + weight-dot context + maintenance sparkline.
+   Panel (2026.10.18-d): mirrors This week — Carbs/Water/Sodium categories,
+   7-day window, < > paging. Runs on Jay's real export (fuel-data-8): the
+   current window (Oct 12-18) contains Oct 15's 8,085 mg sodium day ("8.1k")
+   and his flat-127 fed week; the weight chart (All range) must show BOTH dot
+   kinds; the sparkline renders from his real 17-entry adaptiveHist. */
 const fs = require("fs"), path = require("path"), os = require("os");
 const { JSDOM } = require(path.join(__dirname, "..", "node_modules", "jsdom"));
 const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
@@ -30,20 +30,33 @@ const sleep = ms => new Promise(r=>setTimeout(r, ms));
   const ev = x => w.eval(x);
   const doc = w.document;
 
-  /* --- Day-by-day charts --- */
+  /* --- Day-by-day panel: default Carbs, current week --- */
   ev("renderProgress()");
-  ["dbCarbs", "dbWater", "dbSodium"].forEach(id => {
-    const box = doc.getElementById(id);
-    ok(box && box.querySelectorAll(".dbcol").length === 14, id + " renders 14 day columns, got " + (box ? box.querySelectorAll(".dbcol").length : "missing"));
-  });
-  const carbAvg = doc.getElementById("dbCarbAvg").textContent;
-  ok(/avg \d+g · \d+ of 14 days/.test(carbAvg), "carb avg line populated: '" + carbAvg + "'");
-  const sodHtml = doc.getElementById("dbSodium").innerHTML;
-  ok(sodHtml.includes("8.1k"), "sodium chart shows Oct 15's 8,085 mg as 8.1k");
-  const sodAvg = doc.getElementById("dbSodiumAvg").textContent;
-  ok(/avg [\d,]+ mg/.test(sodAvg), "sodium avg line populated: '" + sodAvg + "'");
-  const wtrAvg = doc.getElementById("dbWaterAvg").textContent;
-  ok(/avg|no data/.test(wtrAvg), "water avg line present: '" + wtrAvg + "'");
+  const bars = () => doc.getElementById("dbBars");
+  ok(bars().querySelectorAll(".bcol").length === 7, "panel renders 7 day columns, got " + bars().querySelectorAll(".bcol").length);
+  ok(doc.getElementById("dbUnit").textContent === "g", "default category is Carbs (unit g)");
+  ok(/of 7 days/.test(doc.getElementById("dbAvg").textContent), "avg line populated: '" + doc.getElementById("dbAvg").textContent + "'");
+  ok(doc.getElementById("dbRange").textContent === "Last 7 days", "range label is Last 7 days");
+  ok(doc.getElementById("dbNext").disabled === true && doc.getElementById("dbPrev").disabled === false, "nav state: next disabled at current week, prev enabled");
+  ok(doc.querySelector('#dbSeg .segbtn[data-dseg="crb"]').classList.contains("on"), "Carbs tab marked on");
+
+  /* --- Sodium category --- */
+  ev('S.dbSeg = "sod"; paintDayCharts()');
+  ok(bars().innerHTML.includes("8.1k"), "sodium bars show Oct 15's 8,085 mg as 8.1k");
+  ok(doc.getElementById("dbUnit").textContent === "mg", "sodium unit is mg");
+  ok(/Sodium averaged/.test(doc.getElementById("dbNote").textContent), "vs-last-week note renders for sodium: '" + doc.getElementById("dbNote").textContent + "'");
+
+  /* --- Water category --- */
+  ev('S.dbSeg = "wtr"; paintDayCharts()');
+  ok(bars().querySelectorAll(".bcol").length === 7 && doc.getElementById("dbUnit").textContent === "oz", "water category renders 7 columns, unit oz");
+
+  /* --- Paging back one week: Oct 5 - Oct 11 --- */
+  ev('S.dbSeg = "crb"; dbOffset = 1; paintDayCharts()');
+  const lbl = doc.getElementById("dbRange").textContent;
+  ok(lbl.includes("Oct 5") && lbl.includes("Oct 11"), "backtrack label is the date range, got '" + lbl + "'");
+  ok(bars().querySelector(".bdn").textContent === "5", "first column is Oct 5");
+  ok(doc.getElementById("dbNext").disabled === false, "next re-enables after paging back");
+  ev("dbOffset = 0; paintDayCharts()");
 
   /* --- Weight chart dots (All range so Sep light days are in view) --- */
   ev("wRange = 0");
