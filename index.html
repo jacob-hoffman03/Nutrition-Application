@@ -2407,7 +2407,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.15-e";
+const APP_VERSION = "2026.10.18-a";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6358,9 +6358,9 @@ function renderGoalsProfile(){
 /* Complete-day gating: partial days must not teach the model. A day counts only
    with real food AND all three bars cleared: ≥800 kcal, ≥ half of maintenance,
    ≥ 60% of your own median day. Today is always excluded — unfinished by definition. */
-function completeDayCals(WIN){
+function completeDayCals(WIN, fromDs){
   WIN=WIN||28; const raw=[]; /* compact model passes 14; legacy callers keep 28 */
-  for(let i=WIN-1;i>=1;i--){ const ds=addDays(todayStr(),-i); if(isLocked(ds)) continue; const t=dayTotals(ds); if(t.foodLogged) raw.push(t.cal); }
+  for(let i=WIN-1;i>=1;i--){ const ds=addDays(todayStr(),-i); if(fromDs && ds<fromDs) continue; if(isLocked(ds)) continue; const t=dayTotals(ds); if(t.foodLogged) raw.push(t.cal); }
   const srt=raw.slice().sort((a,b)=>a-b), med=srt.length?srt[Math.floor(srt.length/2)]:0;
   const maint=S.goals.maintenance||0;
   const cals=[]; let partial=0;
@@ -6427,6 +6427,39 @@ function dailyTrendSeries(ws, alpha){
   }
   return out;
 }
+function detectLevelShift(raw){
+  /* v5 (2026.10.18-a): a LEVEL SHIFT is a >3 lb jump between consecutive
+     weigh-ins whose landing level is then confirmed by 2+ later weigh-ins
+     within 1.5 lb of the landing value (every weigh-in is a real reading —
+     a shift is a level change, usually water/glycogen, not an error and not
+     a rate). Returns the landing date of the LATEST confirmed shift among
+     the sorted raw weigh-ins given, or null. Scoped to the caller's window,
+     so a historical jump can never hijack the current estimate. */
+  let found=null;
+  for(let i=1;i<raw.length;i++){
+    if(Math.abs(raw[i].w-raw[i-1].w)>3){
+      const post=raw.slice(i);
+      if(post.length>=3 && post.slice(1).filter(p=>Math.abs(p.w-post[0].w)<=1.5).length>=2) found=raw[i].d;
+    }
+  }
+  return found;
+}
+function segmentTrendSeries(post){
+  /* Daily EWMA (alpha 0.15, same convention as dailyTrendSeries) RE-SEEDED at
+     the first post-shift weigh-in and stepped daily to today, carrying the
+     last known weight forward. The pre-shift trend is never an input: the
+     rate over a segment must measure movement since the shift, not the
+     shift itself. */
+  const byDay={}; post.forEach(p=>{ byDay[p.d]=p.w; });
+  const out=[]; let trend=null, last=null;
+  for(let ds=post[0].d; ds<=todayStr(); ds=addDays(ds,1)){
+    if(byDay[ds]!==undefined) last=byDay[ds];
+    if(last===null) continue;
+    trend = trend===null ? last : 0.15*last + 0.85*trend;
+    out.push({d:ds, w:trend});
+  }
+  return out;
+}
 function adaptiveCalc(){
   /* ADAPTIVE v3 (2026.10.13-b): one learned number over ONE aligned 21-day window —
      the intake average and the weight trend cover the same days (MacroFactor's
@@ -6448,6 +6481,32 @@ function adaptiveCalc(){
   const wpts=dailyTrendSeries(ws).filter(p=>T(p)>=cutoff);
   const rawInWin=ws.filter(p=>T(p)>=cutoff);
   const spanD=rawInWin.length>=2?(T(rawInWin[rawInWin.length-1])-T(rawInWin[0]))/86400000:0;
+  /* v5 (2026.10.18-a): when the window straddles a CONFIRMED level shift, the
+     halves comparison reads the one-time jump as a continuous rate (the
+     2026-10-11 rebound, 121.8 -> 127.4, scored +0.56 lb/wk while the scale
+     sat flat for a week, and worsened daily as the lagging trend climbed).
+     The rate window RESTARTS at the shift: intake average and trend both
+     measure the post-shift segment only, under the same coverage gates.
+     Below the gates there is NO fresh number — the caller HOLDS the last
+     data-derived value until the new level has ~10 days behind it. */
+  const shiftD=detectLevelShift(rawInWin);
+  if(shiftD){
+    const post=rawInWin.filter(p=>p.d>=shiftD);
+    const postSpan=post.length>=2?(T(post[post.length-1])-T(post[0]))/86400000:0;
+    const seg=completeDayCals(WIN, shiftD);
+    if(postSpan>=MIN_SPAN && seg.cals.length>=MIN_DAYS){
+      const sRate=halvesRate(segmentTrendSeries(post));
+      if(sRate!=null){
+        const sAvg=seg.cals.reduce((a,v)=>a+v,0)/seg.cals.length;
+        const sLearned=sAvg-sRate/7*3500;
+        return {ok:true, days:seg.cals.length, span:Math.round(postSpan), avg:Math.round(sAvg),
+                rateWk:Math.round(sRate*100)/100, learned:Math.round(sLearned), value:Math.round(sLearned),
+                partial:seg.partial, logged:seg.logged||0, shift:shiftD, algo:"v5-shift"};
+      }
+    }
+    return {ok:false, reason:"shift", days:seg.cals.length, span:Math.round(postSpan),
+            partial:seg.partial, logged:seg.logged||0, shift:shiftD};
+  }
   if(cals.length<MIN_DAYS||rawInWin.length<2||spanD<MIN_SPAN)
     return {ok:false, reason:"data", days:cals.length, span:Math.round(spanD), partial, logged};
   const rateWk=halvesRate(wpts);
@@ -6464,8 +6523,10 @@ function refreshAdaptive(){
   const g=S.goals, r=adaptiveCalc();
   if(!r.ok){
     /* HOLD: thin data keeps the last good value and flags it stale */
-    if(g.adaptive&&g.adaptive.ok) g.adaptive.stale=true;
-    else g.adaptive={ok:false, reason:r.reason, days:r.days||0, span:r.span||0, partial:r.partial||0, logged:r.logged||0, updated:todayStr()};
+    if(g.adaptive&&g.adaptive.ok){ g.adaptive.stale=true;
+      /* v5: a level-shift hold says WHY it is holding and since when */
+      g.adaptive.shiftHold = r.reason==="shift" ? {shift:r.shift, span:r.span||0} : null; }
+    else g.adaptive={ok:false, reason:r.reason, days:r.days||0, span:r.span||0, partial:r.partial||0, logged:r.logged||0, updated:todayStr(), shift:r.shift||null};
     return false;
   }
   /* ONE number (2026.10.13-c, Jay's call): the applied value IS the learned value.
@@ -6476,7 +6537,8 @@ function refreshAdaptive(){
   let v=Math.round(r.value);
   const prev=g.adaptive&&g.adaptive.value>0?g.adaptive.value:null;
   g.adaptive={ok:true, stale:false, value:v, learned:r.learned, avg:r.avg,
-    rateWk:r.rateWk, days:r.days, span:r.span, partial:r.partial||0, logged:r.logged||0, updated:todayStr(), algo:"v4-daily"};
+    rateWk:r.rateWk, days:r.days, span:r.span, partial:r.partial||0, logged:r.logged||0, updated:todayStr(), algo:r.algo||"v4-daily"};
+  if(r.shift) g.adaptive.shift=r.shift; /* v5: this estimate measures the post-shift segment only */
   g.adaptiveHist=g.adaptiveHist||[];
   const last=g.adaptiveHist[g.adaptiveHist.length-1];
   if(!last||last.d!==todayStr()) g.adaptiveHist.push({d:todayStr(), v});
@@ -6497,11 +6559,17 @@ function paintAdaptive(){
   if(!el) return;
   if(!a){ el.textContent="No number yet — it is calculated from your food log and weigh-ins once there is about 10 days of data."; return; }
   if(!a.ok){
+    if(a.shift){ el.textContent="Learning from your log — your weight jumped on "+a.shift+", so the rate is re-measured from the new level. A number is calculated once it has about 10 days of data behind it."; return; }
     el.textContent="Learning from your log — "+(a.days||0)+" of 10 logged days so far. No number is presented until there is data behind it.";
+    return;
+  }
+  if(a.stale && a.shiftHold){
+    el.textContent="Maintenance "+a.value.toLocaleString()+" · holding — your weight jumped on "+a.shiftHold.shift+", so the rate is being re-measured from the new level · fresh number around "+addDays(a.shiftHold.shift, 10);
     return;
   }
   el.textContent = "Maintenance "+a.value.toLocaleString()+" · calculated from your log · "+
     a.avg.toLocaleString()+" avg intake · "+(a.rateWk>=0?"+":"-")+Math.abs(a.rateWk).toFixed(2)+" lb/wk · updated "+a.updated+
+    (a.shift?" · measured since the "+a.shift+" weight jump — earlier data set aside":"")+
     (a.stale?" · holding — log more days to refresh it":"");
 }/* The scale is the single source of truth for body weight: every weigh-in updates the
    profile weight, so the goal calculation, BMI, calorie check, and the diary all
