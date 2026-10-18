@@ -581,6 +581,26 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .bars7 .bdot{width:6px; height:6px; border-radius:50%; background:#dcdce4; flex:none;}
 .bars7 .bcol.work .bdot{background:var(--acc);}
 .bars7 .bcol.future{opacity:.38;}
+/* Day-by-day charts (2026.10.18-c): bars7's visual language, 14 columns, db- prefix */
+.dbcard .db-head{display:flex; align-items:baseline; gap:6px; margin:14px 0 0;}
+.dbcard .db-head.first{margin-top:2px;}
+.db-avg{margin-left:auto; font-size:11px; color:var(--muted); font-weight:600;}
+.dbars{display:flex; align-items:flex-end; gap:4px; height:96px; margin-top:4px;}
+.dbcol{flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; height:100%; justify-content:flex-end; min-width:0;}
+.dbbar{width:100%; max-width:20px; border-radius:5px 6px 3px 3px; min-height:3px;}
+.dbbar.crb{background:linear-gradient(#8f8ff7,var(--acc));}
+.dbbar.wtr{background:linear-gradient(#6fc3f7,#2f8fe8);}
+.dbbar.sod{background:linear-gradient(#bcbcd8,#8383a8);}
+.dbcol.today .dbbar{filter:brightness(.88) saturate(1.2);}
+.dbv{font-size:9.5px; font-weight:700; color:var(--muted); white-space:nowrap; line-height:1;}
+.dbcol.today .dbv{color:var(--ink);}
+.dbl{font-size:9.5px; color:var(--muted); font-weight:600; line-height:1;}
+.dbn{font-size:11px; font-weight:800; color:var(--ink); line-height:1;}
+.dbcol.today .dbn{color:var(--acc);}
+/* weight-chart dot legend (2026.10.18-c) */
+.wlg-dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; vertical-align:-1px;}
+.wlg-dot.fed{background:var(--acc);}
+.wlg-dot.light{background:#fff; border:1.4px solid #a9a9ba; box-sizing:border-box;}
 .wrow{display:flex; align-items:center; justify-content:space-between; padding:9px 2px; border-top:1px solid var(--line); font-size:14px;}
 .wrow b{font-variant-numeric:tabular-nums;}
 .wlogrow{display:flex; gap:8px; margin-top:10px;}
@@ -1608,6 +1628,15 @@ body.reordering #progOverview{display:none}
             <div class="mstack-lbls" id="macroStackLbls"></div>
           </div>
         </div><!-- /card weekcard -->
+        <div class="card dbcard">
+          <div class="cardttl"><span class="sicon sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-6M11 20V6M17 20v-9M3 20h18"/></svg></span><b>Day by day</b><span style="margin-left:auto;font-size:11px;color:var(--muted)">last 14 days</span></div>
+          <div class="db-head first"><b>Carbs</b><span class="db-avg" id="dbCarbAvg"></span></div>
+          <div class="dbars" id="dbCarbs"></div>
+          <div class="db-head"><b>Water</b><span class="db-avg" id="dbWaterAvg"></span></div>
+          <div class="dbars" id="dbWater"></div>
+          <div class="db-head"><b>Sodium</b><span class="db-avg" id="dbSodiumAvg"></span></div>
+          <div class="dbars" id="dbSodium"></div>
+        </div><!-- /card dbcard -->
       </div><!-- /punit data-pid="week" -->
       <div class="punit" data-pid="heatmap">
         <div class="card">
@@ -2407,7 +2436,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.18-b";
+const APP_VERSION = "2026.10.18-c";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -5717,6 +5746,23 @@ function paintWeightChart(w){
     s += `<line x1="${PL}" y1="${gy.toFixed(1)}" x2="${W-PR+6}" y2="${gy.toFixed(1)}" stroke="#c9c9d4" stroke-width="1.5" stroke-dasharray="6,5"/>`+
       `<text x="${PL+6}" y="${(gy-5).toFixed(1)}" fill="#9a9aa5" font-size="10" font-weight="700">goal ${f1(flag.v)}${wu}</text>`;
   }
+  /* Water-weight context (2026.10.18-c, Jay's ask): one small dot per weigh-in,
+     styled by what he ate the day BEFORE it — solid = fed day (near goal,
+     glycogen + water aboard), hollow = light day. Muted on purpose: the
+     trend line stays the headline, per the 2026.09.22 simplification.
+     Needs a goal on file; without one, no dots and no legend. */
+  const gt = goalTotal();
+  let dotsDrawn = false;
+  if(pts.length>=2 && gt>0){
+    pts.forEach(p=>{
+      const prev = dayTotals(addDays(p.d,-1));
+      const fr = prev.foodLogged ? prev.cal/gt : -1;
+      const cx = X(T(p)).toFixed(1), cy = Y(p.w).toFixed(1);
+      if(fr>=0.85){ s += `<circle cx="${cx}" cy="${cy}" r="3.2" fill="${THEME.acc}"/>`; dotsDrawn = true; }
+      else if(fr>=0 && fr<=0.60){ s += `<circle cx="${cx}" cy="${cy}" r="3.2" fill="#fff" stroke="#a9a9ba" stroke-width="1.4"/>`; dotsDrawn = true; }
+      else { s += `<circle cx="${cx}" cy="${cy}" r="2.6" fill="${THEME.acc}" opacity="0.30"/>`; }
+    });
+  }
   const ma = trendMA(pts);
   const mxy = ma.map((m,i)=>[X(T(pts[i])), Y(m.w)]);
   /* one clean trend line in the app theme with a soft fill beneath it.
@@ -5743,7 +5789,12 @@ function paintWeightChart(w){
   const wsc = document.getElementById("wChartScroll");
   if(wsc && allMode && wScrollEnd){ wsc.scrollLeft = wsc.scrollWidth; wScrollEnd = false; }
   const wlg = document.getElementById("wGoalLegend");
-  if(wlg) wlg.style.display = "none"; /* legend retired with the segment colors */
+  if(wlg){ /* legend slot now carries the dot key (2026.10.18-c) */
+    if(dotsDrawn){
+      wlg.innerHTML = '<span><i class="wlg-dot fed"></i>fed day before</span><span><i class="wlg-dot light"></i>light day before</span><span>water weight shows up in the dots first</span>';
+      wlg.style.display = "";
+    } else wlg.style.display = "none";
+  }
   svg.setAttribute("aria-label",`Weight chart: ${pts.length} weigh-ins, ${dFmtS(tStart)} to ${dFmtS(tEnd)}`+(flag?`, ${flag.auto?"auto milestone":"goal"} ${f1(flag.v)} ${wu}`:""));
   /* pace line under the chart: range rate + change. Records (high/low/avg)
      live in the Stats view — the chart stays a clean daily glance. The goal
@@ -5806,6 +5857,31 @@ function wtStatusText(){
   if(flat) return "Holding steady.";
   return "Trending "+sgn(rate)+" "+wu+"/wk.";
 }
+/* Day-by-day charts (2026.10.18-c, Jay's ask): carbs, water and sodium as
+   14-day bar charts in the week card's language — he tracks all three daily,
+   so they graph day to day like calories do. Averages count only days with
+   data (food logged for carbs/sodium, water logged for water). */
+function paintDayCharts(){
+  const charts = [
+    { id:"dbCarbs", avg:"dbCarbAvg", cls:"crb", unit:"g", get:t=>t.c, has:t=>t.foodLogged, fmt:v=>String(Math.round(v)), avgFmt:v=>Math.round(v)+"g" },
+    { id:"dbWater", avg:"dbWaterAvg", cls:"wtr", unit:"oz", get:t=>t.waterOz, has:t=>t.waterOz>0, fmt:v=>String(Math.round(v)), avgFmt:v=>Math.round(v)+" oz" },
+    { id:"dbSodium", avg:"dbSodiumAvg", cls:"sod", unit:"mg", get:t=>t.sodium, has:t=>t.foodLogged, fmt:v=>v>=1000?((v/1000).toFixed(1).replace(/\.0$/,"")+"k"):String(Math.round(v)), avgFmt:v=>Math.round(v).toLocaleString()+" mg" }
+  ];
+  charts.forEach(ch=>{
+    const box = document.getElementById(ch.id); if(!box) return;
+    const rows = [];
+    for(let i=13;i>=0;i--){ const ds = addDays(todayStr(), -i), t = dayTotals(ds); rows.push({ds, v: ch.get(t), has: ch.has(t)}); }
+    const vals = rows.filter(r=>r.has).map(r=>r.v);
+    const avgEl = document.getElementById(ch.avg);
+    if(avgEl) avgEl.textContent = vals.length ? "avg "+ch.avgFmt(vals.reduce((a,b)=>a+b,0)/vals.length)+" · "+vals.length+" of 14 days" : "no data yet";
+    const max = Math.max(...vals, 1);
+    box.innerHTML = rows.map(r=>{
+      const dt = new Date(r.ds+"T12:00:00"), isT = r.ds===todayStr();
+      const h = r.has ? Math.max(r.v/max*100, 3) : 2;
+      return `<div class="dbcol${isT?" today":""}"><div class="dbv">${r.has?ch.fmt(r.v):"–"}</div><div class="dbbar ${ch.cls}" style="height:${h.toFixed(1)}%"></div><div class="dbl">${"SMTWTFS"[dt.getDay()]}</div><div class="dbn">${dt.getDate()}</div></div>`;
+    }).join("");
+  });
+}
 function renderProgress(){
   if(typeof paintHeatmap==="function") paintHeatmap(); /* defined in a later script block — same guard as paintAutoZone in renderDiary */
   (function(){ var s=S.weekSeg||"cal";
@@ -5837,6 +5913,7 @@ function renderProgress(){
       `<div class="bdot"></div>`;
     bb.appendChild(c);
   });
+  paintDayCharts();
   const w = S.weights.slice().sort((a,b)=>a.d<b.d?-1:1);
   /* analytics header: 7-day total */
   const wkTotal = days.filter(x=>!x.locked).reduce((a,x)=>a+x.cal,0);
@@ -8363,6 +8440,28 @@ function paintAutoZone(){
   }
   var lr = document.getElementById("autoLastRun");
   if(lr) lr.textContent = a.lastRun || "";
+  /* Maintenance sparkline (2026.10.18-c, Jay's ask): the learned number as a
+     line over its stored history (adaptiveHist, capped at 26 entries) —
+     appended after the feed, same card, no new chrome. */
+  var hist = (S.goals && S.goals.adaptiveHist) || [];
+  if(hist.length >= 2){
+    var hw = 320, hh = 56, hp = 6;
+    var vs = hist.map(function(h){ return h.v; });
+    var mn2 = Math.min.apply(null, vs), mx2 = Math.max.apply(null, vs);
+    if(mx2 - mn2 < 40){ var mid2 = (mx2 + mn2) / 2; mn2 = mid2 - 20; mx2 = mid2 + 20; }
+    var px = function(i){ return (hp + i * (hw - hp * 2) / (hist.length - 1)).toFixed(1); };
+    var py = function(v){ return (hh - 15 - (v - mn2) / (mx2 - mn2) * (hh - 25)).toFixed(1); };
+    var line = hist.map(function(h, i){ return (i ? "L" : "M") + px(i) + "," + py(h.v); }).join("");
+    var lastH = hist[hist.length - 1];
+    html += '<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:2px">' +
+      '<div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:12px;font-weight:700">Maintenance trend</span>' +
+      '<span style="margin-left:auto;font-size:11px;color:var(--muted)">' + fmtD(hist[0].d) + ' \u2192 ' + fmtD(lastH.d) + '</span></div>' +
+      '<svg width="100%" height="' + hh + '" viewBox="0 0 ' + hw + ' ' + hh + '" preserveAspectRatio="none" style="display:block;margin-top:2px" aria-label="Learned maintenance history">' +
+      '<path d="' + line + '" fill="none" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<circle cx="' + px(hist.length - 1) + '" cy="' + py(lastH.v) + '" r="3" fill="var(--acc)"/>' +
+      '<text x="' + hp + '" y="' + (hh - 3) + '" font-size="9" fill="#9a9aa5">' + Math.round(hist[0].v).toLocaleString() + '</text>' +
+      '<text x="' + (hw - hp) + '" y="' + (hh - 3) + '" font-size="9" fill="#9a9aa5" text-anchor="end">' + Math.round(lastH.v).toLocaleString() + '</text></svg></div>';
+  }
   z.innerHTML = html;
   var unit = document.querySelector('#progOverview [data-pid="auto"]');
   if(unit) unit.style.display = html ? "" : "none";
