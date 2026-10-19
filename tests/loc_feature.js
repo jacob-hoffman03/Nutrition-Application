@@ -21,7 +21,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await sleep(400);
   try {
     ok(errors.length === 0, "boot with zero JS errors" + (errors.length ? " :: " + errors.slice(0, 3).join(" | ") : ""));
-    ok(ev("APP_VERSION") === "2026.10.18-d", "version 2026.10.18-d, got " + ev("APP_VERSION"));
+    ok(ev("APP_VERSION") === "2026.10.18-e", "version 2026.10.18-e, got " + ev("APP_VERSION"));
 
     /* ---- create a food WITH a location via the real form ---- */
     q("#newCustomBtn").click();
