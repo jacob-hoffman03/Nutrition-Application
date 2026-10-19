@@ -585,6 +585,7 @@ input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; 
 .wlg-dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; vertical-align:-1px;}
 .wlg-dot.fed{background:var(--acc);}
 .wlg-dot.light{background:#fff; border:1.4px solid #a9a9ba; box-sizing:border-box;}
+.wlg-dot.night{background:#8383a8; opacity:.55;}
 .wrow{display:flex; align-items:center; justify-content:space-between; padding:9px 2px; border-top:1px solid var(--line); font-size:14px;}
 .wrow b{font-variant-numeric:tabular-nums;}
 .wlogrow{display:flex; gap:8px; margin-top:10px;}
@@ -1898,6 +1899,13 @@ body.reordering #progOverview{display:none}
           <input id="weightInput" type="number" inputmode="decimal" step="0.1" placeholder="Weight (lb)">
           <button class="wlogbtn" id="weightAdd">Log</button>
         </div>
+        <div class="segctl" id="wtSlotSeg" style="margin:8px 0 0" role="tablist" aria-label="Weigh-in time of day">
+          <button class="segbtn on" data-s="am" role="tab">Morning</button>
+          <button class="segbtn" data-s="pm" role="tab">Night</button>
+        </div>
+      </div>
+      <div class="card" id="wtSetsCard">
+        <div id="wtSets"></div>
       </div>
       <div class="wtseg" id="wtSeg" role="tablist" aria-label="Weight views">
         <button data-v="trend" class="on" role="tab">Trend</button>
@@ -2422,7 +2430,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.18-d";
+const APP_VERSION = "2026.10.18-e";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2468,7 +2476,7 @@ else { if(!/^#[0-9a-fA-F]{6}$/.test(s.profile.theme)) s.profile.theme = DEFAULT_
       (s.favorites||[]).forEach(function(x,i){ if(x===on) s.favorites[i]=nn; });
       Object.values(s.days||{}).forEach(function(d){ MEALS.forEach(function(m){ ((d.meals||{})[m]||[]).forEach(function(e){ if(e && e.n===on) e.n=nn; }); }); }); } });
     flagSet("crabFix",1); }
-  if(!Array.isArray(s.customFoods)) s.customFoods=[]; if(!Array.isArray(s.weights)) s.weights=[];
+  if(!Array.isArray(s.customFoods)) s.customFoods=[]; if(!Array.isArray(s.weights)) s.weights=[]; if(!Array.isArray(s.pmWeights)) s.pmWeights=[];
   if(!Array.isArray(s.favorites)) s.favorites=[]; if(!s.days||typeof s.days!=="object") s.days={};
   /* missing keys (old/corrupt stores) must not crash render paths that .slice() them 2026.09.24-e */
   /* 2026.10.01-d: purge dead (null/undefined) entries from meal arrays — an
@@ -2478,7 +2486,7 @@ else { if(!/^#[0-9a-fA-F]{6}$/.test(s.profile.theme)) s.profile.theme = DEFAULT_
   return s; } } catch(e){ corruptBoot = (raw!==null && raw!==""); corruptRaw = raw||""; }
   flagSet("zeroReset",1); /* fresh boot / unreadable state: nothing to reset, mark it done */
   freshBoot = true; /* boot code below will try restoring seed-data.json */
-  return {days:{}, customFoods:[], favorites:[], weights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:DEFAULT_PROFILE.name, img:DEFAULT_PROFILE.img, theme:DEFAULT_PROFILE.theme, photos:DEFAULT_PHOTOS.map(p=>({d:p.d,img:p.img}))}, bottles:DEFAULT_BOTTLES.map(b=>({id:b.id, name:b.name, oz:b.oz, img:b.img})), waterV2:1, recipes:[], mealTimes:{breakfast:[], lunch:[], dinner:[], snacks:[]}};
+  return {days:{}, customFoods:[], favorites:[], weights:[], pmWeights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:DEFAULT_PROFILE.name, img:DEFAULT_PROFILE.img, theme:DEFAULT_PROFILE.theme, photos:DEFAULT_PHOTOS.map(p=>({d:p.d,img:p.img}))}, bottles:DEFAULT_BOTTLES.map(b=>({id:b.id, name:b.name, oz:b.oz, img:b.img})), waterV2:1, recipes:[], mealTimes:{breakfast:[], lunch:[], dinner:[], snacks:[]}};
 }
 let S = load();
 /* 2026.10.06-c: seed streaks once — nicotine last vaped 2026-10-05 (Jay's actual last day);
@@ -5662,6 +5670,61 @@ function wRangeStats(pts){
   const vals = pts.map(p=>p.w);
   return {rateWk: halvesRate(pts), change: pts[pts.length-1].w-pts[0].w, hi: Math.max(...vals), lo: Math.min(...vals)};
 }
+/* ============ AM/PM WEIGHT SETS (2026.10.18-e, Jay's ask) ============
+   Night weights live in S.pmWeights, a SEPARATE series: they never enter
+   S.weights, so the trend, the chart's trend line and the learned estimator
+   stay morning-only by construction. A night weight's only jobs: pair with
+   its morning (what the day added), pair with the NEXT morning (the
+   overnight float), and flag a low night while the day can still be fixed. */
+function pmSorted(){ return (S.pmWeights||[]).slice().sort((a,b)=>a.d<b.d?-1:1); }
+function wtSetStats(){
+  const am = {}; sortedWeights().forEach(p=>{ am[p.d]=p.w; });
+  const pm = pmSorted();
+  const deltas = [], floats = [];
+  pm.forEach(p=>{
+    if(am[p.d]!=null) deltas.push({d:p.d, v:p.w-am[p.d]});
+    const nx = addDays(p.d,1);
+    if(am[nx]!=null) floats.push({d:p.d, v:am[nx]-p.w});
+  });
+  const med = a => { if(!a.length) return null; const s=a.slice().sort((x,y)=>x-y), m=Math.floor(s.length/2); return s.length%2 ? s[m] : (s[m-1]+s[m])/2; };
+  const last14 = a => a.slice(-14);
+  return { pm, am, deltas, floats,
+    medDelta: med(last14(deltas).map(x=>x.v)),
+    medFloat: med(last14(floats).map(x=>x.v)),
+    medPM: med(last14(pm).map(p=>p.w)) };
+}
+function paintWtSets(){
+  const box = document.getElementById("wtSets"); if(!box) return;
+  const wu = wUnit(), st = wtSetStats();
+  const f1 = v => wDisp(v).toFixed(1);
+  const sgn = v => (v>0?"+":v<0?"\u2212":"")+f1(Math.abs(v));
+  const dLbl = d => new Date(d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  if(!st.pm.length){
+    box.innerHTML = '<div class="rangenote">Log a <b>night</b> weight before bed (switch the log above to Night) and Fuel pairs it with your morning weigh-in: what the day added, what the night took off. Night weights never touch your trend or your daily number.</div>';
+    return;
+  }
+  const last = st.pm[st.pm.length-1];
+  let lines = "";
+  if(st.am[last.d]!=null) lines += `<div class="rangenote">${dLbl(last.d)}: <b>${f1(st.am[last.d])} ${wu}</b> morning \u2192 <b>${f1(last.w)} ${wu}</b> night (${sgn(last.w-st.am[last.d])})</div>`;
+  else lines += `<div class="rangenote">${dLbl(last.d)}: night <b>${f1(last.w)} ${wu}</b> (no morning weigh-in that day)</div>`;
+  const fl = st.floats.filter(x=>x.d===last.d)[0];
+  if(fl) lines += `<div class="rangenote">Overnight: ${sgn(fl.v)} \u2192 woke at <b>${f1(st.am[addDays(last.d,1)])} ${wu}</b></div>`;
+  if(st.deltas.length>=3 || st.floats.length>=3){
+    const parts = [];
+    if(st.medDelta!=null) parts.push(sgn(st.medDelta)+" by night");
+    if(st.medFloat!=null) parts.push(sgn(st.medFloat)+" overnight");
+    lines += `<div class="rangenote">Your usual set (${Math.max(st.deltas.length, st.floats.length)} nights paired): ${parts.join(" \u00b7 ")}</div>`;
+  }
+  /* the low-night flag: tonight vs his own usual night; a prediction only
+     once 3+ overnight floats are on file to calibrate it */
+  if(last.d===todayStr() && st.pm.length>=5 && st.medPM!=null && last.w <= st.medPM-1.5){
+    let msg = "Low night for you \u2014 your nights usually end around "+f1(st.medPM)+" "+wu+".";
+    if(st.floats.length>=3 && st.medFloat!=null) msg += " With your usual overnight drop, tomorrow will likely read ~"+f1(last.w+st.medFloat)+" "+wu+".";
+    msg += " A shake or some milk before bed can still move it.";
+    lines += `<div class="rangenote" style="color:var(--ink); font-weight:600">${msg}</div>`;
+  }
+  box.innerHTML = lines;
+}
 function paintWeightChart(w){
   const svg = document.getElementById("weightChart"), wu = wUnit();
   const tiles = document.getElementById("wStatTiles");
@@ -5674,14 +5737,16 @@ function paintWeightChart(w){
     if(tiles) tiles.style.display = "none";
     return;
   }
-  const tEnd = T(ws[ws.length-1]);
+  const pmAll = pmSorted();
+  const tEnd = Math.max(T(ws[ws.length-1]), pmAll.length ? T(pmAll[pmAll.length-1]) : 0);
   const tStart = wRange>0 ? tEnd-wRange*86400000 : T(ws[0])-2*86400000;
   const pts = ws.filter(p=>T(p)>=tStart);
+  const pmPts = pmAll.filter(p=>T(p)>=tStart && T(p)<=tEnd);
   /* flag: his set goal, else the auto milestone predicted from his data */
   let flag = null;
   if(S.goals.weight>0) flag = {v:S.goals.weight, auto:false};
   else { const ms = suggestedMilestone(); if(ms) flag = {v:ms.target, auto:true}; }
-  const vals = pts.map(p=>p.w);
+  const vals = pts.map(p=>p.w).concat(pmPts.map(p=>p.w));
   let mn = Math.min(...vals), mx = Math.max(...vals);
   if(flag){ mn = Math.min(mn,flag.v); mx = Math.max(mx,flag.v); }
   if(mx-mn<0.5){ mn-=0.5; mx+=0.5; }
@@ -5749,6 +5814,13 @@ function paintWeightChart(w){
       else { s += `<circle cx="${cx}" cy="${cy}" r="2.6" fill="${THEME.acc}" opacity="0.30"/>`; }
     });
   }
+  /* night weights (2026.10.18-e): faint slate dots, no line — context only,
+     drawn under the trend line so the morning trend stays the headline. */
+  let pmDrawn = false;
+  pmPts.forEach(p=>{
+    s += `<circle cx="${X(T(p)).toFixed(1)}" cy="${Y(p.w).toFixed(1)}" r="2.8" fill="#8383a8" opacity="0.55"/>`;
+    pmDrawn = true;
+  });
   const ma = trendMA(pts);
   const mxy = ma.map((m,i)=>[X(T(pts[i])), Y(m.w)]);
   /* one clean trend line in the app theme with a soft fill beneath it.
@@ -5775,11 +5847,12 @@ function paintWeightChart(w){
   const wsc = document.getElementById("wChartScroll");
   if(wsc && allMode && wScrollEnd){ wsc.scrollLeft = wsc.scrollWidth; wScrollEnd = false; }
   const wlg = document.getElementById("wGoalLegend");
-  if(wlg){ /* legend slot now carries the dot key (2026.10.18-c) */
-    if(dotsDrawn){
-      wlg.innerHTML = '<span><i class="wlg-dot fed"></i>fed day before</span><span><i class="wlg-dot light"></i>light day before</span><span>water weight shows up in the dots first</span>';
-      wlg.style.display = "";
-    } else wlg.style.display = "none";
+  if(wlg){ /* legend slot carries the dot keys (2026.10.18-c, night dots -e) */
+    const parts = [];
+    if(dotsDrawn) parts.push('<span><i class="wlg-dot fed"></i>fed day before</span><span><i class="wlg-dot light"></i>light day before</span><span>water weight shows up in the dots first</span>');
+    if(pmDrawn) parts.push('<span><i class="wlg-dot night"></i>night weight</span>');
+    if(parts.length){ wlg.innerHTML = parts.join(""); wlg.style.display = ""; }
+    else wlg.style.display = "none";
   }
   svg.setAttribute("aria-label",`Weight chart: ${pts.length} weigh-ins, ${dFmtS(tStart)} to ${dFmtS(tEnd)}`+(flag?`, ${flag.auto?"auto milestone":"goal"} ${f1(flag.v)} ${wu}`:""));
   /* pace line under the chart: range rate + change. Records (high/low/avg)
@@ -5992,16 +6065,32 @@ function renderProgress(){
     : "No weigh-ins yet";
   paintWeightChart(w);
   paintWtStats();
+  paintWtSets();
+  wtSlot = wtSlotDefault(document.getElementById("weightDate").value || todayStr()); paintWtSlotSeg();
   const wh = document.getElementById("weightHist");
-  wh.innerHTML = w.slice().reverse().map(p=>
-    `<div class="wrow"><span>${new Date(p.d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span><span style="display:flex;align-items:center;gap:2px"><b>${wDisp(p.w)} ${wu}</b><button class="wdel" data-d="${p.d}" aria-label="Delete weigh-in">×</button></span></div>`).join("");
-  wh.querySelectorAll(".wdel").forEach(b=> b.onclick = ()=>{
+  const pmMap = {}; pmSorted().forEach(p=>{ pmMap[p.d]=p.w; });
+  const amMap = {}; w.forEach(p=>{ amMap[p.d]=p.w; });
+  const allD = Array.from(new Set([...Object.keys(amMap), ...Object.keys(pmMap)])).sort().reverse();
+  wh.innerHTML = allD.map(d=>{
+    const lbl = new Date(d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"});
+    let cells = "";
+    if(amMap[d]!=null) cells += `<span style="display:flex;align-items:center;gap:2px"><b>${wDisp(amMap[d])} ${wu}</b><button class="wdel" data-d="${d}" aria-label="Delete morning weigh-in">×</button></span>`;
+    if(pmMap[d]!=null) cells += `<span style="display:flex;align-items:center;gap:2px"><span style="color:var(--muted);font-size:12.5px">night</span><b>${wDisp(pmMap[d])} ${wu}</b><button class="wdel wpdel" data-d="${d}" aria-label="Delete night weigh-in">×</button></span>`;
+    return `<div class="wrow"><span>${lbl}</span><span style="display:flex;align-items:center;gap:12px">${cells}</span></div>`;
+  }).join("");
+  wh.querySelectorAll(".wdel:not(.wpdel)").forEach(b=> b.onclick = ()=>{
     const dstr = new Date(b.dataset.d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"});
     if(!confirm("Delete the "+dstr+" weigh-in?")) return;
     S.weights = S.weights.filter(p=>p.d!==b.dataset.d);
     const rest = S.weights.slice().sort((a,c)=>a.d<c.d?-1:1);
     if(rest.length) syncWeightFromLog(rest[rest.length-1].w, rest[rest.length-1].d);
     else { S.goals.profile.weightLb = 0; S.goals.profHash = profHash(); } /* no weigh-ins left: blank-slate the synced weight so maintenance/BMI math can't use a ghost number (2026.09.24-x) */
+    save(); renderProgress();
+  });
+  wh.querySelectorAll(".wpdel").forEach(b=> b.onclick = ()=>{
+    const dstr = new Date(b.dataset.d+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"});
+    if(!confirm("Delete the "+dstr+" night weigh-in?")) return;
+    S.pmWeights = (S.pmWeights||[]).filter(p=>p.d!==b.dataset.d);
     save(); renderProgress();
   });
   paintWtGoal(); paintWtAnalysis();
@@ -6031,6 +6120,16 @@ var _at=document.getElementById("alcTap"); if(_at) _at.onclick = ()=>openCal("al
 document.getElementById("nutrInfo").onclick = ()=>openInfo("nutrients");
 document.getElementById("bmiInfo").onclick = ()=>openInfo("bmi");
 document.getElementById("calCheckInfo").onclick = ()=>openInfo("calcheck");
+/* AM/PM log slot (2026.10.18-e): defaults to Night when the picked date
+   already has a morning weigh-in and no night one yet, else Morning. */
+var wtSlot = "am";
+function paintWtSlotSeg(){ document.querySelectorAll("#wtSlotSeg .segbtn").forEach(b=> b.classList.toggle("on", b.dataset.s===wtSlot)); }
+function wtSlotDefault(k){
+  const hasAM = (S.weights||[]).some(p=>p.d===k), hasPM = (S.pmWeights||[]).some(p=>p.d===k);
+  return (hasAM && !hasPM) ? "pm" : "am";
+}
+document.querySelectorAll("#wtSlotSeg .segbtn").forEach(b=> b.onclick = ()=>{ wtSlot = b.dataset.s; paintWtSlotSeg(); });
+document.getElementById("weightDate").addEventListener("change", ()=>{ wtSlot = wtSlotDefault(document.getElementById("weightDate").value || todayStr()); paintWtSlotSeg(); });
 document.getElementById("weightAdd").onclick = ()=>{
   const raw = parseFloat(document.getElementById("weightInput").value);
   const lo = wIsMet()?23:50, hi = wIsMet()?275:600;
@@ -6039,10 +6138,16 @@ document.getElementById("weightAdd").onclick = ()=>{
   if(k>todayStr()){ alert("That date is in the future — pick today or an earlier date."); return; }
   if(k<"2000-01-01") k = todayStr();
   const v = Math.round(wToLb(raw)*10)/10;
-  S.weights = S.weights.filter(p=>p.d!==k); S.weights.push({d:k, w:v});
+  if(wtSlot==="pm"){
+    S.pmWeights = (S.pmWeights||[]).filter(p=>p.d!==k); S.pmWeights.push({d:k, w:v});
+    S.pmWeights.sort((a,b)=>a.d<b.d?-1:1);
+    /* night weights never call syncWeightFromLog: the estimator stays morning-only */
+  } else {
+    S.weights = S.weights.filter(p=>p.d!==k); S.weights.push({d:k, w:v});
+    syncWeightFromLog(v, k);
+  }
   document.getElementById("weightInput").value = "";
   document.getElementById("weightDate").value = todayStr();
-  syncWeightFromLog(v, k);
   save(); renderProgress();
 };
 document.querySelectorAll("#wRange button").forEach(b=>{
