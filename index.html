@@ -1393,12 +1393,11 @@ body.reordering #progOverview{display:none}
           <button class="chip" data-r="1.5">+1.5 lb/wk</button>
         </div>
       </div>
-      <div style="border-top:1px solid var(--line); margin-top:14px; padding-top:12px">
-        <div class="flabel" style="margin:0 0 6px">The math — BMR × activity</div>
-        <div class="gsub" id="formulaEq" style="margin:0 0 8px"></div>
-        <div id="formulaTable"></div>
-        <div class="gsub" style="margin-top:8px">Tap a row to use that activity level. Your food log never moves this goal — only your weight does.</div>
-      </div>
+    </div>
+    <div class="secttl">The math</div>
+    <div class="card">
+      <div class="gsub" id="formulaEq" style="margin:0 0 8px"></div>
+      <div id="formulaTable"></div>
     </div>
     <div class="secttl">Macros</div>
     <div class="card">
@@ -1437,7 +1436,6 @@ body.reordering #progOverview{display:none}
         <button class="chip" data-k="very" title="Very Active: intense exercise 6-7 times/week">Very active</button>
         <button class="chip" data-k="extra" title="Extra Active: very intense exercise daily, or physical job">Extra active</button>
       </div>
-      <div class="rangenote" id="pfNote" style="margin-top:10px"></div>
     </div>
 <div class="gsec" id="gsecWater">
       <div class="ghead"><span>Water</span><b class="gval" id="waterHeadVal"></b><span class="gchev">›</span></div>
@@ -1449,14 +1447,7 @@ body.reordering #progOverview{display:none}
         <div class="rangenote" id="waterBreak"></div>
       </div>
     </div>
-<div class="secttl">Micronutrients</div>
-    <div class="card" style="padding:4px 14px">
-      <button class="srow" id="microRow">
-        <span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h10M18 8h2M4 16h4M12 16h8"/><circle cx="16" cy="8" r="2.2"/><circle cx="10" cy="16" r="2.2"/></svg></span><span><b style="font-size:16px">Micronutrient targets</b><br><span class="ph" id="microSub"></span></span></span>
-        <span class="sval"><span class="chev2">›</span></span>
-      </button>
-    </div>
-    <button class="bigbtn" id="goalsDone">Calculate &amp; Save</button>
+<button class="bigbtn" id="goalsDone">Calculate &amp; Save</button>
   </section>
 
 <!-- PROGRESS -->
@@ -2436,7 +2427,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.21-b";
+const APP_VERSION = "2026.10.21-c";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6532,16 +6523,15 @@ if(!flagGet().imgDedup){
 function paintGainProj(){
   const s = S.goals.surplus>0 ? S.goals.surplus : 0;
   const el = document.getElementById("gainProj");
-  if(s <= 0){ el.textContent = S.goals.maintenance>0 ? "At maintenance — no projected gain" : "Calculate your maintenance above to see your projected gain"; return; }
-  const w = S.goals.profile.weightLb>0 ? S.goals.profile.weightLb : 150;
-  const lbWk = s*7/3500; /* 3500 kcal/lb: rough first-week heuristic, overestimates over time */
-  const wu = wUnit();
-  el.textContent = "≈ +"+wDisp(lbWk).toFixed(2)+" "+wu+"/week ("+(lbWk/w*100).toFixed(2)+"% of body weight) at this surplus — first-week estimate only; gains slow as you grow (Hall 2011). Your weigh-ins are the real answer";
+  if(s <= 0){ el.textContent = S.goals.maintenance>0 ? "At maintenance" : ""; return; }
+  const lbWk = s*7/3500; /* 3500 kcal/lb heuristic */
+  el.textContent = "≈ +"+wDisp(lbWk).toFixed(2)+" "+wUnit()+"/week at this surplus";
 }
 function paintMaintNote(){
+  /* 2026.10.21-c cleanup: the stats card no longer carries an explanatory
+     note — the formula law lives in one place (the page's info button). */
   const el = document.getElementById("pfNote");
-  if(!(S.goals.profile.weightLb>0)){ el.textContent = "Add your stats — they calculate your calorie goal (BMR × activity), plus BMI and water."; return; }
-  el.textContent = "These stats set your number: maintenance is BMR × your activity level, from your current weight. Food you log never changes it — only a weight change does.";
+  if(el) el.textContent = "";
 }
 function readProfile(){
   const p = S.goals.profile, met = p.units==="met";
@@ -6836,10 +6826,9 @@ function paintAdaptive(){
   const el = document.getElementById("goalSrc"); if(!el) return;
   const g = S.goals, fg = g.formula || formulaGoal();
   if(!fg){
-    el.textContent = "No number yet — add your sex, age, height and weight in Your stats below. Your goal is calculated from those, not from your food log.";
+    el.textContent = "Add your stats below to calculate your goal.";
   } else {
-    el.textContent = "Maintenance " + Math.round(g.maintenance).toLocaleString() + " · BMR " + fg.bmr.toLocaleString() + " × " + fg.pal +
-      " (" + fg.tierLabel + ") · from your current weight " + (+fg.weightLb).toLocaleString() + " lb — your food log never moves this number, only your weight does.";
+    el.textContent = "BMR " + fg.bmr.toLocaleString() + " × " + fg.pal + " (" + fg.tierLabel + ") · at " + (+fg.weightLb).toLocaleString() + " lb";
   }
   paintFormulaTable(fg);
 }
@@ -7672,9 +7661,9 @@ document.getElementById("pPhotoFile").onchange = e=>{
 /* ============ WATER TARGET (settings UI) ============ */
 function waterBreakdown(){
   const w = waterCalc();
-  if(w.manual) return "Manual target of "+(w.target*8)+" oz ("+w.target+" glasses). Switch to Auto for the research-based formula.";
-  if(w.unset) return "Auto needs your maintenance first — it is calculated from your stats on the Calorie Goal page.";
-  return "Auto: "+(w.target*8)+" oz ("+w.target+" glasses) from "+Math.round(w.tdee).toLocaleString()+" kcal maintenance × "+w.tier+" activity (1.0–1.2 mL/kcal, IOM 2004)"+(w.xw?" — +16 oz for a supplement you flagged 'needs extra water'.":" — creatine needs no extra water (ISSN 2017).")+".";
+  if(w.manual) return "Manual: "+(w.target*8)+" oz ("+w.target+" glasses).";
+  if(w.unset) return "Auto needs your stats first.";
+  return "Auto: "+(w.target*8)+" oz ("+w.target+" glasses) — maintenance × activity."+(w.xw?" +16 oz for an extra-water supplement.":"");
 }
 function paintWater(){
   const g = S.goals;
@@ -7740,8 +7729,6 @@ function renderGoals(){
   paintSplit();
   paintGainProj();
   updateMacroSplit(); paintWater();
-  const nc = Object.keys(g.nutrTargets||{}).length;
-  document.getElementById("microSub").textContent = nc ? nc+" custom · rest FDA defaults" : "FDA defaults — tap to customize";
 }
 /* Macro split: read-only analysis (2026.10.14-i). Percentages are % of the daily
    calorie goal, uncapped — if the numbers go past 100% that's the truth. */
@@ -7766,12 +7753,12 @@ function updateMacroSplit(){
   document.getElementById("gmFip").textContent = fi>0 ? Math.round(fi)+" g" : "–";
   /* do the macros actually add up to the goal? */
   const an = document.getElementById("macroAnalysis");
-  if(!(tot>0)){ an.textContent = "Percentages are % of your daily calorie goal — tap Calculate & Save to see them."; return; }
+  if(!(tot>0)){ an.textContent = ""; return; }
   const diff = Math.round(sum-tot);
-  let st = "Your macros add up to "+Math.round(sum).toLocaleString()+" kcal vs your "+Math.round(tot).toLocaleString()+" kcal goal";
-  st += diff===0 ? " — exactly on target." : " — "+Math.abs(diff).toLocaleString()+" kcal "+(diff>0?"over":"under")+" your goal.";
-  const kg = S.goals.profile.weightLb/2.20462;
-  if(kg>0 && p>0) st += " Protein is "+(p/kg).toFixed(1)+" g/kg — the research range for gaining muscle is 1.6–2.2 g/kg (Morton 2018).";
+  let st = "Macros total " + Math.round(sum).toLocaleString() + " kcal";
+  if(diff !== 0) st += " · " + Math.abs(diff).toLocaleString() + (diff>0 ? " over" : " under") + " the goal";
+  const kg2 = S.goals.profile.weightLb/2.20462;
+  if(kg2>0 && p>0) st += " · protein " + (p/kg2).toFixed(1) + " g/kg";
   an.textContent = st;
 }
 document.querySelectorAll("#pfAct .chip").forEach(c=>c.onclick=()=>{
@@ -7808,13 +7795,6 @@ document.querySelectorAll("#goalMode .chip").forEach(c=>c.onclick=()=>{
   commitGoals("rate"); /* surplus (rate x 500) + macros re-derive atomically */
   renderGoals(); renderDiary();
 });
-document.getElementById("microRow").onclick = ()=>{
-  commitGoalsInputs(); save();
-  Object.keys(ncatCollapsed).forEach(k=>delete ncatCollapsed[k]); /* expand every nutrient category */
-  saveNcatCollapsed();
-  showView("analysis"); renderAnalysis();
-  setTimeout(()=>{ const el=document.getElementById("nutrTable"); if(el && el.scrollIntoView) el.scrollIntoView({block:"start"}); },80);
-};
 document.getElementById("goalsDone").onclick = ()=>{
   commitGoalsInputs();
   /* THE one calculation (2026.10.21-b): the formula, from the profile

@@ -151,7 +151,12 @@ async function scenarioTable() {
   ok(/1,888/.test(sed.textContent), "Sedentary row = 1,888 (BMR x 1.2)");
   ok(w.document.querySelector("#view-goals h1").textContent.includes("Calorie Goal"), "page is titled Calorie Goal");
   const src = w.document.getElementById("goalSrc").textContent;
-  ok(/2,715/.test(src) && /never moves/.test(src), "evidence line states the formula law");
+  ok(/BMR 1,574/.test(src) && /1.725/.test(src), "goal line is one short formula line: " + src);
+  ok(!w.document.getElementById("microRow"), "cleanup: no micronutrient section on this page");
+  ok(!w.document.getElementById("pfNote"), "cleanup: no duplicate stats note");
+  ok(!w.document.querySelector(".goalbig #formulaTable"), "cleanup: math table is its own card, not inside the goal card");
+  ev(w, 'S.goals.surplusMode = "rate"; S.goals.gainRate = 1.5; commitGoals("t"); renderGoals();');
+  ok(w.document.getElementById("gainProj").textContent === "\u2248 +1.50 lb/week at this surplus", "gain projection is one short line: " + w.document.getElementById("gainProj").textContent);
 }
 
 (async () => {
