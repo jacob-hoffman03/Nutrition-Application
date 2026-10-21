@@ -2430,7 +2430,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.18-e";
+const APP_VERSION = "2026.10.21-a";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -6628,15 +6628,53 @@ function avgCompleteIntake(){ const r=completeDayCals(); return r.cals.length?r.
    only — surplus is derived here from maintenance × the mode's %, so the
    invariant goal = maintenance + surplus always holds). Exactly one source
    decides maintenance: the learned value whenever the log supports it
-   (adaptive.ok), otherwise the last data-derived value holds (stale) — and before any data exists, no number is presented at all. No formula anywhere (2026.10.15-e). Every derivation is stamped
+   (adaptive.ok), otherwise the last data-derived value holds (stale) — and before any data exists, no number is presented at all. A formula CHECK (2026.10.21) guards any learned/held number against the sedentary floor, but never stands in as the source. Every derivation is stamped
    with its provenance. */
+/* ============ FORMULA CHECK (2026.10.21, Jay's fix) ============
+   The learned number stays the source — but it is no longer unchecked.
+   A formula estimate (Mifflin-St Jeor, or Katch-McArdle when body fat is
+   known; same equations documented in the Analytics Engine header) gives a
+   sedentary floor: BMR x 1.2. A learned / held maintenance BELOW that floor
+   is physiologically implausible for anyone out of bed — it is how the
+   2026-10-11 level shift dragged the applied number to 1,816 (below the
+   1,885 sedentary TDEE for Jay's own stats) and the HOLD then froze it
+   there. commitGoals raises a below-floor candidate to the floor and
+   stamps the check on g.formulaCheck so the UI can say what happened.
+   Above the floor the learned number is untouched (formulas are ±10-15%;
+   the log calibrates). No profile stats -> no check -> old behaviour. */
+function formulaCheck(){
+  const p = (S.goals||{}).profile||{};
+  const wKg = p.weightLb>0 ? p.weightLb/2.20462 : 0;
+  const hCm = p.heightIn>0 ? p.heightIn*2.54 : 0;
+  const age = +p.age||0;
+  if(!(wKg>0 && hCm>0 && age>=10 && age<=100)) return null;
+  let bmr;
+  if(p.bodyFat>0 && p.bodyFat<70){ bmr = 370 + 21.6*(wKg*(1-p.bodyFat/100)); /* Katch-McArdle */ }
+  else if(p.sex==="m" || p.sex==="male"){ bmr = 10*wKg + 6.25*hCm - 5*age + 5; }
+  else if(p.sex==="f" || p.sex==="female"){ bmr = 10*wKg + 6.25*hCm - 5*age - 161; }
+  else return null; /* Mifflin needs sex; without it there is no honest check */
+  return {bmr: Math.round(bmr), floor: Math.round(bmr*1.2), tdee: Math.round(bmr*actPAL(p)), pal: actPAL(p)};
+}
 function commitGoals(reason, maintOverride){
   const g = S.goals;
   let src;
   if(maintOverride>0){ g.maintenance = Math.round(maintOverride); src = "auto-tune"; }
   else if(g.adaptive && g.adaptive.ok && g.adaptive.value>0){ g.maintenance = g.adaptive.value; src = "learned"; }
-  else if(g.maintenance>0 && g.derived && (g.derived.src==="learned" || g.derived.src==="auto-tune" || g.derived.src==="learned-stale")){ src = "learned-stale"; /* HOLD: the last data-derived number stays until the log supports a fresh one */ }
+  else if(g.maintenance>0 && g.derived && (g.derived.src==="learned" || g.derived.src==="auto-tune" || g.derived.src==="learned-stale" || g.derived.src==="learned-floored" || g.derived.src==="learned-stale-floored")){ src = g.derived.src.indexOf("floored")>=0 ? g.derived.src : "learned-stale"; /* HOLD: the last data-derived number stays until the log supports a fresh one */ }
   else { g.maintenance = 0; src = "nodata"; /* no data has ever supported a number — present none */ }
+  /* FORMULA CHECK: never apply a learned/held number below the sedentary floor */
+  g.formulaCheck = null;
+  if(g.maintenance>0 && src!=="auto-tune"){
+    const fc = formulaCheck();
+    if(fc){
+      g.formulaCheck = {bmr:fc.bmr, floor:fc.floor, tdee:fc.tdee, learned:Math.round(g.maintenance), floored:false};
+      if(g.maintenance < fc.floor){
+        g.maintenance = fc.floor;
+        g.formulaCheck.floored = true;
+        src = src==="learned" ? "learned-floored" : "learned-stale-floored";
+      }
+    }
+  }
   applyModePct();      /* preset modes: surplus stays glued to its % of maintenance */
   autoDeriveMacros();  /* macros follow the goal unless he locked them manually */
   g.derived = {src, maint: Math.round(g.maintenance||0), at: todayStr(), why: reason||""};
@@ -6808,13 +6846,15 @@ function paintAdaptive(){
     return;
   }
   if(a.stale && a.shiftHold){
-    el.textContent="Maintenance "+a.value.toLocaleString()+" · holding — your weight jumped on "+a.shiftHold.shift+", so the rate is being re-measured from the new level · fresh number around "+addDays(a.shiftHold.shift, 10);
+    el.textContent="Maintenance "+(g.maintenance>0?g.maintenance:a.value).toLocaleString()+" · holding — your weight jumped on "+a.shiftHold.shift+", so the rate is being re-measured from the new level · fresh number around "+addDays(a.shiftHold.shift, 10)
+      +(g.formulaCheck && g.formulaCheck.floored ? " · formula check: the held number ("+g.formulaCheck.learned.toLocaleString()+") was below your sedentary floor ("+g.formulaCheck.floor.toLocaleString()+" = BMR "+g.formulaCheck.bmr.toLocaleString()+" × 1.2), so the floor is applied until the fresh number lands" : "");
     return;
   }
-  el.textContent = "Maintenance "+a.value.toLocaleString()+" · calculated from your log · "+
+  el.textContent = "Maintenance "+(g.formulaCheck && g.formulaCheck.floored ? g.maintenance : a.value).toLocaleString()+" · calculated from your log · "+
     a.avg.toLocaleString()+" avg intake · "+(a.rateWk>=0?"+":"-")+Math.abs(a.rateWk).toFixed(2)+" lb/wk · updated "+a.updated+
     (a.shift?" · measured since the "+a.shift+" weight jump — earlier data set aside":"")+
-    (a.stale?" · holding — log more days to refresh it":"");
+    (a.stale?" · holding — log more days to refresh it":"")+
+    (g.formulaCheck && g.formulaCheck.floored ? " · formula check: learned "+g.formulaCheck.learned.toLocaleString()+" was below your sedentary floor ("+g.formulaCheck.floor.toLocaleString()+" = BMR "+g.formulaCheck.bmr.toLocaleString()+" × 1.2), so the floor is applied" : "");
 }/* The scale is the single source of truth for body weight: every weigh-in updates the
    profile weight, so the goal calculation, BMI, calorie check, and the diary all
    read the same number. The auto-adjust toggle only gates the *recalculation*
@@ -6846,7 +6886,7 @@ function syncWeightFromLog(newLb, dateStr){
 /* Goals section explainers shown behind the ⓘ buttons */
 function infoContent(k){
   if(k==="athlete" || k==="engine") return {t:"How your number works", b:
-    `<div class="irow"><b>No formula.</b> Your maintenance is calculated from your own data only: what you logged eating over the last ~21 days, minus your weight trend x 500 (energy balance — gaining means you ate above maintenance, losing means below).</div>
+    `<div class="irow"><b>Learned, with a formula check.</b> Your maintenance is calculated from your own data: what you logged eating over the last ~21 days, minus your weight trend x 500 (energy balance — gaining means you ate above maintenance, losing means below). A Mifflin-St Jeor formula check then guards it: if the learned number ever falls below your sedentary floor (BMR × 1.2 for your stats), the floor is applied instead and the check-in line says so — a learned number that low is a logging/trend artefact, not a metabolism.</div>
      <div class="irow"><b>No number without data.</b> Until your log has ~10 complete days and your weigh-ins span ~10 days, no daily number is presented at all — nothing stands in for your data.</div>
      <div class="irow"><b>Your weigh-ins move it</b> through the trend (smoothed daily, so one salty day cannot swing it), never through a stats table. Your stats below only feed BMI and your water target.</div>
      <div class="irow"><b>Bulk:</b> your gain-rate pick adds the surplus on top — rate x 500 kcal (so +1.5 lb/wk = +750). Maintain adds nothing.</div>

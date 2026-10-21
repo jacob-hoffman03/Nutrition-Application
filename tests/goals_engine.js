@@ -1,4 +1,5 @@
-/* Goals engine regression tests (2026.10.13-b; law updated 2026.10.15-e):
+/* Goals engine regression tests (2026.10.13-b; law updated 2026.10.15-e;
+   formula-check guard added 2026.10.21 — see tests/formula_check.js):
    1. Split-brain scenario — tapping an activity chip must NOT move
       maintenance/surplus/macros (the Oct 13 bug: hero 3,503 vs macros 2,159).
       The chip is only a water-tier input now; it never touches the number.
@@ -45,19 +46,23 @@ async function scenarioB() {
   const { w, errors } = boot(); await tick();
   w.eval(`
     S.goals.profile = ${PROFILE};
-    S.goals.adaptive = {ok:true, stale:false, value:1877, learned:1877, avg:2133, rateWk:0.51, days:11, span:14, partial:3, updated:"2026-10-13", algo:"v3-21d"};
-    S.goals.maintenance = 1877; S.goals.surplus = 282; S.goals.mode = "bulk";
-    S.goals.protein = 127; S.goals.carbs = 278; S.goals.fat = 60; S.goals.macroAuto = true;
+    /* 2026.10.21: learned value moved 1877 -> 2077 — 1877 is below the new
+       formula-check sedentary floor (1,909) for this 130 lb profile, so the
+       chip tap now correctly floors it; this scenario needs a learned value
+       above the floor to isolate the split-brain behaviour it regresses. */
+    S.goals.adaptive = {ok:true, stale:false, value:2077, learned:2077, avg:2133, rateWk:0.51, days:11, span:14, partial:3, updated:"2026-10-13", algo:"v3-21d"};
+    S.goals.maintenance = 2077; S.goals.surplus = 312; S.goals.mode = "bulk";
+    S.goals.protein = 130; S.goals.carbs = 319; S.goals.fat = 66; S.goals.macroAuto = true;
     save(); renderGoals();
   `);
   const chip = w.document.querySelector('#pfAct .chip[data-k="sedentary"]');
   ok(!!chip, "sedentary chip exists");
   chip.click(); await tick();
   const g = JSON.parse(w.eval(`JSON.stringify(S.goals)`));
-  ok(g.maintenance === 1877, "maintenance still learned 1877 after chip tap (got " + g.maintenance + ")");
-  ok(g.surplus === 282, "surplus still 282 (got " + g.surplus + ")");
+  ok(g.maintenance === 2077, "maintenance still learned 2077 after chip tap (got " + g.maintenance + ")");
+  ok(g.surplus === 312, "surplus still 312 (got " + g.surplus + ")");
   const msumB = g.protein * 4 + g.carbs * 4 + g.fat * 9;
-  ok(Math.abs(msumB - 2159) <= 12, "macros still sum to the SAME goal 2159 (" + msumB + ")");
+  ok(Math.abs(msumB - 2389) <= 12, "macros still sum to the SAME goal 2389 (" + msumB + ")");
   ok(g.derived && g.derived.src === "learned", "provenance stamped src=learned");
   ok(g.profile.activityKey === "sedentary", "chip still recorded (water-tier input only)");
 
