@@ -150,13 +150,16 @@ async function scenarioTable() {
   const sed = w.document.querySelector('#formulaTable button[data-k="sedentary"]');
   ok(/1,888/.test(sed.textContent), "Sedentary row = 1,888 (BMR x 1.2)");
   ok(w.document.querySelector("#view-goals h1").textContent.includes("Calorie Goal"), "page is titled Calorie Goal");
-  const src = w.document.getElementById("goalSrc").textContent;
-  ok(/BMR 1,574/.test(src) && /1.725/.test(src), "goal line is one short formula line: " + src);
+  ok(!w.document.getElementById("goalSrc") && !w.document.getElementById("goalSub") && !w.document.getElementById("gainProj"), "cleanup: no text lines under the calorie number");
   ok(!w.document.getElementById("microRow"), "cleanup: no micronutrient section on this page");
   ok(!w.document.getElementById("pfNote"), "cleanup: no duplicate stats note");
-  ok(!w.document.querySelector(".goalbig #formulaTable"), "cleanup: math table is its own card, not inside the goal card");
-  ev(w, 'S.goals.surplusMode = "rate"; S.goals.gainRate = 1.5; commitGoals("t"); renderGoals();');
-  ok(w.document.getElementById("gainProj").textContent === "\u2248 +1.50 lb/week at this surplus", "gain projection is one short line: " + w.document.getElementById("gainProj").textContent);
+  ok(!w.document.getElementById("waterBreak") && !w.document.getElementById("waterMode"), "cleanup: water has no breakdown text and no manual controls");
+  const ft = w.document.getElementById("formulaTable");
+  ok(!!ft && !ft.closest(".goalbig"), "math table lives in the stats card, not the goal card");
+  ev(w, 'S.goals.surplusMode = "rate"; S.goals.gainRate = 1.5; commitGoals("t"); renderGoals(); openInfo("goaldetail");');
+  const ib = w.document.getElementById("infoBody").textContent;
+  ok(/2,715/.test(ib) && /3,465/.test(ib) && /1.725/.test(ib), "info button shows the full breakdown: " + ib.slice(0, 120));
+  ok(/Auto/.test(w.document.getElementById("waterAutoVal").textContent), "water shows its Auto target");
 }
 
 (async () => {

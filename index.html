@@ -485,6 +485,15 @@ span.calday{cursor:default;}
 .goalbig .gnum{font-size:52px; font-weight:800; letter-spacing:-1px; line-height:1.2; font-variant-numeric:tabular-nums;}
 .goalbig .gnum small{font-size:18px; font-weight:600; color:var(--muted);}
 .goalbig .gsub{font-size:13px; color:var(--muted); margin-top:6px;}
+/* 2026.10.21-d: the calorie panel wears the app theme (accent the user picked
+   in Settings). Text/chips flip to white-on-accent; the selected gain-rate
+   chip inverts to a white pill. */
+.goalbig{background:linear-gradient(150deg,var(--acc),var(--acc-deep)); color:#fff; border:none;}
+.goalbig .glabel{color:#fff;}
+.goalbig .gnum small{color:rgba(255,255,255,.75);}
+.goalbig .flabel{color:rgba(255,255,255,.85);}
+.goalbig .chip{background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.28);}
+.goalbig .chip.sel{background:#fff; color:var(--acc-deep); border-color:#fff;}
 input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:8px; border-radius:9px; background:linear-gradient(90deg,#ff9f43,#ffd23d); outline:none; margin:14px 0 6px;}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:26px; height:26px; border-radius:50%; background:#fff; border:3px solid #ff9f43; box-shadow:0 2px 6px rgba(0,0,0,.18);}
 input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; background:#fff; border:3px solid #ff9f43;}
@@ -1381,10 +1390,7 @@ body.reordering #progOverview{display:none}
     <div class="card goalbig" style="margin-top:14px">
       <div class="glabel">What to eat daily</div>
       <div class="gnum"><span id="goalTotal">3000</span> <small>kcal</small></div>
-      <div class="gsub" id="goalSub"></div>
-      <div class="gsub" id="gainProj" style="font-weight:700"></div>
-      <div class="gsub" id="goalSrc" style="margin-top:6px"></div>
-      <div style="border-top:1px solid var(--line); margin-top:14px; padding-top:12px">
+      <div style="border-top:1px solid rgba(255,255,255,.25); margin-top:14px; padding-top:12px">
         <div class="flabel" style="margin:0 0 10px">Gain rate</div>
         <div class="chips" id="goalMode">
           <button class="chip" data-r="0">Maintain</button>
@@ -1393,11 +1399,6 @@ body.reordering #progOverview{display:none}
           <button class="chip" data-r="1.5">+1.5 lb/wk</button>
         </div>
       </div>
-    </div>
-    <div class="secttl">The math</div>
-    <div class="card">
-      <div class="gsub" id="formulaEq" style="margin:0 0 8px"></div>
-      <div id="formulaTable"></div>
     </div>
     <div class="secttl">Macros</div>
     <div class="card">
@@ -1436,18 +1437,21 @@ body.reordering #progOverview{display:none}
         <button class="chip" data-k="very" title="Very Active: intense exercise 6-7 times/week">Very active</button>
         <button class="chip" data-k="extra" title="Extra Active: very intense exercise daily, or physical job">Extra active</button>
       </div>
+      <div style="border-top:1px solid var(--line); margin-top:14px; padding-top:12px">
+        <div class="flabel" style="margin:0 0 6px">The math — BMR × activity</div>
+        <div class="gsub" id="formulaEq" style="margin:0 0 8px"></div>
+        <div id="formulaTable"></div>
+      </div>
     </div>
 <div class="gsec" id="gsecWater">
       <div class="ghead"><span>Water</span><b class="gval" id="waterHeadVal"></b><span class="gchev">›</span></div>
       <div class="gbody">
         <div class="card">
-          <div class="fhead"><span class="flabel" style="color:var(--ink);font-size:16px">Daily target</span><span class="chips" id="waterMode" style="margin:0"><button class="chip" data-w="auto">Auto</button><button class="chip" data-w="8">8</button><button class="chip" data-w="10">10</button><button class="chip" data-w="12">12</button><button class="chip" data-w="14">14</button></span></div>
-          <div class="cfrow"><span>Custom <span class="ph">(glasses, 0 = Auto)</span></span><input id="waterCustom" type="number" inputmode="numeric" style="width:84px"></div>
+          <div class="cfrow" style="border:0"><span>Daily target</span><b id="waterAutoVal">Auto</b></div>
         </div>
-        <div class="rangenote" id="waterBreak"></div>
       </div>
     </div>
-<button class="bigbtn" id="goalsDone">Calculate &amp; Save</button>
+    <button class="bigbtn" id="goalsDone">Calculate &amp; Save</button>
   </section>
 
 <!-- PROGRESS -->
@@ -2427,7 +2431,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.21-c";
+const APP_VERSION = "2026.10.21-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2911,7 +2915,7 @@ function dayHasXW(ds){
    (the old "+2 glasses on creatine" bump is retired). */
 function waterCalc(ds){
   const g = S.goals;
-  if(g.water>0) return {target:g.water, manual:true};
+  /* Water is always Auto (2026.10.21-d, Jay) — no manual target anymore. */
   if(!(g.maintenance>0)) return {target:0, manual:false, tdee:0, perKcal:0, xw:dayHasXW(ds), tier:"—", unset:true}; /* blank slate: no phantom fallback */
   const tdee = g.maintenance;
   const pal = actPAL(g.profile);
@@ -6523,6 +6527,7 @@ if(!flagGet().imgDedup){
 function paintGainProj(){
   const s = S.goals.surplus>0 ? S.goals.surplus : 0;
   const el = document.getElementById("gainProj");
+  if(!el) return; /* 2026.10.21-d: the projection moved behind the info button */
   if(s <= 0){ el.textContent = S.goals.maintenance>0 ? "At maintenance" : ""; return; }
   const lbWk = s*7/3500; /* 3500 kcal/lb heuristic */
   el.textContent = "≈ +"+wDisp(lbWk).toFixed(2)+" "+wUnit()+"/week at this surplus";
@@ -6823,13 +6828,7 @@ function paintAdaptive(){
   /* FORMULA LAW (2026.10.21-b): this line used to report the learned
      estimate's evidence. The goal is now the formula itself, so it shows the
      formula's inputs — the same numbers as the math table below it. */
-  const el = document.getElementById("goalSrc"); if(!el) return;
   const g = S.goals, fg = g.formula || formulaGoal();
-  if(!fg){
-    el.textContent = "Add your stats below to calculate your goal.";
-  } else {
-    el.textContent = "BMR " + fg.bmr.toLocaleString() + " × " + fg.pal + " (" + fg.tierLabel + ") · at " + (+fg.weightLb).toLocaleString() + " lb";
-  }
   paintFormulaTable(fg);
 }
 function paintFormulaTable(fg){
@@ -6878,6 +6877,18 @@ function syncWeightFromLog(newLb, dateStr){
 /* ============ GOALS: collapsible sections + info buttons ============ */
 /* Goals section explainers shown behind the ⓘ buttons */
 function infoContent(k){
+  if(k==="goaldetail"){
+    const g = S.goals, fg = g.formula || formulaGoal(), tot = goalTotal();
+    if(!fg || !(tot>0)) return {t:"Your calorie goal", b:`<div class="irow">Add your sex, age, height and weight in <b>Your stats</b> and your goal is calculated from them — never from your food log.</div>`};
+    const s2 = g.surplus>0 ? g.surplus : 0;
+    const proj = s2>0 ? "\u2248 +" + (s2*7/3500).toFixed(2) + " lb/week at this surplus" : "At maintenance — no surplus";
+    return {t:"Your calorie goal", b:
+      `<div class="irow"><b>Maintenance:</b> ${Math.round(g.maintenance).toLocaleString()} kcal</div>
+       <div class="irow"><b>Surplus:</b> +${Math.round(s2).toLocaleString()} kcal</div>
+       <div class="irow"><b>Daily goal:</b> ${Math.round(tot).toLocaleString()} kcal \u00b7 ${proj}</div>
+       <div class="irow"><b>How:</b> BMR ${fg.bmr.toLocaleString()} \u00d7 ${fg.pal} (${fg.tierLabel}) at ${(+fg.weightLb).toLocaleString()} lb \u2014 ${fg.eq}.</div>
+       <div class="irow">Your food log never moves this number. It changes only when your weight or stats change.</div>`};
+  }
   if(k==="athlete" || k==="engine") return {t:"How your number works", b:
     `<div class="irow"><b>Learned, with a formula check.</b> Your maintenance is calculated from your own data: what you logged eating over the last ~21 days, minus your weight trend x 500 (energy balance — gaining means you ate above maintenance, losing means below). A Mifflin-St Jeor formula check then guards it: if the learned number ever falls below your sedentary floor (BMR × 1.2 for your stats), the floor is applied instead and the check-in line says so — a learned number that low is a logging/trend artefact, not a metabolism.</div>
      <div class="irow"><b>No number without data.</b> Until your log has ~10 complete days and your weigh-ins span ~10 days, no daily number is presented at all — nothing stands in for your data.</div>
@@ -6906,7 +6917,7 @@ function infoContent(k){
     const w = waterCalc();
     if(w.unset) return {t:"Water target", b:
     `<div class="irow"><b>Auto</b> needs your maintenance first — it is calculated from your stats on the Calorie Goal page.</div>
-     <div class="irow">Or type a manual target below and it takes over immediately.</div>`};
+`};
     const pk = w.perKcal.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
     return {t:"Water target", b:
     `<div class="irow"><b>Auto</b> builds your target from maintenance: <b>${w.target*8} oz (${w.target} glasses)</b> = ${Math.round(w.tdee).toLocaleString()} kcal × ${w.tier} activity at ${pk} mL/kcal.</div>
@@ -7074,7 +7085,7 @@ document.getElementById("infoBack").onclick = ()=>showView(viewReturn);
 document.getElementById("diaryInfo").onclick = ()=>gotoInfoCat("diary");
 document.getElementById("analysisInfo").onclick = ()=>gotoInfoCat("diary");
 document.getElementById("progressInfo").onclick = ()=>gotoInfoCat("progress");
-document.getElementById("goalsInfo").onclick = ()=>gotoInfoCat("goals");
+document.getElementById("goalsInfo").onclick = ()=>openInfo("goaldetail");
 document.getElementById("energyInfo").onclick = ()=>openInfo("energy");
 document.getElementById("snapInfo").onclick = ()=>openInfo("snapshots");
 document.getElementById("medalCaseInfo").onclick = ()=>gotoInfoCat("medals");
@@ -7659,31 +7670,13 @@ document.getElementById("pPhotoFile").onchange = e=>{
   img.src = url;
 };
 /* ============ WATER TARGET (settings UI) ============ */
-function waterBreakdown(){
-  const w = waterCalc();
-  if(w.manual) return "Manual: "+(w.target*8)+" oz ("+w.target+" glasses).";
-  if(w.unset) return "Auto needs your stats first.";
-  return "Auto: "+(w.target*8)+" oz ("+w.target+" glasses) — maintenance × activity."+(w.xw?" +16 oz for an extra-water supplement.":"");
-}
 function paintWater(){
-  const g = S.goals;
-  document.querySelectorAll("#waterMode .chip").forEach(c=>{
-    const w = c.dataset.w;
-    c.classList.toggle("sel", (w==="auto" && !(g.water>0)) || (+w===g.water));
-  });
-  const wc = document.getElementById("waterCustom");
-  if(document.activeElement!==wc) wc.value = g.water>0 ? g.water : "";
-  document.getElementById("waterBreak").textContent = waterBreakdown();
-  document.getElementById("waterHeadVal").textContent = g.water>0 ? g.water+" glasses" : "Auto";
+  const w = waterCalc();
+  const hv = document.getElementById("waterHeadVal");
+  if(hv) hv.textContent = "Auto";
+  const av = document.getElementById("waterAutoVal");
+  if(av) av.textContent = w.unset ? "Auto · add your stats" : "Auto · " + (w.target*8) + " oz (" + w.target + " glasses)";
 }
-document.querySelectorAll("#waterMode .chip").forEach(c=>c.onclick=()=>{
-  S.goals.water = c.dataset.w==="auto" ? 0 : +c.dataset.w;
-  save(); paintWater(); renderDiary(); renderSettings();
-});
-document.getElementById("waterCustom").addEventListener("change", e=>{
-  const n = Math.round(parseFloat(e.target.value)||0);
-  if(n>=0 && n<=30){ S.goals.water = n; save(); paintWater(); renderDiary(); renderSettings(); }
-});
 /* Macro split steppers (2026.10.14-i): % of the goal, GymGeek-style. The
    percentages shown are always derived from the stored grams, so the tiles,
    the segbar, and the steppers can never disagree. */
@@ -7715,7 +7708,6 @@ document.getElementById("splitReset").onclick = ()=>{
 function renderGoals(){
   const g = S.goals, tot = goalTotal();
   document.getElementById("goalTotal").textContent = tot>0 ? Math.round(tot).toLocaleString() : "—";
-  document.getElementById("goalSub").textContent = tot>0 ? (Math.round(g.maintenance).toLocaleString()+" maintenance + "+Math.round(g.surplus>0?g.surplus:0).toLocaleString()+" surplus") : "No number yet — add your stats below to calculate it";
   document.getElementById("gmCg").textContent = Math.round(g.carbs||0).toLocaleString();
   document.getElementById("gmPg").textContent = Math.round(g.protein||0).toLocaleString();
   document.getElementById("gmFg").textContent = Math.round(g.fat||0).toLocaleString();
