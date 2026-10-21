@@ -2431,7 +2431,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.10.21-d";
+const APP_VERSION = "2026.10.21-e";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2447,6 +2447,10 @@ function load(){
   let raw = null;
   try{ raw = localStorage.getItem(KEY); }catch(e){}
   try { const s = JSON.parse(raw); if (s && s.goals) {
+/* 2026.10.21-e (audit): legacy numeric activity factor -> tier key, BEFORE the profile
+   default-fill below stamps activityKey:"" and makes migration impossible. Map matches
+   ACT_TIERS exactly (the old post-fill migration was unreachable AND shifted by a tier). */
+const prA = s.goals.profile; if(prA && typeof prA.activity==="number" && !prA.activityKey){ const mA={1.2:"sedentary",1.375:"light",1.465:"moderate",1.55:"active",1.725:"very",1.9:"extra"}; prA.activityKey = mA[prA.activity]||"moderate"; delete prA.activity; }
 /* 2026.09.18-ak blank-slate reset: Jay asked for every goal, nutrient target, and profile/setting
    at zero like a new app. Runs once — his logged days, custom foods, weights, and training stay.
    The "ran once" flag lives in FLAG_KEY (not inside the state) so a full-storage save failure
@@ -2454,8 +2458,8 @@ function load(){
 if(s.zeroReset) flagSet("zeroReset",1);
 delete s.zeroReset;
 delete s.packPoints; delete s.cards; delete s.packStats; /* pack shop removed 2026.09.18-ax */
-if(!flagGet().zeroReset){ s.goals = defGoals(); flagSet("zeroReset",1); }
-else { const dg = defGoals(); for(const k in dg) if(s.goals[k]===undefined) s.goals[k]=dg[k]; const dp = defProfile(); if(!s.goals.profile) s.goals.profile = dp; else for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; }
+if(!flagGet().zeroReset){ if(!s.zeroResetDone) s.goals = defGoals(); s.zeroResetDone = 1; flagSet("zeroReset",1); }
+else { s.zeroResetDone = 1; const dg = defGoals(); for(const k in dg) if(s.goals[k]===undefined) s.goals[k]=dg[k]; const dp = defProfile(); if(!s.goals.profile) s.goals.profile = dp; else for(const k in dp) if(s.goals.profile[k]===undefined) s.goals.profile[k]=dp[k]; }
 delete s.goals.cal;
 /* migrate legacy numeric activity factor to tier key */
 if(s.goals.profile.activityKey===undefined){ const m={1.2:"sedentary",1.375:"light",1.55:"moderate",1.725:"active",1.9:"very"}; s.goals.profile.activityKey = m[s.goals.profile.activity]||"moderate"; delete s.goals.profile.activity; } if(!s.goals.mode) s.goals.mode = "custom"; if(!s.goals.waterV){ s.goals.water = 0; s.goals.waterV = 1; } s.favorites = (s.favorites||[]).filter(n=>n!=="CAVA bowl, dbl chicken"); if(!s.training) s.training = {sched:{}, done:{}, deloads:{}}; if(!s.training.deloads) s.training.deloads = {}; if(!s.profile) s.profile = {name:DEFAULT_PROFILE.name, img:DEFAULT_PROFILE.img, theme:DEFAULT_PROFILE.theme};
@@ -2485,9 +2489,10 @@ else { if(!/^#[0-9a-fA-F]{6}$/.test(s.profile.theme)) s.profile.theme = DEFAULT_
      totals/tired-model loops that read e.t / e.cal unguarded. */
   Object.values(s.days||{}).forEach(function(d){ if(!d||!d.meals) return; MEALS.forEach(function(m){ if(Array.isArray(d.meals[m])) d.meals[m] = d.meals[m].filter(function(e){ return !!e; }); }); });
   return s; } } catch(e){ corruptBoot = (raw!==null && raw!==""); corruptRaw = raw||""; }
+  if(raw && String(raw).trim() && String(raw).trim()!=="null" && !corruptBoot){ corruptBoot = true; corruptRaw = raw; } /* 2026.10.21-e (audit): valid JSON without goals is damage, not a fresh install — stash + snapshot-restore it like a parse failure */
   flagSet("zeroReset",1); /* fresh boot / unreadable state: nothing to reset, mark it done */
   freshBoot = true; /* boot code below will try restoring seed-data.json */
-  return {days:{}, customFoods:[], favorites:[], weights:[], pmWeights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:DEFAULT_PROFILE.name, img:DEFAULT_PROFILE.img, theme:DEFAULT_PROFILE.theme, photos:DEFAULT_PHOTOS.map(p=>({d:p.d,img:p.img}))}, bottles:DEFAULT_BOTTLES.map(b=>({id:b.id, name:b.name, oz:b.oz, img:b.img})), waterV2:1, recipes:[], mealTimes:{breakfast:[], lunch:[], dinner:[], snacks:[]}};
+  return {zeroResetDone:1, days:{}, customFoods:[], favorites:[], weights:[], pmWeights:[], goals:defGoals(), training:{sched:{}, done:{}, deloads:{}}, profile:{name:DEFAULT_PROFILE.name, img:DEFAULT_PROFILE.img, theme:DEFAULT_PROFILE.theme, photos:DEFAULT_PHOTOS.map(p=>({d:p.d,img:p.img}))}, bottles:DEFAULT_BOTTLES.map(b=>({id:b.id, name:b.name, oz:b.oz, img:b.img})), waterV2:1, recipes:[], mealTimes:{breakfast:[], lunch:[], dinner:[], snacks:[]}};
 }
 let S = load();
 /* 2026.10.06-c: seed streaks once — nicotine last vaped 2026-10-05 (Jay's actual last day);
@@ -2804,7 +2809,7 @@ function totals(k){
   MEALS.forEach(m => (d.meals[m]||[]).forEach(e=>{ if(!e) return; t.cal+=+e.cal||0; t.p+=+e.p||0; t.c+=+e.c||0; t.f+=+e.f||0; })); /* 2026.10.09-h: NaN guard — one bad entry must not poison a whole day */
   return t;
 }
-const mealCals = k => { const d = S.days[k] || emptyDay(); const o={}; MEALS.forEach(m=>o[m]=(d.meals[m]||[]).reduce((a,e)=>a+e.cal,0)); return o; };
+const mealCals = k => { const d = S.days[k] || emptyDay(); const o={}; MEALS.forEach(m=>o[m]=(d.meals[m]||[]).reduce((a,e)=>a+(+e.cal||0),0)); return o; }; /* 2026.10.21-e (audit): same NaN guard totals() has */
 const r1 = n => Math.round(n*10)/10;
 const barW = (v,goal) => (goal>0 ? Math.min(v/goal*100,100) : 0)+"%"; /* never NaN when a goal is 0 */
 function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
@@ -3036,7 +3041,7 @@ function renderDiary(){
   const mh = $("meals"); mh.innerHTML = "";
   MEALS.forEach((m,mi) => {
     const items = d.meals[m]||[];
-    const mc = items.reduce((a,e)=>a+e.cal,0);
+    const mc = items.reduce((a,e)=>a+(+e.cal||0),0); /* 2026.10.21-e (audit): NaN guard, matches totals() */
     const mp = items.reduce((a,e)=>a+(e.p||0),0); /* per-meal protein subtotal (2026.09.24-u) */
     let html = `<div class="mrow${mi===MEALS.length-1 && !items.length ? "" : " noborder"}"><span class="mico" style="background:${MEAL_TINT[m]}">${MEAL_ICON[m]}</span><span class="mname">${MEAL_LABEL[m]}</span><span class="mkcal">${Math.round(mc)} kcal${mp>0.5 ? " · "+Math.round(mp)+"g P" : ""}</span><button class="mcopy" data-copy="${m}" aria-label="Copy ${MEAL_LABEL[m]} from another day">⧉</button><button class="madd" data-add="${m}" aria-label="Add to ${MEAL_LABEL[m]}">+</button></div>`;
     html += items.length ? items.map(e=>{ const im = entryImg(e);
@@ -3078,7 +3083,7 @@ function renderDiary(){
   un.onclick = ()=>{ const dd=day(), h=dd.waterHist||[]; if(h.length){ const last=h.pop(); dd.waterOz=Math.max(0,Math.round(((dd.waterOz||0)-last)*10)/10); save(); renderDiary(); } };
   $("bottleMgr").onclick = openBottleSheet;
   const wn = $("waterNote");
-  const wt = (!(S.goals.water>0) && !(wtOz>0)) ? "No auto target yet — set your maintenance in Goals › Profile, or pick a manual target in Goals › Water." : "";
+  const wt = (!(S.goals.water>0) && !(wtOz>0)) ? "No water target yet — add your stats in Calorie Goal › Your stats and it sets itself automatically." : ""; /* 2026.10.21-e: water is always Auto now; the old text pointed at a removed manual control */
   wn.textContent = wt; wn.style.display = wt ? "" : "none"; /* explainer lives in the ⓘ sheet */
   /* close-day button: today only, reflects closed state */
   const cdb = $("closeDayBtn");
@@ -3946,15 +3951,15 @@ function fiberTarget(){ const ct = (S.goals.nutrTargets||{})["Fiber"]; if(ct && 
    FDA Daily Values are label values (2016 table), not personalized goals.
    Potassium: NASEM 2019 adequate intake 3,400 mg/d men / 2,600 mg/d women —
    the label DV is still 4,700 mg (set from the older AI), shown for reference. */
-function potassiumTarget(){ const ct = (S.goals.nutrTargets||{})["Potassium"]; if(ct && ct.val>0) return ct.val; return S.goals.profile.sex==="f" ? 2600 : 3400; }
+function potassiumTarget(){ const ct = (S.goals.nutrTargets||{})["Potassium"]; if(ct && ct.val>0) return ct.val; const sx = String((S.goals.profile||{}).sex||"").toLowerCase(); return (sx==="f" || sx==="female") ? 2600 : 3400; }
 /* Profile-based nutrient targets (2026.09.23-n): where the NIH/NASEM recommendation
    depends on sex/age, the goal switches from the flat FDA Daily Value ("everyone")
    to his own RDA/AI once his profile has sex/age — it runs in the background, so the
    moment he adds his profile the goals re-preset themselves. Until then, everyone
    gets the standard Daily Value. Returns {val, label} or null. */
 function profileNutrTarget(disp){
-  const p = (S.goals||{}).profile || {}, sex = p.sex, age = +p.age || 0;
-  const M = sex==="m", F = sex==="f";
+  const p = (S.goals||{}).profile || {}, sex = String(p.sex||"").toLowerCase(), age = +p.age || 0;
+  const M = sex==="m" || sex==="male", F = sex==="f" || sex==="female"; /* 2026.10.21-e (audit): seed/export data uses "male" — RDA targets must not silently fall back to FDA defaults */
   switch(disp){
     case "Iron":
       if(M) return {val:8, label:"RDA · male"};
@@ -4360,10 +4365,10 @@ function renderSheetResults(q0){
     const seen = new Set(list.map(f=>f.n.toLowerCase()));
     const ver = VERIFIED_FOODS.filter(f=>f.n.toLowerCase().includes(q) && !seen.has(f.n.toLowerCase()) && !(S.deletedFoods||[]).includes(f.n));
     if(ver.length) verHtml = '<div class="flabel" style="margin:2px 0 6px">Verified foods</div>' +
-      ver.slice(0, 12).map(sheetRowHtml).join("") +
+      ver.slice(0, 12).map(f=>sheetRowHtml(f)).join("") /* 2026.10.21-e (audit): bare .map(sheetRowHtml) leaked the row index into the serving sub-line */ +
       (list.length ? '<div class="flabel" style="margin:10px 0 6px">Your foods</div>' : "");
   }
-  box.innerHTML = verHtml + list.slice(0, 40).map(sheetRowHtml).join("") ||
+  box.innerHTML = verHtml + list.slice(0, 40).map(f=>sheetRowHtml(f)).join("") ||
     '<div class="empty">No matches for &ldquo;'+esc(rawQ)+'&rdquo;.<br><button class="ghostbtn" id="emptyCreate" style="margin-top:10px">Create &ldquo;'+esc(rawQ)+'&rdquo; as new food</button></div>';
   const ec = document.getElementById("emptyCreate");
   if(ec) ec.onclick = ()=>openCustomFromSheet(rawQ);
@@ -4636,8 +4641,8 @@ document.getElementById("confirmAdd").onclick = ()=>{
   const ls = (S.lastServ = S.lastServ||{});
   const rec = ls[sheetFood.n] || (ls[sheetFood.n] = {});
   rec.q = dMode==="serv" ? dQty : round2(dServings()); rec.u = dMode==="serv" ? dUnit : "serv";
-  rec.presets = [{q:dQty, u:dUnit}]
-    .concat((rec.presets||[]).filter(p=>!(round2(p.q)===round2(dQty) && p.u===dUnit)))
+  rec.presets = [{q:rec.q, u:rec.u}] /* 2026.10.21-e (audit): presets must store servings like rec.q does — in kcal/protein modes dQty is a nutrient target, and saving it raw made a "500 servings" preset */
+    .concat((rec.presets||[]).filter(p=>!(round2(p.q)===round2(rec.q) && p.u===rec.u)))
     .slice(0, 3);
   save(); haptic();
   showSearch(); sheetBody().scrollTop = sheetReturnTop;
@@ -4646,7 +4651,7 @@ document.getElementById("confirmAdd").onclick = ()=>{
 /* ============ FOODS TAB ============ */
 function recentFoods(){
   const seen = new Map();
-  const days = Object.keys(S.days).sort().reverse().slice(0,14);
+  const days = Object.keys(S.days).sort().reverse().filter(k=>{ const dd = S.days[k]; return dd && dd.meals && MEALS.some(m=>(dd.meals[m]||[]).length); }).slice(0,14); /* 2026.10.21-e (audit): browsing dates auto-creates empty day records — they must not push real recents out of the window */
   days.forEach(k => MEALS.forEach(m => (S.days[k].meals[m]||[]).forEach(e => {
     if(!seen.has(e.n)){ const f = findFood(e.n); if(f) seen.set(e.n, f); }
   })));
@@ -5591,11 +5596,20 @@ function paintCalCheck(){
     wrap.style.display = "";
     btn.textContent = "Apply "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal/day";
     btn.onclick = ()=>{
-      S.goals.surplus = Math.max(0, Math.round((S.goals.surplus>0?S.goals.surplus:0) + suggest));
+      /* 2026.10.21-e (audit): this Apply could never stick — in rate/% modes the next
+         commitGoals() re-derived the surplus and silently reverted it, and lastAutoTune
+         was never written, so the 21-day cooldown above was dead. Now: switch to a
+         custom surplus (same "custom" mode switch as before, plus surplusMode), clamp
+         at 0, and stamp the tune date the cooldown reads. */
+      const eff = Math.max(0, Math.round((S.goals.surplus||0) + suggest));
+      const applied = eff - (S.goals.surplus||0);
+      S.goals.surplus = eff;
       S.goals.mode = "custom";
+      S.goals.surplusMode = "custom";
+      S.goals.lastAutoTune = todayStr();
       autoDeriveMacros();
-      S.goals.autoNote = "Calibration "+todayStr()+": surplus "+(suggest>0?"+":"−")+Math.abs(suggest)+" kcal based on your weight trend.";
-      save(); renderGoals(); renderProgress(); renderDiary();
+      S.goals.autoNote = "Calibration "+todayStr()+": surplus "+(applied>=0?"+":"−")+Math.abs(applied)+" kcal based on your weight trend."+(applied!==suggest ? " (Floored at 0 — a surplus can't go negative.)" : "");
+      save(); renderGoals(); renderProgress(); renderDiary(); paintCalCheck();
     };
   }
 }
@@ -6358,7 +6372,7 @@ function paintTrajectory(){
   const rCurVal = $("roadCurVal"), rNetVal = $("roadNetVal");
   const rGoalVal = $("roadGoalVal"), rGoalEta = $("roadGoalEta");
   const rRateVal = $("roadRateVal"), rToGoVal = $("roadToGoVal");
-  const rAdhVal = $("roadAdhVal"), rSummary = $("roadSummary"), rLine = $("roadLine");
+  const rAdhVal = $("roadAdhVal"), rSummary = $("roadSummary"); /* 2026.10.21-e (audit): roadLine element was removed when the ring replaced the bar — dead handle dropped */
   const rPill = $("roadPill");
 
   if(rStartVal && cur > 0){
@@ -6376,7 +6390,6 @@ function paintTrajectory(){
     const days = weekDays(0), calGoal = goalTotal();
     const hits = days.filter(x => x.logged && calGoal > 0 && x.cal >= calGoal * 0.9).length;
     if(rAdhVal) rAdhVal.textContent = hits + " / 7 days";
-    if(rLine) rLine.style.width = Math.min(100, Math.max(0, pct)) + "%";
     var wtRing = document.getElementById("wtRingFill"); /* 2026.10.14-i: progress ring replaces the straight bar */
     if(wtRing) wtRing.style.strokeDashoffset = (289 * (1 - Math.min(100, Math.max(0, pct)) / 100)).toFixed(1);
     if(rPill){
@@ -6603,7 +6616,7 @@ function renderGoalsProfile(){
    ≥ 60% of your own median day. Today is always excluded — unfinished by definition. */
 function completeDayCals(WIN, fromDs){
   WIN=WIN||28; const raw=[]; /* compact model passes 14; legacy callers keep 28 */
-  for(let i=WIN-1;i>=1;i--){ const ds=addDays(todayStr(),-i); if(fromDs && ds<fromDs) continue; if(isLocked(ds)) continue; const t=dayTotals(ds); if(t.foodLogged) raw.push(t.cal); }
+  for(let i=WIN;i>=1;i--){ const ds=addDays(todayStr(),-i); /* 2026.10.21-e (audit): was WIN-1 days for a WIN-day window; today stays excluded by design */ if(fromDs && ds<fromDs) continue; if(isLocked(ds)) continue; const t=dayTotals(ds); if(t.foodLogged) raw.push(t.cal); }
   const srt=raw.slice().sort((a,b)=>a-b), med=srt.length?srt[Math.floor(srt.length/2)]:0;
   const maint=S.goals.maintenance||0;
   const cals=[]; let partial=0;
@@ -6816,7 +6829,7 @@ function refreshAdaptive(){
   const last=g.adaptiveHist[g.adaptiveHist.length-1];
   if(!last||last.d!==todayStr()) g.adaptiveHist.push({d:todayStr(), v});
   if(g.adaptiveHist.length>26) g.adaptiveHist=g.adaptiveHist.slice(-26);
-  g.adTuneNote="Adaptive TDEE "+todayStr()+": maintenance set to "+v.toLocaleString()+" kcal from your trend.";
+  g.adTuneNote="Adaptive TDEE "+todayStr()+": estimate "+v.toLocaleString()+" kcal from your trend (info only — your Calorie Goal uses the profile formula)."; /* 2026.10.21-e (audit): refreshAdaptive no longer sets maintenance since the formula law */
   return prev==null||v!==prev;
 }
 function applyAdaptive(){
@@ -7473,7 +7486,7 @@ function dailyMedals(ds){
   const fam=id=>id.replace(/-\d+$/,"");
   bands.forEach((arr,bi)=>{ if(!arr.length) return;
     const base=(h+bi*0x9E3779B9)>>>0;
-    for(let t=0;t<arr.length;t++){ const m=arr[(base+t*0x85EBCA6B)%arr.length];
+    for(let t=0;t<arr.length;t++){ const m=arr[(base+t)%arr.length]; /* 2026.10.21-e (audit): the old multiplicative step could share a factor with the band length and visit only a subset — some days got 2 featured medals and an unreachable Crown */
       if(out.every(o=>fam(o.id)!==fam(m.id))){ out.push(m); break; } }
   });
   return out.slice(0,3);
@@ -7801,7 +7814,7 @@ document.getElementById("goalsDone").onclick = ()=>{
 };
 /* Typed values commit on every field change (blur/return), so nothing the user
    typed can ever be lost or silently reverted — Calculate & Save finalizes. */
-["pfAge","pfHtFt","pfHtIn","pfHtCm","pfWeight","pfFat"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); paintMaintNote(); }));
+["pfAge","pfHtFt","pfHtIn","pfHtCm","pfWeight","pfFat","pfWaist"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{ commitGoalsInputs(); save(); paintMaintNote(); })); /* 2026.10.21-e (audit): pfWaist was the only stats field with no instant commit */
 document.getElementById("goalsBack").onclick = ()=>{ commitGoalsInputs(); save(); showView(viewReturn); };
 
 /* ============ SETTINGS ============ */
@@ -7839,7 +7852,14 @@ document.getElementById("pfGoalsHero").onclick = ()=>{ renderGoals(); showView("
 document.getElementById("settingsRow").onclick = ()=>showView("settings");
 document.getElementById("settingsBack").onclick = ()=>showView("profile");
 document.getElementById("exportBtn").onclick = ()=>{
-  const blob = new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
+  /* 2026.10.21-e (audit): quit timelines, locked days and flags live OUTSIDE S in their
+     own localStorage keys and were silently missing from backups — a phone switch lost
+     the quit streaks for good. They now ride along in a __side envelope (old backups
+     without it still import fine). Snapshots stay on-device by design. */
+  const side = {};
+  try{ for(let i=0;i<localStorage.length;i++){ const k = localStorage.key(i);
+    if(k && (k.indexOf("fuel.quit.")===0 || k==="fuel.lockedDays.v1" || k==="fuel.flags.v1" || k==="fuel.foodSort.v1" || k==="fuel_ncat_collapsed" || k==="fuel_goals_secs")) side[k] = localStorage.getItem(k); } }catch(e){}
+  const blob = new Blob([JSON.stringify(Object.assign({}, S, {__side: side}),null,2)],{type:"application/json"});
   const a = document.createElement("a"); a.href=URL.createObjectURL(blob);
   a.download="fuel-data.json"; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
@@ -7863,12 +7883,9 @@ document.getElementById("importFile").onchange = e=>{
       const obj = JSON.parse(rd.result);
       if(!obj || typeof obj!=="object" || !obj.goals || typeof obj.goals!=="object") throw new Error("bad");
       if(!confirm("Replace everything in the app with this backup? This can't be undone.")) return;
-      S = obj;
-      if(!S.profile) S.profile = {name:"", img:""};
-      if(!S.training) S.training = {sched:{}, done:{}};
-      if(!S.mealTimes) S.mealTimes = {breakfast:[], lunch:[], dinner:[], snacks:[]};
-      ["breakfast","lunch","dinner","snacks"].forEach(m=>{ if(!Array.isArray(S.mealTimes[m])) S.mealTimes[m]=[]; });
-      if(!S.dayTypeOv || typeof S.dayTypeOv!=="object") S.dayTypeOv = {};
+      if(obj.__side && typeof obj.__side==="object"){ try{ for(const k in obj.__side){ if(typeof obj.__side[k]==="string") localStorage.setItem(k, obj.__side[k]); } }catch(e){} }
+      delete obj.__side;
+      adoptState(obj); /* 2026.10.21-e (audit): full load() normalization instead of four ad-hoc patches — malformed inner shapes can no longer boot-loop the app */
       /* 2026.09.27-c: pre-split backup holds untagged numbers the learners now
          ignore — re-tag them from the restored entry timestamps instead of
          dropping to "still learning" */
@@ -7904,7 +7921,7 @@ document.getElementById("wipeBtn").onclick = ()=>{
 let curView = "diary";
 let viewReturn = "diary"; /* 2026.10.11-d: subview backs return to the tab you came from */
 const MAIN_TABS = ["diary","progress","foods","profile"];
-const SUB_VIEWS = ["quit","medals","info","goals","snaps","worksched","analysis","calendar","settings"];
+const SUB_VIEWS = ["quit","medals","info","goals","snaps","worksched","analysis","settings"]; /* 2026.10.21-e (audit): "calendar" had no view section — a stray showView("calendar") would have blanked the screen */
 /* 2026.09.22-o: body no longer scrolls — the active .view owns the scroll, so
    scroll helpers target it instead of window. */
 function activeViewEl(){ return document.querySelector(".view.active"); }
@@ -7917,7 +7934,7 @@ function showView(v){
   curView = v;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active", x.id==="view-"+v));
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",
-    t.dataset.v===v || ((v==="analysis"||v==="calendar"||v==="goals"||v==="medals"||v==="snaps"||v==="worksched"||v==="quit"||v==="info"||v==="settings")&&t.dataset.v==="diary")));
+    t.dataset.v===v || ((v==="analysis"||v==="goals"||v==="medals"||v==="snaps"||v==="worksched"||v==="quit"||v==="info"||v==="settings")&&t.dataset.v==="diary")));
   if(v==="progress"){ weekOffset = 0; renderProgress(); } /* always open on the current 7 days 2026.09.21-j */
   if(v==="profile") renderProfile();
   if(v==="settings") renderSettings();
@@ -8262,30 +8279,54 @@ applyTheme(themeColor());
 let eraseBlocked = false;
 try{ eraseBlocked = localStorage.getItem("fuel.erased")==="1"; }catch(e){} /* 2026.10.09-h: was sessionStorage — erase must hold across tabs/sessions */
 let bootNote = "";
+/* 2026.10.21-e (audit): wholesale state replacements (snapshot / seed / import) used to
+   bypass load() entirely — no default-filling, no water migration, no null purge — so an
+   older backup shape reached renderers raw. adoptState writes the object, then reloads it
+   through load() so every restore gets the full normalization, and re-seeds streaks. */
+/* 2026.10.21-e (audit): on a fresh boot the autopilot's first save() persists the blank
+   slate before the seed fetch resolves. If that fetch fails (offline reinstall), remove
+   the still-blank save so the NEXT boot is still "fresh" and seed restore can retry —
+   otherwise the backup is stranded forever. Only removes a provably blank state. */
+function clearBlankBootSave(){
+  try{ const cur = JSON.parse(localStorage.getItem(KEY)||"null");
+    if(cur && cur.goals && !(cur.goals.profile||{}).weightLb && !Object.keys(cur.days||{}).length) localStorage.removeItem(KEY);
+  }catch(e){}
+}
+function adoptState(obj){
+  try{ localStorage.setItem(KEY, JSON.stringify(obj)); }catch(e){}
+  S = load();
+  if(!S.streaks) S.streaks = {};
+  if(!S.streaks.nicotine) S.streaks.nicotine = { lastUse:"2026-10-05" };
+  if(!S.streaks.alcohol) S.streaks.alcohol = { lastUse:null };
+  save();
+}
 if(freshBoot && !eraseBlocked && typeof fetch==="function"){
   if(corruptBoot){
     /* 2026.10.09-h: fuel.v1 existed but would not parse — never silently swap in the
        stale Sept-22 seed. Stash the damaged bytes, try daily snapshots newest-first. */
-    try{ localStorage.setItem("fuel.corrupt."+Date.now(), String(corruptRaw).slice(0,300000)); }catch(e){}
+    try{ /* 2026.10.21-e (audit): cap the stash — unbounded corrupt backups eat the same quota the app saves into */
+      const cks = []; for(let ci=0; ci<localStorage.length; ci++){ const ck = localStorage.key(ci); if(ck && ck.indexOf("fuel.corrupt.")===0) cks.push(ck); }
+      cks.sort(); while(cks.length>=2){ try{ localStorage.removeItem(cks.shift()); }catch(e){} }
+      localStorage.setItem("fuel.corrupt."+Date.now(), String(corruptRaw).slice(0,300000)); }catch(e){}
     let restored = false;
     listSnapshots().forEach(function(k){
       if(restored) return;
       try{ const st = JSON.parse(localStorage.getItem(k));
-        if(st && st.goals){ S = st; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
+        if(st && st.goals){ adoptState(st);
           bootNote = "Your saved data was damaged — restored from the "+k.slice(SNAP_PRE.length)+" backup. If anything looks off, check Settings → Snapshots.";
           restored = true; } }catch(e){}
     });
     if(restored){ renderAll(); showSaveWarn(bootNote, true); }
     else{
       fetch("seed-data.json",{cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(seed){
-        if(seed && seed.goals){ S = seed; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
+        if(seed && seed.goals){ adoptState(seed);
           bootNote = "Your saved data was damaged and no backup was found — restored from the Sept 22 export. Recent entries may be missing."; }
-      }).catch(function(){}).then(function(){ renderAll(); if(bootNote) showSaveWarn(bootNote, true); });
+      }).catch(function(){ clearBlankBootSave(); }).then(function(){ renderAll(); if(bootNote) showSaveWarn(bootNote, true); });
     }
   }else{
     fetch("seed-data.json",{cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(seed){
-      if(seed && seed.goals){ S = seed; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
-    }).catch(function(){}).then(function(){ renderAll(); });
+      if(seed && seed.goals){ adoptState(seed); }
+    }).catch(function(){ clearBlankBootSave(); }).then(function(){ renderAll(); });
   }
 }else renderAll();
 /* 2026.10.09-h: cross-tab guard — two tabs silently overwrite each other (last-writer-wins). Warn instead. */
@@ -8493,7 +8534,8 @@ function autoApplyProp(id){
   if(!p || p.done) return;
   p.done = 1;
   if(p.kind === "stall" || p.kind === "fast"){
-    g.surplus = p.to; autoDeriveMacros();
+    g.surplus = p.to; g.mode = "custom"; g.surplusMode = "custom"; /* 2026.10.21-e (audit): without this, the next commitGoals() re-derived the surplus from the mode and the applied proposal silently reverted */
+    autoDeriveMacros();
     autoLog("Goal → " + Math.round(goalTotal()).toLocaleString() + " kcal (" + (p.kind === "stall" ? "+150" : "−100") + " — your call).");
   }
   save(); renderAll();
