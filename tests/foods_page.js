@@ -73,15 +73,17 @@ const SEED = `
   const rows = [...w.document.querySelectorAll("#sheetResults .arow2")].map(r => r.dataset.n);
   const kinds = w.eval(`(function(){ return ${JSON.stringify(rows)}.map(n => { const f = findFood(n); return f ? f.kind : "?"; }); })()`);
   ok(rows.length >= 2 && kinds.every(k => k === "supp"), "sheet supps tab lists only supplements (" + rows.length + " rows)");
-  console.log("Add sheet: removed built-ins stay removed (2026.10.14-g)");
-  const defName = w.eval(`FOODS[0].n`);
+  console.log("Add sheet: removed built-ins stay removed (2026.10.14-g; repointed 2026.11.01-b — the personal FOODS library is gone, built-ins now means VERIFIED_FOODS, which surface via search)");
+  const defName = w.eval(`VERIFIED_FOODS[0].n`);
   [...w.document.querySelectorAll("#sheetTabs .segtab")].find(t => t.dataset.t === "custom").click(); await tick();
+  w.eval(`renderSheetResults("big mac");`);
+  await tick();
   let allRows = [...w.document.querySelectorAll("#sheetResults .arow2")].map(r => r.dataset.n);
-  ok(allRows.includes(defName), "built-in shows in All before removal");
-  w.eval(`S.deletedFoods = [${JSON.stringify(defName)}]; renderSheetResults("");`);
+  ok(allRows.includes(defName), "built-in shows in search before removal");
+  w.eval(`S.deletedFoods = [${JSON.stringify(defName)}]; renderSheetResults("big mac");`);
   await tick();
   allRows = [...w.document.querySelectorAll("#sheetResults .arow2")].map(r => r.dataset.n);
-  ok(!allRows.includes(defName), "removed built-in gone from All");
+  ok(!allRows.includes(defName), "removed built-in gone from search");
   ok(w.eval(`findFood(${JSON.stringify(defName)})`) === null, "findFood no longer resolves the removed built-in");
 
   ok(errors.length === 0, "no runtime errors (" + errors.join("; ") + ")");
