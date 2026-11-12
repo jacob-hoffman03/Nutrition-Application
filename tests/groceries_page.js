@@ -119,9 +119,23 @@ function baseState(){
     const saved = JSON.parse(w.localStorage.getItem("fuel.v1"));
     ok(saved.groceries && saved.groceries.length === 1 && saved.groceries[0].done === true, "list persists to storage");
     ev("renderSettings()");
-    ok(w.document.getElementById("grocRowVal").textContent === "All bought", "settings row reflects state");
+    ok(w.document.getElementById("grocRowVal").textContent === "All bought", "profile row reflects state");
+    ok(!!w.document.querySelector("#view-profile #grocRow") && !w.document.querySelector("#view-settings #grocRow"), "groceries entry sits on Profile, not Settings");
     ev("document.getElementById('grocClearDone').click()"); await tick();
     ok(ev("S.groceries.length") === 0, "clear checked empties bought items");
+    // predicted total: priced chicken x2 = $20; unpriced eggs flagged; done items leave "still to buy"
+    ev("addGroc('Chicken Breast', 2)"); ev("addGroc('Large Eggs', 1)"); await tick();
+    let priceTx = w.document.getElementById("grocPrice").textContent;
+    ok(priceTx.includes("Predicted total") && priceTx.includes("$20.00") && priceTx.includes("Still to buy $20.00") && priceTx.includes("1 item without a price"), "predicted total block: " + priceTx.trim().slice(0, 90));
+    ev("S.groceries.find(i=>i.n==='Chicken Breast').done = true; save(); renderGroceries();"); await tick();
+    priceTx = w.document.getElementById("grocPrice").textContent;
+    ok(priceTx.includes("$20.00") && priceTx.includes("Still to buy $0.00"), "checked items drop out of still-to-buy, total stays");
+    // navigation: Profile -> Groceries -> back to Profile
+    ev("showView('profile')"); await tick();
+    w.document.getElementById("grocRow").click(); await tick();
+    ok(w.document.getElementById("view-groceries").classList.contains("active"), "profile row opens groceries");
+    w.document.getElementById("grocBack").click(); await tick();
+    ok(w.document.getElementById("view-profile").classList.contains("active"), "back returns to profile");
     ok(w.__errs.length === 0, "no errors (" + w.__errs.join(";") + ")");
     w.close();
   }

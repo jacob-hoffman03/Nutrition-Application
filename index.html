@@ -1677,6 +1677,9 @@ body.reordering #progOverview{display:none}
       </div>
       <button class="pf-reorder" id="profReorderBtn" aria-label="Rearrange panels"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/><path d="m17 4 3 3-3 3"/></svg></button>
     </div>
+    <div class="card slim" style="margin-bottom:12px;">
+      <button class="srow" id="grocRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8h13l-1.2 11a2 2 0 0 1-2 1.8h-6.6a2 2 0 0 1-2-1.8L5.5 8z"/><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10"/></svg></span>Groceries</span><span class="sval"><b id="grocRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
+    </div>
     <button class="pfhero" id="pfGoalsHero">
       <span class="pfhero-chev">›</span>
       <span class="pfhero-lbl">Eat daily · <span id="pfHeroMode">—</span></span>
@@ -1707,10 +1710,6 @@ body.reordering #progOverview{display:none}
       <div style="width:44px"></div>
     </div>
 <div id="profSettings">
-    <div class="slabel">Shopping</div>
-    <div class="card slim" style="margin-top:6px;">
-      <button class="srow" id="grocRow"><span class="sleft"><span class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8h13l-1.2 11a2 2 0 0 1-2 1.8h-6.6a2 2 0 0 1-2-1.8L5.5 8z"/><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10"/></svg></span>Groceries</span><span class="sval"><b id="grocRowVal" style="color:var(--ink)"></b><span class="chev2">›</span></span></button>
-    </div>
     <div class="slabel">Personalize</div>
     <div class="card" style="margin-top:6px">
       <div class="pmeta" style="margin-bottom:2px"><input class="sname" id="sName" placeholder="Your name" autocomplete="off"></div>
@@ -1751,6 +1750,7 @@ body.reordering #progOverview{display:none}
       <div class="flabel" style="margin:0">This week's shop</div>
       <div class="hint" id="grocSummary" style="margin-top:4px"></div>
       <div class="gprog"><div class="gprogbar" id="grocProg" style="width:0%"></div></div>
+      <div id="grocPrice" style="margin-top:10px"></div>
       <div id="grocList"></div>
       <div style="display:flex; gap:10px; margin-top:12px">
         <button class="ghostbtn" id="grocClearDone" style="flex:1">Clear checked</button>
@@ -2482,7 +2482,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.11.12-a";
+const APP_VERSION = "2026.11.12-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -8042,8 +8042,18 @@ function renderGroceries(){
   const total = items.reduce((t, i) => { const f = grocFood(i.n); return t + ((f && f.pr > 0) ? f.pr * (i.qty || 1) : 0); }, 0);
   const sum = document.getElementById("grocSummary");
   if(sum) sum.textContent = items.length
-    ? done + " of " + items.length + " in the cart" + (total > 0 ? " · est. $" + total.toFixed(2) + " for priced items" : "")
+    ? done + " of " + items.length + " in the cart"
     : "Your list is empty — add foods below, or take a suggestion.";
+  const priceEl = document.getElementById("grocPrice");
+  if(priceEl){
+    if(!items.length) priceEl.innerHTML = "";
+    else if(total > 0){
+      const remaining = items.filter(i => !i.done).reduce((t, i) => { const f = grocFood(i.n); return t + ((f && f.pr > 0) ? f.pr * (i.qty || 1) : 0); }, 0);
+      const unpriced = items.filter(i => { const f = grocFood(i.n); return !(f && f.pr > 0); }).length;
+      priceEl.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:baseline"><span style="font-weight:700">Predicted total</span><b style="font-size:19px">$${total.toFixed(2)}</b></div>`
+        + `<div class="gsub">Still to buy $${remaining.toFixed(2)} · from saved package prices${unpriced ? " · " + unpriced + " item" + (unpriced > 1 ? "s" : "") + " without a price" : ""}</div>`;
+    } else priceEl.innerHTML = `<div class="gsub">Add a package price to a food and the list gets a predicted total.</div>`;
+  }
   const prog = document.getElementById("grocProg");
   if(prog) prog.style.width = items.length ? Math.round(done / items.length * 100) + "%" : "0%";
   if(!items.length) listEl.innerHTML = "";
@@ -8078,7 +8088,7 @@ if(grocSearchEl) grocSearchEl.addEventListener("input", renderGrocPick);
 document.getElementById("grocClearDone").onclick = () => { S.groceries = grocItems().filter(i => !i.done); save(); renderGroceries(); };
 document.getElementById("grocReset").onclick = () => { grocItems().forEach(i => i.done = false); save(); renderGroceries(); };
 document.getElementById("grocRow").onclick = () => showView("groceries");
-document.getElementById("grocBack").onclick = () => { renderSettings(); showView("settings"); };
+document.getElementById("grocBack").onclick = () => showView(viewReturn);
 document.getElementById("schedRow").onclick = ()=>{ wsSel = new Date().getDay(); showView("worksched"); };
 document.getElementById("wschedBack").onclick = ()=>showView(viewReturn);
 document.getElementById("wschedInfo").onclick = ()=>openInfo("schedule");
