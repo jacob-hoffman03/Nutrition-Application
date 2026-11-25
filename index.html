@@ -8507,7 +8507,10 @@ function paintSigned(root){
     tn.parentNode.replaceChild(sp, tn);
   });
 }
-function renderAll(){ renderDiary(); renderFoods(); renderProgress(); renderSettings(); applyProgLayout(); if(curView==="profile") renderProfile(); paintSigned(); }
+/* 2026.11.25-a: Progress is ~3/4 of a full render (17 of 23 ms with 5 months
+   of logs) and showView("progress") already re-renders it on open, so a full
+   render only repaints it while it is the screen being looked at. */
+function renderAll(){ renderDiary(); renderFoods(); if(curView==="progress") renderProgress(); renderSettings(); applyProgLayout(); if(curView==="profile") renderProfile(); paintSigned(); }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.v));
 /* Progress sub-tabs were removed in 2026.09.22-a: Progress is a single view whose
    weight circle opens the full-screen #wtDetail sheet. */
