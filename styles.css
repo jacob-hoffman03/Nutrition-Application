@@ -1259,3 +1259,48 @@ body.reordering #progOverview{display:none}
 .pf-streak .sgn-neg, .wtcircle .sgn-neg, .pg-duo .xrow .sgn-neg{color:#a4001f;}
 .progcard .sgn-pos, .bodycard .sgn-pos, .pfhero .sgn-pos, .goalbig .sgn-pos,
 .pf-streak .sgn-pos, .wtcircle .sgn-pos, .pg-duo .xrow .sgn-pos{color:#0b6b43;}
+
+/* ============ READABILITY, PASS 2 (2026.11.25-e) ============
+   Every text colour below measured under the 4.5 : 1 readability line
+   (3 : 1 for large/bold text) on its real background at iPhone size. */
+/* Nutrition Analysis: what you ate is the bold number; the target is grey */
+.macrow .mhead b i{color:var(--ink);}
+/* goal flag under the analysis ring (was orange, 2.5 : 1) — the intake card keeps its white */
+.arow .flagkc{color:#a3500a !important;}
+/* over-limit nutrient values and "Erase data" (light red, 2.8 : 1) */
+.nhead b i.lim{color:#c0262d;}
+.srow.danger{color:#c0262d;}
+/* "+630 SUR" on the blue intake card (green on blue, 2.1 : 1) */
+.progcard .flagsur.on{color:#fff !important;}
+/* Calorie Goal: kcal under the macro tiles and unit labels (1.8–2.4 : 1) */
+.m3 .mk, .m3 .mkcal{color:var(--muted);}
+.cfrow .ph{color:var(--muted);}
+/* selected chips (4.1 : 1) and unselected segment buttons (4.4 : 1) */
+.chip.sel{color:var(--acc-deep);}
+.segbtn, .wtseg button, .wrange button{color:#5c5c68;}
+.wtseg button.on, .wrange button.on{color:#fff;}
+.segbtn.on{color:var(--ink);}
+/* medal rarity counts (2.8–4.2 : 1) */
+.r-common{color:#4b5563;} .r-uncommon{color:#047857;} .r-legendary{color:#94500a;}
+/* groceries: the price summary wraps instead of cutting off */
+#grocPrice .gsub{white-space:normal; overflow:visible; text-overflow:clip;}
+
+/* ============ CHARTS (2026.11.25-e) ============ */
+/* bar columns: the bar has its own area so the goal line sits at the true height */
+.bars7 .bwrap{position:relative; flex:1 1 auto; width:100%; min-height:0; display:flex; align-items:flex-end; justify-content:center;}
+.bars7 .bwrap .bar{max-width:30px;}
+.bars7 .bgoal{position:absolute; left:-4px; right:-4px; height:0; border-top:2px dashed rgba(var(--acc-rgb),.6); pointer-events:none; z-index:1;}
+.bars7 .bcol.hit .bar{background:rgba(var(--acc-rgb),.42);}
+#dbBars.m-wtr .bcol.hit .bar{background:#8cc8f5;}
+.bars7 .bcol.over .bar{background:#f2a2a6;}
+.bkey{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:8px; font-size:11.5px; font-weight:600; color:var(--muted);}
+.bkey:empty{display:none;}
+.bkey span{display:inline-flex; align-items:center; gap:6px;}
+.bkey-line{display:inline-block; width:16px; height:0; border-top:2px dashed rgba(var(--acc-rgb),.6);}
+.bkey-sw{display:inline-block; width:10px; height:10px; border-radius:3px;}
+.bkey-sw.hit{background:rgba(var(--acc-rgb),.42);}
+.bkey-sw.over{background:#f2a2a6;}
+/* weight graph legend: keys on one line, the explanation underneath */
+.wlegend{gap:6px 12px;}
+.wlegend > span{white-space:nowrap;}
+.wlegend .wlg-note{flex-basis:100%; text-align:center; white-space:normal; font-weight:500;}

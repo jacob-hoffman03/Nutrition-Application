@@ -12,7 +12,7 @@
 <meta name="theme-color" content="#5b5bf0">
 <title>Fuel — Nutrition Tracker</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2714%27%20fill%3D%27white%27%2F%3E%3Cpolygon%20points%3D%278%2C8%2056%2C8%2056%2C17%2029%2C31%2056%2C31%2056%2C40%208%2C40%208%2C31%2035%2C17%208%2C17%27%20fill%3D%27black%27%2F%3E%3Ctext%20x%3D%2732%27%20y%3D%2754%27%20font-family%3D%27Arial%2Csans-serif%27%20font-weight%3D%27900%27%20font-size%3D%278%27%20text-anchor%3D%27middle%27%20fill%3D%27black%27%20textLength%3D%2748%27%20lengthAdjust%3D%27spacingAndGlyphs%27%3ENUTRITION%3C%2Ftext%3E%3C%2Fsvg%3E">
-<link rel="stylesheet" href="styles.css?v=2026.11.25-d">
+<link rel="stylesheet" href="styles.css?v=2026.11.25-f">
 </head>
 <body>
 <div id="app">
@@ -416,6 +416,7 @@
           <div class="wseg" id="wseg-cal">
             <div class="ana-top"><div><b id="anaTotal">0</b><span class="ana-unit">kcal</span><div class="ana-sub" id="anaAvg"></div></div><span class="wk-nav"><button id="pgWkPrev" aria-label="Previous week">‹</button><span class="ana-range" id="anaRange">Last 7 days</span><button id="pgWkNext" aria-label="Next week">›</button></span></div>
             <div class="bars7" id="bars7"></div>
+            <div class="bkey" id="bars7Key"></div>
             <div class="rangenote" id="trendChip" style="margin-top:8px"></div>
             <div class="chal">
               <div class="chal-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Goal days</div>
@@ -423,7 +424,7 @@
             </div>
           </div>
           <div class="wseg" id="wseg-mac" hidden>
-            <div class="mc-head"><span class="mc-legend"><i style="background:#8b8bf5"></i>Carbs<i style="background:#f5a623"></i>Protein<i style="background:#34c77b"></i>Fat</span><span class="mc-week" id="mcWeek">Weekly</span></div>
+            <div class="mc-head"><span class="mc-legend"><i style="background:#7e7ef2"></i>Carbs<i style="background:#12cfae"></i>Protein<i style="background:#fb6f84"></i>Fat</span><span class="mc-week" id="mcWeek">Weekly</span></div>
             <div class="mstack" id="macroStack"></div>
             <div class="mstack-lbls" id="macroStackLbls"></div>
           </div>
@@ -437,6 +438,7 @@
           </div>
           <div class="ana-top"><div><b id="dbTotal">0</b><span class="ana-unit" id="dbUnit">g</span><div class="ana-sub" id="dbAvg"></div></div><span class="wk-nav"><button id="dbPrev" aria-label="Previous week">‹</button><span class="ana-range" id="dbRange">Last 7 days</span><button id="dbNext" aria-label="Next week">›</button></span></div>
           <div class="bars7" id="dbBars"></div>
+          <div class="bkey" id="dbKey"></div>
           <div class="rangenote" id="dbNote" style="margin-top:8px"></div>
         </div><!-- /card dbcard -->
       </div><!-- /punit data-pid="week" -->
@@ -1005,10 +1007,10 @@
 <!-- STORAGE WARNING -->
 <div id="saveWarn" hidden></div>
 
-<script src="js/core.js?v=2026.11.25-d"></script>
-<script src="js/app.js?v=2026.11.25-d"></script>
-<script src="js/gestures.js?v=2026.11.25-d"></script>
-<script src="js/autopilot.js?v=2026.11.25-d"></script>
-<script src="js/boot.js?v=2026.11.25-d"></script>
+<script src="js/core.js?v=2026.11.25-f"></script>
+<script src="js/app.js?v=2026.11.25-f"></script>
+<script src="js/gestures.js?v=2026.11.25-f"></script>
+<script src="js/autopilot.js?v=2026.11.25-f"></script>
+<script src="js/boot.js?v=2026.11.25-f"></script>
 </body>
 </html>

@@ -1353,7 +1353,7 @@ function paintWtAnalysis(){
     return;
   }
   const bmi = w/(hIn*hIn)*703;
-  const cat = bmi<18.5 ? ["Underweight","#2f9df0","#e8f3fe"] : bmi<25 ? ["Healthy","#1e9e5a","#e6f6ec"] : bmi<30 ? ["Overweight","#d98a12","#fdf3e2"] : ["Obese","#e5484d","#fdecec"];
+  const cat = bmi<18.5 ? ["Underweight","#1767a8","#e8f3fe"] : bmi<25 ? ["Healthy","#146c3f","#e6f6ec"] : bmi<30 ? ["Overweight","#8f5200","#fdf3e2"] : ["Obese","#b42318","#fdecec"]; /* 2026.11.25-e: darker pill text, 4.5:1+ on its tint */
   bv.textContent = bmi.toFixed(1);
   pill.style.display = ""; pill.textContent = cat[0]; pill.style.color = cat[1]; pill.style.background = cat[2];
   mark.style.display = ""; mark.style.left = Math.min(100,Math.max(0,(bmi-14)/20*100)).toFixed(1)+"%";
@@ -1577,6 +1577,24 @@ function paintWtSets(){
   }
   box.innerHTML = lines;
 }
+/* Weight graph: tap anywhere to read the nearest morning weigh-in (date +
+   weight), tap the same spot again to hide it. 2026.11.25-e */
+function wChartTip(svg, e){
+  const t = svg._tip; if(!t || !t.pts.length) return;
+  const old = svg.querySelector("#wTip"); if(old) old.remove();
+  const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal;
+  const vx = (e.clientX - r.left) * (vb.width / r.width);
+  let best = t.pts[0]; t.pts.forEach(p => { if(Math.abs(p.x - vx) < Math.abs(best.x - vx)) best = p; });
+  if(svg._tipD === best.d){ svg._tipD = null; return; }
+  svg._tipD = best.d;
+  const txt = new Date(best.d+"T12:00:00").toLocaleDateString(undefined,{weekday:"short", month:"short", day:"numeric"}) + " · " + wDisp(best.w).toFixed(1) + " " + t.wu;
+  const bw = txt.length*6.3 + 18, bx = Math.min(Math.max(best.x - bw/2, 4), vb.width - bw - 4), by = Math.max(best.y - 36, 2);
+  svg.insertAdjacentHTML("beforeend",
+    `<g id="wTip" pointer-events="none"><line x1="${best.x.toFixed(1)}" y1="${t.PT}" x2="${best.x.toFixed(1)}" y2="${t.H - t.PB}" stroke="${THEME.acc}" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.7"/>`+
+    `<circle cx="${best.x.toFixed(1)}" cy="${best.y.toFixed(1)}" r="5.5" fill="#fff" stroke="${THEME.acc}" stroke-width="2.5"/>`+
+    `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${bw.toFixed(1)}" height="23" rx="7" fill="#1b1b1f"/>`+
+    `<text x="${(bx + bw/2).toFixed(1)}" y="${(by + 15.5).toFixed(1)}" text-anchor="middle" fill="#fff" font-size="11.5" font-weight="700">${esc(txt)}</text></g>`);
+}
 function paintWeightChart(w){
   const svg = document.getElementById("weightChart"), wu = wUnit();
   const tiles = document.getElementById("wStatTiles");
@@ -1607,16 +1625,22 @@ function paintWeightChart(w){
   /* All range: a wide time-linear canvas that scrolls horizontally (like Motion's
      savings graph) instead of squishing months into 340px */
   const allMode = wRange===0;
-  const W = allMode ? Math.max(560, Math.round((tEnd-tStart)/86400000*4)+PL+PR) : 340;
+  /* 2026.11.25-e: draw at the real on-screen width so dots and text are never squashed */
+  const cw = (document.getElementById("wChartScroll")||{}).clientWidth || 0, baseW = cw>=200 ? cw : 340;
+  const W = allMode ? Math.max(baseW+220, Math.round((tEnd-tStart)/86400000*4)+PL+PR) : baseW;
   const X = t => PL + (t-tStart)/Math.max(1,(tEnd-tStart))*(W-PL-PR);
   const Y = v => PT + (1-(v-mn)/Math.max(0.001,(mx-mn)))*(H-PT-PB);
   const dFmtS = t => new Date(t).toLocaleDateString(undefined,{month:"short",day:"numeric"});
   let s = "";
   /* y gridlines + right-side labels */
-  for(let i=0;i<=3;i++){
-    const v = mn+(mx-mn)*i/3, y = Y(v);
+  /* 2026.11.25-e: round axis values (160 / 165 / 170…) in your units, not 156.8 / 163.8 */
+  const toD = lb => wIsMet() ? lb/2.20462 : lb, toLb = v => wIsMet() ? v*2.20462 : v;
+  const dmn = toD(mn), dmx = toD(mx), ySpan = dmx-dmn;
+  const yStep = [0.5,1,2,5,10,20,50,100].find(st => ySpan/st <= 5.5) || 100;
+  for(let v = Math.ceil(dmn/yStep)*yStep; v <= dmx+1e-9; v += yStep){
+    const y = Y(toLb(v));
     s += `<line x1="${PL}" y1="${y.toFixed(1)}" x2="${W-PR+6}" y2="${y.toFixed(1)}" stroke="#eeeef3" stroke-width="1"/>`+
-         `<text x="${W-2}" y="${(y+3.5).toFixed(1)}" text-anchor="end" fill="#9a9aa5" font-size="10">${f1(v)}</text>`;
+         `<text x="${W-2}" y="${(y+3.5).toFixed(1)}" text-anchor="end" fill="#6b6b77" font-size="10">${yStep<1 ? v.toFixed(1) : String(Math.round(v))}</text>`;
   }
   /* x labels: month starts for long spans, day ticks for short ones.
      Crowded labels are thinned first, then a pixel-distance pass guarantees no two
@@ -1642,12 +1666,12 @@ function paintWeightChart(w){
     if(prev && xa-prev.xa<38) kept[kept.length-1] = {l:x.l, xa};  /* too close: later wins */
     else kept.push({l:x.l, xa});
   });
-  kept.forEach(k=>{ s += `<text x="${k.xa.toFixed(1)}" y="${H-6}" text-anchor="middle" fill="#9a9aa5" font-size="10">${k.l}</text>`; });
+  kept.forEach(k=>{ s += `<text x="${k.xa.toFixed(1)}" y="${H-6}" text-anchor="middle" fill="#6b6b77" font-size="10">${k.l}</text>`; });
   /* goal: one quiet dashed reference line — the trend is the headline */
   if(flag){
     const gy = Y(flag.v);
     s += `<line x1="${PL}" y1="${gy.toFixed(1)}" x2="${W-PR+6}" y2="${gy.toFixed(1)}" stroke="#c9c9d4" stroke-width="1.5" stroke-dasharray="6,5"/>`+
-      `<text x="${PL+6}" y="${(gy-5).toFixed(1)}" fill="#9a9aa5" font-size="10" font-weight="700">goal ${f1(flag.v)}${wu}</text>`;
+      `<text x="${PL+6}" y="${(gy-5).toFixed(1)}" fill="#6b6b77" font-size="10" font-weight="700">goal ${f1(flag.v)}${wu}</text>`;
   }
   /* Water-weight context (2026.10.18-c, Jay's ask): one small dot per weigh-in,
      styled by what he ate the day BEFORE it — solid = fed day (near goal,
@@ -1694,15 +1718,20 @@ function paintWeightChart(w){
   svg.innerHTML = s;
   svg.setAttribute("role","img");
   /* All mode renders on the wide canvas; other ranges keep the fluid 340 layout */
-  if(allMode){ svg.setAttribute("width", W); svg.setAttribute("viewBox", `0 0 ${W} 200`); }
-  else { svg.setAttribute("width", "100%"); svg.setAttribute("viewBox", "0 0 340 200"); }
+  if(allMode){ svg.setAttribute("width", W); svg.setAttribute("viewBox", `0 0 ${W} ${H}`); }
+  else { svg.setAttribute("width", "100%"); svg.setAttribute("viewBox", `0 0 ${W} ${H}`); }
+  /* tap-to-read (2026.11.25-e): remember each morning weigh-in's position */
+  svg._tip = {pts: pts.map(p => ({x: X(T(p)), y: Y(p.w), d: p.d, w: p.w})), H, PT, PB, wu};
+  svg._tipD = null;
+  if(!svg._wired){ svg._wired = true; svg.style.cursor = "pointer"; svg.addEventListener("click", e => wChartTip(svg, e)); }
   const wsc = document.getElementById("wChartScroll");
   if(wsc && allMode && wScrollEnd){ wsc.scrollLeft = wsc.scrollWidth; wScrollEnd = false; }
   const wlg = document.getElementById("wGoalLegend");
   if(wlg){ /* legend slot carries the dot keys (2026.10.18-c, night dots -e) */
     const parts = [];
-    if(dotsDrawn) parts.push('<span><i class="wlg-dot fed"></i>fed day before</span><span><i class="wlg-dot light"></i>light day before</span><span>water weight shows up in the dots first</span>');
-    if(pmDrawn) parts.push('<span><i class="wlg-dot night"></i>night weight</span>');
+    if(dotsDrawn) parts.push('<span><i class="wlg-dot fed"></i>fed day before</span><span><i class="wlg-dot light"></i>light day before</span>');
+    if(pmDrawn) parts.push('<span><i class="wlg-dot night"></i>night</span>');
+    if(pts.length) parts.push('<span class="wlg-note">'+(dotsDrawn ? "Water weight shows up in the dots first. " : "")+"Tap the graph to read any weigh-in.</span>");
     if(parts.length){ wlg.innerHTML = parts.join(""); wlg.style.display = ""; }
     else wlg.style.display = "none";
   }
@@ -1780,6 +1809,19 @@ const DB_METRICS = {
   wtr: { unit:"oz", get:t=>t.waterOz, has:t=>t.waterOz>0, fmt:v=>String(Math.round(v)), tot:v=>Math.round(v).toLocaleString(), grad:"background:linear-gradient(#6fc3f7,#2f8fe8);", gradT:"background:linear-gradient(#2f8fe8,#1f6fc4);" },
   sod: { unit:"mg", get:t=>t.sodium, has:t=>t.foodLogged, fmt:v=>v>=1000?((v/1000).toFixed(1).replace(/\.0$/,"")+"k"):String(Math.round(v)), tot:v=>Math.round(v).toLocaleString(), grad:"background:linear-gradient(#bcbcd8,#8383a8);", gradT:"background:linear-gradient(#8383a8,#5f5f86);" }
 };
+/* Bar columns for This week + Day by day (2026.11.25-e). The bar lives in its
+   own area so a dashed goal line can sit at the true goal height across all
+   seven columns. Grey = not there, tinted = reached the target (90%+), red =
+   over a limit (sodium), solid = today. */
+function barColHTML(o){
+  const g = o.goalPct>0 && o.goalPct<=100 ? `<i class="bgoal" style="bottom:${o.goalPct.toFixed(1)}%"></i>` : "";
+  return `<div class="bkcal">${o.val}</div><div class="bwrap"><div class="bar" style="height:${Math.max(o.pct,2).toFixed(1)}%;${o.style||""}"></div>${g}</div>`+
+    `<div class="bl">${o.wd}</div><div class="bdn">${o.dn}</div><div class="bdot"></div>`;
+}
+function barKeyHTML(goalTxt, hitTxt, isLimit){
+  if(!goalTxt) return "";
+  return `<span><i class="bkey-line"></i>${goalTxt}</span><span><i class="bkey-sw ${isLimit?"over":"hit"}"></i>${hitTxt}</span>`;
+}
 function paintDayCharts(){
   const seg = S.dbSeg || "crb", m = DB_METRICS[seg] || DB_METRICS.crb;
   document.querySelectorAll("#dbSeg .segbtn").forEach(b=>b.classList.toggle("on", b.dataset.dseg===seg));
@@ -1795,20 +1837,23 @@ function paintDayCharts(){
   $("dbRange").textContent = dbOffset===0 ? "Last 7 days" : weekLabel(rows);
   $("dbPrev").disabled = dbOffset>=MAX_WEEKS_BACK;
   $("dbNext").disabled = dbOffset===0;
-  const max = Math.max(...rows.map(r=>r.v), 1);
+  /* goal line: your carb target, water target, or the 2,300 mg sodium limit */
+  const goal = seg==="crb" ? (S.goals.carbs||0) : seg==="wtr" ? (waterTarget(todayStr())*8||0) : 2300;
+  const isLimit = seg==="sod";
+  const max = Math.max(...rows.map(r=>r.v), goal, 1);
+  box.className = "bars7 m-"+seg;
   box.innerHTML = "";
   rows.forEach(r=>{
     const c = document.createElement("div");
     const dt = new Date(r.k+"T12:00:00"), isT = r.k===todayStr();
-    c.className = "bcol"+(isWorkDayAuto(r.k)?" work":"")+(isT?" today":"")+(r.future?" future":"");
-    c.innerHTML =
-      `<div class="bkcal">${r.has?m.fmt(r.v):"–"}</div>`+
-      `<div class="bar" style="height:${Math.max(r.v/max*100,2)}%;${isT?m.gradT:m.grad}"></div>`+
-      `<div class="bl">${dt.toLocaleDateString(undefined,{weekday:"short"})}</div>`+
-      `<div class="bdn">${dt.getDate()}</div>`+
-      `<div class="bdot"></div>`;
+    const hit = !isLimit && goal>0 && r.has && r.v>=goal*0.9, over = isLimit && r.has && r.v>goal;
+    c.className = "bcol"+(isWorkDayAuto(r.k)?" work":"")+(isT?" today":"")+(r.future?" future":"")+(hit?" hit":"")+(over?" over":"");
+    c.innerHTML = barColHTML({val: r.has?m.fmt(r.v):"–", pct: r.v/max*100, goalPct: goal>0 ? goal/max*100 : 0,
+      style: isT ? m.gradT : "", wd: dt.toLocaleDateString(undefined,{weekday:"short"}), dn: dt.getDate()});
     box.appendChild(c);
   });
+  const dk = $("dbKey");
+  if(dk) dk.innerHTML = goal>0 ? barKeyHTML((isLimit?"Limit ":"Goal ")+Math.round(goal).toLocaleString()+" "+m.unit, isLimit?"over the limit":"reached the goal", isLimit) : "";
   /* vs the week before: one quiet line in the rangenote style */
   const note = $("dbNote");
   if(note){
@@ -1838,21 +1883,22 @@ function renderProgress(){
   document.getElementById("stAvgCal").textContent = lg.length ? Math.round(lg.reduce((a,x)=>a+x.cal,0)/lg.length).toLocaleString() : 0;
   document.getElementById("stAvgP").textContent = (lg.length ? Math.round(lg.reduce((a,x)=>a+x.p,0)/lg.length) : 0)+"g";
   const bb = document.getElementById("bars7"); bb.innerHTML = "";
-  const max = Math.max(...days.map(x=>x.cal), (S.goals.maintenance>0?S.goals.maintenance:0)+(S.goals.surplus>0?S.goals.surplus:0), 1);
+  const wkGoal = goalTotal();
+  const max = Math.max(...days.map(x=>x.cal), wkGoal, 1);
   days.forEach(x=>{
     const c = document.createElement("div");
     const dt = new Date(x.k+"T12:00:00"), isT = x.k===todayStr();
     /* 2026.09.27-e: schedule-strip style labels — kcal, name, day number,
-       work/off dot. kcal always visible, so the tap-to-reveal is gone. */
-    c.className = "bcol"+(isWorkDayAuto(x.k)?" work":"")+(isT?" today":"")+(x.future?" future":"");
-    c.innerHTML =
-      `<div class="bkcal">${x.logged?Math.round(x.cal).toLocaleString():"–"}</div>`+
-      `<div class="bar" style="height:${Math.max(x.cal/max*100,2)}%;${isT?"background:linear-gradient(var(--acc),var(--acc-deep));":""}"></div>`+
-      `<div class="bl">${dt.toLocaleDateString(undefined,{weekday:"short"})}</div>`+
-      `<div class="bdn">${dt.getDate()}</div>`+
-      `<div class="bdot"></div>`;
+       work/off dot. 2026.11.25-e: dashed goal line; days at 90%+ of goal are
+       tinted (same rule as the Goal days row below). */
+    const hit = wkGoal>0 && x.logged && !x.locked && x.cal>=wkGoal*0.9;
+    c.className = "bcol"+(isWorkDayAuto(x.k)?" work":"")+(isT?" today":"")+(x.future?" future":"")+(hit?" hit":"");
+    c.innerHTML = barColHTML({val: x.logged?Math.round(x.cal).toLocaleString():"–", pct: x.cal/max*100, goalPct: wkGoal>0 ? wkGoal/max*100 : 0,
+      style: isT ? "background:linear-gradient(var(--acc),var(--acc-deep));" : "", wd: dt.toLocaleDateString(undefined,{weekday:"short"}), dn: dt.getDate()});
     bb.appendChild(c);
   });
+  const wk = $("bars7Key");
+  if(wk) wk.innerHTML = wkGoal>0 ? barKeyHTML("Goal "+Math.round(wkGoal).toLocaleString()+" kcal", "reached the goal", false) : "";
   paintDayCharts();
   const w = S.weights.slice().sort((a,b)=>a.d<b.d?-1:1);
   /* analytics header: 7-day total */
@@ -1886,9 +1932,9 @@ function renderProgress(){
   days.forEach(x=>{
     const tot = x.c+x.p+x.f, col = document.createElement("div"); col.className = "mscol";
     col.innerHTML = '<div class="msbar" style="height:'+Math.max(tot/maxG*100,3)+'%">'
-      +'<i style="height:'+(tot?x.f/tot*100:0)+'%;background:#34c77b"></i>'
-      +'<i style="height:'+(tot?x.p/tot*100:0)+'%;background:#f5a623"></i>'
-      +'<i style="height:'+(tot?x.c/tot*100:0)+'%;background:#8b8bf5"></i></div>';
+      +'<i style="height:'+(tot?x.f/tot*100:0)+'%;background:#fb6f84"></i>'
+      +'<i style="height:'+(tot?x.p/tot*100:0)+'%;background:#12cfae"></i>'
+      +'<i style="height:'+(tot?x.c/tot*100:0)+'%;background:#7e7ef2"></i></div>'; /* 2026.11.25-e: same carbs/protein/fat colours as the rest of the app */
     ms.appendChild(col);
     const lb = document.createElement("span"); lb.textContent = x.label; ml.appendChild(lb);
   });
@@ -2260,6 +2306,7 @@ document.getElementById("pgWkNext").onclick = ()=>{ if(weekOffset>0){ weekOffset
 function openWtDetail(){
   document.getElementById("wtDetail").classList.add("open");
   document.getElementById("wtDetail").querySelector(".wtd-scroll").scrollTop = 0;
+  paintWeightChart(S.weights||[]); /* 2026.11.25-e: now visible, so draw at its true width */
   if(wRange===0){ const sc = document.getElementById("wChartScroll"); if(sc) sc.scrollLeft = sc.scrollWidth; }
 }
 function closeWtDetail(){

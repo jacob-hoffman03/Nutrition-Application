@@ -273,7 +273,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.11.25-d";
+const APP_VERSION = "2026.11.25-f";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -2051,7 +2051,7 @@ function renderAnalysis(){
     return `<tr><td><span class="mdot" style="background:${MEAL_SEG[m]}"></span>${MEAL_LABEL[m]}</td><td>${Math.round(mc[m]).toLocaleString()} kcal</td><td>${pct}%</td></tr>`;
   }).join("");
   $("aNote").innerHTML = tot>0
-    ? `<b style="color:var(--ink)">${Math.round(tCal-tot).toLocaleString()} kcal</b> to your daily target of ${Math.round(tCal).toLocaleString()}.<br>Protein ${r1(t.p)}g of ${g.protein}g.`
+    ? (tot>tCal ? `<b style="color:var(--ink)">${Math.round(tot-tCal).toLocaleString()} kcal over</b> your daily target of ${Math.round(tCal).toLocaleString()}.<br>` : `<b style="color:var(--ink)">${Math.round(tCal-tot).toLocaleString()} kcal to go</b> to your daily target of ${Math.round(tCal).toLocaleString()}.<br>`) + `Protein ${r1(t.p)}g of ${g.protein}g.`
     : `Nothing logged yet.<br>Tap + on a meal to start.`;
   $("abarC").style.width = barW(t.c,g.carbs);
   $("abarP").style.width = barW(t.p,g.protein);
