@@ -326,7 +326,7 @@ function qtRenderTracker(key){
       : ("Day "+Math.min(qtDayNum(h),90)+" \u00b7 "+cur.name+" ("+cur.range+")"))+'</div>'; /* 2026.10.09-h: was "Day 91 · …(Days 30–90)" on the last phase day */
     var segs="", lbls="";
     def.phases.forEach(function(p,i){
-      var prev = i===0?0:def.phases[i-1].d1+1, dur = p.d1-prev+1, fg = Math.sqrt(dur).toFixed(2);
+      var prev = i===0?0:def.phases[i-1].d1+1, dur = p.d1-prev+1, fg = 1; /* 2026.11.25-a: equal-width phase steps so every label fits; the dot track below stays to scale */
       var cls = "qt-seg"+((i===pi&&!done)?" qt-cur":"")+(i===shown?" qt-sel":"");
       segs += '<button class="'+cls+'" data-qtkey="'+key+'" data-qti="'+i+'" title="'+qtEsc(p.name+" \u00b7 "+p.range)+'" aria-label="'+qtEsc(p.name+", "+p.range)+'" style="flex:'+fg+' 1 0%;background:'+p.color+'59;color:'+p.color+'"></button>';
       lbls += '<span class="qt-seglbl" style="flex:'+fg+' 1 0%">'+p.name+'</span>';

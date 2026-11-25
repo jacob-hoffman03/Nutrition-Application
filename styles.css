@@ -1207,3 +1207,36 @@ body.reordering #progOverview{display:none}
 .pcttgl{border:1px solid var(--line);background:var(--card2);color:var(--muted);border-radius:9px;font-size:11px;font-weight:700;padding:5px 7px;cursor:pointer;flex:none}
 .pcttgl.sel{background:var(--acc);border-color:var(--acc);color:#fff}
 .pcthint{font-size:11.5px;color:var(--acc);font-weight:700;white-space:nowrap}
+
+/* ============ INTERFACE FIXES (2026.11.25-a) ============ */
+/* --card2 was used by 10 rules (food thumbnails, + and −/+ buttons, %DV
+   toggle, empty heatmap cells) but never defined, so they had no background. */
+:root{ --card2:#f1f2f6; }
+/* Pop-up sheets: long content (bottles, copy meal, energy & bloat, info pages)
+   was clipped at the bottom with no way to scroll. */
+.infbody{flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y;}
+/* The formula line on Calorie Goal borrowed the groceries one-line ellipsis. */
+#formulaEq{white-space:normal; overflow:visible; text-overflow:clip; line-height:1.5;}
+/* kcal under each macro tile on Calorie Goal had no style at all */
+.m3 .mk{font-size:11px; color:#9aa3ad; margin-top:4px; font-variant-numeric:tabular-nums; min-height:14px;}
+/* meal header totals ("620 kcal · 29g P") no longer break onto two lines */
+.mrow .mkcal{white-space:nowrap;}
+/* Bigger touch targets (Apple's guideline is ~44pt). The ⓘ buttons keep their
+   look; an invisible ring around them catches the tap. */
+.ginfo, .pf-ibtn{position:relative;}
+.ginfo::after, .pf-ibtn::after{content:""; position:absolute; inset:-10px; border-radius:50%;}
+.wknav{padding:8px 10px;}
+.logdel{width:36px; height:36px; font-size:20px; flex:none;}
+.favstar, .nedit{min-width:38px; min-height:38px; justify-content:center;}
+.gdel{min-width:34px; min-height:34px; font-size:16px;}
+.gqbtn{width:32px; height:32px;}
+.qt-reset{padding:12px 0 4px;}
+/* Foods: sort chips sit in one swipeable row instead of three rows */
+#foodSortChips{flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; margin-right:-14px; padding-right:14px;}
+#foodSortChips::-webkit-scrollbar{display:none;}
+#foodSortChips .chip{flex:none;}
+/* Food serving and grocery lines wrap to two lines instead of cutting off */
+.anm>span{white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
+.grow .gname, .grow .gsub{white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
+/* Quit tracker: phase labels wrap instead of turning into "O…", "TH…" */
+.qt-seglbl{white-space:normal; text-overflow:clip; text-transform:none; font-size:10px; line-height:1.2; letter-spacing:0; overflow-wrap:anywhere;}

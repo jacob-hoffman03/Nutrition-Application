@@ -537,11 +537,12 @@ function sortFoodList(list){
 }
 function foodRowHtml(f){
   return `<div class="arow2" data-n="${esc(f.n)}"><span class="athumb">${foodThumb(f)}</span>
-     <div class="anm"><b>${isCustom(f.n)?'<span class="diy">DIY</span>':''}${locPrefixHTML(f.loc)}${esc(f.n)}</b><span>${Math.round(f.cal)}kcal / ${esc(f.s)}</span></div>
-     <button class="favstar" data-n="${esc(f.n)}">${isFav(f.n)?STAR_ON:STAR_OFF}</button>
-     <button class="aplus" data-n="${esc(f.n)}">+</button>
-     <button class="nedit" data-n="${esc(f.n)}" aria-label="Edit food"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
-     <button class="ndel" data-n="${esc(f.n)}" aria-label="Delete food">×</button></div>`;
+     <div class="anm"><b>${locPrefixHTML(f.loc)}${esc(f.n)}</b><span>${Math.round(f.cal)}kcal / ${esc(f.s)}</span></div>
+     <button class="favstar" data-n="${esc(f.n)}" aria-label="${isFav(f.n)?"Remove from favorites":"Add to favorites"}">${isFav(f.n)?STAR_ON:STAR_OFF}</button>
+     <button class="nedit" data-n="${esc(f.n)}" aria-label="Edit food"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button></div>`;
+  /* 2026.11.25-a: the row's own + and × are gone — tapping the row already
+     opens the log sheet (same as +), and that sheet has Edit and Remove.
+     Every food on this page is yours, so the DIY badge was noise here. */
 }
 function wireFoodRows(box){
   box.querySelectorAll(".favstar").forEach(b=>b.onclick=e=>{ e.stopPropagation(); toggleFav(b.dataset.n); renderFoods(); });
@@ -3943,8 +3944,10 @@ function showView(v){
   if(curView!==v && MAIN_TABS.indexOf(curView)>=0 && SUB_VIEWS.indexOf(v)>=0){ viewReturn = curView; }
   curView = v;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active", x.id==="view-"+v));
-  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",
-    t.dataset.v===v || ((v==="analysis"||v==="goals"||v==="medals"||v==="snaps"||v==="worksched"||v==="quit"||v==="info"||v==="settings"||v==="groceries")&&t.dataset.v==="diary")));
+  /* 2026.11.25-a: a sub-page keeps the tab you opened it from lit (Settings,
+     Groceries, Goals… come from Profile) instead of always lighting Diary */
+  const litTab = MAIN_TABS.indexOf(v)>=0 ? v : viewReturn;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active", t.dataset.v===litTab));
   if(v==="progress"){ weekOffset = 0; renderProgress(); } /* always open on the current 7 days 2026.09.21-j */
   if(v==="profile") renderProfile();
   if(v==="groceries") renderGroceries();
@@ -3968,7 +3971,9 @@ const CHECK_SVG = '<svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>
 function progUnits(){ return Array.prototype.slice.call(document.querySelectorAll("#progOverview .punit")); }
 function progOrder(){
   const saved = (typeof S!=="undefined" && S && Array.isArray(S.progLayout)) ? S.progLayout.filter(function(p){ return PROG_UNITS.indexOf(p)>=0; }) : [];
-  const order = PROG_UNITS.filter(function(p){ return saved.indexOf(p)>=0; })
+  /* 2026.11.25-a: keep the SAVED order — this used to re-sort saved panels
+     back into the default order, so Edit → drag → ✓ never stuck */
+  const order = saved.filter(function(p, i){ return saved.indexOf(p)===i; })
     .concat(PROG_UNITS.filter(function(p){ return saved.indexOf(p)<0; }));
   const bIdx = order.indexOf("body");
   if(bIdx > 0){ order.splice(bIdx, 1); order.unshift("body"); }
@@ -4054,11 +4059,15 @@ function prHandleDown(e){
   handle.addEventListener("lostpointercapture", end);
 }
 /* ============ PROFILE VIEW (2026.10.11-a) ============ */
-const PROF_UNITS = ["streaks"];
-const PROF_TITLES = {streaks:"Habit Trackers"};
+/* 2026.11.25-a: Groceries, the calorie card and the streaks are all
+   rearrangeable (the ≡ button used to have only one panel to move);
+   Settings stays pinned at the bottom of Profile. */
+const PROF_UNITS = ["groceries","goals","streaks"];
+const PROF_TITLES = {groceries:"Groceries", goals:"Calorie goal", streaks:"Habit Trackers"};
 function profOrder(){
-  const saved = (S && Array.isArray(S.profOrder)) ? S.profOrder.filter(function(p){ return PROF_UNITS.indexOf(p)>=0; }) : [];
-  return PROF_UNITS.filter(function(p){ return saved.indexOf(p)>=0; })
+  let saved = (S && Array.isArray(S.profOrder)) ? S.profOrder.filter(function(p){ return PROF_UNITS.indexOf(p)>=0; }) : [];
+  if(saved.length < 2) saved = []; /* one panel can't express an order (old saves were ["streaks"]) */
+  return saved.filter(function(p, i){ return saved.indexOf(p)===i; })
     .concat(PROF_UNITS.filter(function(p){ return saved.indexOf(p)<0; }));
 }
 function applyProfLayout(){

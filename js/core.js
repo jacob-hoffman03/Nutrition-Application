@@ -273,7 +273,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.11.25-a";
+const APP_VERSION = "2026.11.25-b";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -897,7 +897,7 @@ function renderDiary(){
       const sub = (e.nutrs && e.nutrs.length)
         ? `${esc(eserv)}${eqty>1?` × ${eqty}`:""} · ${e.nutrs.map(x=>`${r1(x.amt)} ${esc(x.u)}`).join(" + ")}`
         : `${eqty} × ${esc(eserv)}`;
-      return `<div class="logrow">${im?`<span class="lthumb"><img src="${im}" alt=""></span>`:""}<span class="nm"><span class="nmt">${locPrefixHTML(entryLoc(e))}${esc(e.n)} <span class="nmsub">${sub}</span></span>${foodBadgeHTML(findFood(e.n)||e)}</span><span class="kc">${Math.round(e.cal)}</span><button class="logdel" data-m="${m}" data-id="${e.id}">×</button></div>`;
+      return `<div class="logrow">${im?`<span class="lthumb"><img src="${im}" alt=""></span>`:""}<span class="nm"><span class="nmt">${locPrefixHTML(entryLoc(e))}${esc(e.n)} <span class="nmsub">${sub}</span></span>${foodBadgeHTML(findFood(e.n)||e)}</span><span class="kc">${Math.round(e.cal)}</span><button class="logdel" data-m="${m}" data-id="${e.id}" aria-label="Remove ${esc(e.n)}">×</button></div>`;
     }).join("") : "";
     const wrap = document.createElement("div");
     wrap.innerHTML = html;
@@ -906,8 +906,20 @@ function renderDiary(){
   mh.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>openSheet(b.dataset.add));
   mh.querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>openCopySheet(b.dataset.copy));
   mh.querySelectorAll(".logdel").forEach(b=>b.onclick=()=>{
-    const dd = day(); dd.meals[b.dataset.m] = dd.meals[b.dataset.m].filter(e=>e.id!==b.dataset.id);
+    /* 2026.11.25-a: one tap removes the entry, so it gets an Undo — a mis-tap
+       on the small × no longer loses a logged food for good */
+    const k = viewDate(), m = b.dataset.m, dd = day(), arr = dd.meals[m] || [];
+    const ix = arr.findIndex(e=>e.id===b.dataset.id); if(ix<0) return;
+    const gone = arr[ix];
+    dd.meals[m] = arr.filter(e=>e.id!==b.dataset.id);
     save(); renderDiary();
+    showToast("Removed "+gone.n, "Undo", ()=>{
+      const d2 = S.days[k]; if(!d2) return;
+      const a2 = d2.meals[m] || (d2.meals[m] = []);
+      if(a2.some(e=>e.id===gone.id)) return;
+      a2.splice(Math.min(ix, a2.length), 0, gone);
+      save(); renderDiary();
+    });
   });
 
   const wtOz = waterTarget(viewDate())*8; /* target in oz; 0 = unset, logging still works */
