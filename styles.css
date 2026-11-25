@@ -1240,3 +1240,6 @@ body.reordering #progOverview{display:none}
 .grow .gname, .grow .gsub{white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
 /* Quit tracker: phase labels wrap instead of turning into "O…", "TH…" */
 .qt-seglbl{white-space:normal; text-overflow:clip; text-transform:none; font-size:10px; line-height:1.2; letter-spacing:0; overflow-wrap:anywhere;}
+/* Calorie Goal macro tiles: a later .macro3 flex rule overrode the 3-column
+   grid, so the tiles bunched to the left instead of filling the card. */
+.macro3 .m3{flex:1 1 0; min-width:0;}

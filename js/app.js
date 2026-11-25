@@ -943,9 +943,11 @@ function streak(){
    against the target rate, then adjust intake ±100-150 kcal. Research finds no large
    "metabolic damage" term beyond what the formulas predict — the trend is the truth. */
 function targetRateBand(){
-  const m = S.goals.mode, w = S.goals.profile.weightLb>0 ? S.goals.profile.weightLb : 150;
-  if(m==="maintain") return [-0.15, 0.15];
+  /* 2026.11.25-c: your own weight (7-day weigh-in average), never an assumed
+     150 lb; no surplus = maintenance band, not a 0%-exactly target */
+  const m = S.goals.mode, w = goalWeight().lb;
   const s = S.goals.surplus>0 ? S.goals.surplus : 0;
+  if(m==="maintain" || !(s>0) || !(w>0)) return [-0.15, 0.15];
   if(s>0){
     /* 2026.09.25-d: derive the band from the prescribed surplus so it always
        contains the app's own projection — a +15% bulk at 123 lb projects
@@ -966,6 +968,22 @@ function curBodyWeight(){
   if(ws.length) return ws[ws.length-1].w;
   const p = S.goals.profile||{};
   return p.weightLb>0 ? p.weightLb : 0;
+}
+/* 2026.11.25-c: the weight every goal calculation uses (calories, protein,
+   gain-rate band). One morning's water swing (±1-2 lb) no longer moves your
+   targets: it is the average of your weigh-ins in the 7 days ending at the
+   latest one (the same window as the Progress trend). One weigh-in in that
+   window = that weigh-in; no weigh-ins = the weight typed in your profile. */
+function goalWeight(){
+  const ws = sortedWeights();
+  if(ws.length){
+    const T = p => new Date(p.d+"T12:00:00").getTime(), last = ws[ws.length-1];
+    const win = ws.filter(p => T(p) > T(last) - 7*864e5);
+    if(win.length >= 2) return {lb: win.reduce((a,p)=>a+p.w,0)/win.length, n: win.length, src: "7-day average of "+win.length+" weigh-ins"};
+    return {lb: last.w, n: 1, src: "latest weigh-in"};
+  }
+  const p = S.goals.profile||{};
+  return p.weightLb>0 ? {lb: p.weightLb, n: 0, src: "profile"} : {lb: 0, n: 0, src: "none"};
 }
 /* Trend from weigh-ins: halves-by-date split so the two windows never overlap (same method as Calorie Check).
    2026 graph-UX refresh: rates are computed on the 7-day moving average ("trend weight",
@@ -1918,7 +1936,7 @@ function renderProgress(){
     S.weights = S.weights.filter(p=>p.d!==b.dataset.d);
     const rest = S.weights.slice().sort((a,c)=>a.d<c.d?-1:1);
     if(rest.length) syncWeightFromLog(rest[rest.length-1].w, rest[rest.length-1].d);
-    else { S.goals.profile.weightLb = 0; S.goals.profHash = profHash(); } /* no weigh-ins left: blank-slate the synced weight so maintenance/BMI math can't use a ghost number (2026.09.24-x) */
+    else { S.goals.profile.weightLb = 0; S.goals.profHash = profHash(); commitGoals("weight-cleared"); } /* 2026.11.25-c: the goal blanks too. No weigh-ins left: blank-slate the synced weight so maintenance/BMI math can't use a ghost number (2026.09.24-x) */
     save(); renderProgress();
   });
   wh.querySelectorAll(".wpdel").forEach(b=> b.onclick = ()=>{
@@ -2304,7 +2322,8 @@ function deriveMacros(){
     S.goals.carbs = Math.max(0, Math.round((tot - S.goals.protein*4 - S.goals.fat*9)/4));
     return;
   }
-  const wKg = (S.goals.profile.weightLb>0 ? S.goals.profile.weightLb : 150)/2.20462;
+  const wKg = goalWeight().lb/2.20462; /* 2026.11.25-c: no assumed 150 lb — your weigh-in average */
+  if(!(wKg>0)){ S.goals.protein=0; S.goals.carbs=0; S.goals.fat=0; return; }
   S.goals.protein = Math.round(wKg*2.2);
   S.goals.fat = Math.max(0, Math.round(tot*0.25/9));
   S.goals.carbs = Math.max(0, Math.round((tot - S.goals.protein*4 - S.goals.fat*9)/4));
@@ -2374,7 +2393,8 @@ function readProfile(){
   const p = S.goals.profile, met = p.units==="met";
   const oldW = p.weightLb||0;
   const age = parseInt(document.getElementById("pfAge").value);
-  if(age>=10 && age<=100) p.age = age;
+  /* store the age with today's date only when it actually changed, so it keeps counting up */
+  if(age>=10 && age<=100 && (age!==effAge(p) || !p.ageAsOf)){ p.age = age; p.ageAsOf = todayStr(); }
   if(met){
     const cm = parseFloat(document.getElementById("pfHtCm").value);
     if(cm>100 && cm<250) p.heightIn = cm/2.54;
@@ -2417,12 +2437,14 @@ function renderGoalsProfile(){
   const p = S.goals.profile, met = p.units==="met";
   document.querySelectorAll("#pfUnits .chip").forEach(c=>c.classList.toggle("sel", c.dataset.u===p.units));
   document.querySelectorAll("#pfSex .chip").forEach(c=>c.classList.toggle("sel", c.dataset.x===p.sex));
-  document.getElementById("pfAge").value = p.age;
+  /* 2026.11.25-c: an unset field is empty, not "0"; age shows your age today */
+  document.getElementById("pfAge").value = effAge(p) || "";
   document.getElementById("htImpRow").style.display = met?"none":"flex";
   document.getElementById("htMetRow").style.display = met?"flex":"none";
-  if(met) document.getElementById("pfHtCm").value = Math.round(p.heightIn*2.54);
-  else { document.getElementById("pfHtFt").value = Math.floor(p.heightIn/12); document.getElementById("pfHtIn").value = Math.round(p.heightIn%12); }
-  document.getElementById("pfWeight").value = met ? (p.weightLb/2.20462).toFixed(1) : Math.round(p.weightLb*10)/10;
+  const hasH = p.heightIn>0, hasW = p.weightLb>0;
+  if(met) document.getElementById("pfHtCm").value = hasH ? Math.round(p.heightIn*2.54) : "";
+  else { document.getElementById("pfHtFt").value = hasH ? Math.floor(p.heightIn/12) : ""; document.getElementById("pfHtIn").value = hasH ? Math.round(p.heightIn%12) : ""; }
+  document.getElementById("pfWeight").value = hasW ? (met ? (p.weightLb/2.20462).toFixed(1) : Math.round(p.weightLb*10)/10) : "";
   document.getElementById("pfWeightUnit").textContent = met?"kg":"lb";
   document.getElementById("pfFat").value = p.bodyFat>0 ? p.bodyFat : "";
   document.getElementById("pfWaist").value = p.waistIn>0 ? (met ? Math.round(p.waistIn*2.54*10)/10 : Math.round(p.waistIn*10)/10) : "";
@@ -2467,14 +2489,15 @@ function avgCompleteIntake(){ const r=completeDayCals(); return r.cals.length?r.
    Every derivation is stamped with its provenance. */
 function actTier(p){
   p = p || (S.goals||{}).profile || {};
-  const t = ACT_TIERS.find(t=>t.key===p.activityKey);
-  return t || ACT_TIERS[2];
+  return ACT_TIERS.find(t=>t.key===p.activityKey) || null; /* 2026.11.25-c: no silent "Moderate" */
 }
 function formulaGoal(){
   const p = (S.goals||{}).profile||{};
-  const wKg = p.weightLb>0 ? p.weightLb/2.20462 : 0;
+  if(!profileReady()) return null; /* sex, age, height, weight AND activity — nothing assumed */
+  const gw = goalWeight();
+  const wKg = gw.lb>0 ? gw.lb/2.20462 : 0;
   const hCm = p.heightIn>0 ? p.heightIn*2.54 : 0;
-  const age = +p.age||0;
+  const age = effAge(p);
   if(!(wKg>0 && hCm>0 && age>=10 && age<=100)) return null;
   let bmr, eq;
   if(p.bodyFat>0 && p.bodyFat<70){ bmr = 370 + 21.6*(wKg*(1-p.bodyFat/100)); eq = "Katch-McArdle: 370 + 21.6 x lean kg"; }
@@ -2484,7 +2507,7 @@ function formulaGoal(){
   const tier = actTier(p), pal = tier.pal;
   return {bmr: Math.round(bmr), bmrRaw: bmr, pal, tier: tier.key, tierLabel: tier.label,
           maintenance: Math.round(bmr*pal), eq, wKg: Math.round(wKg*10)/10, hCm: Math.round(hCm*10)/10,
-          age, weightLb: p.weightLb};
+          age, weightLb: Math.round(gw.lb*10)/10, weightSrc: gw.src};
 }
 /* Back-compat name: the formula used to be only a CHECK under the learned
    number (2026.10.21-a); since -b it IS the goal. */
@@ -2667,8 +2690,8 @@ function paintFormulaTable(fg){
   const eq = document.getElementById("formulaEq"), tb = document.getElementById("formulaTable");
   if(!eq || !tb) return;
   fg = fg || formulaGoal();
-  if(!fg){ eq.textContent = "Add your stats below to see the math."; tb.innerHTML = ""; return; }
-  eq.textContent = fg.eq + " = " + fg.bmr.toLocaleString() + " kcal BMR  (" + fg.wKg + " kg, " + fg.hCm + " cm, age " + fg.age + ")";
+  if(!fg){ eq.textContent = profileReady() ? "Add your stats below to see the math." : "Still needed: " + profileMissingText() + ". Nothing is calculated until your stats are complete."; tb.innerHTML = ""; return; }
+  eq.textContent = fg.eq + " = " + fg.bmr.toLocaleString() + " kcal BMR  (" + fg.wKg + " kg — " + fg.weightSrc + ", " + fg.hCm + " cm, age " + fg.age + ")";
   tb.innerHTML = ACT_TIERS.map(t=>{
     const m = Math.round((fg.bmrRaw||fg.bmr)*t.pal), sel = t.key===fg.tier; /* same unrounded BMR commitGoals uses — table and goal always agree */
     return '<button type="button" data-k="' + t.key + '" style="display:flex;justify-content:space-between;align-items:center;width:100%;padding:8px 10px;margin:0 0 6px;border:1px solid var(--line);border-radius:10px;background:transparent;color:inherit;text-align:left;' + (sel ? 'border-color:var(--acc,#6c6cf4);font-weight:700' : '') + '">' +
@@ -2690,19 +2713,16 @@ function syncWeightFromLog(newLb, dateStr){
   const changed = Math.abs(effW - (p.weightLb||0)) >= 0.05;
   p.weightLb = effW;
   let tuned = false;
-  if(p.auto && changed && effW>0){
-    /* FORMULA LAW: a new weigh-in changes the CURRENT weight, so the formula
-       re-derives maintenance + surplus + macros together. Food plays no part. */
+  /* 2026.11.25-c: every weigh-in (including backdated ones, which change the
+     7-day average) re-derives maintenance + surplus + macros together, right
+     away. This used to hinge on profile.auto — off by default with no switch
+     in the app — so BMI and protein moved on a weigh-in while calories waited
+     for the next day's background refresh. Food plays no part. */
+  if(effW>0){
+    const before = goalTotal();
     commitGoals("weight");
-    S.goals.autoNote = "Weighed "+wDisp(effW)+" "+wUnit()+" on "+dateStr+" — your daily number recalculated from the formula at your new weight.";
-    tuned = true;
-  } else if(changed && effW>0){
-    /* 2026.09.25-d: auto-adjust is off — the weight still syncs (BMI, BAC, macro
-       math all read it) but maintenance waits for the user's next Goals save.
-       The stored hash is deliberately left stale so Goals › Done detects the
-       change and recalculates; refreshing it here used to mask the divergence
-       and the goal silently went stale. */
-    S.goals.autoNote = "Weighed "+wDisp(effW)+" "+wUnit()+" on "+dateStr+" — maintenance recalculates next time you save Goals.";
+    tuned = goalTotal()!==before;
+    if(changed || tuned) S.goals.autoNote = "Weighed "+wDisp(newLb)+" "+wUnit()+" on "+dateStr+" — your goal uses your "+goalWeight().src+" ("+wDisp(goalWeight().lb).toFixed(1)+" "+wUnit()+").";
   }
   return tuned;
 }
@@ -2722,11 +2742,12 @@ function infoContent(k){
        <div class="irow">Your food log never moves this number. It changes only when your weight or stats change.</div>`};
   }
   if(k==="athlete" || k==="engine") return {t:"How your number works", b:
-    `<div class="irow"><b>Learned, with a formula check.</b> Your maintenance is calculated from your own data: what you logged eating over the last ~21 days, minus your weight trend x 500 (energy balance — gaining means you ate above maintenance, losing means below). A Mifflin-St Jeor formula check then guards it: if the learned number ever falls below your sedentary floor (BMR × 1.2 for your stats), the floor is applied instead and the check-in line says so — a learned number that low is a logging/trend artefact, not a metabolism.</div>
-     <div class="irow"><b>No number without data.</b> Until your log has ~10 complete days and your weigh-ins span ~10 days, no daily number is presented at all — nothing stands in for your data.</div>
-     <div class="irow"><b>Your weigh-ins move it</b> through the trend (smoothed daily, so one salty day cannot swing it), never through a stats table. Your stats below only feed BMI and your water target.</div>
-     <div class="irow"><b>Bulk:</b> your gain-rate pick adds the surplus on top — rate x 500 kcal (so +1.5 lb/wk = +750). Maintain adds nothing.</div>
-     <div class="irow"><b>Macros:</b> protein ~2.2 g/kg, fat ~25%, carbs fill the rest (or your split, if you set one) — re-derived every time the number changes.</div>`};
+    `<div class="irow"><b>From your stats, nothing assumed.</b> Maintenance = your BMR × your activity multiplier. BMR is Mifflin-St Jeor from your sex, age, height and weight — or Katch-McArdle (lean mass) if you enter body fat. Until all five of sex, age, height, weight and activity are filled in, no number is shown at all.</div>
+     <div class="irow"><b>Your weigh-ins keep it current.</b> The weight used is the average of your weigh-ins over the 7 days ending at your latest one, so one salty or dehydrated morning can't move your targets. Every new weigh-in recalculates everything right away. Night weigh-ins are kept separate and never move it.</div>
+     <div class="irow"><b>Your age keeps up.</b> Age counts up each year from the day you entered it.</div>
+     <div class="irow"><b>Your food log never changes the goal.</b> The Calorie Check on Progress compares your weight trend with your target and can suggest a change — it only applies one if you tap it.</div>
+     <div class="irow"><b>Gain rate:</b> adds the surplus on top — rate × 500 kcal (so +1.5 lb/wk = +750). Maintain adds nothing.</div>
+     <div class="irow"><b>Macros:</b> protein 2.2 g/kg of that same weight, fat 25% of the goal, carbs fill the rest (or your own split) — re-derived every time the goal changes.</div>`};
   /* 2026.09.22-h: Progress insight rows open their evidence here */
   if(k.indexOf("insight:")===0){
     const ik = k.slice(8);
@@ -2736,10 +2757,10 @@ function infoContent(k){
     return {t: r.title, b: `<div class="irow">${esc(r.copy)}</div><div class="irow">${r.ev}</div>`};
   }
   if(k==="activity") return {t:"Activity level", b:
-    `<div class="irow">Your activity pick does <b>not</b> set your eating number — that is calculated from your food log and weigh-ins, not from an activity table. This setting now only adjusts your <b>water target</b> tier.</div>
+    `<div class="irow">Your activity pick <b>is the multiplier</b> on your BMR: maintenance = BMR × 1.2 (Sedentary) up to × 1.9 (Extra active). It also sets your water target. Nothing is assumed — no goal is calculated until you pick one.</div>
      <div class="irow"><b>Sedentary:</b> little or no exercise. <b>Light:</b> exercise 1-3 times/week. <b>Moderate:</b> 4-5 times/week. <b>Active:</b> daily or intense 3-4 times/week. <b>Very active:</b> intense 6-7 times/week. <b>Extra active:</b> very intense daily, or a physical job.</div>`};
   if(k==="calorie") return {t:"Daily number", b:
-    `<div class="irow">The big number is what to eat today: <b>maintenance</b> (calculated from your log) <b>+ your surplus</b>. It is a check-in, not a target to beat — eat it and let the trend judge.</div>
+    `<div class="irow">The big number is what to eat today: <b>maintenance</b> (your BMR × activity, from your stats and weigh-ins) <b>+ your surplus</b>. It is a check-in, not a target to beat — eat it and let the trend judge.</div>
      <div class="irow"><b>Maintain:</b> surplus 0 — eat at maintenance to hold your weight.</div>
      <div class="irow"><b>+0.5 / +1.0 / +1.5 lb/wk:</b> adds 250 / 500 / 750 kcal. Research (Helms 2023) puts useful muscle gain near 0.25-0.5% of body weight per week — bigger surpluses mostly add fat.</div>`};
   if(k==="macros") return {t:"Macros", b:
@@ -2757,8 +2778,8 @@ function infoContent(k){
      <div class="irow"><b>Creatine:</b> no extra water needed — controlled trials show creatine does <b>not</b> cause dehydration (ISSN, Kreider 2017). The "needs extra water" toggle is for other supplements (e.g. fiber).</div>`};
   }
   if(k==="advanced") return {t:"Advanced", b:
-    `<div class="irow"><b>Always on:</b> new weigh-ins feed the learned engine, and your maintenance + macros re-derive together whenever the number updates — open the app in the morning or tap Calculate & Save and everything is already in sync.</div>
-     <div class="irow">The formulas are only ±10% accurate — your weigh-in trend is the calibration instrument, which is why the learned number takes over once your log supports it.</div>`};
+    `<div class="irow"><b>Always on:</b> every weigh-in and every stats change recalculates maintenance, macros, water and nutrient targets together, immediately.</div>
+     <div class="irow">BMR formulas are about ±10% for an individual — your weigh-in trend is the check. If the scale disagrees with your target for 2+ weeks, the Calorie Check on Progress offers a ±150 kcal adjustment for you to approve.</div>`};
   if(k==="scores") return {t:"Energy & bloat", b: scoreInfoHTML()};
   if(k==="badges") return {t:"Food badges", b:
     `<div class="irow">The three dots under every food name say what the food is good for — a colored dot means yes, gray means no.</div>
@@ -2831,8 +2852,9 @@ function infoContent(k){
      <div class="irow">Full detail per phase lives in <b>Quit tracker › Timeline</b>.</div>`};
   if(k==="nutrients") return {t:"Nutrient targets", b:
     `<div class="irow">Combined from everything logged today. Tap a nutrient to set your own daily target.</div>
-     <div class="irow">Every target defaults to the <b>FDA Daily Value</b>. Where the recommendation depends on you — iron, zinc, calcium, magnesium, vitamins A/C/D/K, phosphorus — it <b>automatically switches to your age/sex-based RDA or AI</b> once your profile (Settings) has your sex and age. Until then, everyone gets the standard Daily Value.</div>
-     <div class="irow"><b>Fiber</b> stays auto (14 g per 1,000 kcal of your goal) and <b>potassium</b> stays on the NASEM adequate intake. "Reset to FDA defaults" clears all your custom targets at once.</div>`};
+     <div class="irow"><b>No targets until your profile is complete</b> (Calorie Goal › Your stats). Then every vitamin and mineral uses the official <b>RDA or AI for your sex and age</b> (NIH / NASEM Dietary Reference Intakes, adults 19+).</div>
+     <div class="irow"><b>From your goal:</b> fiber is 14 g per 1,000 kcal; saturated fat and added sugars are capped at 10% of your calorie goal each (Dietary Guidelines 2020–2025). <b>Potassium</b> uses the NASEM 2019 adequate intake, <b>sodium</b> the 2,300 mg limit.</div>
+     <div class="irow">A target you set yourself always wins. "Reset to FDA defaults" clears your own targets and goes back to these personal ones.</div>`};
   if(k==="energy") return {t:"Energy check-in", b:
     `<div class="irow">One tap a day, 1–5. Tap again to clear it.</div>
      <div class="irow">This is the <b>only logged energy series</b> — next-day energy correlations run on these check-ins, never on the computed tired model.</div>
@@ -3628,7 +3650,8 @@ document.getElementById("goalsDone").onclick = ()=>{
   commitGoals("calculate");
   save(); paintAdaptive(); renderGoals(); renderDiary();
   /* never silently "not work": if there's still nothing to calculate from, put the cursor on the missing weight field */
-  if(!(S.goals.profile.weightLb>0)){ showView("goals"); document.getElementById("pfWeight").focus(); return; }
+  /* 2026.11.25-c: never leave with a blank goal and no reason — say what is missing and stay */
+  if(!profileReady()){ showView("goals"); showToast("Still needed: "+profileMissingText()); const first = {sex:"pfSex", age:"pfAge", height:(S.goals.profile.units==="met"?"pfHtCm":"pfHtFt"), weight:"pfWeight", activity:"pfAct"}[profileMissing()[0]]; const el = document.getElementById(first); if(el){ if(el.scrollIntoView) el.scrollIntoView({block:"center"}); if(el.focus) el.focus(); } return; }
   showView("profile");
 };
 /* Typed values commit on every field change (blur/return), so nothing the user
@@ -3645,14 +3668,15 @@ function renderSettings(){
   const hg = document.getElementById("pfHeroGoal");
   if(hg){
     hg.textContent = goalTotal()>0 ? Math.round(goalTotal()).toLocaleString() : "—";
-    const md = document.getElementById("pfHeroMode"); if(md) md.textContent = ({lean:"Lean Bulk", bulk:"Bulk", maintain:"Maintain", custom:"Custom"})[g.mode] || ""; /* local map: renderSettings runs at boot, before MODE_LABEL's script */
+    /* 2026.11.25-c: no surplus = maintaining, whatever the stored mode says */
+    const md = document.getElementById("pfHeroMode"); if(md) md.textContent = !(g.maintenance>0) ? "not set" : !(g.surplus>0) ? "Maintain" : (({lean:"Lean Bulk", bulk:"Bulk", maintain:"Maintain", custom:"Custom"})[g.mode] || ""); /* local map: renderSettings runs at boot, before MODE_LABEL's script */
     const hs = document.getElementById("pfHeroSub");
     if(hs) hs.textContent = g.maintenance > 0
       ? Math.round(g.maintenance).toLocaleString() + " maintenance + " + Math.round(g.surplus).toLocaleString() + " surplus"
-      : "Not enough data yet — calculated from your log";
-    const hp = document.getElementById("pfHeroP"); if(hp) hp.textContent = (g.protein || 0) + "g";
-    const hc = document.getElementById("pfHeroC"); if(hc) hc.textContent = (g.carbs || 0) + "g";
-    const hf = document.getElementById("pfHeroF"); if(hf) hf.textContent = (g.fat || 0) + "g";
+      : (profileReady() ? "Tap to calculate your goal" : "Add your " + profileMissingText() + " to calculate your goal");
+    const hp = document.getElementById("pfHeroP"); if(hp) hp.textContent = g.protein>0 ? g.protein + "g" : "—";
+    const hc = document.getElementById("pfHeroC"); if(hc) hc.textContent = g.carbs>0 ? g.carbs + "g" : "—";
+    const hf = document.getElementById("pfHeroF"); if(hf) hf.textContent = g.fat>0 ? g.fat + "g" : "—";
   }
   document.getElementById("appVer").textContent = "Fuel " + APP_VERSION;
     const mrv=document.getElementById("medalCaseRowVal"); if(mrv) mrv.textContent=Object.keys(medalCase()).length+"/"+MDEF.length;

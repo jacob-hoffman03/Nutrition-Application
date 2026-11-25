@@ -273,7 +273,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.11.25-b";
+const APP_VERSION = "2026.11.25-c";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a
@@ -561,6 +561,34 @@ if(!S.goals.profHash) S.goals.profHash = profHash();
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const dstr = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const todayStr = () => dstr(new Date());
+/* ============ PROFILE COMPLETENESS + LIVE AGE (2026.11.25-c) ============
+   Nothing is calculated from assumptions: the calorie goal, macros, water and
+   nutrient targets all stay blank until the profile has sex, age, height,
+   weight and activity. Age is stored with the date it was entered (ageAsOf)
+   and counts up a year every year after that, so the formula never runs on a
+   frozen age. */
+function effAge(p){
+  p = p || (S.goals||{}).profile || {};
+  const a = +p.age || 0; if(!a) return 0;
+  if(!p.ageAsOf) return a;
+  const yrs = Math.floor((new Date(todayStr()+"T12:00:00") - new Date(p.ageAsOf+"T12:00:00")) / (365.2425*864e5));
+  return a + Math.max(0, yrs);
+}
+const PROFILE_FIELD_LABEL = {sex:"sex", age:"age", height:"height", weight:"weight", activity:"activity level"};
+function profileMissing(){
+  const p = (S.goals||{}).profile || {}, miss = [];
+  if(!(p.sex==="m" || p.sex==="f" || p.sex==="male" || p.sex==="female")) miss.push("sex");
+  const a = effAge(p); if(!(a>=10 && a<=100)) miss.push("age");
+  if(!(p.heightIn>0)) miss.push("height");
+  if(!(p.weightLb>0)) miss.push("weight");
+  if(!p.activityKey) miss.push("activity");
+  return miss;
+}
+function profileReady(){ return profileMissing().length===0; }
+function profileMissingText(){ return profileMissing().map(k=>PROFILE_FIELD_LABEL[k]).join(", "); }
+/* migrate: an age saved before ageAsOf existed was last confirmed at the last profile save */
+if(S.goals && S.goals.profile && S.goals.profile.age>0 && !S.goals.profile.ageAsOf)
+  S.goals.profile.ageAsOf = S.goals.profile.updatedAt || todayStr();
 let dayOffset = 0;
 const viewDate = () => { const d = new Date(); d.setDate(d.getDate()+dayOffset); return dstr(d); };
 /* ============ LOCKED DAYS (2026.10.08-f) ============
@@ -658,6 +686,7 @@ function totals(k){
 }
 const mealCals = k => { const d = S.days[k] || emptyDay(); const o={}; MEALS.forEach(m=>o[m]=(d.meals[m]||[]).reduce((a,e)=>a+(+e.cal||0),0)); return o; }; /* 2026.10.21-e (audit): same NaN guard totals() has */
 const r1 = n => Math.round(n*10)/10;
+const tgtTxt = v => v>0 ? r1(v) : "–"; /* 2026.11.25-c: an unset target reads "–", never a fake 0 */
 const barW = (v,goal) => (goal>0 ? Math.min(v/goal*100,100) : 0)+"%"; /* never NaN when a goal is 0 */
 function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 const $ = id => document.getElementById(id);
@@ -879,10 +908,10 @@ function renderDiary(){
   $("barP").style.width = barW(t.p,g.protein);
   $("barF").style.width = barW(t.f,g.fat);
   const fib = fiberTotal(k);
-  $("barFi").style.width = barW(fib,fiberTarget()); $("valFig").textContent = r1(fiberTarget());
-  $("valCv").textContent = r1(t.c); $("valCg").textContent = g.carbs;
-  $("valPv").textContent = r1(t.p); $("valPg").textContent = g.protein;
-  $("valFv").textContent = r1(t.f); $("valFg").textContent = g.fat;
+  $("barFi").style.width = barW(fib,fiberTarget()); $("valFig").textContent = tgtTxt(fiberTarget());
+  $("valCv").textContent = r1(t.c); $("valCg").textContent = tgtTxt(g.carbs);
+  $("valPv").textContent = r1(t.p); $("valPg").textContent = tgtTxt(g.protein);
+  $("valFv").textContent = r1(t.f); $("valFg").textContent = tgtTxt(g.fat);
   $("valFiv").textContent = r1(fib);
 
   const mh = $("meals"); mh.innerHTML = "";
@@ -1810,52 +1839,61 @@ function fiberTarget(){ const ct = (S.goals.nutrTargets||{})["Fiber"]; if(ct && 
    FDA Daily Values are label values (2016 table), not personalized goals.
    Potassium: NASEM 2019 adequate intake 3,400 mg/d men / 2,600 mg/d women —
    the label DV is still 4,700 mg (set from the older AI), shown for reference. */
-function potassiumTarget(){ const ct = (S.goals.nutrTargets||{})["Potassium"]; if(ct && ct.val>0) return ct.val; const sx = String((S.goals.profile||{}).sex||"").toLowerCase(); return (sx==="f" || sx==="female") ? 2600 : 3400; }
-/* Profile-based nutrient targets (2026.09.23-n): where the NIH/NASEM recommendation
-   depends on sex/age, the goal switches from the flat FDA Daily Value ("everyone")
-   to his own RDA/AI once his profile has sex/age — it runs in the background, so the
-   moment he adds his profile the goals re-preset themselves. Until then, everyone
-   gets the standard Daily Value. Returns {val, label} or null. */
+function potassiumTarget(){ const ct = (S.goals.nutrTargets||{})["Potassium"]; if(ct && ct.val>0) return ct.val; const sx = String((S.goals.profile||{}).sex||"").toLowerCase(); return (sx==="f" || sx==="female") ? 2600 : (sx==="m" || sx==="male") ? 3400 : 0; /* 2026.11.25-c: no assumed sex */ }
+/* Personal nutrient targets (2026.11.25-c). Adult (19+) Recommended Dietary
+   Allowances / Adequate Intakes from the NIH Office of Dietary Supplements
+   (NASEM Dietary Reference Intakes), by sex and age. Under 19 there is no
+   adult table here, so the general FDA Daily Value is used instead.
+   Returns {val, label} or null. */
 function profileNutrTarget(disp){
-  const p = (S.goals||{}).profile || {}, sex = String(p.sex||"").toLowerCase(), age = +p.age || 0;
-  const M = sex==="m" || sex==="male", F = sex==="f" || sex==="female"; /* 2026.10.21-e (audit): seed/export data uses "male" — RDA targets must not silently fall back to FDA defaults */
+  const p = (S.goals||{}).profile || {}, sex = String(p.sex||"").toLowerCase(), age = effAge(p);
+  const M = sex==="m" || sex==="male", F = sex==="f" || sex==="female";
+  if(!(M||F) || !(age>=19)) return null;
+  const x = M ? "male" : "female";
+  const R = (val, kind, ages) => ({val, label: (kind||"RDA")+" · "+x+(ages ? " "+ages : "")});
   switch(disp){
-    case "Iron":
-      if(M) return {val:8, label:"RDA · male"};
-      if(F) return age>=51 ? {val:8, label:"RDA · female 51+"} : {val:18, label:"RDA · female 19–50"};
-      return null;
-    case "Zinc":
-      if(M) return {val:11, label:"RDA · male"};
-      if(F) return {val:8, label:"RDA · female"};
-      return null;
-    case "Calcium":
-      if(M) return age>=71 ? {val:1200, label:"RDA · male 71+"} : {val:1000, label:"RDA · male 19–70"};
-      if(F) return age>=51 ? {val:1200, label:"RDA · female 51+"} : {val:1000, label:"RDA · female 19–50"};
-      return null;
-    case "Magnesium":
-      if(M) return age>=31 ? {val:420, label:"RDA · male 31+"} : {val:400, label:"RDA · male 19–30"};
-      if(F) return age>=31 ? {val:320, label:"RDA · female 31+"} : {val:310, label:"RDA · female 19–30"};
-      return null;
-    case "Vitamin A":
-      if(M) return {val:900, label:"RDA · male"};
-      if(F) return {val:700, label:"RDA · female"};
-      return null;
-    case "Vitamin K":
-      if(M) return {val:120, label:"AI · male"};
-      if(F) return {val:90, label:"AI · female"};
-      return null;
-    case "Vitamin C":
-      if(M) return {val:90, label:"RDA · male"};
-      if(F) return {val:75, label:"RDA · female"};
-      return null;
-    case "Vitamin D":
-      if(age>0) return age>=71 ? {val:20, label:"RDA · age 71+"} : {val:15, label:"RDA · age 19–70"};
-      return null;
-    case "Phosphorus":
-      if(age>=19) return {val:700, label:"RDA · adult"};
-      return null;
+    case "Vitamin A":  return R(M?900:700);
+    case "Vitamin C":  return R(M?90:75);
+    case "Vitamin D":  return age>=71 ? R(20,"RDA","71+") : R(15,"RDA","19–70");
+    case "Vitamin E":  return R(15);
+    case "Vitamin K":  return R(M?120:90,"AI");
+    case "Thiamin":    return R(M?1.2:1.1);
+    case "Riboflavin": return R(M?1.3:1.1);
+    case "Niacin":     return R(M?16:14);
+    case "Vitamin B6": return age>=51 ? R(M?1.7:1.5,"RDA","51+") : R(1.3,"RDA","19–50");
+    case "Folate":     return R(400);
+    case "Vitamin B12":return R(2.4);
+    case "Biotin":     return R(30,"AI");
+    case "Pantothenic acid": return R(5,"AI");
+    case "Calcium":    return (M ? age>=71 : age>=51) ? R(1200,"RDA",M?"71+":"51+") : R(1000,"RDA",M?"19–70":"19–50");
+    case "Iron":       return (M || age>=51) ? R(8,"RDA",F?"51+":"") : R(18,"RDA","19–50");
+    case "Magnesium":  return age>=31 ? R(M?420:320,"RDA","31+") : R(M?400:310,"RDA","19–30");
+    case "Zinc":       return R(M?11:8);
+    case "Phosphorus": return R(700);
+    case "Iodine":     return R(150);
+    case "Selenium":   return R(55);
+    case "Copper":     return R(0.9);
+    case "Manganese":  return R(M?2.3:1.8,"AI");
+    case "Chromium":   return age>=51 ? R(M?30:20,"AI","51+") : R(M?35:25,"AI","19–50");
+    case "Molybdenum": return R(45);
+    case "Chloride":   return age>=71 ? R(1800,"AI","71+") : age>=51 ? R(2000,"AI","51–70") : R(2300,"AI","19–50");
     default: return null;
   }
+}
+/* The one place a nutrient's default target is chosen (custom targets are
+   applied before this). Blank until the profile is complete — no generic
+   targets before you have entered who you are. */
+function defaultNutrTarget(disp){
+  if(!profileReady()) return null;
+  const tot = goalTotal();
+  if(disp==="Fiber"){ const v = fiberTarget(); return v>0 ? {val:v, src:"auto", label:"14 g per 1,000 kcal of your goal"} : null; }
+  if(disp==="Potassium"){ const v = potassiumTarget(); return v>0 ? {val:v, src:"ai", label:"NASEM 2019 adequate intake"} : null; }
+  if(disp==="Saturated Fat" && tot>0) return {val:Math.round(tot*0.10/9), src:"goal", label:"limit · 10% of your "+Math.round(tot).toLocaleString()+" kcal goal (DGA 2020–2025)"};
+  if(disp==="Added Sugars" && tot>0) return {val:Math.round(tot*0.10/4), src:"goal", label:"limit · 10% of your "+Math.round(tot).toLocaleString()+" kcal goal (DGA 2020–2025)"};
+  const prof = profileNutrTarget(disp);
+  if(prof) return {val:prof.val, src:"profile", label:prof.label};
+  const dv = NUTR_DV[disp];
+  return dv ? {val:dv.dv, src:"fda", label:"FDA Daily Value"} : null;
 }
 function fiberTotal(k){
   const d = S.days[k]; let f = 0;
@@ -1888,16 +1926,8 @@ function dayNutrients(k){
       unit = "IU"; val = v.base; target = ct.val; pct = val/ct.val*100; custom = true;
     } else if(v.cls==="wt" && dv){
       unit = dv.unit; val = v.base/(WT2MG[unit]||1);
-      if(v.disp==="Fiber"){ target = fiberTarget(); pct = target>0 ? val/target*100 : 0; src = "auto"; srcLabel = "14 g per 1,000 kcal of goal"; } /* research auto-target, not zero */
-      else if(v.disp==="Potassium"){ target = potassiumTarget(); pct = target>0 ? val/target*100 : 0; src = "ai"; srcLabel = "NASEM 2019 adequate intake"; } /* NASEM 2019 AI goal; label DV 4,700 mg shown for reference */
-      else {
-        /* default goal: FDA Daily Value for everyone, or his own RDA/AI once his
-           profile has the sex/age it depends on — custom targets always win */
-        const prof = profileNutrTarget(v.disp);
-        if(prof){ target = prof.val; src = "profile"; srcLabel = prof.label; }
-        else { target = dv.dv; src = "fda"; srcLabel = "FDA Daily Value"; }
-        pct = target>0 ? val/target*100 : 0;
-      }
+      const dt = defaultNutrTarget(v.disp); /* 2026.11.25-c: blank until your profile is complete */
+      if(dt){ target = dt.val; src = dt.src; srcLabel = dt.label; pct = target>0 ? val/target*100 : 0; }
     } else if(v.cls==="iu" && dv && dv.iu){
       unit = "IU"; val = v.base; target = 0; pct = 0;
     } else if(v.cls==="wt"){
@@ -1915,12 +1945,8 @@ function dayNutrients(k){
     const dv = NUTR_DV[disp], ct = (S.goals.nutrTargets||{})[disp];
     let target = null, src = null, srcLabel = "", custom = false;
     if(ct && ct.val>0){ target = ct.val; custom = true; }
-    else if(disp==="Fiber"){ target = fiberTarget(); src = "auto"; srcLabel = "14 g per 1,000 kcal of goal"; }
-    else if(disp==="Potassium"){ target = potassiumTarget(); src = "ai"; srcLabel = "NASEM 2019 adequate intake"; }
-    else { const prof = profileNutrTarget(disp);
-      if(prof){ target = prof.val; src = "profile"; srcLabel = prof.label; }
-      else { target = dv.dv; src = "fda"; srcLabel = "FDA Daily Value"; } }
-    out.push({disp, val:0, unit:dv.unit, target, pct:0, custom, src, srcLabel, limit:!custom&&!!dv.limit, dvRef:dv});
+    else { const dt = defaultNutrTarget(disp); if(dt){ target = dt.val; src = dt.src; srcLabel = dt.label; } }
+    out.push({disp, val:0, unit:dv.unit, target, pct: target>0 ? 0 : null, custom, src, srcLabel, limit:!custom&&!!dv.limit, dvRef:dv});
   });
   out.sort((a,b)=>((b.pct===null?-1:b.pct)-(a.pct===null?-1:a.pct)) || a.disp.localeCompare(b.disp));
   return out;
@@ -1936,9 +1962,9 @@ function paintNutrients(k){
     if((e.nutrs&&e.nutrs.length) || (((findFood(e.n)||{}).nutrs||[]).length)) withNutr++;
   }));
   const nn = document.getElementById("nutrNote");
-  nn.textContent = totalFoods
+  nn.textContent = (profileReady() ? "" : "Targets appear once your stats are complete (still needed: "+profileMissingText()+"). ") + (totalFoods
     ? "Based on "+withNutr+" of "+totalFoods+" foods today — add vitamins & minerals when creating custom foods to fill the gaps."
-    : "No foods logged yet — add vitamins & minerals when creating custom foods to fill the gaps.";
+    : "No foods logged yet — add vitamins & minerals when creating custom foods to fill the gaps.");
   nn.style.display = "";
   if(!rows.length){
     box.innerHTML = `<div class="empty">No nutrient data yet.<br>Add vitamins &amp; minerals when creating custom foods.</div>`;
@@ -2031,9 +2057,9 @@ function renderAnalysis(){
   $("abarP").style.width = barW(t.p,g.protein);
   $("abarF").style.width = barW(t.f,g.fat);
   $("abarFi").style.width = barW(fiberTotal(k),fiberTarget());
-  $("avalCv").textContent = r1(t.c); $("avalCg").textContent = g.carbs;
-  $("avalPv").textContent = r1(t.p); $("avalPg").textContent = g.protein;
-  $("avalFv").textContent = r1(t.f); $("avalFg").textContent = g.fat;
-  $("avalFiv").textContent = r1(fiberTotal(k)); $("avalFig").textContent = r1(fiberTarget());
+  $("avalCv").textContent = r1(t.c); $("avalCg").textContent = tgtTxt(g.carbs);
+  $("avalPv").textContent = r1(t.p); $("avalPg").textContent = tgtTxt(g.protein);
+  $("avalFv").textContent = r1(t.f); $("avalFg").textContent = tgtTxt(g.fat);
+  $("avalFiv").textContent = r1(fiberTotal(k)); $("avalFig").textContent = tgtTxt(fiberTarget());
   paintNutrients(k);
 }
