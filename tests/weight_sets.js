@@ -12,7 +12,7 @@
       Night when the date already has a morning weigh-in.
    5. Legacy state (no pmWeights key) boots clean with the hint line. */
 const fs = require("fs"), path = require("path"), os = require("os");
-const { JSDOM } = require(path.join(__dirname, "..", "node_modules", "jsdom"));
+const { JSDOM } = require("jsdom");
 const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nxws-"));
 fs.writeFileSync(path.join(tmp, "harness.html"), html.replace('persistence:"local"', 'persistence:"memory"'));
@@ -21,7 +21,7 @@ let pass = 0, fail = 0;
 function ok(c, m){ if(c){ pass++; } else { fail++; console.log("  FAIL", m); } }
 const near = (a, b, t) => Math.abs(a - b) <= (t || 0.051);
 
-const EXPORT = JSON.parse(fs.readFileSync(path.join(os.homedir(), "workspace/user/files/fuel-data-8.json"), "utf8"));
+const EXPORT = JSON.parse(require("./_harness").fixtureOrSkip("weight_sets"));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function boot(state){

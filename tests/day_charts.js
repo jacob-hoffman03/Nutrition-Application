@@ -5,7 +5,7 @@
    and his flat-127 fed week; the weight chart (All range) must show BOTH dot
    kinds; the sparkline renders from his real 17-entry adaptiveHist. */
 const fs = require("fs"), path = require("path"), os = require("os");
-const { JSDOM } = require(path.join(__dirname, "..", "node_modules", "jsdom"));
+const { JSDOM } = require("jsdom");
 const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nxdc-"));
 fs.writeFileSync(path.join(tmp, "harness.html"), html.replace('persistence:"local"', 'persistence:"memory"'));
@@ -13,7 +13,7 @@ fs.writeFileSync(path.join(tmp, "harness.html"), html.replace('persistence:"loca
 let pass = 0, fail = 0;
 function ok(c, m){ if(c){ pass++; } else { fail++; console.log("  FAIL", m); } }
 
-const EXPORT = JSON.parse(fs.readFileSync(path.join(os.homedir(), "workspace/user/files/fuel-data-8.json"), "utf8"));
+const EXPORT = JSON.parse(require("./_harness").fixtureOrSkip("day_charts"));
 
 const dom = new JSDOM(fs.readFileSync(path.join(tmp, "harness.html"), "utf8"), {
   url: "https://localhost/", runScripts: "dangerously", pretendToBeVisual: true,

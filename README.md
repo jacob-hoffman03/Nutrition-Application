@@ -25,3 +25,14 @@ All data is stored in the phone's browser (localStorage). Nothing is sent to any
 2. Tap **Share** → **Add to Home Screen** → **Add**.
 
 The app then opens full-screen like a native app. It does not work offline: there is no service worker, so the page needs a network connection to load. Your logged data stays on your phone.
+
+## Tests
+
+The tests boot the real `index.html` in [jsdom](https://github.com/jsdom/jsdom). With Node.js installed:
+
+```bash
+npm install --no-save jsdom
+node tests/run_all.js
+```
+
+A few tests replay a private data export (`fuel-data-8.json`). It is never committed; put it in `tests/fixtures/` (git-ignored) or set `FUEL_FIXTURE=/path/to/file`. Without it those tests are skipped, not failed.

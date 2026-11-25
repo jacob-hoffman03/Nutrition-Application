@@ -2,7 +2,7 @@
 const fs = require("fs");
 const { JSDOM } = require("jsdom");
 const html = fs.readFileSync(__dirname + "/../index.html", "utf8");
-const exportJson = fs.readFileSync("/home/hatch/workspace/user/files/fuel-data-8.json", "utf8");
+const exportJson = require("./_harness").fixtureOrSkip("shift_estimator");
 
 let pass = 0, fail = 0;
 const ok = (c, n) => { if (c) { pass++; console.log("  ✓ " + n); } else { fail++; console.log("  ✗ FAIL: " + n); } };

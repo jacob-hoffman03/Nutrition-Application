@@ -1,0 +1,5 @@
+node_modules/
+# Private data exports used by some tests — never commit these.
+tests/fixtures/
+fuel-data-*.json
+.DS_Store

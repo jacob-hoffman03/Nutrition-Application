@@ -5,7 +5,7 @@
    usual must re-rank above it and carry the reason. A balanced morning must
    produce NO gap and legacy behavior. Hermetic: fixed local copy of the shell. */
 const fs = require("fs"), path = require("path"), os = require("os");
-const { JSDOM } = require(path.join(__dirname, "..", "node_modules", "jsdom"));
+const { JSDOM } = require("jsdom");
 const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nxsg-"));
 fs.writeFileSync(path.join(tmp, "harness.html"), html.replace('persistence:"local"', 'persistence:"memory"'));
@@ -13,7 +13,7 @@ fs.writeFileSync(path.join(tmp, "harness.html"), html.replace('persistence:"loca
 let pass = 0, fail = 0; const fails = [];
 function ok(c, m){ if(c){ pass++; } else { fail++; fails.push(m); console.log("  FAIL", m); } }
 
-const EXPORT = JSON.parse(fs.readFileSync(path.join(os.homedir(), "workspace/user/files/fuel-data-8.json"), "utf8"));
+const EXPORT = JSON.parse(require("./_harness").fixtureOrSkip("smart_gotos"));
 const FLAGS = JSON.stringify({ zeroReset: 1, calcNet: 1 });
 
 function boot(){
