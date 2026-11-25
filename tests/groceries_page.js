@@ -4,7 +4,7 @@
    servings + days eaten, pack counts from the food's package size (ps). */
 const fs = require("fs");
 const { JSDOM } = require("jsdom");
-const html = fs.readFileSync(__dirname + "/../index.html", "utf8");
+const html = require("./_harness").appHtml();
 
 let pass = 0, fail = 0;
 const ok = (c, name) => { if (c) { pass++; console.log("  ✓ " + name); } else { fail++; console.log("  ✗ FAIL: " + name); } };

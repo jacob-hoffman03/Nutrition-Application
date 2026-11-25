@@ -15,7 +15,7 @@
       activity tier, the current tier marked "yours". */
 const fs = require("fs");
 const { JSDOM } = require("jsdom");
-const html = fs.readFileSync(__dirname + "/../index.html", "utf8");
+const html = require("./_harness").appHtml();
 
 let pass = 0, fail = 0;
 const ok = (cond, name) => { if (cond) { pass++; console.log("  ✓ " + name); } else { fail++; console.log("  ✗ FAIL: " + name); } };

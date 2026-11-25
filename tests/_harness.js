@@ -29,4 +29,14 @@ function fixtureOrSkip(testName){
   return fs.readFileSync(p, "utf8");
 }
 
-module.exports = { ROOT, fixturePath, fixtureOrSkip };
+/* The app is index.html + styles.css + js/*.js. jsdom does not fetch
+   subresources here, so tests get the page with every local stylesheet and
+   script inlined back in — exactly the markup the browser ends up running. */
+function appHtml(){
+  const read = rel => fs.readFileSync(path.join(ROOT, rel), "utf8");
+  return read("index.html")
+    .replace(/<link rel="stylesheet" href="([^"?]+)(?:\?[^"]*)?">/g, (m, f) => "<style>\n" + read(f) + "</style>")
+    .replace(/<script src="([^"?]+)(?:\?[^"]*)?"><\/script>/g, (m, f) => "<script>\n" + read(f) + "</script>");
+}
+
+module.exports = { ROOT, fixturePath, fixtureOrSkip, appHtml };

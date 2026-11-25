@@ -2,7 +2,7 @@
    Boots the real app in jsdom (same harness pattern as loc_feature.js). */
 const fs = require("fs"), path = require("path");
 const { JSDOM } = require("jsdom");
-const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+const html = require("./_harness").appHtml();
 
 let pass = 0, fail = 0;
 const ok = (c, n) => { if (c) pass++; else { fail++; console.log("  ✗ " + n); } };

@@ -6,7 +6,7 @@
    kinds; the sparkline renders from his real 17-entry adaptiveHist. */
 const fs = require("fs"), path = require("path"), os = require("os");
 const { JSDOM } = require("jsdom");
-const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+const html = require("./_harness").appHtml();
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nxdc-"));
 fs.writeFileSync(path.join(tmp, "harness.html"), html.replace('persistence:"local"', 'persistence:"memory"'));
 

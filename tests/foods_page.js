@@ -3,7 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const { JSDOM } = require("jsdom");
-const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+const html = require("./_harness").appHtml();
 
 let passed = 0, failed = 0;
 const ok = (cond, msg) => { if (cond) { passed++; console.log("  ✓ " + msg); } else { failed++; console.log("  ✗ FAIL: " + msg); } };

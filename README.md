@@ -16,7 +16,7 @@ All data is stored in the phone's browser (localStorage). Nothing is sent to any
 
 1. In the [Cloudflare dashboard](https://dash.cloudflare.com), go to **Workers & Pages → Create → Pages → Connect to Git**.
 2. Select this repository (`Nutrition-Application`).
-3. Build settings: **no build command**, **output directory** = `/` (the site is a single `index.html`).
+3. Build settings: **no build command**, **output directory** = `/` (the site is static files: `index.html`, `styles.css`, `js/`).
 4. Deploy. You'll get a `*.pages.dev` link.
 
 ## Add to iPhone home screen
@@ -28,7 +28,7 @@ The app then opens full-screen like a native app. It does not work offline: ther
 
 ## Tests
 
-The tests boot the real `index.html` in [jsdom](https://github.com/jsdom/jsdom). With Node.js installed:
+The tests boot the real app (`index.html` with `styles.css` and `js/*.js` inlined back in by `tests/_harness.js`) in [jsdom](https://github.com/jsdom/jsdom). With Node.js installed:
 
 ```bash
 npm install --no-save jsdom

@@ -13,7 +13,7 @@
    5. Legacy state (no pmWeights key) boots clean with the hint line. */
 const fs = require("fs"), path = require("path"), os = require("os");
 const { JSDOM } = require("jsdom");
-const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+const html = require("./_harness").appHtml();
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nxws-"));
 fs.writeFileSync(path.join(tmp, "harness.html"), html.replace('persistence:"local"', 'persistence:"memory"'));
 

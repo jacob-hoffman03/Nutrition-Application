@@ -1,7 +1,7 @@
 /* v5 level-shift estimator verification (2026.10.18-a) */
 const fs = require("fs");
 const { JSDOM } = require("jsdom");
-const html = fs.readFileSync(__dirname + "/../index.html", "utf8");
+const html = require("./_harness").appHtml();
 const exportJson = require("./_harness").fixtureOrSkip("shift_estimator");
 
 let pass = 0, fail = 0;

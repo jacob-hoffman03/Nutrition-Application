@@ -1,7 +1,7 @@
 /* Fuel 2026.10.14-i: Location tag on custom foods (f.loc) — create/edit, chips,
    bold prefix in diary / add-sheet / foods tab / detail, loc search, entry fallback. */
 const fs = require("fs"), path = require("path"), { JSDOM } = require("jsdom");
-const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+const html = require("./_harness").appHtml();
 const shim = `<script>window.__memStore={"fuel.flags.v1":JSON.stringify({zeroReset:1})};window.localStorage={getItem:k=>window.__memStore[k]??null,setItem:(k,v)=>{window.__memStore[k]=String(v)},removeItem:k=>{delete window.__memStore[k]},clear:()=>{window.__memStore={}}};</script>`;
 const html2 = html.replace(/<script/, shim + "<script");
 let pass = 0, fail = 0;
@@ -21,7 +21,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await sleep(400);
   try {
     ok(errors.length === 0, "boot with zero JS errors" + (errors.length ? " :: " + errors.slice(0, 3).join(" | ") : ""));
-    ok(ev("APP_VERSION") === "2026.11.12-b", "version 2026.10.21-d, got " + ev("APP_VERSION"));
+    ok(ev("APP_VERSION") === "2026.11.25-a", "version 2026.11.25-a, got " + ev("APP_VERSION"));
 
     /* ---- create a food WITH a location via the real form ---- */
     q("#newCustomBtn").click();
