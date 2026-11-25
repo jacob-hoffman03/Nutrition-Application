@@ -273,7 +273,7 @@ function saveTrimPhotos(){
   }
   return true;
 }
-const APP_VERSION = "2026.11.25-c";
+const APP_VERSION = "2026.11.25-d";
 
 /* ============ STATE ============ */
 /* Blank slate: every goal, nutrient target, and profile/setting starts at zero, like a

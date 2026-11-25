@@ -4290,8 +4290,8 @@ function paintSigned(root){
     re.lastIndex = 0;
     while((m = re.exec(txt))){
       found = true;
-      var col = (m[2][0]==="−" || m[2][0]==="-") ? "#b00020" : "#0b7a4b";
-      out += esc(txt.slice(last, m.index)) + m[1] + '<span class="neg" style="color:'+col+'">' + esc(m[2]) + "</span>";
+      var cls = (m[2][0]==="−" || m[2][0]==="-") ? "sgn-neg" : "sgn-pos";
+      out += esc(txt.slice(last, m.index)) + m[1] + '<span class="neg '+cls+'">' + esc(m[2]) + "</span>";
       last = m.index + m[0].length;
     }
     if(!found) return;
